@@ -55,7 +55,7 @@ export default function Setting({ knowledgeBaseCode, updateKnowledgeDetail }: Pr
 			const { path } = fullfilled[0].value
 			setIconUploadUrl(path)
 			setIconPreviewUrl(localPreviewUrl)
-			message.success("上传成功")
+			message.success(t("knowledgeDatabase.uploadSuccess"))
 		} else {
 			message.error(t("file.uploadFail", { ns: "message" }))
 		}
@@ -87,7 +87,7 @@ export default function Setting({ knowledgeBaseCode, updateKnowledgeDetail }: Pr
 	const handleReset = useMemoizedFn(async () => {
 		if (knowledgeBaseCode) {
 			await getKnowledgeDetail(knowledgeBaseCode)
-			message.success("重置成功")
+			message.success(t("knowledgeDatabase.resetSuccess"))
 		}
 	})
 
@@ -136,6 +136,7 @@ export default function Setting({ knowledgeBaseCode, updateKnowledgeDetail }: Pr
 					<Flex align="center" gap={8} className={styles.settingValue}>
 						<img className={styles.icon} src={iconPreviewUrl} alt="" />
 						<Upload
+							accept="image/jpg,image/png,image/jpeg"
 							disabled={iconUploading}
 							showUploadList={false}
 							beforeUpload={beforeIconUpload}

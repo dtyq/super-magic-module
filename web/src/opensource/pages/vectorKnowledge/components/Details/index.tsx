@@ -10,7 +10,12 @@ import { useNavigate, useLocation } from "react-router-dom"
 import { genFileData } from "@/opensource/pages/chatNew/components/MessageEditor/MagicInput/components/InputFiles/utils"
 import { useUpload } from "@/opensource/hooks/useUploadFiles"
 import { useTranslation } from "react-i18next"
-import { fileTypeIconsMap, supportedFileTypes, documentSyncStatusMap } from "../../constant"
+import {
+	fileTypeIconsMap,
+	supportedFileTypes,
+	documentSyncStatusMap,
+	supportedEmbedFileTypes,
+} from "../../constant"
 import SubSider from "../SubSider"
 import { useVectorKnowledgeDetailStyles } from "./styles"
 import Setting from "../Setting"
@@ -357,6 +362,7 @@ export default function VectorKnowledgeDetail() {
 									</Flex>
 								</Dropdown>
 								<Upload
+									accept={supportedEmbedFileTypes}
 									multiple
 									showUploadList={false}
 									beforeUpload={beforeFileUpload}

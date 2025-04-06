@@ -20,7 +20,12 @@ import { RoutePath } from "@/const/routes"
 import { FlowRouteType } from "@/types/flow"
 import MagicIcon from "@/opensource/components/base/MagicIcon"
 import { useVectorKnowledgeCreateStyles } from "./styles"
-import { supportedFileTypes, fileTypeIconsMap } from "../../constant"
+import {
+	supportedFileTypes,
+	fileTypeIconsMap,
+	DEFAULT_ICON_OSS_KEY,
+	supportedEmbedFileTypes,
+} from "../../constant"
 import VectorKnowledgeEmbed from "../Embed"
 import { KnowledgeApi } from "@/apis"
 import type { Knowledge } from "@/types/knowledge"
@@ -46,10 +51,6 @@ export type CreatedKnowledge = {
 	icon: string
 	fileList?: Knowledge.EmbedDocumentDetail[]
 }
-
-// 知识库默认图标的OSS key
-export const DEFAULT_ICON_OSS_KEY =
-	"MAGIC/open/2c17c6393771ee3048ae34d6b380c5ec/NnsZ43-d-ut3WrZqGTpOR.png"
 
 export default function VectorKnowledgeCreate() {
 	const { styles } = useVectorKnowledgeCreateStyles()
@@ -95,7 +96,7 @@ export default function VectorKnowledgeCreate() {
 			const { path } = fullfilled[0].value
 			setPreviewIconUrl(localPreviewUrl)
 			setUploadIconUrl(path)
-			message.success("上传成功")
+			message.success(t("knowledgeDatabase.uploadSuccess"))
 		} else {
 			message.error(t("file.uploadFail", { ns: "message" }))
 		}
@@ -302,6 +303,7 @@ export default function VectorKnowledgeCreate() {
 							<Flex align="center" gap={8}>
 								<img className={styles.icon} src={previewIconUrl} alt="" />
 								<Upload
+									accept="image/jpg,image/png,image/jpeg"
 									disabled={iconUploading}
 									showUploadList={false}
 									beforeUpload={beforeIconUpload}
@@ -355,6 +357,7 @@ export default function VectorKnowledgeCreate() {
 						>
 							<div>
 								<Upload.Dragger
+									accept={supportedEmbedFileTypes}
 									multiple
 									showUploadList={false}
 									beforeUpload={beforeFileUpload}

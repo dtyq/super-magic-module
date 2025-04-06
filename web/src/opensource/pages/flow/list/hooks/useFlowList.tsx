@@ -216,7 +216,7 @@ export default function useFlowList({ flowType }: FlowListHooksProps) {
 						break
 					case FlowRouteType.Knowledge:
 						// 删除知识库
-						await KnowledgeApi.deleteKnowledge(flow.id)
+						await KnowledgeApi.deleteKnowledge(flow.code)
 						break
 					default:
 						break

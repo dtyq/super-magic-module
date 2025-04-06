@@ -30,14 +30,14 @@ export default function RecordMenu({
 		e?.domEvent?.stopPropagation?.()
 		Modal.confirm({
 			centered: true,
-			title: t("knowledgeDatabase.delete", { ns: "flow" }),
+			title: t("knowledgeDatabase.deleteKnowledge", { ns: "flow" }),
 			content: t("knowledgeDatabase.deleteDesc", { ns: "flow" }),
 			okText: t("button.confirm", { ns: "interface" }),
 			cancelText: t("button.cancel", { ns: "interface" }),
 			onOk: async () => {
-				await KnowledgeApi.deleteKnowledge(record.id)
+				await KnowledgeApi.deleteKnowledge(record.code)
 				message.success(t("knowledgeDatabase.deleteSuccess", { ns: "flow" }))
-				deleteKnowledgeById(record.id)
+				deleteKnowledgeById(record.code)
 			},
 		})
 	})
