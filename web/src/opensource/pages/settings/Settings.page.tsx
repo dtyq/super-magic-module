@@ -3,11 +3,7 @@ import { Flex, Input } from "antd"
 import { useTranslation } from "react-i18next"
 import MagicAvatar from "@/opensource/components/base/MagicAvatar"
 import PageContainer from "@/opensource/components/base/PageContainer"
-import {
-	useCurrentMagicOrganization,
-	useCurrentOrganization,
-	useUserInfo,
-} from "@/opensource/models/user/hooks"
+import { useCurrentMagicOrganization, useUserInfo } from "@/opensource/models/user/hooks"
 import AiCompletionSwitch from "./featrues/AiCompletionSwitch"
 import AppearenceSwitch from "./featrues/AppearenceSwitch"
 import FontSizeChanger from "./featrues/FontSizeChanger"

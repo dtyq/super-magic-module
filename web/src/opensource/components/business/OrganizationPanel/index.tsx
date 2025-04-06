@@ -18,7 +18,7 @@ import { useContactStore } from "@/opensource/stores/contact/hooks"
 import MagicSpin from "@/opensource/components/base/MagicSpin"
 import type { CheckboxChangeEvent } from "antd/es/checkbox"
 import { isArray } from "lodash-es"
-import { useCurrentOrganization } from "@/opensource/models/user/hooks"
+import { useCurrentMagicOrganization } from "@/opensource/models/user/hooks"
 import MagicScrollBar from "@/opensource/components/base/MagicScrollBar"
 import { isDepartment, isMember } from "./utils"
 import Member from "./components/Member"
@@ -98,7 +98,7 @@ const OrganizationPanel = memo(function OrganizationPanel(props: OrganizationPan
 		[data.departments, data.users],
 	)
 
-	const organization = useCurrentOrganization()
+	const organization = useCurrentMagicOrganization()
 
 	const emptyNode = useMemo(() => {
 		return isLoading ? null : (
@@ -227,11 +227,11 @@ const OrganizationPanel = memo(function OrganizationPanel(props: OrganizationPan
 		return (
 			<Flex className={styles.breadcrumb} align="center" gap={4} wrap="wrap">
 				<MagicAvatar
-					src={organization?.organization_logo?.[0]?.url}
+					// src={organization?.organization_logo?.[0]?.url}
 					size={42}
 					className={styles.avatar}
 				>
-					{organization?.organization_name}
+					{organization?.magic_organization_code}
 				</MagicAvatar>
 
 				<Flex flex={1} align="center" style={{ flexWrap: "wrap" }}>
@@ -239,7 +239,7 @@ const OrganizationPanel = memo(function OrganizationPanel(props: OrganizationPan
 						className={styles.breadcrumbItem}
 						onClick={() => enchancedSetSelectPath([])}
 					>
-						{organization?.organization_name ?? t("organization.root")}
+						{organization?.magic_organization_code ?? t("organization.root")}
 					</span>
 					{selectedPath?.map((item, index) => {
 						const arrowKey = `arrow-${index}`
@@ -265,8 +265,7 @@ const OrganizationPanel = memo(function OrganizationPanel(props: OrganizationPan
 		styles.breadcrumb,
 		styles.avatar,
 		styles.breadcrumbItem,
-		organization?.organization_logo,
-		organization?.organization_name,
+		organization?.magic_organization_code,
 		t,
 		selectedPath,
 		enchancedSetSelectPath,
