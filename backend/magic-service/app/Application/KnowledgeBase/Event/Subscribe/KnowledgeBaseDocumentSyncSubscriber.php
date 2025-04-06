@@ -79,6 +79,10 @@ readonly class KnowledgeBaseDocumentSyncSubscriber implements ListenerInterface
                 $content = $fileParser->parse($file->getFileLink()->getUrl());
                 $logger->info('解析文件完成，正在文件分段，文件名：' . $file->getName());
                 $splitText = $tokenSplitter->splitText($content);
+                // 过滤trim后为空的内容
+                $splitText = array_filter($splitText, function ($text) {
+                    return trim($text) !== '';
+                });
                 $logger->info('文件分段完成，文件名：' . $file->getName() . '，分段数量:' . count($splitText));
 
                 foreach ($splitText as $text) {
