@@ -78,13 +78,10 @@ class MessageDbService {
 	 */
 	async createMessageTables(conversationIds: string[]) {
 		await chatDb.changeSchema(
-			conversationIds.reduce(
-				(acc, id) => {
-					acc[this.genMessageTableName(id)] = this.messageTableSchema
-					return acc
-				},
-				{} as Record<string, string>,
-			),
+			conversationIds.reduce((acc, id) => {
+				acc[this.genMessageTableName(id)] = this.messageTableSchema
+				return acc
+			}, {} as Record<string, string>),
 		)
 	}
 
@@ -362,18 +359,29 @@ class MessageDbService {
 	 * @param messageId 消息ID
 	 * @param message 消息
 	 */
-	async updateMessageStatus(
+	updateMessageStatus(
 		conversationId: string,
 		messageId: string,
 		message: SeqResponse<SeenMessage>,
 	) {
-		const table = await this.getMessageTable(conversationId)
-		if (table) {
-			table.update(messageId, {
-				"message.status": message.message.unread_count > 0 ? message.message.status : ConversationMessageStatus.Read,
-				"message.unread_count": message.message.unread_count,
-			})
-		}
+		this.getMessageTable(conversationId).then((table) => {
+			if (table) {
+				table
+					.update(messageId, {
+						"message.status":
+							message.message.unread_count > 0
+								? message.message.status
+								: ConversationMessageStatus.Read,
+						"message.unread_count": message.message.unread_count,
+					})
+					.then((res) => {
+						console.log("updateMessageStatus success", res)
+					})
+					.catch((err) => {
+						console.error("updateMessageStatus error", err)
+					})
+			}
+		})
 	}
 
 	/**
@@ -382,13 +390,21 @@ class MessageDbService {
 	 * @param messageId 消息ID
 	 * @param unreadCount 未读数
 	 */
-	async updateMessageUnreadCount(conversationId: string, messageId: string, unreadCount: number) {
-		const table = await this.getMessageTable(conversationId)
-		if (table) {
-			table.update(messageId, {
-				"message.unread_count": unreadCount,
-			})
-		}
+	updateMessageUnreadCount(conversationId: string, messageId: string, unreadCount: number) {
+		this.getMessageTable(conversationId).then((table) => {
+			if (table) {
+				table
+					.update(messageId, {
+						"message.unread_count": unreadCount,
+					})
+					.then((res) => {
+						console.log("updateMessageUnreadCount success", res, messageId)
+					})
+					.catch((err) => {
+						console.error("updateMessageUnreadCount error", err)
+					})
+			}
+		})
 	}
 
 	/**

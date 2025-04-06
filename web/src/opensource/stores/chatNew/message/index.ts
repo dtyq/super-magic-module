@@ -162,11 +162,17 @@ class MessageStore {
 
 	/**
 	 * 更新消息已读状态
-	 * @param id 消息ID
+	 * @param messageIdOrTempId 消息ID
 	 * @param status 已读状态
 	 */
-	updateMessageSeenStatus(id: string, status: ConversationMessageStatus) {
-		this.seenStatusMap.set(id, status)
+	updateMessageSeenStatus(messageIdOrTempId: string, status: ConversationMessageStatus) {
+		const message = this.messages.find(
+			(m) => m.message_id === messageIdOrTempId || m.temp_id === messageIdOrTempId,
+		)
+
+		if (message) {
+			message.seen_status = status
+		}
 	}
 
 	/**

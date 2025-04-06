@@ -6,7 +6,6 @@ import { IconPin } from "@tabler/icons-react"
 import { useMemoizedFn } from "ahooks"
 import { observer } from "mobx-react-lite"
 import { useTranslation } from "react-i18next"
-import { ChatApi } from "@/opensource/apis"
 
 const TopConversationButton = observer(({ conversationId }: { conversationId: string }) => {
 	const { t } = useTranslation("interface")
@@ -16,8 +15,7 @@ const TopConversationButton = observer(({ conversationId }: { conversationId: st
 	const onClick = useMemoizedFn(() => {
 		if (!conversation) return
 		const isTop = conversation.is_top ? 0 : 1
-		conversationService.updateTopStatus(conversationId, isTop)
-		ChatApi.topConversation(conversationId, isTop)
+		conversationService.setTopStatus(conversationId, isTop)
 	})
 
 	if (!conversation) return null

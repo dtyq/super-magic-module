@@ -11,13 +11,13 @@ export function useAccount() {
 	 * @param {string} magicId magic生态下的唯一Id
 	 */
 	const accountSwitch = useMemoizedFn(
-		async (unionId: string, teamshareOrganizationCode: string) => {
+		async (unionId: string, magic_user_id: string, magic_organization_code: string) => {
 			const { accounts } = userStore.account
 			const account = accounts.find((o) => o.magic_id === unionId)
 			if (account) {
 				setClusterCode(account?.deployCode)
 			}
-			await userService.switchAccount(unionId, teamshareOrganizationCode)
+			await userService.switchAccount(unionId, magic_user_id, magic_organization_code)
 		},
 	)
 

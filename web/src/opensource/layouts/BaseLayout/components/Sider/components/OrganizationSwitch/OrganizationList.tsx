@@ -1,4 +1,4 @@
-import { memo, useMemo, useRef } from "react"
+import { memo, useRef } from "react"
 import MagicAvatar from "@/opensource/components/base/MagicAvatar"
 import { IconCheck, IconPlus } from "@tabler/icons-react"
 import MagicScrollBar from "@/opensource/components/base/MagicScrollBar"
@@ -9,11 +9,7 @@ import { useTranslation } from "react-i18next"
 import { useMemoizedFn } from "ahooks"
 import type { User } from "@/types/user"
 import { useAccount } from "@/opensource/stores/authentication"
-import {
-	useAccount as useAccountHook,
-	useUserInfo,
-	useOrganization,
-} from "@/opensource/models/user/hooks"
+import { useAccount as useAccountHook, useUserInfo } from "@/opensource/models/user/hooks"
 import AccountModal from "@/opensource/pages/login/AccountModal"
 import { useClusterConfig } from "@/opensource/models/config/hooks"
 import { userService } from "@/services"
@@ -26,25 +22,25 @@ import { ContactApi } from "@/apis"
 
 interface OrganizationItemProps {
 	disabled: boolean
+	isSelected: boolean
 	onClick?: () => void
 	account: User.UserAccount
-	organization: User.UserOrganization
+	organization: User.MagicOrganization
 }
 
 const OrganizationItem = observer((props: OrganizationItemProps) => {
-	const { disabled, organization, account, onClick } = props
+	const { disabled, organization, account, onClick, isSelected } = props
 
 	const { styles, cx } = useOrganizationListStyles()
 
 	const { accountSwitch } = useAccount()
 
 	const { userInfo } = useUserInfo()
-	const { teamshareOrganizationCode } = useOrganization()
 
 	const unreadDotsGroupByOrganization = OrganizationDotsStore.dots
 
 	const switchOrganization = useMemoizedFn(
-		async (accountInfo: User.UserAccount, organizationInfo: User.UserOrganization) => {
+		async (accountInfo: User.UserAccount, organizationInfo: User.MagicOrganization) => {
 			if (disabled) {
 				return
 			}
@@ -53,52 +49,50 @@ const OrganizationItem = observer((props: OrganizationItemProps) => {
 				useInterafceStore.setState({ isSwitchingOrganization: true })
 				// 账号不一致下要切换账号
 				if (accountInfo?.magic_id !== userInfo?.magic_id) {
-					await accountSwitch(accountInfo?.magic_id, organizationInfo.organization_code)
-				} else if (organizationInfo?.organization_code !== userInfo?.organization_code) {
-					// 找到目标组织的 user_id，拉取用户信息，更新本地信息
-					const targetMagicUser = accountInfo.organizations.find(
-						(org) =>
-							org.third_platform_organization_code ===
-							organizationInfo?.organization_code,
+					await accountSwitch(
+						accountInfo?.magic_id,
+						organizationInfo.magic_user_id,
+						organizationInfo.magic_organization_code,
 					)
+				} else if (
+					organizationInfo?.magic_organization_code !== userInfo?.organization_code
+				) {
+					try {
+						await userService.switchOrganization(
+							organizationInfo.magic_user_id,
+							organizationInfo.magic_organization_code,
+						)
+						// 拉取用户信息
+						const { items } = await ContactApi.getUserInfos({
+							user_ids: [organizationInfo.magic_user_id],
+							query_type: 2,
+						})
 
-					if (targetMagicUser) {
-						try {
-							await userService.switchOrganization(
-								targetMagicUser.third_platform_organization_code ?? "",
-							)
-							// 拉取用户信息
-							const { items } = await ContactApi.getUserInfos({
-								user_ids: [targetMagicUser.magic_user_id],
-								query_type: 2,
-							})
+						const targetUser = items[0]
 
-							const targetUser = items[0]
-
-							if (targetUser) {
-								const magicUser = {
-									magic_id: targetUser.magic_id,
-									user_id: targetUser.user_id,
-									status: targetUser.status,
-									nickname: targetUser.nickname,
-									avatar: targetUser.avatar_url,
-									organization_code: targetUser?.organization_code,
-								}
-
-								userStore.user.setUserInfo(magicUser)
-
-								// 切换用户
-								await userService.switchUser(magicUser)
-							} else {
-								// 切换失败，恢复当前组织
-								userService.setMagicOrganizationCode(userInfo?.organization_code)
+						if (targetUser) {
+							const magicUser = {
+								magic_id: targetUser.magic_id,
+								user_id: targetUser.user_id,
+								status: targetUser.status,
+								nickname: targetUser.nickname,
+								avatar: targetUser.avatar_url,
+								organization_code: targetUser?.organization_code,
 							}
-						} catch (err) {
-							console.error(err)
+
+							userStore.user.setUserInfo(magicUser)
+
+							// 切换用户
+							await userService.switchUser(magicUser)
+						} else {
 							// 切换失败，恢复当前组织
 							userService.setMagicOrganizationCode(userInfo?.organization_code)
-							userService.setUserInfo(userInfo)
 						}
+					} catch (err) {
+						console.error(err)
+						// 切换失败，恢复当前组织
+						userService.setMagicOrganizationCode(userInfo?.organization_code)
+						userService.setUserInfo(userInfo)
 					}
 				}
 				onClick?.()
@@ -110,21 +104,9 @@ const OrganizationItem = observer((props: OrganizationItemProps) => {
 		},
 	)
 
-	const isSelected = useMemo(
-		() =>
-			teamshareOrganizationCode === organization.organization_code &&
-			userInfo?.magic_id === account?.magic_id,
-		[
-			account?.magic_id,
-			organization.organization_code,
-			teamshareOrganizationCode,
-			userInfo?.magic_id,
-		],
-	)
-
 	return (
 		<div
-			key={organization.organization_code}
+			key={organization.magic_organization_code}
 			onClick={() => switchOrganization(account, organization)}
 			className={cx(styles.item, {
 				[styles.itemDisabled]: disabled,
@@ -133,16 +115,16 @@ const OrganizationItem = observer((props: OrganizationItemProps) => {
 		>
 			<div className={styles.itemIcon}>
 				<MagicAvatar
-					src={organization.organization_logo?.[0]?.url}
+					// src={organization.organization_logo?.[0]?.url}
 					size={30}
 					className={cx(styles.avatar, {
 						[styles.avatarDisabled]: disabled,
 					})}
 				>
-					{organization.organization_name}
+					{organization.magic_organization_code}
 				</MagicAvatar>
 			</div>
-			<div className={styles.itemText}>{organization.organization_name}</div>
+			<div className={styles.itemText}>{organization.magic_organization_code}</div>
 			<Flex>
 				{isSelected ? (
 					<MagicIcon
@@ -152,7 +134,9 @@ const OrganizationItem = observer((props: OrganizationItemProps) => {
 						component={IconCheck}
 					/>
 				) : (
-					<Badge count={unreadDotsGroupByOrganization[organization.organization_code]} />
+					<Badge
+						count={unreadDotsGroupByOrganization[organization.magic_organization_code]}
+					/>
 				)}
 			</Flex>
 		</div>
@@ -174,12 +158,13 @@ function OrganizationList(props: OrganizationListItemProps) {
 	const { accounts } = useAccountHook()
 	const { clustersConfig } = useClusterConfig()
 
+	const { userInfo } = useUserInfo()
+
 	const handleAddAccount = () => {
 		AccountModal()
 		onClose?.()
 	}
 
-	console.log("-accounts-", accounts)
 	return (
 		<div className={styles.container}>
 			<MagicScrollBar
@@ -209,7 +194,7 @@ function OrganizationList(props: OrganizationListItemProps) {
 												[styles.avatarDisabled]: false,
 											})}
 										>
-											organization.organization_name
+											{account.nickname}
 										</MagicAvatar>
 										<span className={styles.groupTitle}>
 											{account.nickname}
@@ -220,15 +205,24 @@ function OrganizationList(props: OrganizationListItemProps) {
 									</div>
 								</div>
 							</Affix>
-							{account.teamshareOrganizations?.map((organization) => (
-								<OrganizationItem
-									key={organization.organization_code}
-									onClick={onClose}
-									account={account}
-									disabled={!validOrgs.includes(organization.organization_code)}
-									organization={organization}
-								/>
-							))}
+							{account.organizations?.map((organization) => {
+								return (
+									<OrganizationItem
+										key={organization.magic_organization_code}
+										onClick={onClose}
+										account={account}
+										disabled={
+											!validOrgs.includes(
+												organization.magic_organization_code,
+											)
+										}
+										isSelected={
+											userInfo?.user_id === organization?.magic_user_id
+										}
+										organization={organization}
+									/>
+								)
+							})}
 						</div>
 					)
 				})}

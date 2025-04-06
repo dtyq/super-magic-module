@@ -54,15 +54,15 @@ class MessageApplyService {
 		if (!conversation) {
 			// 如果会话不存在，则拉取会话列表
 			if (!this.fetchingPromiseMap[message.conversation_id]) {
-				this.fetchingPromiseMap[message.conversation_id] = ChatApi
-					.getConversationList([message.conversation_id])
-					.then(({ items }) => {
-						delete this.fetchingPromiseMap[message.conversation_id]
-						if (items.length === 0) return
-						if (items[0].status === ConversationStatus.Normal) {
-							ConversationService.addNewConversation(items[0])
-						}
-					})
+				this.fetchingPromiseMap[message.conversation_id] = ChatApi.getConversationList([
+					message.conversation_id,
+				]).then(({ items }) => {
+					delete this.fetchingPromiseMap[message.conversation_id]
+					if (items.length === 0) return
+					if (items[0].status === ConversationStatus.Normal) {
+						ConversationService.addNewConversation(items[0])
+					}
+				})
 			}
 
 			await this.fetchingPromiseMap[message.conversation_id]

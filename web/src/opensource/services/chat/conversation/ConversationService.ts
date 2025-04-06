@@ -384,6 +384,11 @@ class ConversationService {
 		this.cacheConversationSiderbarGroups()
 	}
 
+	setTopStatus(conversationId: string, isTop: 0 | 1) {
+		ChatApi.topConversation(conversationId, isTop)
+		this.updateTopStatus(conversationId, isTop)
+	}
+
 	/**
 	 * 设置会话免打扰
 	 * @param conversationId 会话
@@ -391,9 +396,18 @@ class ConversationService {
 	 */
 	notDisturbConversation(conversationId: string, isNotDisturb: 0 | 1) {
 		conversationStore.updateConversationDisturbStatus(conversationId, isNotDisturb)
-
 		// 更新数据库
 		ConversationDbServices.updateNotDisturbStatus(conversationId, isNotDisturb)
+	}
+
+	/**
+	 * 设置会话免打扰状态
+	 * @param conversationId 会话
+	 * @param isNotDisturb 是否免打扰
+	 */
+	setNotDisturbStatus(conversationId: string, isNotDisturb: 0 | 1) {
+		ChatApi.muteConversation(conversationId, isNotDisturb)
+		this.notDisturbConversation(conversationId, isNotDisturb)
 	}
 
 	/**
@@ -439,6 +453,17 @@ class ConversationService {
 			this.organizationCode,
 			conversationSiderbarStore.getConversationSiderbarGroups(),
 		)
+	}
+
+	/**
+	 * 从数据库添加会话
+	 * @param conversationId 会话ID
+	 */
+	async addNewConversationFromDB(conversationId: string) {
+		const conversation = await ConversationDbServices.getConversation(conversationId)
+		if (conversation) {
+			conversationStore.initConversations([conversation as Conversation])
+		}
 	}
 
 	addNewConversation(conversation: ConversationFromService) {
@@ -525,7 +550,7 @@ class ConversationService {
 		// 缓存侧边栏会话组
 		this.cacheConversationSiderbarGroups()
 		// 从数据库中删除
-		ConversationDbServices.deleteConversation(conversationId)
+		// ConversationDbServices.deleteConversation(conversationId)
 	}
 
 	/**
@@ -538,7 +563,7 @@ class ConversationService {
 		// 缓存侧边栏会话组
 		this.cacheConversationSiderbarGroups()
 		// 从数据库中删除
-		ConversationDbServices.deleteConversations(conversationIds)
+		// ConversationDbServices.deleteConversations(conversationIds)
 	}
 
 	/**

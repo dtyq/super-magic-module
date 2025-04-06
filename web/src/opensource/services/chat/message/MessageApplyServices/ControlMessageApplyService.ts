@@ -6,6 +6,7 @@ import type { SeqResponse } from "@/types/request"
 // 导入新的服务
 import ConversationService from "@/opensource/services/chat/conversation/ConversationService"
 import chatTopicService from "@/opensource/services/chat/topic"
+import userInfoService from "@/opensource/services/userInfo"
 
 // 导入存储状态管理
 import conversationStore from "@/opensource/stores/chatNew/conversation"
@@ -23,11 +24,11 @@ import type {
 import type { SeenMessage } from "@/types/chat/seen_message"
 import type { CreateTopicMessage, UpdateTopicMessage, DeleteTopicMessage } from "@/types/chat/topic"
 import { ConversationStatus } from "@/types/chat/conversation"
+import { MessageReceiveType } from "@/types/chat"
 import groupInfoService from "@/opensource/services/groupInfo"
 import MessageService from "../MessageService"
 import { userStore } from "@/opensource/models/user"
 import { ChatApi } from "@/apis"
-import userInfoService from "@/opensource/services/userInfo"
 
 type ApplyMessageOptions = {
 	isHistoryMessage?: boolean
@@ -246,6 +247,10 @@ class ControlMessageApplyService {
 			ChatApi.getConversationList([message.conversation_id]).then(({ items }) => {
 				if (items.length === 0) return
 				console.log("applyOpenConversationMessage items", items)
+				// 如果是单聊，尝试获取用户信息
+				if (items[0].receive_type === MessageReceiveType.User) {
+					userInfoService.fetchUserInfos([items[0].receive_id], 2)
+				}
 				ConversationService.addNewConversation(items[0])
 			})
 		}

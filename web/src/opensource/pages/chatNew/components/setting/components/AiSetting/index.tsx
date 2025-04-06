@@ -24,11 +24,11 @@ const AiSetting = observer(({ conversation }: AiSettingProps) => {
 	}, [conversation])
 
 	const onTopConversationChange = useMemoizedFn((value: boolean) => {
-		conversationService.updateTopStatus(conversation.id, value ? 1 : 0)
+		conversationService.setTopStatus(conversation.id, value ? 1 : 0)
 	})
 
 	const onNotDisturbConversationChange = useMemoizedFn((value: boolean) => {
-		conversationService.notDisturbConversation(conversation.id, value ? 1 : 0)
+		conversationService.setNotDisturbStatus(conversation.id, value ? 1 : 0)
 	})
 
 	const chatSettingListItems = useMemo(() => {
@@ -134,6 +134,5 @@ const AiSetting = observer(({ conversation }: AiSettingProps) => {
 		</Flex>
 	)
 })
-
 
 export default AiSetting
