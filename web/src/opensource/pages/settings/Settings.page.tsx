@@ -5,7 +5,6 @@ import MagicAvatar from "@/opensource/components/base/MagicAvatar"
 import PageContainer from "@/opensource/components/base/PageContainer"
 import {
 	useCurrentMagicOrganization,
-	useCurrentOrganization,
 	useUserInfo,
 } from "@/opensource/models/user/hooks"
 import AiCompletionSwitch from "./featrues/AiCompletionSwitch"
