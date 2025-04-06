@@ -1,5 +1,5 @@
-ARG NODE_BASE_IMAGE=kkguan-registry-vpc.cn-shenzhen.cr.aliyuncs.com/open-source/node:18-alpine
-ARG CADDY_BASE_IMAGE=kkguan-registry-vpc.cn-shenzhen.cr.aliyuncs.com/open-source/caddy:alpine
+ARG NODE_BASE_IMAGE=node:18-alpine
+ARG CADDY_BASE_IMAGE=caddy:alpine
 
 FROM ${NODE_BASE_IMAGE} AS builder
 
