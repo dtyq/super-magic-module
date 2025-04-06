@@ -8,6 +8,7 @@ export const useVectorKnowledgeDetailStyles = createStyles(
 			`,
 			leftContainer: css`
 				flex: 1;
+				min-width: 250px;
 				border-right: 1px solid
 					${isDarkMode ? token.magicColorScales.grey[8] : token.magicColorUsages.border};
 			`,

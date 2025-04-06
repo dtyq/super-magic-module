@@ -327,7 +327,6 @@
 		"inputFeiShuAppSecretPlaceholder": "Enter FeiShu App Secret",
 		"feiShuSettingsSuccess": "FeiShu application configuration completed",
 		"requestAddr": "Request URL",
-		"savedSuccess": "Saved Successfully",
 		"historyMessages": "History Messages",
 		"role": "Role",
 		"content": "Content",
@@ -340,7 +339,6 @@
 		"admin": "Admin",
 		"read": "Read",
 		"flowAssistant": "Flow Assistant",
-
 		"enterpriseWeChatSettings": "Enterprise WeChat Settings",
 		"setEnterpriseWeChatInfo": "Configure Enterprise WeChat App Information",
 		"enterpriseWeChatPlatform": "Enterprise WeChat Management Backend",
