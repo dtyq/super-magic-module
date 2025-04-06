@@ -5,7 +5,7 @@ import { cloneDeep, set } from "lodash-es"
 import type { UseableToolSet } from "@/types/flow"
 import { ComponentTypes } from "@/types/flow"
 import { useCurrentNode } from "@dtyq/magic-flow/MagicFlow/nodes/common/context/CurrentNode/useCurrentNode"
-import { genDefaultComponent } from "../../../RecordOperation/v0/helpers"
+import { genDefaultComponent } from "@/opensource/pages/flow/utils/helpers"
 
 /**
  * 针对旧工具的处理

@@ -664,6 +664,12 @@ export default function useFlowLayout({
 		showMinMap,
 		currentZoom,
 		onMove,
-		interaction,
+		interaction,		
+        onFitView,
+		onZoomIn,
+		onZoomOut,
+		onEdgeTypeChange,
+		onLock,
+		onInteractionChange,
 	}
 }

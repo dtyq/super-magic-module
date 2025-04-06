@@ -10,7 +10,6 @@ import { useMemoizedFn } from "ahooks"
 import { cloneDeep, set } from "lodash-es"
 import { useFlow } from "@dtyq/magic-flow/MagicFlow/context/FlowContext/useFlow"
 import usePrevious from "@/opensource/pages/flow/common/hooks/usePrevious"
-import { customNodeType, templateMap } from "@/opensource/pages/flow/constants"
 import useCurrentNodeUpdate from "@/opensource/pages/flow/common/hooks/useCurrentNodeUpdate"
 import NodeOutputWrap from "@/opensource/pages/flow/components/NodeOutputWrap/NodeOutputWrap"
 import { useTranslation } from "react-i18next"
@@ -20,6 +19,7 @@ import styles from "./SearchUsers.module.less"
 import { filterTargetOptions } from "./constants"
 import { getDefaultFilter, getFilterOption } from "./helpers"
 import useRenderConfig from "./hooks/useRenderConfig"
+import { v1Template } from "./template"
 
 export default function SearchUsersV1() {
 	const { t } = useTranslation()
@@ -33,7 +33,7 @@ export default function SearchUsersV1() {
 
 	const initialValues = useMemo(() => {
 		return {
-			...templateMap[customNodeType.SearchUsers].v1.params,
+			...v1Template.params,
 			...currentNode?.params,
 		}
 	}, [currentNode])

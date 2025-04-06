@@ -16,10 +16,10 @@ import { useTranslation } from "react-i18next"
 import { getExpressionPlaceholder } from "@/opensource/pages/flow/utils/helpers"
 import usePrevious from "../../../common/hooks/usePrevious"
 import styles from "./index.module.less"
-import { customNodeType, templateMap } from "../../../constants"
 import KnowledgeSelect from "../../VectorSearch/v0/components/KnowledgeSelect/KnowledgeSelect"
 import useOldKnowledgeHandle from "../../VectorSearch/v0/components/KnowledgeSelect/hooks/useOldKnowledgeHandle"
 import useCurrentNodeUpdate from "../../../common/hooks/useCurrentNodeUpdate"
+import { v0Template } from "./template"
 
 export default function VectorV0() {
 	const { t } = useTranslation()
@@ -56,7 +56,7 @@ export default function VectorV0() {
 
 	const initialValues = useMemo(() => {
 		let resultValue = {
-			...cloneDeep(templateMap[customNodeType.VectorStorage].v0.params),
+			...cloneDeep(v0Template.params),
 			...currentNode?.params,
 		}
 		// @ts-ignore

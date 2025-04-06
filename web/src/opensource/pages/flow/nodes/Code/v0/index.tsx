@@ -14,9 +14,10 @@ import { useTranslation } from "react-i18next"
 import styles from "./index.module.less"
 import usePrevious from "../../../common/hooks/usePrevious"
 import LanguageSelect from "./components/LanguageSelect/LanguageSelect"
-import { customNodeType, templateMap } from "../../../constants"
+import { customNodeType } from "../../../constants"
 import useMode, { CodeMode } from "./hooks/useMode"
 import useCode from "./hooks/useCode"
+import { v0Template } from "./template"
 
 export default function Code() {
 	const { t } = useTranslation()
@@ -35,7 +36,7 @@ export default function Code() {
 
 	const initialValues = useMemo(() => {
 		const currentNodeParams = currentNode?.params || {}
-		const cloneTemplateParams = cloneDeep(templateMap[customNodeType.Code].v0.params)
+		const cloneTemplateParams = cloneDeep(v0Template.params)
 		const mergeParams = {
 			...cloneTemplateParams,
 			...currentNodeParams,

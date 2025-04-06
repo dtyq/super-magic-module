@@ -113,8 +113,6 @@ export default function Fragments({
 			okText: t("button.confirm", { ns: "interface" }),
 			cancelText: t("button.cancel", { ns: "interface" }),
 			onOk: async () => {
-				// FIXME: 需要删除知识库的向量
-				// @ts-ignore
 				await KnowledgeApi.deleteFragment(fragment.id)
 				message.success(t("knowledgeDatabase.deleteFragmentSuccess", { ns: "flow" }))
 				deleteFragmentById(fragment.id)
@@ -128,7 +126,6 @@ export default function Fragments({
 				{fragments.map((fragment, i) => {
 					return (
 						<FragmentMenu
-							key={fragment.id}
 							fragment={fragment}
 							deleteFragmentById={deleteFragmentById}
 							updateFragmentById={updateFragmentById}
@@ -141,21 +138,20 @@ export default function Fragments({
 								align="center"
 							>
 								<div className="content">{fragment?.content}</div>
-								{knowledge?.user_operation &&
-									hasEditRight(knowledge?.user_operation) && (
-										<Flex align="center" gap={6}>
-											<AddFragment
-												knowledgeId={knowledgeId}
-												fragment={fragment}
-												ref={editRefs[fragment.id]}
-												initFragmentList={initFragmentList}
-											/>
-											<IconTrash
-												className="iconEdit"
-												onClick={() => deleteItem(fragment)}
-											/>
-										</Flex>
-									)}
+								{hasEditRight(knowledge?.user_operation!) && (
+									<Flex align="center" gap={6}>
+										<AddFragment
+											knowledgeId={knowledgeId}
+											fragment={fragment}
+											ref={editRefs[fragment.id]}
+											initFragmentList={initFragmentList}
+										/>
+										<IconTrash
+											className="iconEdit"
+											onClick={() => deleteItem(fragment)}
+										/>
+									</Flex>
+								)}
 							</Flex>
 						</FragmentMenu>
 					)

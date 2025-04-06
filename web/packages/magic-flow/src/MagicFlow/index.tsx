@@ -55,6 +55,8 @@ type MagicFlowProps = {
 	allowDebug?: boolean
 	/** 是否显示额外信息 */
 	showExtraFlowInfo?: boolean
+	/** 流程实例 */
+	flowInteractionRef?: React.MutableRefObject<any>
 }
 
 export type MagicFlowInstance = {
@@ -94,6 +96,7 @@ const MagicFlowComponent = React.forwardRef(
 			layoutOnMount = true,
 			allowDebug = false,
 			showExtraFlowInfo = true,
+			flowInteractionRef,
 		}: MagicFlowProps,
 		ref,
 	) => {
@@ -178,6 +181,8 @@ const MagicFlowComponent = React.forwardRef(
 						layoutOnMount={layoutOnMount}
 						allowDebug={allowDebug}
 						showExtraFlowInfo={showExtraFlowInfo}
+						flowInteractionRef={flowInteractionRef}
+						omitNodeKeys={omitNodeKeys}
 					>
 						<ResizeProvider windowSize={windowSize}>
 							<ReactFlowProvider>

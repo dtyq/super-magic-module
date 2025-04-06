@@ -6,8 +6,7 @@ import { useCurrentNode } from "@dtyq/magic-flow/MagicFlow/nodes/common/context/
 import { defaultExpressionValue } from "@dtyq/magic-flow/MagicExpressionWidget/constant"
 import type { Knowledge } from "@/types/knowledge"
 import { LabelTypeMap } from "@dtyq/magic-flow/MagicExpressionWidget/types"
-import { generateSnowFlake } from "@/opensource/pages/flow/utils/helpers"
-import { genDefaultComponent } from "@/opensource/pages/flow/nodes/RecordOperation/v0/helpers"
+import { genDefaultComponent, generateSnowFlake } from "@/opensource/pages/flow/utils/helpers"
 import { useTranslation } from "react-i18next"
 
 /**

@@ -14,9 +14,9 @@ import MagicExpression from "../../../common/Expression"
 import usePrevious from "../../../common/hooks/usePrevious"
 import { getMessageTypeOptions, MessageType } from "./constants"
 import styles from "./index.module.less"
-import { customNodeType, templateMap } from "../../../constants"
 import useCurrentNodeUpdate from "../../../common/hooks/useCurrentNodeUpdate"
 import useReply from "./hooks/useReply"
+import { v0Template } from "./template"
 
 export default function ReplyV0() {
 	const { t } = useTranslation()
@@ -51,7 +51,7 @@ export default function ReplyV0() {
 	})
 
 	const initialValues = useMemo(() => {
-		const cloneTemplateParams = cloneDeep(templateMap[customNodeType.ReplyMessage].v0.params)
+		const cloneTemplateParams = cloneDeep(v0Template.params)
 		return {
 			...cloneTemplateParams,
 			...currentNode?.params,

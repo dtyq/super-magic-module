@@ -128,7 +128,7 @@ export default function useBaseFlow({ currentFlow, paramsName }: UseBaseFlowProp
 	// }, [nodes, edges])
 
 	const getDefaultFlow = useMemoizedFn(() => {
-		let defaultNodes = [] as MagicFlow.Node[]
+		const defaultNodes = [] as MagicFlow.Node[]
 
 		/** 如果已注册开始节点，则加入节点列表 */
 		if (isRegisteredStartNode()) {
@@ -155,7 +155,7 @@ export default function useBaseFlow({ currentFlow, paramsName }: UseBaseFlowProp
 		const renderEdges = [] as Edge[]
 		const cacheConfig = {} as Record<string, MagicFlow.Node>
 		for (let i = 0; i < serverFlow.nodes.length; i++) {
-			let node = serverFlow.nodes[i]
+			const node = serverFlow.nodes[i]
 
 			// TODO node schema转换渲染
 
@@ -202,7 +202,7 @@ export default function useBaseFlow({ currentFlow, paramsName }: UseBaseFlowProp
 	})
 
 	useAsyncEffect(async () => {
-		let serverFlow = currentFlow || (getDefaultFlow() as MagicFlow.Flow)
+		const serverFlow = currentFlow || (getDefaultFlow() as MagicFlow.Flow)
 
 		if (serverFlow?.nodes?.length === 0 && isRegisteredStartNode()) {
 			const startNode = generateStartNode(paramsName)

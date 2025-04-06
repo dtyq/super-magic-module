@@ -1,21 +1,41 @@
 import { Switch } from "antd"
 import type { DataSourceOption } from "@dtyq/magic-flow/common/BaseUI/DropdownRenderer/Reference"
+import { Common } from "@dtyq/magic-flow/MagicConditionEdit/types/common"
 import MagicInput from "@dtyq/magic-flow/common/BaseUI/Input"
 import type { EXPRESSION_VALUE } from "@dtyq/magic-flow/MagicExpressionWidget/types"
-import { FormItemType } from "@dtyq/magic-flow/MagicExpressionWidget/types"
+import { FormItemType, LabelTypeMap } from "@dtyq/magic-flow/MagicExpressionWidget/types"
 import type { MagicFlow } from "@dtyq/magic-flow/MagicFlow/types/flow"
-import type Schema from "@dtyq/magic-flow/MagicJsonSchemaEditor/types/Schema"
+import type JSONSchema from "@dtyq/magic-flow/MagicJsonSchemaEditor/types/Schema"
 import { flowStore } from "@dtyq/magic-flow/MagicFlow/store/index"
 import type { NodeSchema } from "@dtyq/magic-flow/MagicFlow"
-import { get, last, isEmpty, isObject, isArray, cloneDeep, uniqBy, set, omitBy } from "lodash-es"
+
+import type { Sheet } from "@/types/sheet"
+import { Schema } from "@/types/sheet"
+import {
+	get,
+	last,
+	isEmpty,
+	isObject,
+	isArray,
+	cloneDeep,
+	uniqBy,
+	set,
+	omitBy,
+	unionBy,
+} from "lodash-es"
 // @ts-ignore
 import SnowFlakeId from "snowflake-id"
 import i18next from "i18next"
 import { useFlowStore } from "@/opensource/stores/flow"
-import type { UseableToolSet } from "@/types/flow"
+import type { ComponentTypes, UseableToolSet } from "@/types/flow"
 import { getLatestNodeVersion } from "@dtyq/magic-flow/MagicFlow/utils"
 import { customNodeType } from "../constants"
 import { shadow, unshadow } from "./shadow"
+import { ComponentType } from "react"
+import { JsonSchemaEditorProps } from "@dtyq/magic-flow/MagicJsonSchemaEditor"
+import { getDefaultSchema } from "@dtyq/magic-flow/MagicJsonSchemaEditor/utils/SchemaUtils"
+import { ContactApi } from "@/apis"
+import { UserType } from "@/types/user"
 
 // 雪花id生成
 const snowflake = new SnowFlakeId({
@@ -152,7 +172,7 @@ export const getComponent = (type: string) => {
  * @returns
  */
 export const searchExpressionFieldsInSchema = (
-	schema: Record<string, Schema>,
+	schema: Record<string, JSONSchema>,
 	result = [] as EXPRESSION_VALUE[],
 ) => {
 	Object.values(schema?.properties || {}).forEach((subSchema) => {
@@ -259,18 +279,142 @@ export const getExpressionPlaceholder = (str: string) => {
 // 根据id查找到工具集对应的工具
 export const findTargetTool = (id: string) => {
 	const { useableToolSets } = useFlowStore.getState()
-	const allTools = useableToolSets.reduce(
-		(tools, currentToolSet) => {
-			return tools.concat(
-				currentToolSet.tools.map((tool) => ({
-					...tool,
-					icon: currentToolSet.icon,
-				})),
-			)
-		},
-		[] as (UseableToolSet.UsableTool & { icon: string })[],
-	)
+	const allTools = useableToolSets.reduce((tools, currentToolSet) => {
+		return tools.concat(
+			currentToolSet.tools.map((tool) => ({
+				...tool,
+				icon: currentToolSet.icon,
+			})),
+		)
+	}, [] as (UseableToolSet.UsableTool & { icon: string })[])
 	return allTools.find((tool) => tool.code === id)
 }
 
-export default {}
+/**
+ * 生成组件默认数据
+ * @param componentType
+ * @returns
+ */
+export function genDefaultComponent<ResultType extends Common.ComponentTypes>(
+	componentType: ComponentTypes,
+	structure: any = null,
+): ResultType {
+	const uniqueId = null
+	const result = {
+		id: uniqueId,
+		type: componentType,
+		version: "1",
+		structure,
+	}
+
+	// @ts-ignore
+	return result
+}
+
+/** 根据类型生成默认的schema，可以通过defaultProps新增一些其他属性或者覆盖默认属性 */
+export const getDefaultSchemaWithDefaultProps = (
+	type: string,
+	defaultProps: Partial<JsonSchemaEditorProps>,
+	itemsType?: string,
+) => {
+	return {
+		...getDefaultSchema(type, itemsType),
+		...defaultProps,
+	}
+}
+
+// 根据字段类型，获取表达式组件渲染属性
+export const getExpressionRenderConfig = (column: Sheet.Column) => {
+	switch (column?.columnType) {
+		case Schema.CHECKBOX:
+			return {
+				type: LabelTypeMap.LabelCheckbox,
+				props: {},
+			}
+		case Schema.DATE:
+		case Schema.CREATE_AT:
+		case Schema.UPDATE_AT:
+			return {
+				type: LabelTypeMap.LabelDateTime,
+				props: {},
+			}
+		case Schema.MEMBER:
+			return {
+				type: LabelTypeMap.LabelMember,
+				props: {
+					options: [],
+					value: [],
+					onSearch: async (searchInfo: { with_department: number; name: string }) => {
+						const searchedUsers = await ContactApi?.searchUser?.({
+							query: searchInfo.name,
+							page_token: "",
+							// @ts-ignore
+							query_type: 2,
+						})
+						if (searchedUsers?.items?.length) {
+							const filterUsers = searchedUsers?.items?.filter(
+								(user) => user.user_type !== UserType.AI,
+							)
+							const filterUserInfos = filterUsers.map((user) => {
+								return {
+									id: user.user_id,
+									name: user.real_name || user.nickname,
+									avatar: user.avatar_url,
+								}
+							})
+							return filterUserInfos
+						}
+						return []
+					},
+				},
+			}
+		case Schema.SELECT:
+			return {
+				type: LabelTypeMap.LabelSelect,
+				props: {
+					value: [],
+					options: column?.columnProps?.options,
+				},
+			}
+		case Schema.MULTIPLE:
+			return {
+				type: LabelTypeMap.LabelMultiple,
+				props: {
+					value: [],
+					options: column?.columnProps?.options,
+				},
+			}
+		default:
+			return undefined
+	}
+}
+
+export const getPlaceholder = (
+	column: Sheet.Column,
+	columnType: Schema,
+	isSpecialHandle?: boolean,
+) => {
+	switch (columnType) {
+		case Schema.TEXT:
+		case Schema.NUMBER:
+		case Schema.LINK:
+			return "请输入"
+		case Schema.MEMBER:
+		case Schema.CREATED:
+		case Schema.UPDATED:
+			return "选择成员"
+		case Schema.QUOTE_RELATION:
+		case Schema.MUTUAL_RELATION:
+		case Schema.SELECT:
+		case Schema.MULTIPLE:
+			return "请选择"
+		case Schema.DATE:
+		case Schema.CREATE_AT:
+		case Schema.UPDATE_AT:
+		case Schema.TODO_FINISHED_AT:
+			if (isSpecialHandle) return "YYYY-MM-DD"
+			return get(column, ["columnProps", "format"], "YYYY-MM-DD")
+		default:
+			return ""
+	}
+}

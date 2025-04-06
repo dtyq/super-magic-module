@@ -4,7 +4,8 @@ import { useEffect, useMemo, useState } from "react"
 import { useFlowStore } from "@/opensource/stores/flow"
 import { cloneDeep } from "lodash-es"
 import { useMemoizedFn } from "ahooks"
-import { customNodeType, templateMap } from "../constants"
+import { customNodeType } from "../constants"
+import { v0Template } from "../nodes/SubFlow/v0/template"
 
 export default function useMaterialSource() {
 	const { subFlows, useableToolSets } = useFlowStore()
@@ -26,8 +27,8 @@ export default function useMaterialSource() {
 					?.map((flow) => {
 						return {
 							...flow,
-							input: templateMap[customNodeType.Sub].v0.input,
-							output: templateMap[customNodeType.Sub].v0.output,
+							input: v0Template.input,
+							output: v0Template.output,
 						}
 					})
 				// @ts-ignore

@@ -356,4 +356,24 @@ export const generateFlowApi = (fetch: HttpClient) => ({
 			category,
 		})
 	},
+
+	/** Api Key 调用工具或流程 */
+	callToolOrFlow(apiKey: string, params: object) {
+		return fetch.post<any>(genRequestUrl(RequestUrl.callToolOrFlow), {
+			params,
+			headers: {
+				"api-key": apiKey,
+			},
+		})
+	},
+
+	/** 调用Agent进行对话 */
+	callAgent(apiKey: string, params: { message: string; conversation_id: string }) {
+		return fetch.post<any>(genRequestUrl(RequestUrl.callAgent), {
+			params,
+			headers: {
+				"api-key": apiKey,
+			},
+		})
+	},
 })

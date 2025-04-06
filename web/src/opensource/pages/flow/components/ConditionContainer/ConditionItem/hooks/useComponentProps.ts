@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react"
 import { Schema, type Sheet } from "@/types/sheet"
-import { getPlaceholder } from "@/opensource/pages/flow/nodes/RecordOperation/v0/helpers"
 import type { Condition } from "../../types"
 import {
 	getColumnTargetType,
@@ -10,6 +9,7 @@ import {
 	judgeIsMultiple,
 } from "../../helpers"
 import { AutomateFlowFieldGroup, ROW_ID_COLUMN_ID } from "../../constants"
+import { getPlaceholder } from "@/opensource/pages/flow/utils/helpers"
 
 type UseComponentProps = {
 	condition: Condition

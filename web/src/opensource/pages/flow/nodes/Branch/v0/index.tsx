@@ -16,7 +16,7 @@ export default function Branch() {
 	const { currentNode } = useCurrentNode()
 	const { notifyNodeChange, edges, deleteEdges } = useFlow()
 	const [branchList, setBranchList] = useState(
-		addBranchTypeIfWithout(currentNode?.params?.branches!),
+		addBranchTypeIfWithout(currentNode?.params?.branches),
 	)
 
 	// 创建一个存储所有元素 ref 的数组
@@ -111,6 +111,7 @@ export default function Branch() {
 					onDeleteItem={deleteBranch}
 					conditionRefsMap={conditionRefsMap}
 					expressionDataSource={expressionDataSource}
+					key={branch.branch_id}
 				/>
 			)
 		})

@@ -2,7 +2,6 @@ import { useEffect, useMemo } from "react"
 import { useMemoizedFn } from "ahooks"
 import { get } from "lodash-es"
 import TSIcon from "@dtyq/magic-flow/common/BaseUI/TSIcon"
-import { getExpressionRenderConfig } from "@/opensource/pages/flow/nodes/RecordOperation/v0/helpers"
 import usePrevious from "@/opensource/pages/flow/common/hooks/usePrevious"
 import type { Schema } from "@/types/sheet"
 import MagicSelect from "@dtyq/magic-flow/common/BaseUI/Select"
@@ -13,6 +12,7 @@ import "./index.less"
 import { AutomateFlowFieldGroup, getDefaultConstValue } from "../constants"
 import { Operators } from "../types"
 import useComponentProps from "./hooks/useComponentProps"
+import { getExpressionRenderConfig } from "../../../utils/helpers"
 
 const ConditionItem = ({
 	handleDel,
@@ -47,7 +47,7 @@ const ConditionItem = ({
 	})
 
 	const updateOperator = useMemoizedFn((val) => {
-		const columnType = getColumnType(columns, value?.column_id!)
+		const columnType = getColumnType(columns, value?.column_id ?? "")
 		onChange?.({
 			...value!,
 			column_type: columnType,
@@ -57,7 +57,7 @@ const ConditionItem = ({
 	})
 
 	const updateValue = useMemoizedFn((val) => {
-		const columnType = getColumnType(columns, value?.column_id!)
+		const columnType = getColumnType(columns, value?.column_id ?? "")
 		const v = val?.currentTarget ? val.currentTarget.value : val
 		onChange?.({
 			...value!,
@@ -76,7 +76,8 @@ const ConditionItem = ({
 	}, [leftColumnOptions, value?.column_id])
 
 	const isShowValueOption = useMemo(() => {
-		return ![Operators.EMPTY, Operators.NOT_EMPTY].includes(value?.operator!)
+		// @ts-ignore
+		return ![Operators.EMPTY, Operators.NOT_EMPTY].includes(value?.operator ?? "")
 	}, [value])
 
 	useEffect(() => {
@@ -84,9 +85,9 @@ const ConditionItem = ({
 		if (value?.column_type === rightExpressionProps.columnType) return
 
 		// setIsShowColumnChangeTip(true)
-		const columnType = getColumnType(columns, value?.column_id!)
+		const columnType = getColumnType(columns, value?.column_id ?? "")
 		onChange?.({
-			column_id: value?.column_id!,
+			column_id: value?.column_id ?? "",
 			column_type: columnType,
 			operator: AutomateFlowFieldGroup[columnType]?.conditions[0]?.id,
 			value: getDefaultConstValue(),

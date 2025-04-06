@@ -10,11 +10,11 @@ import { ExpressionMode } from "@dtyq/magic-flow/MagicExpressionWidget/constant"
 import { useMemo } from "react"
 import JSONSchemaRenderer from "@dtyq/magic-flow/common/BaseUI/JSONSchemaRenderer"
 import usePrevious from "@/opensource/pages/flow/common/hooks/usePrevious"
-import { customNodeType, templateMap } from "@/opensource/pages/flow/constants"
 import useCurrentNodeUpdate from "@/opensource/pages/flow/common/hooks/useCurrentNodeUpdate"
 import { useTranslation } from "react-i18next"
 import { getExpressionPlaceholder } from "@/opensource/pages/flow/utils/helpers"
 import styles from "./TextSplit.module.less"
+import { v0Template } from "./template"
 
 export default function TextSplitV0() {
 	const { t } = useTranslation()
@@ -43,7 +43,7 @@ export default function TextSplitV0() {
 
 	const initialValues = useMemo(() => {
 		const currentNodeParams = currentNode?.params || {}
-		const cloneTemplateParams = cloneDeep(templateMap[customNodeType.TextSplit].v0.params)
+		const cloneTemplateParams = cloneDeep(v0Template.params)
 		const mergeParams = {
 			...cloneTemplateParams,
 			...currentNodeParams,
@@ -82,7 +82,7 @@ export default function TextSplitV0() {
 				<DropdownCard title={t("common.output", { ns: "flow" })} height="auto">
 					<JSONSchemaRenderer
 						// @ts-ignore
-						form={templateMap?.[customNodeType.TextSplit]?.v0?.output?.form?.structure}
+						form={v0Template.output?.form?.structure}
 					/>
 				</DropdownCard>
 			</Form>

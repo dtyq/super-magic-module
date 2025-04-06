@@ -17,11 +17,11 @@ import { useTranslation } from "react-i18next"
 import { getExpressionPlaceholder } from "@/opensource/pages/flow/utils/helpers"
 import styles from "./index.module.less"
 import usePrevious from "../../../common/hooks/usePrevious"
-import { customNodeType, templateMap } from "../../../constants"
 import Output from "../../../common/Output"
 import KnowledgeSelect from "./components/KnowledgeSelect/KnowledgeSelect"
 import useOldKnowledgeHandle from "./components/KnowledgeSelect/hooks/useOldKnowledgeHandle"
 import useCurrentNodeUpdate from "../../../common/hooks/useCurrentNodeUpdate"
+import { v1Template } from "./template"
 
 export default function VectorSearchV1() {
 	const { t } = useTranslation()
@@ -57,8 +57,7 @@ export default function VectorSearchV1() {
 	const { handleOldKnowledge } = useOldKnowledgeHandle()
 
 	const initialValues = useMemo(() => {
-		let resultValue =
-			currentNode?.params || cloneDeep(templateMap[customNodeType.VectorSearch].v1?.params)
+		let resultValue = currentNode?.params || cloneDeep(v1Template.params)
 		resultValue = handleOldKnowledge(resultValue, "knowledge_codes", "vector_database_ids")
 		return resultValue
 	}, [currentNode?.params, handleOldKnowledge])

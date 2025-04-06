@@ -4,22 +4,22 @@ import { useCurrentNode } from "@dtyq/magic-flow/MagicFlow/nodes/common/context/
 import { ShowColumns } from "@dtyq/magic-flow/MagicJsonSchemaEditor/constants"
 import JSONSchemaRenderer from "@dtyq/magic-flow/common/BaseUI/JSONSchemaRenderer"
 import { useFlowStore } from "@/opensource/stores/flow"
-import { Form } from "antd"
+import { Form, Select } from "antd"
 import { useMemoizedFn, useMount, useUpdateEffect } from "ahooks"
 import { get, set } from "lodash-es"
 import type Schema from "@dtyq/magic-flow/MagicJsonSchemaEditor/types/Schema"
 import MagicJsonSchemaEditor from "@dtyq/magic-flow/MagicJsonSchemaEditor"
 import { useFlow } from "@dtyq/magic-flow/MagicFlow/context/FlowContext/useFlow"
-import { Select } from "antd"
 import { replaceRouteParams } from "@/utils/route"
 import { RoutePath } from "@/const/routes"
 import RenderLabelCommon from "@/opensource/pages/flow/components/RenderLabel/RenderLabel"
 import { useTranslation } from "react-i18next"
-import { customNodeType, templateMap } from "@/opensource/pages/flow/constants"
+import { customNodeType } from "@/opensource/pages/flow/constants"
 import { FlowRouteType } from "@/types/flow"
 import { FlowApi } from "@/apis"
 import usePrevious from "../../../common/hooks/usePrevious"
 import styles from "./index.module.less"
+import { v0Template } from "./template"
 
 export default function SubFlowV0() {
 	const { t } = useTranslation()
@@ -119,7 +119,7 @@ export default function SubFlowV0() {
 		return {
 			input: currentNode?.input,
 			output: currentNode?.output,
-			...{ ...templateMap[customNodeType.Sub].v0.params, ...currentNode?.params },
+			...{ ...v0Template.params, ...currentNode?.params },
 		}
 	}, [currentNode?.input, currentNode?.output, currentNode?.params])
 

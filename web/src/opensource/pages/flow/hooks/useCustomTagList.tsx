@@ -97,7 +97,7 @@ export default function useCustomTagList({
 							icon: null as any,
 							text: flow?.description || "",
 						},
-					]
+				  ]
 				: []),
 		]
 		return result
@@ -111,7 +111,7 @@ export default function useCustomTagList({
 							icon: <Spin size="small" className={styles.spin} />,
 							text: `${t("common.autoSaving", { ns: "flow" })}...`,
 						},
-					]
+				  ]
 				: []),
 			...(!isSaving && lastSaveTime
 				? [
@@ -123,7 +123,7 @@ export default function useCustomTagList({
 							),
 							text: `${lastSaveTime} ${t("common.savedText", { ns: "flow" })}`,
 						},
-					]
+				  ]
 				: []),
 		]
 

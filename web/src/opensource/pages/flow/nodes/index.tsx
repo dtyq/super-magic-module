@@ -9,18 +9,10 @@ import { ExcelComponentVersionMap } from "./Excel"
 import { GroupChatComponentVersionMap } from "./GroupChat"
 import { HTTPComponentVersionMap } from "./HTTP"
 import { IntentionRecognitionComponentVersionMap } from "./IntentionRecognition"
-import { KnowledgeSearchComponentVersionMap } from "./KnowledgeSearch"
 import { LLMComponentVersionMap } from "./LLM"
-import { LLMCallComponentVersionMap } from "./LLMCall"
 import { LoaderComponentVersionMap } from "./Loader"
 import { LoopComponentVersionMap } from "./Loop"
 import { MessageSearchComponentVersionMap } from "./MessageSearch"
-import {
-	RecordAddOperationComponentVersionMap,
-	RecordDeleteOperationComponentVersionMap,
-	RecordSearchOperationComponentVersionMap,
-	RecordUpdateOperationComponentVersionMap,
-} from "./RecordOperation"
 import { ReplyComponentVersionMap } from "./Reply"
 import { SearchUsersComponentVersionMap } from "./SearchUsers"
 import { StartComponentVersionMap } from "./Start"
@@ -36,12 +28,13 @@ import { VectorDeleteComponentVersionMap } from "./VectorDelete"
 import { VectorDatabaseMatchComponentVersionMap } from "./VectorDatabaseMatch"
 import { LoopBodyComponentVersionMap } from "./LoopBody"
 import { AgentComponentVersionMap } from "./Agent"
-import { DocumentResolveComponentVersionMap } from "./DocumentResolve"
 import { LoopEndComponentVersionMap } from "./LoopEnd"
+import { InstructionsComponentVersionMap } from "./Instructions"
 
 export type ComponentVersionMap = {
 	component: () => JSX.Element
 	headerRight: ReactNode
+	template: object
 }
 
 type Version = string
@@ -60,18 +53,12 @@ export const nodeComponentVersionMap: Record<
 	[customNodeType.GroupChat]: GroupChatComponentVersionMap,
 	[customNodeType.HTTP]: HTTPComponentVersionMap,
 	[customNodeType.IntentionRecognition]: IntentionRecognitionComponentVersionMap,
-	[customNodeType.KnowledgeSearch]: KnowledgeSearchComponentVersionMap,
 	[customNodeType.LLM]: LLMComponentVersionMap,
-	[customNodeType.LLMCall]: LLMCallComponentVersionMap,
 	[customNodeType.Loader]: LoaderComponentVersionMap,
 	[customNodeType.Loop]: LoopComponentVersionMap,
 	[customNodeType.LoopBody]: LoopBodyComponentVersionMap,
 	[customNodeType.LoopEnd]: LoopEndComponentVersionMap,
 	[customNodeType.MessageSearch]: MessageSearchComponentVersionMap,
-	[customNodeType.AddRecord]: RecordAddOperationComponentVersionMap,
-	[customNodeType.UpdateRecord]: RecordUpdateOperationComponentVersionMap,
-	[customNodeType.DeleteRecord]: RecordDeleteOperationComponentVersionMap,
-	[customNodeType.FindRecord]: RecordSearchOperationComponentVersionMap,
 	[customNodeType.ReplyMessage]: ReplyComponentVersionMap,
 	[customNodeType.SearchUsers]: SearchUsersComponentVersionMap,
 	[customNodeType.Start]: StartComponentVersionMap,
@@ -86,6 +73,5 @@ export const nodeComponentVersionMap: Record<
 	[customNodeType.VectorSearch]: VectorSearchComponentVersionMap,
 	[customNodeType.WaitForReply]: WaitForReplyComponentVersionMap,
 	[customNodeType.MessageMemory]: ReplyComponentVersionMap,
-	[customNodeType.DocumentResolve]: DocumentResolveComponentVersionMap,
-	[customNodeType.Instructions]: DocumentResolveComponentVersionMap,
+	[customNodeType.Instructions]: InstructionsComponentVersionMap,
 }

@@ -21,6 +21,7 @@ import useFlowEvents from "./hooks/useFlowEvents"
 import useNodeClick from "./hooks/useNodeClick"
 import useTargetToErrorNode from "./hooks/useTargetToErrorNode"
 import { useNodes } from "@/MagicFlow/context/NodesContext/useNodes"
+import useFlowCommand from "./hooks/useFlowCommands"
 
 export default function FlowDesign() {
 	const { edges, onEdgesChange, onConnect, flowInstance } =
@@ -52,7 +53,14 @@ export default function FlowDesign() {
 		showMinMap,
 		currentZoom,
 		onMove,
-		interaction,
+		interaction,		
+        onInteractionChange,
+		onFitView,
+		onZoomIn,
+		onZoomOut,
+		onEdgeTypeChange,
+		onLock,
+
 	} = useFlowControls({
 		setShowParamsComp,
 		nodeClick,
@@ -87,6 +95,21 @@ export default function FlowDesign() {
 
 	/** 运行错误时，定位到错误节点 */
 	useTargetToErrorNode()
+
+    useFlowCommand({
+		layout,
+		onInteractionChange,
+		onFitView,
+		onZoomIn,
+		onZoomOut,
+		onEdgeTypeChange,
+		onLock,
+		// @ts-ignore
+		onNodesDelete,
+		onEdgesDelete,
+		onAddItem,
+	})
+
 
 	return (
 		<div className={styles.flowDesign} ref={reactFlowWrapper}>

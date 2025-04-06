@@ -4,4 +4,4 @@
 import { initializeApp } from "./initializeApp"
 
 // 导出单例
-export const { userService, loginService, configService } = initializeApp()
+export const { userService, loginService, configService, flowService } = initializeApp()

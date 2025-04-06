@@ -7,7 +7,7 @@ import DefaultToolIcon from "@/assets/logos/tool-avatar.png"
 import { useCurrentNode } from "@dtyq/magic-flow/MagicFlow/nodes/common/context/CurrentNode/useCurrentNode"
 import { replaceRouteParams } from "@/utils/route"
 import { RoutePath } from "@/const/routes"
-import { genDefaultComponent } from "@/opensource/pages/flow/nodes/RecordOperation/v0/helpers"
+import { genDefaultComponent } from "@/opensource/pages/flow/utils/helpers"
 import { useTranslation } from "react-i18next"
 import { useFlowStore } from "@/opensource/stores/flow"
 import useStyles from "./style"
@@ -25,6 +25,7 @@ interface ToolAddableCardProps {
 	cardOpen: boolean
 	toolSet: UseableToolSet.Item
 }
+
 
 const ToolAddableCard = memo(
 	({

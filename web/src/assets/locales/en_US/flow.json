@@ -305,6 +305,7 @@
 		"identification": "Identifier",
 		"identificationPlaceholder": "Enter an identifier to distinguish multiple data under the same platform",
 		"invalidModel": "Model has been disabled or deleted",
+		"savedSuccess": "Saved successfully",
 		"feiShuSettings": "FeiShu Settings",
 		"setFeiShuInfo": "Configure FeiShu App Information",
 		"feiShuPlatform": "FeiShu Open Platform",
@@ -338,6 +339,8 @@
 		"owner": "Owner",
 		"admin": "Admin",
 		"read": "Read",
+		"flowAssistant": "Flow Assistant",
+
 		"enterpriseWeChatSettings": "Enterprise WeChat Settings",
 		"setEnterpriseWeChatInfo": "Configure Enterprise WeChat App Information",
 		"enterpriseWeChatPlatform": "Enterprise WeChat Management Backend",
@@ -752,5 +755,16 @@
 		"switchInstructionValue": "Switch Instruction Value",
 		"singleChoiceInstructionName": "Single Choice Instruction Name",
 		"singleChoiceInstructionValue": "Single Choice Instruction Value"
+	},
+	"flowAssistant": {
+		"title": "Flow Assistant",
+		"welcome": "Hello! I'm your Flow Assistant and can help you create flows using natural language.\n\nYou can tell me to:\n- Create a flow with specific functionality\n- Add, delete, or modify nodes\n- Connect or disconnect nodes\n- Save or publish your flow\n\nJust describe what you want to achieve and I'll help you build it!",
+		"inputPlaceholder": "Enter your request or instruction...",
+		"error": "Sorry, I couldn't process this request. Please try describing your needs again or provide more details.",
+		"processError": "Error processing instruction",
+		"publishSuccess": "Flow published successfully",
+		"publishError": "Failed to publish flow",
+		"processingCommands": "Collecting instruction data...",
+		"commandCompleted": "Command execution completed"
 	}
 }

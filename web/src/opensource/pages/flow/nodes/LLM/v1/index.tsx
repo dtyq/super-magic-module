@@ -23,9 +23,8 @@ import useKnowledge from "./hooks/useKnowledge"
 import useMessage from "./hooks/useMessage"
 import LLMParameters from "./components/LLMParameters"
 import useParameterHandler from "./hooks/useParameterHandler"
-import { getLLMRoleConstantOptions } from "../../LLMCall/v0/constants"
-
-import KnowledgeDataListV1 from "../../KnowledgeSearch/v1/components/KnowledgeDataList/KnowledgeDataList"
+import KnowledgeDataListV1 from "./components/KnowledgeDataList/KnowledgeDataList"
+import { getLLMRoleConstantOptions } from "./helpers"
 
 export default function LLMV1() {
 	const { t } = useTranslation()

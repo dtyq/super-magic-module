@@ -20,11 +20,16 @@ export default function useInteraction({ nodeClick }: InteractionProps) {
 		setInteraction(updatedInteraction)
 	})
 
-	useMount(() => {
+	const getInteractionMode = useMemoizedFn(() => {
 		const storageInteraction = localStorage.getItem(localStorageKeyMap.InteractionMode)
 		if (storageInteraction) {
-			setInteraction(storageInteraction as any)
+			return storageInteraction as any
 		}
+		return Interactions.TouchPad
+	})
+
+	useMount(() => {
+		setInteraction(getInteractionMode())
 	})
 
 	useUpdateEffect(() => {

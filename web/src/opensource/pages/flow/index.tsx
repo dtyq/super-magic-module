@@ -3,9 +3,9 @@
  */
 import MagicButton from "@/opensource/components/base/MagicButton"
 import { useTranslation } from "react-i18next"
-import type { MagicFlowInstance } from "@dtyq/magic-flow/MagicFlow"
-import { MaterialSourceProvider } from "@dtyq/magic-flow/MagicFlow/context/MaterialSourceContext/MaterialSourceContext"
+import type { MagicFlowInstance, NodeSchema } from "@dtyq/magic-flow/MagicFlow"
 import MagicFlowComponent from "@dtyq/magic-flow/MagicFlow"
+import { MaterialSourceProvider } from "@dtyq/magic-flow/MagicFlow/context/MaterialSourceContext/MaterialSourceContext"
 import { NodeMapProvider } from "@dtyq/magic-flow/common/context/NodeMap/Provider"
 import { RoutePath } from "@/const/routes"
 import { ToastContainer } from "react-toastify"
@@ -16,12 +16,10 @@ import { ConfigProvider, message } from "antd"
 import { useMemoizedFn, useSize } from "ahooks"
 import { FlowType, type TestResult, type TriggerConfig } from "@/types/flow"
 import locale from "antd/es/locale/zh_CN"
-import { IconChevronLeft, IconMenu2 } from "@tabler/icons-react"
+import { IconChevronLeft, IconMenu2, IconRobot } from "@tabler/icons-react"
 import DefaultImage from "@/assets/logos/agent-avatar.jpg"
 import { cx } from "antd-style"
 import { useLocation, useNavigate, useParams } from "react-router"
-import { useGlobalLanguage } from "@/opensource/models/config/hooks"
-import { FlowApi } from "@/apis"
 import { customNodeType } from "./constants"
 import { installAllNodes } from "./utils"
 import styles from "./index.module.less"
@@ -55,26 +53,44 @@ import { generateNodeVersionSchema } from "./utils/version"
 import useEvent from "./hooks/useEvent"
 import "./override.css"
 import useMaterialSource from "./hooks/useMaterialSource"
+import FlowAssistant from "./components/FlowAssistant/index"
+import { useGlobalLanguage } from "@/opensource/models/config/hooks"
+import { flowService } from "@/opensource/services"
+import { ComponentVersionMap } from "./nodes"
+// import flow from "./mock/flow"
 
 registerEditor()
-installAllNodes()
 
-export default function BaseFlow() {
+export type BaseFlowProps = {
+	extraData?: {
+		canReferenceNodeTypes: string[]
+		getEnterpriseSchemaConfigMap: () => Record<string, NodeSchema>
+		extraNodeInfos: any
+		enterpriseNodeComponentVersionMap: Record<string, Record<string, ComponentVersionMap>>
+		enterpriseNodeTypes: Record<string, string>
+	}
+}
+
+export default function BaseFlow({ extraData }: BaseFlowProps) {
 	const navigate = useNavigate() // 在组件内
 	const location = useLocation()
 	const params = useParams()
 	const { t } = useTranslation()
 	// 是否正在试运行
 	const [isTesting, setIsTesting] = useState(false)
+	// 是否显示FlowAssistant
+	const [showFlowAssistant, setShowFlowAssistant] = useState(false)
 
 	const flowInstance = useRef(null as null | MagicFlowInstance)
 
+	const flowInteractionRef = useRef(null as any)
+
 	// 监听语言变化，重新安装节点
-	const language = useGlobalLanguage()
+	const language = useGlobalLanguage(true)
 
 	useEffect(() => {
-		installAllNodes()
-	}, [language])
+		installAllNodes(extraData)
+	}, [language, extraData])
 
 	// 浏览器相关事件拦截处理
 	useEvent()
@@ -153,7 +169,7 @@ export default function BaseFlow() {
 		setIsTesting(true)
 		const shadowedFlow = shadowFlow(flow)
 		try {
-			const res = await FlowApi.testFlow({
+			const res = await flowService.testFlow({
 				...shadowedFlow,
 				trigger_config: triggerConfig,
 			})
@@ -271,6 +287,17 @@ export default function BaseFlow() {
 							flow={currentFlow}
 							flowInstance={flowInstance}
 						/>
+						{/* 添加AI助手按钮 */}
+
+						{isEditRight && (
+							<MagicButton
+								onClick={() => setShowFlowAssistant((prev) => !prev)}
+								icon={<IconRobot size={16} />}
+							>
+								{t("common.flowAssistant", { ns: "flow" })}
+							</MagicButton>
+						)}
+
 						{/* <SaveDraftButton
 							flowInstance={flowInstance}
 							flow={currentFlow}
@@ -298,23 +325,24 @@ export default function BaseFlow() {
 			</>
 		)
 	}, [
-		agent,
-		currentFlow,
-		getDropdownItems,
-		initDraftList,
-		initPublishList,
-		initAgentPublishList,
-		isAdminRight,
 		isAgent,
+		agent,
+		isAdminRight,
 		isCollapse,
-		isEditRight,
-		isMainFlow,
 		isReleasedToMarket,
-		isTesting,
 		moreIcon,
-		setAgent,
+		getDropdownItems,
+		currentFlow,
+		isEditRight,
+		initDraftList,
 		showFlowIsDraftToast,
 		testFlow,
+		isTesting,
+		t,
+		isMainFlow,
+		initPublishList,
+		setAgent,
+		initAgentPublishList,
 	])
 
 	const navigateBack = useMemoizedFn(() => {
@@ -365,8 +393,12 @@ export default function BaseFlow() {
 	}, [Buttons, navigateBack, isAgent, customTags, openAddAgentModal])
 
 	const nodeSchemaMap = useMemo(() => {
-		return generateNodeVersionSchema()
-	}, [])
+		return generateNodeVersionSchema(
+			extraData?.enterpriseNodeComponentVersionMap || {},
+			extraData?.getEnterpriseSchemaConfigMap || (() => ({})),
+			extraData?.enterpriseNodeTypes || {},
+		)
+	}, [extraData])
 
 	const { subFlow, tools } = useMaterialSource()
 
@@ -400,9 +432,11 @@ export default function BaseFlow() {
 										showExtraFlowInfo={false}
 										ref={flowInstance}
 										flow={currentFlow}
-										onlyRenderVisibleElements={false}
+										onlyRenderVisibleElements
 										layoutOnMount={false}
 										allowDebug
+										// @ts-ignore
+										flowInteractionRef={flowInteractionRef}
 										omitNodeKeys={[
 											"data",
 											"expandParent",
@@ -416,6 +450,18 @@ export default function BaseFlow() {
 										]}
 									/>
 								</div>
+
+								{/* 添加FlowAssistant组件 */}
+								{showFlowAssistant && isEditRight && (
+									<FlowAssistant
+										flowInteractionRef={flowInteractionRef}
+										flow={currentFlow}
+										onClose={() => setShowFlowAssistant(false)}
+										isAgent={isAgent}
+										saveDraft={saveDraft}
+										isEditRight={isEditRight}
+									/>
+								)}
 
 								<ToastContainer
 									toastClassName="toast"

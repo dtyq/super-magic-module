@@ -16,7 +16,7 @@ import { IconHelp, IconPlus } from "@tabler/icons-react"
 import { useMemoizedFn } from "ahooks"
 import clsx from "clsx"
 import _ from "lodash"
-import React from "react"
+import { memo } from "react"
 import { Edge, useReactFlow } from "reactflow"
 import useAvatar from "./hooks/useAvatar"
 import styles from "./index.module.less"
@@ -27,7 +27,7 @@ type MaterialItemProps = NodeSchema & {
 	avatar?: string
 }
 
-export default function MaterialItem({
+function MaterialItem({
 	showIcon = true,
 	inGroup = false,
 	avatar,
@@ -104,6 +104,7 @@ export default function MaterialItem({
 		showIcon,
 	})
 
+
 	return (
 		<div
 			className={clsx(
@@ -140,3 +141,16 @@ export default function MaterialItem({
 		</div>
 	)
 }
+
+// 使用React.memo包装组件，添加自定义比较函数只比较关键属性
+export default memo(MaterialItem, (prevProps, nextProps) => {
+    // 只有当关键属性发生变化时才重新渲染
+    return (
+        prevProps.id === nextProps.id &&
+        prevProps.label === nextProps.label &&
+        prevProps.desc === nextProps.desc &&
+        prevProps.showIcon === nextProps.showIcon &&
+        prevProps.inGroup === nextProps.inGroup &&
+        prevProps.avatar === nextProps.avatar
+    );
+});

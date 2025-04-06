@@ -141,9 +141,7 @@ export default function KeyManagerButton({
 
 			onListItemChanged(data, "edit")
 			message.success(
-				`${params.enabled ? t("flow.apiKey.enable") : t("flow.apiKey.disabled")} ${t(
-					"flow.apiKey.success",
-				)}`,
+				`${params.enabled ? t("flow.apiKey.enable") : t("flow.apiKey.disabled")} ${t("flow.apiKey.success")}`,
 			)
 		},
 	)
@@ -166,9 +164,7 @@ export default function KeyManagerButton({
 		let curlCommand = ""
 
 		if (isAgent) {
-			curlCommand = `curl --location --request POST "${env(
-				"MAGIC_SERVICE_BASE_URL",
-			)}${endpoint}" \\
+			curlCommand = `curl --location --request POST "${env("MAGIC_SERVICE_BASE_URL")}${endpoint}" \\
 --header 'api-key: ${key.secret_key}' \\
 --header 'Content-Type: application/json' \\
 --data-raw '{
@@ -176,9 +172,7 @@ export default function KeyManagerButton({
     "conversation_id": ""
 }'`
 		} else {
-			curlCommand = `curl --location --request POST "${env(
-				"MAGIC_SERVICE_BASE_URL",
-			)}${endpoint}" \\
+			curlCommand = `curl --location --request POST "${env("MAGIC_SERVICE_BASE_URL")}${endpoint}" \\
 --header 'api-key: ${key.secret_key}' \\
 --header 'Content-Type: application/json' \\
 --data-raw '{

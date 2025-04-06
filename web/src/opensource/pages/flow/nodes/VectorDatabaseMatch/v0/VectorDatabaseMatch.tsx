@@ -10,7 +10,7 @@ import { useMemoizedFn } from "ahooks"
 import { cloneDeep, set } from "lodash-es"
 import { useFlow } from "@dtyq/magic-flow/MagicFlow/context/FlowContext/useFlow"
 import usePrevious from "@/opensource/pages/flow/common/hooks/usePrevious"
-import { customNodeType, templateMap } from "@/opensource/pages/flow/constants"
+import { customNodeType } from "@/opensource/pages/flow/constants"
 import useCurrentNodeUpdate from "@/opensource/pages/flow/common/hooks/useCurrentNodeUpdate"
 import NodeOutputWrap from "@/opensource/pages/flow/components/NodeOutputWrap/NodeOutputWrap"
 import { useTranslation } from "react-i18next"
@@ -19,6 +19,7 @@ import useFilters from "./hooks/useFilters"
 import styles from "./VectorDatabaseMatch.module.less"
 import { filterTargetOptions } from "./constants"
 import { getDefaultFilter, getFilterOption } from "./helpers"
+import { v0Template } from "./template"
 
 export default function VectorDatabaseMatchV0() {
 	const { t } = useTranslation()
@@ -32,7 +33,7 @@ export default function VectorDatabaseMatchV0() {
 
 	const initialValues = useMemo(() => {
 		return {
-			...templateMap[customNodeType.VectorDatabaseMatch].v0.params,
+			...v0Template.params,
 			...currentNode?.params,
 		}
 	}, [currentNode])

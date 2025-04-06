@@ -11,8 +11,8 @@ import { useFlow } from "@dtyq/magic-flow/MagicFlow/context/FlowContext/useFlow"
 import { useTranslation } from "react-i18next"
 import Common from "../../Start/v0/components/Common"
 import styles from "./WaitForReply.module.less"
-import { customNodeType, templateMap } from "../../../constants"
 import useCurrentNodeUpdate from "../../../common/hooks/useCurrentNodeUpdate"
+import { v0Template } from "./template"
 
 export default function WaitForReplyV0() {
 	const { t } = useTranslation()
@@ -23,7 +23,7 @@ export default function WaitForReplyV0() {
 
 	const initialValues = useMemo(() => {
 		return {
-			...cloneDeep(templateMap[customNodeType.WaitForReply].v0.params),
+			...cloneDeep(v0Template.params),
 			...currentNode?.params,
 		}
 	}, [currentNode?.params])

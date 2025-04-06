@@ -1,8 +1,8 @@
 import { useMemo } from "react"
 import { useCurrentNode } from "@dtyq/magic-flow/MagicFlow/nodes/common/context/CurrentNode/useCurrentNode"
-import { customNodeType, templateMap } from "@/opensource/pages/flow/constants"
 import { cloneDeep, isNull } from "lodash-es"
 import useOldToolsHandle from "./useOldToolsHandle"
+import { v1Template } from "../template"
 
 export default function useLLMV0() {
 	const { currentNode } = useCurrentNode()
@@ -11,7 +11,7 @@ export default function useLLMV0() {
 
 	const initialValues = useMemo(() => {
 		let nodeParams = {
-			...cloneDeep(templateMap[customNodeType.LLM].v1.params),
+			...cloneDeep(v1Template.params),
 			...(currentNode?.params || {}),
 		}
 
@@ -20,13 +20,13 @@ export default function useLLMV0() {
 		return {
 			...nodeParams,
 			model_config: {
-				...templateMap[customNodeType.LLM].v1.params.model_config,
+				...v1Template.params.model_config,
 				...nodeParams.model_config,
 				vision: nodeParams.model_config?.vision || false,
 				vision_model: nodeParams.model_config?.vision_model || "",
 			},
 			messages: isNull(nodeParams?.messages)
-				? templateMap[customNodeType.LLM].v1.params.messages
+				? v1Template.params.messages
 				: nodeParams?.messages,
 		}
 	}, [currentNode?.params, handleOldTools])

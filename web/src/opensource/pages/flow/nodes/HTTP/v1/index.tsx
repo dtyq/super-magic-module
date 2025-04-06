@@ -13,8 +13,8 @@ import usePrevious from "../../../common/hooks/usePrevious"
 import ApiSettings from "./ApiSettings"
 import styles from "./index.module.less"
 import type { WidgetValue } from "../../../common/Output"
-import { customNodeType, templateMap } from "../../../constants"
 import Output from "../../../common/Output"
+import { v1Template } from "./template"
 
 const omitDomainPath = (api: WidgetValue["value"]["form"]) => {
 	return {
@@ -34,9 +34,7 @@ export default function HTTPNodeV1() {
 
 	const [api, setApi] = useState<HTTP.Api>(
 		// @ts-ignore
-		omitDomainPath(
-			currentNode?.params?.api || cloneDeep(templateMap[customNodeType.HTTP].v1.params?.api),
-		),
+		omitDomainPath(currentNode?.params?.api || cloneDeep(v1Template.params?.api)),
 	)
 
 	const [output, setOutput] = useState<Schema>(
@@ -50,7 +48,7 @@ export default function HTTPNodeV1() {
 		if (!currentNode?.system_output) {
 			updateNodeConfig({
 				...currentNode,
-				system_output: cloneDeep(templateMap[customNodeType.HTTP].v1.system_output),
+				system_output: cloneDeep(v1Template.system_output),
 			})
 		}
 		if (currentNode?.params?.api) {

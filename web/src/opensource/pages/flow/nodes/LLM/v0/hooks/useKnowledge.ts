@@ -7,7 +7,6 @@ import type { FormInstance } from "antd"
 import { useCurrentNode } from "@dtyq/magic-flow/MagicFlow/nodes/common/context/CurrentNode/useCurrentNode"
 import { useMemoizedFn } from "ahooks"
 import { set } from "lodash-es"
-import { getDefaultKnowledge } from "../../../KnowledgeSearch/v0/helpers"
 
 type UseKnowledgeProps = {
 	form: FormInstance<any>
@@ -31,12 +30,11 @@ export default function useKnowledge({ form, onValuesChange }: UseKnowledgeProps
 	})
 
 	const handleAdd = useMemoizedFn(() => {
-		const newKnowledge = getDefaultKnowledge() // 获取默认的知识项
 		const currentKnowledgeConfig = form.getFieldValue("knowledge_config")
 		const newKnowledgeConfig = {
 			knowledge_config: {
 				...currentKnowledgeConfig,
-				knowledge_list: [...(currentKnowledgeConfig?.knowledge_list || []), newKnowledge],
+				knowledge_list: [...(currentKnowledgeConfig?.knowledge_list || [])],
 			},
 		}
 		form.setFieldsValue(newKnowledgeConfig)

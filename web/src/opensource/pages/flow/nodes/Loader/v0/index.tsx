@@ -11,9 +11,10 @@ import { useFlow } from "@dtyq/magic-flow/MagicFlow/context/FlowContext/useFlow"
 import { useTranslation } from "react-i18next"
 import styles from "./index.module.less"
 import usePrevious from "../../../common/hooks/usePrevious"
-import { customNodeType, templateMap } from "../../../constants"
+import { customNodeType } from "../../../constants"
 import NodeOutputWrap from "../../../components/NodeOutputWrap/NodeOutputWrap"
 import useCurrentNodeUpdate from "../../../common/hooks/useCurrentNodeUpdate"
+import { v0Template } from "./template"
 
 export default function LoaderV0() {
 	const { t } = useTranslation()
@@ -26,7 +27,7 @@ export default function LoaderV0() {
 
 	const initialValues = useMemo(() => {
 		const currentNodeParams = currentNode?.params || {}
-		const cloneTemplateParams = cloneDeep(templateMap[customNodeType.Loader].v0.params)
+		const cloneTemplateParams = cloneDeep(v0Template.params)
 		return {
 			...cloneTemplateParams,
 			...currentNodeParams,

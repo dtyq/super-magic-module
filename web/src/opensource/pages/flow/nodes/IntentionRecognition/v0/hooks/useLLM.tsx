@@ -4,10 +4,10 @@ import { useMemo, useState } from "react"
 import { useCurrentNode } from "@dtyq/magic-flow/MagicFlow/nodes/common/context/CurrentNode/useCurrentNode"
 import useSWRImmutable from "swr/immutable"
 import { RequestUrl } from "@/opensource/apis/constant"
-import { customNodeType, templateMap } from "@/opensource/pages/flow/constants"
 import { cloneDeep } from "lodash-es"
 import { FlowApi } from "@/apis"
 import type { LLMParametersValue } from "../components/LLMParameters"
+import { v0Template } from "../template"
 
 type UseLLM = {
 	form: FormInstance<any>
@@ -55,10 +55,8 @@ export default function useLLM({ form }: UseLLM) {
 	})
 
 	const initialValues = useMemo(() => {
-		const cloneTemplate = cloneDeep(templateMap[customNodeType.IntentionRecognition].v0)
-		const nodeParams =
-			currentNode?.params ||
-			cloneDeep(templateMap[customNodeType.IntentionRecognition].v0.params)
+		const cloneTemplate = cloneDeep(v0Template)
+		const nodeParams = currentNode?.params || cloneDeep(v0Template.params)
 		if (!nodeParams)
 			return {
 				max_record: LLMValue.max_record,

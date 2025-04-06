@@ -13,6 +13,8 @@ export const ExternalProvider = ({
 	layoutOnMount,
 	allowDebug,
 	showExtraFlowInfo,
+	flowInteractionRef,
+    omitNodeKeys,
 	children,
 }: ExternalCtx) => {
 	const value = useMemo(() => {
@@ -25,6 +27,8 @@ export const ExternalProvider = ({
 			layoutOnMount,
 			allowDebug,
 			showExtraFlowInfo,
+			flowInteractionRef,
+            omitNodeKeys
 		}
 	}, [
 		header,
@@ -35,6 +39,8 @@ export const ExternalProvider = ({
 		layoutOnMount,
 		allowDebug,
 		showExtraFlowInfo,
+		flowInteractionRef,
+        omitNodeKeys
 	])
 
 	return <ExternalContext.Provider value={value}>{children}</ExternalContext.Provider>

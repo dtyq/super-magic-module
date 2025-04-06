@@ -26,7 +26,6 @@ import { FlowType } from "@/types/flow"
 import DropdownCard from "@dtyq/magic-flow/common/BaseUI/DropdownCard"
 import JSONSchemaRenderer from "@dtyq/magic-flow/common/BaseUI/JSONSchemaRenderer"
 import CustomHandle from "@dtyq/magic-flow/MagicFlow/nodes/common/Handle/Source"
-import { customNodeType, templateMap } from "@/opensource/pages/flow/constants"
 import styles from "./index.module.less"
 import type { WidgetValue } from "../../../common/Output"
 import "./index.less"
@@ -35,10 +34,11 @@ import { TriggerType } from "./constants"
 import { getDefaultTimeTriggerBranches } from "./components/TimeTrigger/helpers"
 import Common from "./components/Common"
 import TimeTrigger from "./components/TimeTrigger"
+import { v1Template } from "./template"
 
 const Splitor = "$$"
 
-export default function Start() {
+export default function StartV1() {
 	const { t } = useTranslation()
 	const [form] = Form.useForm()
 	const { nodeConfig, flow, updateNodeConfig } = useFlow()
@@ -50,7 +50,7 @@ export default function Start() {
 	}, [currentNode?.meta?.parent_id])
 
 	const templateBranches = useMemo(() => {
-		return get(templateMap, [customNodeType.Start, "v0", "params", "branches"], [])
+		return get(v1Template, ["template", "params", "branches"], [])
 	}, [])
 
 	const branches = useMemo(() => {

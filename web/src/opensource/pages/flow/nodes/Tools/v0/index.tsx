@@ -2,10 +2,9 @@ import DropdownCard from "@dtyq/magic-flow/common/BaseUI/DropdownCard"
 import { useMemo } from "react"
 import { useCurrentNode } from "@dtyq/magic-flow/MagicFlow/nodes/common/context/CurrentNode/useCurrentNode"
 import { ShowColumns } from "@dtyq/magic-flow/MagicJsonSchemaEditor/constants"
-import { Form, Switch } from "antd"
+import { Form, Switch, Flex, Select, Tooltip } from "antd"
 import MagicJSONSchemaEditorWrap from "@dtyq/magic-flow/common/BaseUI/MagicJsonSchemaEditorWrap"
 import { DisabledField } from "@dtyq/magic-flow/MagicJsonSchemaEditor/types/Schema"
-import { Flex, Select, Tooltip } from "antd"
 import { IconHelp } from "@tabler/icons-react"
 import { get, set } from "lodash-es"
 import { useMemoizedFn, useMount } from "ahooks"
@@ -15,7 +14,6 @@ import { replaceRouteParams } from "@/utils/route"
 import { RoutePath } from "@/const/routes"
 import usePrevious from "@/opensource/pages/flow/common/hooks/usePrevious"
 import useToolsParameters from "@/opensource/pages/flow/components/ToolsSelect/components/ToolsSelectedCard/ToolsParameters/hooks/useToolsParameters"
-import { customNodeType, templateMap } from "@/opensource/pages/flow/constants"
 import useCurrentNodeUpdate from "@/opensource/pages/flow/common/hooks/useCurrentNodeUpdate"
 import NodeOutputWrap from "@/opensource/pages/flow/components/NodeOutputWrap/NodeOutputWrap"
 import MagicExpression from "@/opensource/pages/flow/common/Expression"
@@ -29,6 +27,7 @@ import styles from "./index.module.less"
 import ModeSelect, { ToolsMode } from "./components/ModeSelect/ModeSelect"
 import useParameterHandler from "../../LLM/v0/hooks/useParameterHandler"
 import LLMParametersV0 from "../../LLM/v0/components/LLMParameters"
+import { v0Template } from "./template"
 
 export default function ToolsV0() {
 	const { t } = useTranslation()
@@ -54,17 +53,17 @@ export default function ToolsV0() {
 				const toolDetail = findTargetTool(toolId)
 				if (toolDetail) {
 					set(currentNode, ["params", "avatar"], toolDetail.icon)
-					set(currentNode, ["output"], tool.output)
+					set(currentNode, ["output"], tool?.output)
 
-					set(currentNode, ["input"], tool.input)
-					set(currentNode, ["params", "custom_system_input"], tool.custom_system_input)
+					set(currentNode, ["input"], tool?.input)
+					set(currentNode, ["params", "custom_system_input"], tool?.custom_system_input)
 					form.setFieldsValue({
 						input: null,
 						custom_system_input: null,
 					})
 					form.setFieldsValue({
-						input: tool.input,
-						custom_system_input: tool.custom_system_input,
+						input: tool?.input,
+						custom_system_input: tool?.custom_system_input,
 					})
 					updateNodeConfig({ ...currentNode })
 				}
@@ -99,7 +98,7 @@ export default function ToolsV0() {
 
 	const initialValues = useMemo(() => {
 		return {
-			...{ ...templateMap[customNodeType.Tools].v0.params, ...currentNode?.params },
+			...{ ...v0Template.params, ...currentNode?.params },
 			input: currentNode?.input,
 			output: currentNode?.output,
 			custom_system_input: currentNode?.params?.custom_system_input,

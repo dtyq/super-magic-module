@@ -1,15 +1,13 @@
-import { Form } from "antd"
+import { Form, Flex } from "antd"
 import MagicSelect from "@dtyq/magic-flow/common/BaseUI/Select"
 import { useMemoizedFn } from "ahooks"
 import { useCurrentNode } from "@dtyq/magic-flow/MagicFlow/nodes/common/context/CurrentNode/useCurrentNode"
 import { useFlow } from "@dtyq/magic-flow/MagicFlow/context/FlowContext/useFlow"
 import { set } from "lodash-es"
 import { ExpressionMode } from "@dtyq/magic-flow/MagicExpressionWidget/constant"
-import { Flex } from "antd"
 import DropdownCard from "@dtyq/magic-flow/common/BaseUI/DropdownCard"
 import { cx } from "antd-style"
 import { useMemo } from "react"
-import { customNodeType, templateMap } from "@/opensource/pages/flow/constants"
 import { getExpressionPlaceholder, removeEmptyValues } from "@/opensource/pages/flow/utils/helpers"
 import usePrevious from "@/opensource/pages/flow/common/hooks/usePrevious"
 import useCurrentNodeUpdate from "@/opensource/pages/flow/common/hooks/useCurrentNodeUpdate"
@@ -20,6 +18,7 @@ import styles from "./Text2Image.module.less"
 import { getDefaultSelfDefineRatio, getDefaultSize, ImageModelOptions } from "./constants"
 import SRSwitch from "./components/SRSwitch/SRSwitch"
 import useRatio from "./hooks/useRatio"
+import { v0Template } from "./template"
 
 export default function Text2ImageV0() {
 	const { t } = useTranslation()
@@ -82,7 +81,7 @@ export default function Text2ImageV0() {
 
 	const initialValues = useMemo(() => {
 		return {
-			...templateMap[customNodeType.Text2Image].v0.params,
+			...v0Template.params,
 			...removeEmptyValues(currentNode?.params || {}),
 		}
 	}, [currentNode?.params])

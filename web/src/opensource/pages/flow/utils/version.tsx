@@ -15,10 +15,6 @@ import {
 	IconHealthRecognition,
 	IconMessage,
 	IconMessageSearch,
-	IconPencilCog,
-	IconPencilMinus,
-	IconPencilPlus,
-	IconPencilSearch,
 	IconPhotoAi,
 	IconPlaylistX,
 	IconRepeat,
@@ -33,7 +29,7 @@ import {
 import { get, pick } from "lodash-es"
 import i18next from "i18next"
 import type { ReactElement } from "react"
-import { customNodeType, templateMap } from "../constants"
+import { customNodeType } from "../constants"
 import type { ComponentVersionMap } from "../nodes"
 import { nodeComponentVersionMap } from "../nodes"
 
@@ -373,64 +369,6 @@ const getCommonSchemaConfigMap: () => Record<string, NodeSchema> = () => ({
 	// 		width: "600px",
 	// 	},
 	// },
-	[customNodeType.AddRecord]: {
-		label: i18next.t("addRecord.name", { ns: "flow" }),
-		icon: <IconPencilPlus color="#fff" stroke={1} size={18} />,
-		color: "#3B81F7",
-		id: customNodeType.AddRecord,
-		desc: i18next.t("addRecord.desc", { ns: "flow" }),
-		handle: {
-			withSourceHandle: true,
-			withTargetHandle: true,
-		},
-		style: {
-			width: "600px",
-		},
-	},
-	[customNodeType.UpdateRecord]: {
-		label: i18next.t("updateRecord.name", { ns: "flow" }),
-		icon: <IconPencilCog color="#fff" stroke={1} size={18} />,
-		color: "#07C160",
-		id: customNodeType.UpdateRecord,
-		desc: i18next.t("updateRecord.desc", { ns: "flow" }),
-		handle: {
-			withSourceHandle: true,
-			withTargetHandle: true,
-		},
-		style: {
-			width: "640px",
-		},
-	},
-
-	[customNodeType.FindRecord]: {
-		label: i18next.t("findRecord.name", { ns: "flow" }),
-		icon: <IconPencilSearch color="#fff" stroke={1} size={18} />,
-		color: "#00C0D6",
-		id: customNodeType.FindRecord,
-		desc: i18next.t("findRecord.desc", { ns: "flow" }),
-		handle: {
-			withSourceHandle: true,
-			withTargetHandle: true,
-		},
-		style: {
-			width: "640px",
-		},
-	},
-
-	[customNodeType.DeleteRecord]: {
-		label: i18next.t("deleteRecord.name", { ns: "flow" }),
-		icon: <IconPencilMinus color="#fff" stroke={1} size={18} />,
-		color: "#FF4D3A",
-		id: customNodeType.DeleteRecord,
-		desc: i18next.t("deleteRecord.desc", { ns: "flow" }),
-		handle: {
-			withSourceHandle: true,
-			withTargetHandle: true,
-		},
-		style: {
-			width: "640px",
-		},
-	},
 	[customNodeType.MessageSearch]: {
 		label: i18next.t("messageSearch.name", { ns: "flow" }),
 		icon: <IconMessageSearch color="#fff" stroke={1} size={18} />,
@@ -546,36 +484,6 @@ const getCommonSchemaConfigMap: () => Record<string, NodeSchema> = () => ({
 		},
 	},
 
-	[customNodeType.KnowledgeSearch]: {
-		label: i18next.t("knowledgeSearch.name", { ns: "flow" }),
-		icon: <IconVocabulary color="#fff" stroke={1} size={18} />,
-		color: "#00C1D2",
-		id: customNodeType.KnowledgeSearch,
-		desc: i18next.t("knowledgeSearch.desc", { ns: "flow" }),
-		handle: {
-			withSourceHandle: true,
-			withTargetHandle: true,
-		},
-		style: {
-			width: "600px",
-		},
-	},
-
-	[customNodeType.DocumentResolve]: {
-		label: i18next.t("documentResolve.name", { ns: "flow" }),
-		icon: <IconVocabulary color="#fff" stroke={1} size={18} />,
-		color: "#41434C",
-		id: customNodeType.DocumentResolve,
-		desc: i18next.t("documentResolve.desc", { ns: "flow" }),
-		handle: {
-			withSourceHandle: true,
-			withTargetHandle: true,
-		},
-		style: {
-			width: "600px",
-		},
-	},
-
 	[customNodeType.Instructions]: {
 		label: i18next.t("flow:flowInstructions.name"),
 		icon: <IconWand color="#fff" stroke={1} size={18} />,
@@ -594,32 +502,47 @@ const getCommonSchemaConfigMap: () => Record<string, NodeSchema> = () => ({
 
 type Version = string
 
-export const generateNodeVersionSchema = () => {
-	const result = Object.entries(templateMap).reduce(
-		(accVersionTemplate, [nodeType, versionMap]) => {
+export const generateNodeVersionSchema = (
+	enterpriseNodeComponentVersionMap: Record<string, Record<string, ComponentVersionMap>>,
+	getEnterpriseSchemaConfigMap: () => Record<string, NodeSchema>,
+	enterpriseNodeTypes: Record<string, string>,
+) => {
+	const result = Object.values({ ...customNodeType, ...enterpriseNodeTypes }).reduce(
+		(accVersionTemplate, nodeType) => {
+			if (
+				!nodeComponentVersionMap[nodeType] &&
+				!enterpriseNodeComponentVersionMap[nodeType]
+			) {
+				console.error(`nodeComponentVersionMap 不存在 ${nodeType}`)
+				return accVersionTemplate
+			}
+			const nodeVersionMap =
+				nodeComponentVersionMap[nodeType] || enterpriseNodeComponentVersionMap[nodeType]
 			return {
-				[nodeType]: Object.entries(versionMap).reduce(
-					(versionTemplate, [version, nodeSchema]) => {
+				[nodeType]: Object.entries(nodeVersionMap).reduce(
+					(versionTemplate, [nodeVersion, nodeMap]) => {
 						/** 需要进行版本化的配置 */
-						const versionConfig = pick(nodeSchema as NodeSchema, [
+						const versionConfig = pick(nodeMap.template, [
 							"input",
 							"output",
 							"params",
 							"system_output",
 						])
 						/** 拿到具体版本的组件 */
-						const versionComp = get(nodeComponentVersionMap, [
-							nodeType,
-							version,
-						]) as ComponentVersionMap
+						const versionComp = nodeMap
 
 						const commonSchemaConfigMap = getCommonSchemaConfigMap()
 
-						versionTemplate[version] = {
+						const enterpriseSchemaConfigMap = getEnterpriseSchemaConfigMap()
+
+						const targetNodeSchema =
+							enterpriseSchemaConfigMap[nodeType] || commonSchemaConfigMap[nodeType]
+
+						versionTemplate[nodeVersion] = {
 							schema: {
-								...commonSchemaConfigMap[nodeType],
+								...targetNodeSchema,
 								...versionConfig,
-								headerRight: versionComp.headerRight as ReactElement,
+								headerRight: versionComp?.headerRight as ReactElement,
 							},
 							component: versionComp.component,
 						}
@@ -632,5 +555,6 @@ export const generateNodeVersionSchema = () => {
 		},
 		{},
 	)
+
 	return result as Record<customNodeType, Record<Version, NodeWidget>>
 }

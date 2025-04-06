@@ -9,11 +9,12 @@ import { ShowColumns } from "@dtyq/magic-flow/MagicJsonSchemaEditor/constants"
 import { DisabledField } from "@dtyq/magic-flow/MagicJsonSchemaEditor/types/Schema"
 import { useFlow } from "@dtyq/magic-flow/MagicFlow/context/FlowContext/useFlow"
 import usePrevious from "@/opensource/pages/flow/common/hooks/usePrevious"
-import { customNodeType, templateMap } from "@/opensource/pages/flow/constants"
+import { customNodeType } from "@/opensource/pages/flow/constants"
 import useCurrentNodeUpdate from "@/opensource/pages/flow/common/hooks/useCurrentNodeUpdate"
 import NodeOutputWrap from "@/opensource/pages/flow/components/NodeOutputWrap/NodeOutputWrap"
 import { useTranslation } from "react-i18next"
 import styles from "./index.module.less"
+import { v0Template } from "./template"
 
 export default function ExcelV0() {
 	const { t } = useTranslation()
@@ -26,7 +27,7 @@ export default function ExcelV0() {
 
 	const initialValues = useMemo(() => {
 		const currentNodeParams = currentNode?.params || {}
-		const cloneTemplateParams = cloneDeep(templateMap[customNodeType.Excel].v0.params)
+		const cloneTemplateParams = cloneDeep(v0Template.params)
 		return {
 			...cloneTemplateParams,
 			...currentNodeParams,

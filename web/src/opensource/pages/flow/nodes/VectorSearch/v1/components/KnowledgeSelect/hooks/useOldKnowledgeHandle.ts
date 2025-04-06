@@ -6,8 +6,7 @@ import { useCurrentNode } from "@dtyq/magic-flow/MagicFlow/nodes/common/context/
 import { defaultExpressionValue } from "@dtyq/magic-flow/MagicExpressionWidget/constant"
 import type { Knowledge } from "@/types/knowledge"
 import { LabelTypeMap } from "@dtyq/magic-flow/MagicExpressionWidget/types"
-import { generateSnowFlake } from "@/opensource/pages/flow/utils/helpers"
-import { genDefaultComponent } from "@/opensource/pages/flow/nodes/RecordOperation/v0/helpers"
+import { genDefaultComponent, generateSnowFlake } from "@/opensource/pages/flow/utils/helpers"
 import { useTranslation } from "react-i18next"
 
 /**
@@ -33,7 +32,8 @@ export default function useOldKnowledgeHandle() {
 			const newValue = cloneParams[newKey] || []
 			// 如果新知识库列表为空，且旧知识库列表不为空，则取旧知识库列表的值作为新知识库列表的值
 			if (newValue?.length === 0 && oldValue?.length > 0) {
-				const newKnowledgeResult = genDefaultComponent(ComponentTypes.Value, {
+				// @ts-ignore
+				const newKnowledgeResult = genDefaultComponent("value", {
 					...defaultExpressionValue,
 					const_value: [
 						{

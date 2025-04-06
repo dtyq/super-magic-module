@@ -11,8 +11,8 @@ import { useMemo } from "react"
 import { useTranslation } from "react-i18next"
 import styles from "./index.module.less"
 import usePrevious from "../../../common/hooks/usePrevious"
-import { customNodeType, templateMap } from "../../../constants"
 import useCurrentNodeUpdate from "../../../common/hooks/useCurrentNodeUpdate"
+import { v0Template } from "./template"
 
 export default function VariableSave() {
 	const { t } = useTranslation()
@@ -38,9 +38,7 @@ export default function VariableSave() {
 	})
 
 	const initialValues = useMemo(() => {
-		return (
-			currentNode?.params || cloneDeep(templateMap[customNodeType.VariableSave]?.v0?.params)
-		)
+		return currentNode?.params || v0Template.params
 	}, [currentNode])
 
 	useCurrentNodeUpdate({

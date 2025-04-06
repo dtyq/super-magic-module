@@ -4,7 +4,7 @@ import { FlowType } from "@/types/flow"
 import { useMemoizedFn, useMount } from "ahooks"
 import type { MagicFlow } from "@dtyq/magic-flow/MagicFlow/types/flow"
 import { useEffect } from "react"
-import { FlowApi, KnowledgeApi } from "@/apis"
+import { FlowApi } from "@/apis"
 import { customNodeType } from "../constants"
 import type { ToolSelectedItem } from "../components/ToolsSelect/types"
 
@@ -22,9 +22,7 @@ export default function useDataInit({ currentFlow }: UseDataInitProps) {
 		updateUseableDatabases,
 		updateSubFlowList,
 		updateMethodDataSource,
-		updateUseableTeamshareDatabase,
 		updateToolInputOutputMap,
-		updateVisionModels,
 	} = useFlowStore()
 
 	const initMethodsDataSource = useMemoizedFn(async () => {
@@ -43,11 +41,15 @@ export default function useDataInit({ currentFlow }: UseDataInitProps) {
 	})
 
 	const initUseableToolSets = useMemoizedFn(async () => {
-		FlowApi.getUseableToolList().then((response) => {
+		try {
+			const response = await FlowApi.getUseableToolList()
+			console.log("FlowApi.getUseableToolList()", response)
 			if (response && response.list) {
 				updateUseableToolSets(response.list)
 			}
-		})
+		} catch (e) {
+			console.log("initUseableToolSets error", e)
+		}
 	})
 
 	const initUseableDatabases = useMemoizedFn(async () => {
@@ -61,21 +63,6 @@ export default function useDataInit({ currentFlow }: UseDataInitProps) {
 	const initModels = useMemoizedFn(async () => {
 		const { models } = await FlowApi.getLLMModal()
 		updateModels(models)
-	})
-
-	const initTeamshareDatabase = useMemoizedFn(() => {
-		KnowledgeApi.getUseableTeamshareDatabaseList().then((response) => {
-			updateUseableTeamshareDatabase(response.list)
-		})
-	})
-
-	// 初始化视觉理解模型数据源
-	const initGLMDataSource = useMemoizedFn(async () => {
-		const response = await FlowApi.getVisionModels("vlm")
-		if (response && response?.length) {
-			// @ts-ignore
-			updateVisionModels(response)
-		}
 	})
 
 	// 初始化已配置的工具的相关模板
@@ -101,14 +88,11 @@ export default function useDataInit({ currentFlow }: UseDataInitProps) {
 		if (flowToolIds.length > 0) {
 			const response = await FlowApi.getAvailableTools(flowToolIds)
 			if (response.list) {
-				const map = response.list.reduce(
-					(toolsMap, currentTool) => {
-						if (!currentTool?.id) return toolsMap
-						toolsMap[currentTool.id] = currentTool
-						return toolsMap
-					},
-					{} as Record<string, MagicFlow.Flow>,
-				)
+				const map = response.list.reduce((toolsMap, currentTool) => {
+					if (!currentTool?.id) return toolsMap
+					toolsMap[currentTool.id] = currentTool
+					return toolsMap
+				}, {} as Record<string, MagicFlow.Flow>)
 				updateToolInputOutputMap(map)
 			}
 		}
@@ -120,8 +104,6 @@ export default function useDataInit({ currentFlow }: UseDataInitProps) {
 		initUseableDatabases()
 		initSubFlows()
 		initMethodsDataSource()
-		initTeamshareDatabase()
-		initGLMDataSource()
 	})
 
 	useMount(() => {

@@ -10,7 +10,6 @@ import {
 	// @ts-ignore
 	registerNodeGroups,
 	registerLoopStartConfig,
-	registerNotMaterialNodeTypes,
 	registerMaterialNodeTypeMap,
 } from "@dtyq/magic-flow/MagicFlow/register/node"
 import {
@@ -18,7 +17,6 @@ import {
 	IconDatabase,
 	IconFileTextAi,
 	IconHistory,
-	IconTableAlias,
 	IconVariable,
 	IconVocabulary,
 } from "@tabler/icons-react"
@@ -26,8 +24,9 @@ import i18next from "i18next"
 import { TabObject } from "@dtyq/magic-flow/MagicFlow/components/FlowMaterialPanel/constants"
 import { customNodeType } from "../constants"
 import { generateNodeVersionSchema } from "./version"
+import { BaseFlowProps } from ".."
 
-export const installAllNodes = () => {
+export const installAllNodes = (extraData?: BaseFlowProps["extraData"]) => {
 	/**
 	 * 注册分支节点，为了走分支相关的路径，next_nodes会加在branches里面
 	 */
@@ -50,12 +49,7 @@ export const installAllNodes = () => {
 		customNodeType.HTTP,
 		customNodeType.Sub,
 		customNodeType.VectorSearch,
-		customNodeType.AddRecord,
-		customNodeType.FindRecord,
-		customNodeType.DeleteRecord,
-		customNodeType.UpdateRecord,
 		customNodeType.MessageSearch,
-		customNodeType.LLMCall,
 		customNodeType.CacheGetter,
 		customNodeType.TextSplit,
 		customNodeType.WaitForReply,
@@ -63,10 +57,9 @@ export const installAllNodes = () => {
 		customNodeType.Excel,
 		customNodeType.Tools,
 		customNodeType.VectorDatabaseMatch,
-		customNodeType.KnowledgeSearch,
 		customNodeType.Text2Image,
-		customNodeType.DocumentResolve,
 		customNodeType.Instructions,
+		...(extraData?.canReferenceNodeTypes || []),
 	])
 
 	/** 指定引用大语言模型时，不再是node_id.value  而是LLM.value */
@@ -89,9 +82,6 @@ export const installAllNodes = () => {
 
 	/** 指定循环起始节点类型 */
 	registerLoopStartType(customNodeType.Start)
-
-	/** 等待节点 */
-	registerNotMaterialNodeTypes([customNodeType.LLMCall])
 
 	/** 注册循环起始节点配置 */
 	registerLoopStartConfig({
@@ -132,7 +122,7 @@ export const installAllNodes = () => {
 				customNodeType.Loop,
 				customNodeType.LoopEnd,
 				customNodeType.SearchUsers,
-				customNodeType.KnowledgeSearch,
+				...(extraData?.extraNodeInfos?.operation ?? []),
 				customNodeType.Text2Image,
 				customNodeType.GroupChat,
 			],
@@ -184,18 +174,7 @@ export const installAllNodes = () => {
 					nodeTypes: [customNodeType.VariableSave],
 				},
 
-				{
-					groupName: i18next.t("magicTable.name", { ns: "flow" }),
-					desc: i18next.t("magicTable.name", { ns: "flow" }),
-					color: "#00BF9A",
-					icon: <IconTableAlias color="#fff" stroke={2} size={18} />,
-					nodeTypes: [
-						customNodeType.FindRecord,
-						customNodeType.AddRecord,
-						customNodeType.UpdateRecord,
-						customNodeType.DeleteRecord,
-					],
-				},
+				...(extraData?.extraNodeInfos?.dataHandler?.magicTable ?? []),
 
 				{
 					groupName: i18next.t("file.name", { ns: "flow" }),
@@ -205,7 +184,7 @@ export const installAllNodes = () => {
 					nodeTypes: [
 						customNodeType.Loader,
 						customNodeType.Excel,
-						customNodeType.DocumentResolve,
+						...(extraData?.extraNodeInfos?.dataHandler?.file ?? []),
 					],
 				},
 
@@ -229,5 +208,11 @@ export const installAllNodes = () => {
 	/**
 	 * 注册所有节点schema
 	 */
-	installNodes(generateNodeVersionSchema())
+	installNodes(
+		generateNodeVersionSchema(
+			extraData?.enterpriseNodeComponentVersionMap || {},
+			extraData?.getEnterpriseSchemaConfigMap || (() => ({})),
+			extraData?.enterpriseNodeTypes || {},
+		),
+	)
 }

@@ -22,12 +22,16 @@ export type ExternalCtx = React.PropsWithChildren<{
 	onlyRenderVisibleElements: boolean
 	layoutOnMount: boolean
 	allowDebug: boolean
-	showExtraFlowInfo?: boolean
+	showExtraFlowInfo?: boolean    
+    flowInteractionRef: React.MutableRefObject<any>
+    omitNodeKeys: string[]
 }>  
 
 export const ExternalContext = React.createContext({
 	header: {},
     nodeToolbar: {},
 	layoutOnMount: true,
-    showExtraFlowInfo: true,
+    showExtraFlowInfo: true,    
+    flowInteractionRef: {} as React.MutableRefObject<any>,
+    omitNodeKeys: []
 } as ExternalCtx)

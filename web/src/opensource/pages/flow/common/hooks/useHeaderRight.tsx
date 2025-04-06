@@ -30,14 +30,14 @@ import MagicModal from "@/opensource/components/base/MagicModal"
 import TestNodeBtn from "../TestNodeBtn"
 import { useCustomFlow } from "../../context/CustomFlowContext/useCustomFlow"
 import styles from "./testNode.module.less"
-import { findFieldInDataSource } from "../../utils/helpers"
+import {
+	findFieldInDataSource,
+	genDefaultComponent,
+	getDefaultSchemaWithDefaultProps,
+} from "../../utils/helpers"
 
 import usePrevious from "./usePrevious"
 import { customNodeType } from "../../constants"
-import {
-	genDefaultComponent,
-	getDefaultSchemaWithDefaultProps,
-} from "../../nodes/RecordOperation/v0/helpers"
 import UpgradeVersionBtn from "../UpgradeVersionBtn/UpgradeVersion"
 
 export type Field = {
@@ -146,6 +146,7 @@ export default function useHeaderRight({ rules, extraComponent }: UseHeaderRight
 		// 普通的引用表单
 		const referenceForm = genDefaultComponent(
 			ComponentTypes.Form,
+			// @ts-ignore
 			getDefaultSchemaWithDefaultProps(FormItemType.Object, {
 				...defaultProps,
 			}),
@@ -153,6 +154,7 @@ export default function useHeaderRight({ rules, extraComponent }: UseHeaderRight
 		// 环境变量的引用表单
 		const globalVariableForm = genDefaultComponent(
 			ComponentTypes.Form,
+			// @ts-ignore
 			getDefaultSchemaWithDefaultProps(FormItemType.Object, {
 				...defaultProps,
 			}),

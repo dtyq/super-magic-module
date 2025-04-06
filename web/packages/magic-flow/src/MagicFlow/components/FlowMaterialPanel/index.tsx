@@ -39,6 +39,7 @@ export default function FlowMaterialPanel() {
 				className={clsx(styles.flowMaterialPanel, `${prefix}flow-material-panel`)}
 				style={{
 					width: show ? "280px" : 0,
+                    display: show ? "block" : "none",
 				}}
 			>
 				{materialHeader ? (
@@ -75,7 +76,7 @@ export default function FlowMaterialPanel() {
 					{tabContents.map(([DynamicContent, showContent], index) => {
 						return (
 							<div
-								key={index}
+								key={`materials-panel-item-${index}`}
 								style={{ display: `${showContent ? "block" : "none"}` }}
 								className={clsx(styles.blockItem, `${prefix}block-item`)}
 							>

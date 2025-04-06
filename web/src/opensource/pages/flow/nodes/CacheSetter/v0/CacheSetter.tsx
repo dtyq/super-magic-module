@@ -13,8 +13,8 @@ import { getExpressionPlaceholder } from "@/opensource/pages/flow/utils/helpers"
 import MagicExpression from "../../../common/Expression"
 import usePrevious from "../../../common/hooks/usePrevious"
 import styles from "./index.module.less"
-import { customNodeType, templateMap } from "../../../constants"
 import useCurrentNodeUpdate from "../../../common/hooks/useCurrentNodeUpdate"
+import { v0Template } from "./template"
 
 export default function CacheSetter() {
 	const { t } = useTranslation()
@@ -40,7 +40,7 @@ export default function CacheSetter() {
 
 	const initialValues = useMemo(() => {
 		return {
-			...cloneDeep(templateMap[customNodeType.CacheSetter].v0.params),
+			...cloneDeep(v0Template.params),
 			...currentNode?.params,
 		}
 	}, [currentNode?.params])

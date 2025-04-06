@@ -1,18 +1,16 @@
-import { Button, Drawer, Tooltip } from "antd"
+import { Button, Drawer, Tooltip, Form, Flex } from "antd"
 import type { MagicFlowInstance } from "@dtyq/magic-flow/MagicFlow"
 import { useBoolean, useMemoizedFn } from "ahooks"
 import { useMemo, useState, type MutableRefObject } from "react"
-import { Form, Flex } from "antd"
 import type { MagicFlow } from "@dtyq/magic-flow/MagicFlow/types/flow"
 import { pick, cloneDeep, set } from "lodash-es"
 import MagicJSONSchemaEditorWrap from "@dtyq/magic-flow/common/BaseUI/MagicJsonSchemaEditorWrap"
 import { ShowColumns } from "@dtyq/magic-flow/MagicJsonSchemaEditor/constants"
-import { ComponentTypes } from "@/types/flow"
 import { useFlowStore } from "@/opensource/stores/flow"
 import { useTranslation } from "react-i18next"
 import styles from "./GlobalVariablesButton.module.less"
 import { useCustomFlow } from "../../context/CustomFlowContext/useCustomFlow"
-import { genDefaultComponent } from "../../nodes/RecordOperation/v0/helpers"
+import { genDefaultComponent } from "../../utils/helpers"
 
 type GlobalVariablesButtonProps = {
 	flowInstance?: MutableRefObject<MagicFlowInstance | null>
@@ -42,7 +40,8 @@ export default function GlobalVariablesButton({
 		// @ts-ignore
 		if (!initValue.global_variable) {
 			return {
-				global_variable: genDefaultComponent(ComponentTypes.Form, null),
+				// @ts-ignore
+				global_variable: genDefaultComponent("form", null),
 			}
 		}
 		return initValue

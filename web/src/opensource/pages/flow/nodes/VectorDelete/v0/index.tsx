@@ -13,10 +13,11 @@ import MagicJSONSchemaEditorWrap from "@dtyq/magic-flow/common/BaseUI/MagicJsonS
 import { useTranslation } from "react-i18next"
 import styles from "./index.module.less"
 import usePrevious from "../../../common/hooks/usePrevious"
-import { customNodeType, templateMap } from "../../../constants"
+import { customNodeType } from "../../../constants"
 import KnowledgeSelect from "../../VectorSearch/v0/components/KnowledgeSelect/KnowledgeSelect"
 import useOldKnowledgeHandle from "../../VectorSearch/v0/components/KnowledgeSelect/hooks/useOldKnowledgeHandle"
 import useCurrentNodeUpdate from "../../../common/hooks/useCurrentNodeUpdate"
+import { v0Template } from "./template"
 
 export default function VectorDeleteV0() {
 	const { t } = useTranslation()
@@ -42,8 +43,7 @@ export default function VectorDeleteV0() {
 	const { handleOldKnowledge } = useOldKnowledgeHandle()
 
 	const initialValues = useMemo(() => {
-		let resultValue =
-			currentNode?.params || cloneDeep(templateMap[customNodeType.VectorDelete].v0?.params)
+		let resultValue = currentNode?.params || cloneDeep(v0Template.params)
 		resultValue = handleOldKnowledge(resultValue)
 		return resultValue
 	}, [currentNode?.params, handleOldKnowledge])

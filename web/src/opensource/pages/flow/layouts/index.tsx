@@ -3,10 +3,12 @@ import { createStyles } from "antd-style"
 
 import { Flex } from "antd"
 import type { PropsWithChildren } from "react"
+import { Suspense } from "react"
 import { IconChevronLeft } from "@tabler/icons-react"
 import MagicIcon from "@/opensource/components/base/MagicIcon"
 import { useNavigate } from "react-router"
 import { useTranslation } from "react-i18next"
+import MagicSpin from "@/opensource/components/base/MagicSpin"
 import FlowSubSider from "../components/FlowSubSider"
 import LoadingFallback from "@/opensource/components/fallback/LoadingFallback"
 

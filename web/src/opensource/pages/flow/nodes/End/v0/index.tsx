@@ -11,8 +11,8 @@ import { FormItemType } from "@dtyq/magic-flow/MagicExpressionWidget/types"
 import type Schema from "@dtyq/magic-flow/MagicJsonSchemaEditor/types/Schema"
 import styles from "./index.module.less"
 import usePrevious from "../../../common/hooks/usePrevious"
-import { customNodeType, templateMap } from "../../../constants"
 import useCurrentNodeUpdate from "../../../common/hooks/useCurrentNodeUpdate"
+import { v0Template } from "./template"
 
 export default function End() {
 	const [form] = useForm()
@@ -41,9 +41,7 @@ export default function End() {
 
 	const initialValues = useMemo(() => {
 		return {
-			output:
-				currentNode?.output?.form?.structure ||
-				cloneDeep(templateMap[customNodeType.End].v0.output?.form?.structure),
+			output: currentNode?.output?.form?.structure || v0Template.output?.form?.structure,
 		}
 	}, [currentNode?.output?.form?.structure])
 

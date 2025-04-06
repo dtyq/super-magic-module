@@ -250,6 +250,10 @@ export const enum RequestUrl {
 	getTeamshareKnowledgeProgress = "/api/v2/magic/external-api/teamshare/knowledge/manageable-progress",
 	/** 发起知识库的向量创建 */
 	createTeamshareKnowledgeVector = "/api/v2/magic/external-api/teamshare/knowledge/start-vector",
+	/** Api Key 调用 Agent */
+	callAgent = "/api/chat",
+	/** Api Key 调用工具或流程  */
+	callToolOrFlow = "/api/param-call",
 
 	/** 发布流程版本 */
 	publishFlow = "/api/v1/flows/${flowId}/version/publish",
