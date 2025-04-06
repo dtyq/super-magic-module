@@ -275,6 +275,7 @@ class ModelGatewayMapper extends ModelMapper
             MagicAILocalModel::class,
             $model,
             [
+                'vector_size' => $modelOptions->getVectorSize(),
             ],
             $modelOptions,
             $apiOptions,
