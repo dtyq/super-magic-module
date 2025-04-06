@@ -6,7 +6,7 @@ import { replaceRouteParams } from "@/utils/route"
 import { RoutePath } from "@/const/routes"
 import { FlowRouteType } from "@/types/flow"
 import MagicIcon from "@/opensource/components/base/MagicIcon"
-import { useNavigate, useLocation } from "react-router-dom"
+import { useNavigate, useSearchParams } from "react-router-dom"
 import { genFileData } from "@/opensource/pages/chatNew/components/MessageEditor/MagicInput/components/InputFiles/utils"
 import { useUpload } from "@/opensource/hooks/useUploadFiles"
 import { useTranslation } from "react-i18next"
@@ -25,7 +25,8 @@ import { KnowledgeApi } from "@/apis"
 export default function VectorKnowledgeDetail() {
 	const { styles } = useVectorKnowledgeDetailStyles()
 
-	const { code: knowledgeBaseCode } = useLocation().state
+	const [searchParams] = useSearchParams()
+	const knowledgeBaseCode = searchParams.get("code") || ""
 
 	const navigate = useNavigate()
 

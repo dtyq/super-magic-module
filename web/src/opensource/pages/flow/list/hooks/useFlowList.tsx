@@ -399,9 +399,7 @@ export default function useFlowList({ flowType }: FlowListHooksProps) {
 
 	/** 跳转向量知识库详情 */
 	const goToKnowledgeDetail = useMemoizedFn((code: string) => {
-		navigate(RoutePath.VectorKnowledgeDetail, {
-			state: { code },
-		})
+		navigate(`${RoutePath.VectorKnowledgeDetail}?code=${code}`)
 	})
 
 	const getDropdownItems = useMemoizedFn((flow: MagicFlow.Flow | Knowledge.KnowledgeItem) => {

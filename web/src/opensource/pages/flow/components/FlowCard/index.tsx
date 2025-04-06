@@ -146,13 +146,13 @@ function Card({
 				{flowType === FlowRouteType.Knowledge && (
 					<Flex gap={5} align="center">
 						<div>
-							{tFlow("knowledgeDatabase.documentCount", {
+							{tFlow("common.documentCount", {
 								num: data.document_count || 0,
 							})}
 						</div>
 						<div>/</div>
 						<div>
-							{tFlow("knowledgeDatabase.wordCount", {
+							{tFlow("common.wordCount", {
 								num: formatToK(data.word_count) || 0,
 							})}
 						</div>

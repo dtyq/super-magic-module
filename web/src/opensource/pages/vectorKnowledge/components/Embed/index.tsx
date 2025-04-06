@@ -32,11 +32,7 @@ export default function VectorKnowledgeEmbed({ createdKnowledge }: Props) {
 
 	/** 查看知识库 - 跳转至详情页 */
 	const handleViewKnowledge = useMemoizedFn(() => {
-		navigate(RoutePath.VectorKnowledgeDetail, {
-			state: {
-				code: createdKnowledge.code,
-			},
-		})
+		navigate(`${RoutePath.VectorKnowledgeDetail}?code=${createdKnowledge.code}`)
 	})
 
 	/** 获取文档同步状态图标 */
