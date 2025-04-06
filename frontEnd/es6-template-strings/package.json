@@ -1,11 +1,15 @@
 {
 	"name": "@dtyq/es6-template-strings",
-	"version": "0.0.3",
-	"description": "",
+	"version": "0.0.4",
+	"description": "字符串模版引擎",
 	"keywords": [],
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/dtyq/es6-template-strings"
+	},
+	"license": "Apache License 2.0",
 	"type": "module",
 	"main": "dist/lib/index.js",
-	"unpkg": "dist/index.min.js",
 	"module": "dist/es/index.js",
 	"typings": "dist/es/index.d.ts",
 	"files": [
@@ -35,7 +39,7 @@
 		"esniff": "~1.1.0"
 	},
 	"devDependencies": {
-		"@dtyq/eslint-config": "workspace:*",
+		"@dtyq/eslint-config": "~0.0.4",
 		"@jest/globals": "^29.7.0",
 		"@swc/core": "~1.11.11",
 		"@types/jest": "~29.5.12",

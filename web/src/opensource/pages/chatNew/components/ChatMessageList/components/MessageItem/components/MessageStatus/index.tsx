@@ -2,7 +2,7 @@ import { memo, useMemo } from "react"
 import { Flex } from "antd"
 import { observer } from "mobx-react-lite"
 import MessageStore from "@/opensource/stores/chatNew/message"
-import { ConversationMessageStatus, SendStatus } from "@/types/chat/conversation_message"
+import { SendStatus } from "@/types/chat/conversation_message"
 import MessageSeenStatus from "../../../MessageSeenStatus"
 import MessageSendStatus from "../../../MessageSendStatus"
 import { useStyles } from "./style"
@@ -13,7 +13,7 @@ interface MessageStatusProps {
 }
 
 // 将 StatusContainer 组件抽离并使用 memo
-const StatusContainer = memo(({ children }: { children: React.ReactNode }) => {
+const StatusContainer = memo(function StatusContainer({ children }: { children: React.ReactNode }) {
 	const { styles } = useStyles()
 	return (
 		<Flex vertical className={styles.container}>
@@ -24,32 +24,28 @@ const StatusContainer = memo(({ children }: { children: React.ReactNode }) => {
 
 // 将 StatusContent 组件抽离并使用 memo
 const StatusContent = memo(
-	({
+	function StatusContent({
 		message_id,
 		unread_count,
 	}: {
 		message_id: string
 		unread_count: number
-		seenStatus: ConversationMessageStatus
+		// seenStatus: ConversationMessageStatus
 		sendStatus: SendStatus
-	}) => (
-		<>
-			<MessageSeenStatus unreadCount={unread_count} messageId={message_id} />
-			<MessageSendStatus messageId={message_id} />
-		</>
-	),
+	}) {
+		return (
+			<>
+				<MessageSeenStatus unreadCount={unread_count} messageId={message_id} />
+				<MessageSendStatus messageId={message_id} />
+			</>
+		)
+	},
 	(prevProps, nextProps) =>
 		prevProps.message_id === nextProps.message_id &&
 		prevProps.unread_count === nextProps.unread_count,
 )
 
 const MessageStatus = ({ message_id, unread_count = 0 }: MessageStatusProps) => {
-	// 使用 useMemo 缓存状态
-	const seenStatus = useMemo(
-		() => MessageStore.seenStatusMap.get(message_id) ?? ConversationMessageStatus.Unread,
-		[message_id],
-	)
-
 	const sendStatus = useMemo(
 		() => MessageStore.sendStatusMap.get(message_id) ?? SendStatus.Pending,
 		[message_id],
@@ -60,7 +56,7 @@ const MessageStatus = ({ message_id, unread_count = 0 }: MessageStatusProps) => 
 			<StatusContent
 				message_id={message_id}
 				unread_count={unread_count}
-				seenStatus={seenStatus}
+				// seenStatus={seenStatus}
 				sendStatus={sendStatus}
 			/>
 		</StatusContainer>

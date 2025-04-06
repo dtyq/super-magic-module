@@ -140,12 +140,18 @@ class ChatMessageApplyService {
 	 * 应用会话消息
 	 * @param message 会话消息对象
 	 */
-	applyConversationMessage(
+	async applyConversationMessage(
 		message: SeqResponse<ConversationMessage>,
 		options: ApplyMessageOptions = {},
 	) {
 		const { isHistoryMessage = false } = options
-		const conversation = ConversationStore.getConversation(message.conversation_id)
+		let conversation = ConversationStore.getConversation(message.conversation_id)
+
+		if (!conversation) {
+			await ConversationService.addNewConversationFromDB(message.conversation_id)
+		}
+
+		conversation = ConversationStore.getConversation(message.conversation_id)
 
 		MessageService.addReceivedMessage(message)
 

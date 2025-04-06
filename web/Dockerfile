@@ -1,6 +1,6 @@
 # ===== 基础镜像配置 =====
-# 基础镜像: node:22-alpine
-ARG NODE_IMAGE=kkguan-registry.cn-shenzhen.cr.aliyuncs.com/open-source/node:22-alpine
+# 基础镜像: node:18-alpine
+ARG NODE_IMAGE=node:18-alpine
 # =================================================
 
 # build

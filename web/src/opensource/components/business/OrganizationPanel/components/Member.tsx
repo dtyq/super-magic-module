@@ -7,6 +7,7 @@ import { Flex } from "antd"
 
 import MagicLogo from "@/opensource/components/MagicLogo"
 import { LogoType } from "@/opensource/components/MagicLogo/LogoType"
+import { getUserName } from "@/utils/modules/chat"
 
 interface MemberProps extends HTMLAttributes<HTMLDivElement> {
 	data: StructureUserItem
@@ -48,21 +49,19 @@ const useStyles = createStyles(({ css, isDarkMode, token }) => {
 	}
 })
 
-const Member = memo(({ extra, data: item, ...props }: MemberProps) => {
+const Member = memo(function Member({ extra, data: item, ...props }: MemberProps) {
 	const { styles } = useStyles()
+
+	const userName = getUserName(item)
 
 	return (
 		<Flex align="center" justify="space-between" className={styles.container} {...props}>
 			<Flex gap={8} align="center">
 				<MagicAvatar src={(item as StructureUserItem).avatar_url} size={32}>
-					{item.real_name?.length > 0 ? (
-						item.real_name
-					) : (
-						<MagicLogo type={LogoType.ICON} />
-					)}
+					{userName?.length > 0 ? userName : <MagicLogo type={LogoType.ICON} />}
 				</MagicAvatar>
 				<Flex vertical>
-					<span className={styles.name}>{item.real_name}</span>
+					<span className={styles.name}>{userName}</span>
 					{item.job_title ? <span className={styles.title}>{item.job_title}</span> : null}
 				</Flex>
 			</Flex>
