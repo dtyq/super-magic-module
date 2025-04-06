@@ -1,0 +1,1322 @@
+{
+	"DINGDING_ENV": "DingTalk environment",
+	"ErrorHappened": "Some Error Happended!",
+	"FrontendVersionDetected": "Project update detected",
+	"GFDSAQ_DINGTALK_SSO_ENVIRONMENT": "DingTalk Bindeng Environment",
+	"MagicChat": "McGee Chat",
+	"PleaseReloadThePage": "Reloading in progress",
+	"Reload": "reload",
+	"agent": {
+		"addInstruction": "Add command",
+		"agentEmpty": "No available assistants found yet",
+		"agentInfo": "assistant information",
+		"agentManage": "Manage AI Assistant",
+		"checkVersionRecord": "View version history",
+		"createTime": "creation time",
+		"createTo": "Created in",
+		"creator": "Creator",
+		"currentVersion": "Current version",
+		"deleteAgent": "Delete assistant",
+		"dialog": "dialog box",
+		"dialogHelp": "Shortcuts will appear in the bottom area of ​​the assistant dialog input box and will be merged into the top toolbar when on mobile.",
+		"emptyQuickInstruction": "No shortcuts have been added yet",
+		"instruction": "command",
+		"instructionsDesc": "Shortcuts to drive your AI assistant",
+		"interaction": "interactive commands",
+		"maxInstruction": "Supports up to 5 sets of shortcut commands",
+		"nameRepeatError": "Name cannot be repeated",
+		"needPublishTips": "There are modifications to the AI assistant, which need to be published before they can take effect.",
+		"needPublishTips2": "The AI assistant has not yet been released to the enterprise and is only available to the creator.",
+		"noQuote": "Not cited",
+		"organization": "Inside the enterprise",
+		"publishNewVersion": "Release new version",
+		"quickInstruction": "Shortcuts",
+		"quote": "Reference relationship",
+		"quoteAgent": "${num} assistant references",
+		"select": "choose",
+		"status": "status",
+		"switchMarketTip": "Need to be released to the market before activation",
+		"switchOrgTip": "It needs to be published to the enterprise before being activated.",
+		"systemInstructionError": "System instruction cannot be moved",
+		"toolbar": "Toolbar",
+		"toolbarHelp": "Shortcuts will appear in the top toolbar of the Assistant dialog box",
+		"transferCreator": "Forward to creator",
+		"updateTime": "Update time",
+		"upload": "upload",
+		"versionManagement": "Version management",
+		"versionRecord": "version record",
+		"workFlow": "Workflow configuration"
+	},
+	"appList": {
+		"myApps": "Apps",
+		"noDescription": "No Description",
+		"openApp": "Open",
+		"powerBy": "Powered by ${company}"
+	},
+	"backHome": "Return to homepage",
+	"brand": {
+		"dingtalk": "DingTalk",
+		"wechat": "WeChat"
+	},
+	"button": {
+		"add": "Add to",
+		"agree": "",
+		"allow": "Allow",
+		"cancel": "Cancel",
+		"close": "Closure",
+		"confirm": "Confirm",
+		"create": "Create",
+		"delete": "Delete",
+		"edit": "Edit",
+		"publish": "Publish",
+		"reject": "Reject",
+		"save": "Save",
+		"send": "Send",
+		"view": "View"
+	},
+	"calendar": {
+		"aiCalendar": "Let AI create a schedule in one sentence",
+		"holiday": "stop",
+		"meetingRoom": {
+			"advanceBook": "Can be booked in advance",
+			"allPeopleBook": "Available for reservation by all members",
+			"allow": "allow",
+			"baseInfo": "Basic information",
+			"bookMethod": "Booking method",
+			"bookRule": "predetermined rules",
+			"bookTime": "7:00 - 23:00 every day",
+			"bookTimeSlot": "Booking duration",
+			"booked": "Already booked by someone else",
+			"bookedApproval": "Approval after booking",
+			"canBookTime": "Available for booking from ${time1} to ${time2}",
+			"capacity": "Capacity",
+			"changeBookTimeTip": "It is inconsistent with the schedule time. Do you want to adjust the schedule time to",
+			"colorTip": "color description",
+			"cycleBook": "Periodic booking",
+			"device": "Device support",
+			"free": "idle",
+			"hour": "Hour",
+			"locate": "Place",
+			"location": "City·Building·Floor",
+			"minute": "point",
+			"myBooked": "My booking",
+			"needApproval": "Requires approval",
+			"noResource": "No meeting room that meets the criteria was found.",
+			"notAllow": "not allowed",
+			"openTime": "Opening hours",
+			"search": "Search meeting rooms",
+			"selectMeetingRoom": "Select meeting room",
+			"selectedTimeLine": "Select time period",
+			"support": "support",
+			"total": "common",
+			"unavailable": "Not available for reservation"
+		},
+		"moreNum": "There are also ${num} items",
+		"newEvent": {
+			"accept": "accept",
+			"add": "Add schedule",
+			"addFile": "Add attachment",
+			"addLocation": "Add location",
+			"addMeeting": "Add meeting",
+			"addMeetingRoom": "Add meeting room",
+			"addParticipant": "Add participants",
+			"addParticipantTip": "You will add participants to a recurring schedule, please select the effective range",
+			"allDay": "All Day",
+			"busy": "Busy",
+			"calendarDesc": "Add event description",
+			"calendarFile": "Add attachment",
+			"calendarStatus": "schedule status",
+			"changeSuccess": "Modification successful",
+			"checkAll": "Check all",
+			"checkConflict": "Check participants' availability",
+			"checkIn": "Initiate check-in",
+			"checkSummary": "Check summary",
+			"comment": "Enter the comment content, you can @ person",
+			"confirmDelete": "Are you sure to delete this schedule?",
+			"confirmTip": "Are you sure you want to ${text} this schedule?",
+			"confirmTitle": "Modify schedule status to",
+			"conflict": "time conflict",
+			"createSummary": "Create summary",
+			"currentLocation": "Current location",
+			"datePlaceholder": "Select date",
+			"delete": "Delete schedule",
+			"deleteTip": "You will delete this duplicate schedule, please select the effective range",
+			"detail": "Schedule details",
+			"edit": "Edit schedule",
+			"editTip": "You will edit this recurring schedule, please select the effective range",
+			"file": "Attachments (${num} in total)",
+			"finish": "Finish",
+			"free": "idle",
+			"hasConflictTip": "There are ${num} people with time conflicts",
+			"location": "Place",
+			"manageParticipant": "Manage participants",
+			"meetingLink": "Link",
+			"meetingNum": "Meeting number",
+			"meetingRoom": "Conference Room",
+			"moreOptions": "More options",
+			"nearlyLocation": "nearby places",
+			"newOrganizer": "new organizer",
+			"noConflictTip": "No conflicts within everyone's time period",
+			"notify": "remind",
+			"notifyOptions": {
+				"noNotify": "Don't remind",
+				"none": "none",
+				"notify0Min": "at the beginning",
+				"notify15Min": "15 minutes ago",
+				"notify1Day": "1 day ago",
+				"notify1Hour": "1 hour ago",
+				"notify1Week": "1 week ago",
+				"notify2Day": "2 days ago",
+				"notify2Hour": "2 hours ago",
+				"notify30Min": "30 minutes in advance",
+				"notify5Min": "5 minutes ago"
+			},
+			"notifyOrganizer": "Notify new organization members via private chat messages",
+			"notifyOrganzier": "Notify new organization members via private chat messages",
+			"organizer": "organizer",
+			"organizerWithdraw": "The original organizer withdraws from the schedule",
+			"participant": "Participants",
+			"pending": "Tentative schedule",
+			"pendingTip": "You will tentatively schedule this recurring schedule, please select the effective range",
+			"placeholder": "Add event title",
+			"pleaseInputTitle": "Please enter the schedule title",
+			"reject": "Decline schedule",
+			"rejectTip": "You will reject this recurring schedule, please select the effective range",
+			"repeat": "repeat",
+			"repeatOptions": {
+				"count": "after times",
+				"custom": "Customize",
+				"customCycle": "Custom cycle",
+				"daily": "every day",
+				"day": "sky",
+				"endRepeat": "end repeat",
+				"every": "Every",
+				"friday": "five",
+				"monday": "one",
+				"month": "Month",
+				"monthly": "per month",
+				"noRepeat": "Not repeated",
+				"repeatCount": "Limit the number of repetitions",
+				"repeatFrequency": "repetition frequency",
+				"repeatInfinite": "Repeat infinitely",
+				"repeatTimeEnd": "Expire at specified time",
+				"saturday": "six",
+				"sunday": "Day",
+				"theThDay": "Day ${num}",
+				"thursday": "Thursday",
+				"tuesday": "Tuesday",
+				"wednesday": "Wednesday",
+				"week": "Week",
+				"weekly": "Weekly",
+				"workday": "Working days (Monday to Friday)",
+				"year": "Year",
+				"yearly": "each year"
+			},
+			"scope": {
+				"after": "Every subsequent schedule",
+				"all": "All schedule",
+				"only": "Only this schedule"
+			},
+			"searchLocation": "Search location",
+			"selectLocation": "Select location",
+			"tabs": {
+				"comment": "Comment",
+				"dynamics": "dynamic"
+			},
+			"tentative": "Tentative",
+			"title": "Create new schedule",
+			"toGroup": "Enter group chat",
+			"totalParticipant": "Total ${num} people",
+			"transferOrganizer": "Transfer to organizer",
+			"transferSuccess": "Transfer successful",
+			"videoConference": "videoconference"
+		},
+		"sider": {
+			"my": "Mine",
+			"myAgent": "My Assistant",
+			"myCalendar": "My Schedule",
+			"myTask": "My Tasks"
+		},
+		"title": "Calendar",
+		"today": "Today",
+		"today2": "Now",
+		"work": "Work"
+	},
+	"chat": {
+		"aggregate_ai_search_card": {
+			"deep_reading": "Reading in depth",
+			"deep_searching": "Searching in depth",
+			"event": "",
+			"eventDescription": "Event overview",
+			"eventName": "event name",
+			"eventTime": "event time",
+			"mind_map": "mind map",
+			"questionReadCount": "${count} pages read",
+			"read_page": "Read {{number}} pages",
+			"read_pages_count": "{{count}} pages read",
+			"reading_pages": "Reading",
+			"reasoning": "Thinking deeply",
+			"relatedEvents": "Related events",
+			"search": "source",
+			"searchSummary": "We have retrieved ${search_count} pieces of relevant information on the entire web, and carefully read ${read_count} of them. The total number of words is about ${word_count}.",
+			"searchSummaryTips": "The average person's reading speed is 200 ~ 500 words per minute, and it takes about ${time} to read the same length of content.",
+			"search_page": "Search the web",
+			"searching": "Searching",
+			"searchingWebPage": "Searching the web...",
+			"searching_questions": "Searching for questions",
+			"summarizing": "Summarizing..."
+		},
+		"aiImage": {
+			"Generating": "Image generation in progress",
+			"checkHistoryConversation": "View historical conversation",
+			"continueEdit": "Continue to edit",
+			"empty": "No image generated, please try again",
+			"makeTheSame": "Make the same",
+			"reGenerate": "Regenerate",
+			"startPageDescription": "Inspiration overload, ignite your imagination"
+		},
+		"allRead": "All read",
+		"authorityAuthorizationManagement": {
+			"empty": "No authority authorization",
+			"title": "Authority authorization management"
+		},
+		"backToBottom": "back to bottom",
+		"business_form": {
+			"approve_form": {
+				"reset": "reset",
+				"submit": "Initiate approval",
+				"submitted": "already"
+			},
+			"loading": "Form loading",
+			"magic_table": {
+				"add_row": "New",
+				"cancel": "Cancel",
+				"confirmDelete": "Confirm deletion?",
+				"ok": "confirm",
+				"operation": "operate",
+				"submit": "submit",
+				"submitted": "Submitted",
+				"title": "form"
+			},
+			"text": "[form card]"
+		},
+		"busniess_form": {
+			"text": ""
+		},
+		"chat": {
+			"quickInstruction": {
+				"notFoundConfiguration": "Directive configuration not found"
+			}
+		},
+		"chatHistory": {
+			"chatHistory": "Chat history",
+			"filter": {
+				"sender": "sender",
+				"senderPlaceholder": "Enter name to find sender",
+				"time": "time",
+				"timeOption": {
+					"noLimit": "No time limit",
+					"oneMonth": "Last 30 days",
+					"oneWeek": "last 7 days",
+					"today": "today"
+				},
+				"timeRange": "time range",
+				"title": "filter"
+			},
+			"search": {
+				"placeholder": "Search chat history"
+			},
+			"tab": {
+				"all": "all",
+				"file": "document",
+				"link": "Link",
+				"media": "Pictures and Videos"
+			},
+			"title": {
+				"chatHistory": "'s chat history",
+				"groupChatHistory": "Group chat chat history",
+				"with": "and"
+			}
+		},
+		"chatSetting": {
+			"deleteMessageRecords": "Clear chat history",
+			"shareToOther": "Share with others",
+			"shareToOthers": "Share with others"
+		},
+		"collect": "Favorites",
+		"copy": "Copy",
+		"delete": "Delete",
+		"echarts": {
+			"loading": "Chart loading"
+		},
+		"file": {
+			"download": "Download",
+			"preview": "Preview",
+			"saveTo": "Save To",
+			"upload_failed": "File upload failed"
+		},
+		"filePreview": {
+			"notFoundFile": "The file was not found",
+			"notSupport": "Preview is not supported yet",
+			"title": "File preview"
+		},
+		"floatButton": {
+			"AIFriendConfiguration": "AI friend settings",
+			"Praise": "Like",
+			"Praised": "Liked",
+			"aiAssistantConfiguration": "AI assistant settings",
+			"cancelTopConversation": "Unpin",
+			"clearChatMessages": "Delete Chat History",
+			"configuration": "Configuration",
+			"disableNoDisturbing": "Turn off do not disturb",
+			"enableNoDisturbing": "Turn on do not disturb",
+			"moveToGroup": "Move to group",
+			"removeGroup": "Remove session",
+			"topConversation": "Pin conversation",
+			"workflow": "Workflow"
+		},
+		"folder": "document",
+		"forward": "Forward",
+		"groupCreateTip": {
+			"createGroup": "Started a group chat"
+		},
+		"groupDisbandTip": {
+			"disbandGroup": "This group chat has been dissolved"
+		},
+		"groupDisbanded": {
+			"content": "This group has been disbanded"
+		},
+		"groupInfo": "Group chat information",
+		"groupNotice": {
+			"empty": "No announcement yet",
+			"placeholder": "Please enter announcement content",
+			"postNewNotice": "Make a new announcement",
+			"title": "Group announcement"
+		},
+		"groupSetting": {
+			"addMember": {
+				"AddGroupMember": "invite",
+				"PleaseSelectAtLeastOneMember": "Please select at least one user",
+				"selectedCount": "${count} people selected"
+			},
+			"addMemberSuccess": "Added successfully",
+			"dissolveGroup": "Dismiss group chat",
+			"groupAdmin": "Group management",
+			"groupAdminTip": "Related settings of group permissions",
+			"groupInWhich": "Belongs to ${name}",
+			"groupName": "Group name",
+			"groupNamePlaceholder": "Please enter the group name",
+			"groupNotice": "Group announcement",
+			"groupType": "Group type",
+			"leaveGroup": "Exit group chat",
+			"leaveGroupConfirm": "",
+			"leaveGroupSuccess": "Exited group chat",
+			"ownerLeaveGroupTip": "The group owner cannot exit the group chat. Please transfer the group and then exit.",
+			"remove": "Remove",
+			"removeGroupConfirm": "",
+			"removeGroupSuccess": "Disbanded successfully",
+			"removeMember": "Remove group members",
+			"title": "Group settings",
+			"updateGroupName": "Modify group name",
+			"userSetting": "Personalized settings (only effective for yourself)",
+			"viewAllMembers": "View all group members (${count}/1000)"
+		},
+		"groupType": {
+			"external": "external group",
+			"internal": "internal group",
+			"internalMeeting": "internal meeting group",
+			"internalProject": "internal projects",
+			"internalTraining": "internal training group",
+			"internalWorkOrder": "internal work order group"
+		},
+		"groupUpdateTip": {
+			"updateGroupAvatar": "Fixed group avatar",
+			"updateGroupName": "Change the group name to:"
+		},
+		"groupUsersRemoveTip": {
+			"do": "",
+			"leaveGroup": "Exit group chat",
+			"make": "Will",
+			"removeMember": "Move out of group chat"
+		},
+		"imagePreview": {
+			"afterProcessing": "Ultra-HD Image",
+			"beforeProcessing": "Original image",
+			"converting": "Converting",
+			"convertingCloseTip": "You can close this window during the conversion process.",
+			"defaultTitle": "Preview content",
+			"download": "download",
+			"highDefinition": "Ultra HD",
+			"highDefinitionImage": "AI Ultra HD",
+			"hightImageConverted": "High-Definition Image Converted",
+			"hightImageConverting": "AI high-definition conversion in progress ${num}%",
+			"longPressCompare": "Long Press to Compare",
+			"navigateToMessage": "Locate the message",
+			"senderFiles": "File sent by {{username}}",
+			"senderImage": "Pictures sent by {{username}}",
+			"senderVideo": "Video sent by {{username}}",
+			"transpond": "Forward",
+			"useHightImageTip": "The AI super-clear feature consumes a large amount of computational resources and has a limited number of monthly uses. Do you confirm to use it?"
+		},
+		"input": {
+			"calendar": "schedule",
+			"clearContext": "clear context",
+			"dragFile": {
+				"tip": "Drag files here to send"
+			},
+			"emoji": "Emoji",
+			"internet": "Internet",
+			"microphone": "Voice",
+			"newTopic": "new topic",
+			"people": "member",
+			"quickInstruction": "shortcut command",
+			"referTo": "Mention",
+			"task": "Task",
+			"todo": "To-do",
+			"upload": "File",
+			"videoPhone": "video call"
+		},
+		"inviteMemberTip": {
+			"invite": "invite",
+			"joinGroupConversation": "Join group chat"
+		},
+		"link": {
+			"title": "title"
+		},
+		"markdown": {
+			"citation": {
+				"viewSource": "View source page"
+			},
+			"copy": "Copy",
+			"graph": "graphics",
+			"raw": "original"
+		},
+		"markmap": {
+			"downloadPicture": "Download pictures",
+			"enableInteraction": "Enable interaction",
+			"exitFullScreen": "Exit full screen",
+			"fullScreen": "View full screen",
+			"generatePPT": "Generate presentation"
+		},
+		"mentionPanel": {
+			"search": {
+				"placeholder": "Search contacts, AI assistant, files"
+			}
+		},
+		"mermaid": {
+			"error": "Mermaid grammar error",
+			"loading": "Flowchart loading"
+		},
+		"message": {
+			"BeThinking": "thinking",
+			"groupSeenPopover": {
+				"title": "Message recipient list"
+			},
+			"image": {
+				"longImage": "Long picture"
+			},
+			"loading": "loading",
+			"markdown": {
+				"image_is_not_exist": "Resource does not exist"
+			},
+			"networkError": {
+				"description": "Network abnormality, content loading failed",
+				"reload": "reload"
+			},
+			"placeholder": {
+				"code": "[code block]",
+				"echarts_card": "",
+				"image": "[picture]",
+				"mermaid": "flow chart",
+				"sinan_card": ""
+			},
+			"thought_process": "Thinking process"
+		},
+		"messageAttachments": {
+			"collapse": "close",
+			"expandAllFiles": "Expand all files (${count})"
+		},
+		"messageRevoked": "Message has been withdrawn",
+		"messageTextRender": {
+			"aggregate_ai_search_card": "[Search results]",
+			"ai_image": "[Image]",
+			"files": "[File]",
+			"image": "[Image]",
+			"link": "[Link]",
+			"magic_search_card": "[Search results]"
+		},
+		"mulitiple": "Multiple choice",
+		"oss_file": {
+			"loading": "Resource loading"
+		},
+		"quickInstruction": {
+			"instructionValue": "@ command value",
+			"noInstructionConfigure": "No directive configured",
+			"notFoundConfiguration": "Directive configuration not found"
+		},
+		"read": "Read",
+		"recall": "Recall",
+		"reply": "Reply",
+		"resend": "Resend",
+		"revoke_one_message": "Withdrawn a message",
+		"schedule": "schedule",
+		"schedule_card": {
+			"bookingMeetRoom": "",
+			"onlyCreateSchedule": "",
+			"participant": "",
+			"participantDescription": "",
+			"schedule": "",
+			"scheduleDescription": "",
+			"schedule_time": ""
+		},
+		"seenCount": "${count} people have read",
+		"sendFailed": "Sending failed",
+		"sending": "Sending...",
+		"setting": "Chat settings",
+		"sinan_card": {
+			"loading": "Chart loading"
+		},
+		"subSider": {
+			"aggregateAISearchCard": "[Search results]",
+			"aiBots": "AI Assistant",
+			"atMe": "@Me",
+			"conversation": "Chat",
+			"files": "[document]",
+			"group": "Groups",
+			"groupConversation": "Group Chat",
+			"message": "All",
+			"pinned": "Pinned",
+			"specialCardMessage": "[Special Card Message]"
+		},
+		"task": "Task",
+		"timedTask": {
+			"addTask": "Add Task",
+			"alwaysRepeat": "Always repeat",
+			"changeTopic": "Switch to Related Topic",
+			"createTask": "Create Scheduled Task",
+			"customRepeat": "Custom Repeat",
+			"dailyRepeat": "Repeat Daily",
+			"deadline": "Deadline",
+			"deadlineTo": "Deadline to ${time}",
+			"deleteTask": "Delete Task",
+			"editTask": "Edit Task",
+			"editTimedTask": "Edit Scheduled Task",
+			"monthlyRepeat": "Repeat Monthly",
+			"monthlyTimePlaceholder": "Please select day",
+			"neverEnding": "Never Ending",
+			"noRepeat": "No Repeat",
+			"repeat": "Repeat",
+			"repeatPlaceholder": "please select repeat type",
+			"taskContent": "Task Content",
+			"taskContentPlaceholder": "e.g., Summarize daily work content",
+			"taskDescription": "${per} [${time}] execute ${deadline}",
+			"taskDescription2": "[${day} ${time}] execute ${deadline}",
+			"timePlaceholder": "Please select time",
+			"title": "Scheduled Tasks",
+			"topic": "Related Topic",
+			"topicPlaceholder": "Please select related topic",
+			"unit": "unit",
+			"weekdayRepeat": "Repeat Every Workday (Monday to Friday)",
+			"weekdayRepeat2": "",
+			"weeklyRepeat": "Repeat Weekly",
+			"weeklyTimePlaceholder": "Please select week",
+			"xDay": "${num} day",
+			"xMonth": "${num} month",
+			"yearlyTimePlaceholder": "Please select month"
+		},
+		"todo": "To-do",
+		"topic": {
+			"backChat": "Return to chat",
+			"createTopic": "Create new topic",
+			"currentTopic": "Current Topic",
+			"menu": {
+				"ai_rename": "Smart renaming",
+				"delete_topic": "Delete topic",
+				"rename_topic": "Rename",
+				"topicName": "topic name"
+			},
+			"newTopic": "new topic",
+			"noTopic": "No topic yet",
+			"switchTopic": "Change topic",
+			"tip": {
+				"description": "Use group chat topics to focus on each topic.",
+				"title": "Topic List"
+			},
+			"topic": "Topic"
+		},
+		"translate": "translate",
+		"unread": "Unread",
+		"unreadCount": "${count} unread",
+		"unseenCount": "${count} unread",
+		"urgent": "urgent",
+		"urgentModal": {
+			"form": {
+				"recipient": "recipient",
+				"sendType": "Send method",
+				"timedTransmission": "Send regularly",
+				"timedTransmissionOpenPlaceholder": "Please select date and time"
+			},
+			"sendType": {
+				"appAndMessage": "Application SMS",
+				"appAndPhone": "application phone",
+				"onlyApp": "Apply only"
+			},
+			"title": "urgent"
+		},
+		"userSetting": {
+			"GroupInWhich": "Group",
+			"addMember": "Add to",
+			"aiTranslateRealTime": "AI real-time translation",
+			"disturbMessage": "Do not disturb messages",
+			"removeMember": "Remove",
+			"specialAttention": "special attention",
+			"startConversation": "Start a group chat",
+			"topConversation": "Pin conversation"
+		},
+		"wiki": {
+			"noContent": "No content",
+			"noSources": "no source",
+			"related": "Further",
+			"sources": "Source"
+		},
+		"you": "You "
+	},
+	"collectModal": {
+		"save": "save",
+		"selectTip": "Select from existing tags",
+		"tip": "When the content of the collected messages changes, the content of the messages in the collection will also change in real time.",
+		"tip1": "When the message content is withdrawn, the message content in the collection will not be displayed.",
+		"tip2": "When the message content is modified, the message content in the collection is also modified simultaneously."
+	},
+	"common": {
+		"calendar": {
+			"newEvent": {
+				"allDay": "all day"
+			}
+		},
+		"cancel": "Cancel",
+		"confirm": "Confirm",
+		"day": "Day",
+		"format": {
+			"NthOfweek": "Week ${week}",
+			"yearAndMonth": "YYYY year MM month"
+		},
+		"hour": "Hour",
+		"loading": "loading",
+		"max_upload_size_placeholder": "Upload up to {{count}} files",
+		"minute": "minute",
+		"noMore": "no more",
+		"refresh": "refresh",
+		"reload": "Refresh the page",
+		"save": "save",
+		"select": "choose",
+		"tip": "hint",
+		"unknown": "unknown",
+		"upload": "Upload",
+		"upload_max_count_placeholder": "",
+		"upload_max_size_placeholder": "Maximum {{size}}MB per file"
+	},
+	"contacts": {
+		"organization": {
+			"noOrganizationOrMember": "No department or personnel yet"
+		},
+		"selectAll": "select all",
+		"subSider": {
+			"aiAssistant": "AI Assistant",
+			"enterpriseInternal": "Inside the enterprise",
+			"followee": "people following",
+			"myFriends": "My Friends",
+			"myGroups": "My Groups",
+			"organization": "Organizational"
+		},
+		"topBar": {
+			"segmented": {
+				"architecturalView": "architectural view",
+				"list": "list view"
+			},
+			"title": "Address book"
+		}
+	},
+	"deleteConfirm": "Confirm deletion",
+	"deleteConfirmTip1": "To ensure data security, if you need to delete it, please",
+	"deleteConfirmTip2": "Enter below and confirm",
+	"deleteConfirmTitle": "Delete operation confirmation",
+	"diffTip": "The current input content is inconsistent with the original content",
+	"drive": {
+		"all": "all",
+		"common": "Commonly Used",
+		"favorite": "Favorites",
+		"modal": {
+			"CollaboratorOrDepartment": "Collaborator/Department",
+			"classification": "Classification",
+			"confirmMoveToTrash": "Are you sure you want to move it to the recycle bin?",
+			"inviteCollaborators": "Invite collaborators",
+			"moveTo": "Move to",
+			"moveToTrash": "Move to recycle bin",
+			"newSubFolder": "Create new subfolder",
+			"officialTemplate": "Official template",
+			"permission": {
+				"all": "Manageable",
+				"batchOperation": "Batch operations",
+				"download": "Preview and download available",
+				"edit": "editable",
+				"noticeNewCollaborator": "Notify this new collaborator",
+				"read": "Preview available",
+				"selectAll": "select all"
+			},
+			"personalTemplate": "Personal template",
+			"pleaseEnterFolderName": "Please enter a folder name",
+			"rename": "Rename",
+			"searchFolder": "Search folder",
+			"searchTemplate": "Search template",
+			"templateLibrary": "Template library"
+		},
+		"myCreated": "My Creations",
+		"personalDrive": "Personal Disk",
+		"recentVisit": "recent visits",
+		"sharedDrive": "Organization Disk",
+		"table": {
+			"addToFavorite": "Add to favorites",
+			"authorityManagement": "authority management",
+			"cancelFavorite": "Cancel favorites",
+			"copy": "Create a copy",
+			"copyLink": "copy Link",
+			"creator": "Creator",
+			"download": "download",
+			"modifyTime": "Modification Time",
+			"moveTo": "Move to",
+			"moveToTrash": "Move to recycle bin",
+			"name": "Name",
+			"new": "New",
+			"newMenu": {
+				"all": "all types",
+				"cloudDocument": "Cloud documents",
+				"excel": "Excel document",
+				"folder": "folder",
+				"magicTable": "magic form",
+				"ppt": "Presentation document",
+				"whiteBoard": "whiteboard",
+				"word": "Word document"
+			},
+			"openCurrentFolder": "Open the directory",
+			"openOnNewTab": "Open in new tab",
+			"remainDay": "Expiration days",
+			"rename": "Rename",
+			"upload": "Upload files/folders"
+		},
+		"template": {
+			"new": "New",
+			"usedTimeTip": "Has been used ${used_time} times"
+		},
+		"trash": "recycle bin",
+		"trashMenu": {
+			"removePermanent": "Delete completely",
+			"restore": "recover"
+		}
+	},
+	"explore": {
+		"assistantMarket": "assistant market",
+		"bestAssistant": "Best Assistants",
+		"buttonText": {
+			"addOption": "Add options",
+			"addStatus": "Add Status",
+			"authorityManagement": "Administrative permissions",
+			"autoGenerate": "Automatically generated",
+			"conversationAssistant": "Talk to an AI assistant",
+			"createAssistant": "Create an AI assistant",
+			"createInteraction": "Add interactive commands",
+			"mangageAssistant": "Manage AI Assistant",
+			"moreAll": "View more",
+			"publishAssistant": "Release AI Assistant",
+			"updateAssistant": "Edit AI assistant",
+			"useDefaultIcon": "Use Default Icon"
+		},
+		"byWhoCreate": "Created by <span>{{nickname}}</span>",
+		"descriptionPanel": {
+			"addFriendAndChat": "Add friends and chat",
+			"alreadyAddAgent": "The assistant has been added",
+			"friendNum": "Number of friends",
+			"good": "Good reviews",
+			"initiateAsession": "Start a session",
+			"onlyAddAgent": "Add assistant only",
+			"onlyAddFriend": ""
+		},
+		"findYour": "Find Your ",
+		"form": {
+			"addMemberOrDepartment": "Add members/departments",
+			"allMember": "Available to all members",
+			"assistantAvatarPlaceholder": "Please upload avatar",
+			"assistantDesc": "Introduction",
+			"assistantDescPlaceholder": "Introduce AI assistant and show it to users",
+			"assistantName": "name",
+			"assistantNamePlaceholder": "Give your AI assistant a unique name",
+			"baseInfo": "Basic information",
+			"chatInstruction": "Chat Instruction",
+			"chatInstructionTip": "Chat instructions combine instruction content with user dialogue text in the message content, which can be directly read by large language models",
+			"close": "close",
+			"comingSoon": "Coming soon",
+			"conversationTip": "You can quickly start a conversation through the button below",
+			"defaultValue": "default value",
+			"example": "Example",
+			"exampleDesc": "Characters and stories emerge between light and shadow in the picture",
+			"exampleTitle": "Movie Portrait Style",
+			"flowInstruction": "Flow Instruction",
+			"flowInstructionTip": "The instruction value of flow instructions can be used for flow node judgment or reading values, and can be called via @ on flow nodes",
+			"insertBefore": "Before Message Content",
+			"insertBehind": "After Message Content",
+			"insertCursor": "At Cursor Position in Message",
+			"insertInstruction": "Insert command value",
+			"insertLocation": "Instruction Insert Position",
+			"insertLocationTip": "When 'At Cursor Position in Message' is selected, the instruction will be inserted at the cursor position. If cursor loses focus, it will be appended to the end of message content.",
+			"instructionContent": "Command content",
+			"instructionContentPlaceholder": "The content sent by the input command will be added to the message when the user sends the message. \nSupports using @ to add directive values.",
+			"instructionDesc": "Command description",
+			"instructionDescPlaceholder": "Enter shortcut description",
+			"instructionExpDesc": "Instruction Description",
+			"instructionExpDescPlaceholder": "Enter description",
+			"instructionExpImgTip1": "Upload prompt image (optional)",
+			"instructionExpImgTip2": "280*160 pixels",
+			"instructionExpName": "Instruction Name",
+			"instructionExpNamePlaceholder": "Enter name",
+			"instructionExplanation": "Instruction Explanation",
+			"instructionMode": "Instruction Mode",
+			"instructionName": "Command name",
+			"instructionNamePlaceholder": "Enter the name of the shortcut command and display it at the button position",
+			"instructionResidency": "Instruction Residency",
+			"instructionResidencyTip": "When enabled, the option selected by the user will be fixed to this instruction, and in the case of dialogue instructions, the instruction content will be inserted before the message content.",
+			"instructionSetting": "Command configuration",
+			"instructionSwitchTip": "Switch type instructions will be passed to the assistant each time a dialogue occurs",
+			"instructionType": "Instruction type",
+			"officialChannel": "Official Channel",
+			"open": "open",
+			"option": "Options",
+			"optionName": "display name",
+			"optionNamePlaceholder": "Please enter a display name",
+			"optionPlaceholder": "Please enter the command content of the option",
+			"optionValue": "command value",
+			"optionValuePlaceholder": "Please enter the command value",
+			"passTime": "passing time",
+			"private": "personal use",
+			"privatePlaceholder": "Only available to the creator",
+			"publishOrg": "Inside the enterprise",
+			"publishOrgPlaceholder": "For internal use only",
+			"publishPublic": "AI assistant market",
+			"publishPublicPlaceholder": "Available to everyone",
+			"publishRecord": "Release record",
+			"publishRecordPlaceholder": "Please enter release record",
+			"publishScope": "Release scope",
+			"publishSuccess": "Posted successfully",
+			"sendCommand": "Send a direct command",
+			"sendCommandTip": "Once turned on, commands will be sent directly to the assistant when the user clicks on them.",
+			"singleChoice": "single choice",
+			"specificMember": "Available to specified members/departments",
+			"statusIcon": "Icon",
+			"statusText": "Status Text",
+			"statusTextColor": "Text Color",
+			"statusTextColorDefault": "Default",
+			"statusTextColorGreen": "Green",
+			"statusTextColorOrange": "Orange",
+			"statusTextColorRed": "Red",
+			"statusTextPlaceholder": "Display status text",
+			"statusTip": "After triggering the status button command, the status will change according to the set order, and the command value will be sent directly to the assistant.",
+			"submitTime": "Submission time",
+			"switch": "switch",
+			"text": "text",
+			"version": "version number",
+			"versionPlaceholder": "Please enter the version number, which cannot be less than the current version number.",
+			"versionValidateTip": "Wrong format, example: 1.0.1",
+			"visibleRange": "Visible Range",
+			"visibleRangeDesc": "Set members/departments who can use this AI assistant"
+		},
+		"noDescription": "No description",
+		"promptsDesc": {
+			"innerAssistant": "AI Assistant for Enterprise's Own Scenarios",
+			"mostPopular": "Selected assistant list, there is always one suitable for you"
+		},
+		"promptsTitle": {
+			"innerAssistant": "Internal assistant",
+			"mostPopular": "Most Popular",
+			"newlyJoined": "Newly Joined"
+		},
+		"searchFriend": "Search AI Assistant",
+		"searchResult": "Search results(${num})"
+	},
+	"favorite": {
+		"all": "all",
+		"batchDelete": "Batch Delete",
+		"batchEdit": "",
+		"chatRecord": "Chat history",
+		"contact": "Contact",
+		"createLabel": "",
+		"createOrEditLabel": "Create/modify tags",
+		"creator": "Created by",
+		"deleteFavorite": "Delete favorites",
+		"deleteLabel": "Delete tags",
+		"doc": "document",
+		"editLabel": "Edit Tags",
+		"group": "Group chat",
+		"label": "Label",
+		"loading": "",
+		"noFavorite": "No collection yet",
+		"noMoreData": "",
+		"pleaseInputLabel": "Please enter the tag name",
+		"recentAccessAt": "Last visit time",
+		"rename": "Rename",
+		"selectAll": "Select all",
+		"selectFromCurrentLabel": "Select from an existing tag",
+		"untag": ""
+	},
+	"flow": {
+		"addTools": "Add Tools",
+		"apiKey": {
+			"addKey": "New key",
+			"clickToCopy": "Click to copy",
+			"confirmToDelete": "Confirm to delete this Key?",
+			"confirmToRebuild": "Confirm to rebuild this Key?",
+			"copy": "Copy key",
+			"copyCurl": "Copy curl",
+			"deleteKey": "Delete key",
+			"descPlaceholder": "Please input key description",
+			"description": "Description",
+			"disabled": "Disable",
+			"editKey": "Edit key",
+			"emptyTips": "Create an Api Key to quickly call flow instance by api",
+			"enable": "Enable",
+			"hideKey": "Hide key",
+			"keyManager": "API key management",
+			"keyName": "Key name",
+			"keyValue": "Key secret",
+			"lastUsed": "Last used",
+			"name": "Name",
+			"namePlaceholder": "Please input key name",
+			"neverUsed": "Never",
+			"resetKey": "Reset key",
+			"showKey": "Show key",
+			"status": "Status",
+			"success": "success"
+		},
+		"appAuth": "Application Authorization",
+		"changeInfo": "Modify information",
+		"emptyTips": "No ${title} added yet",
+		"flow": "process",
+		"flowInput": "Process input parameters",
+		"hasToolsNum": "Contains ${num} tools",
+		"required": "must",
+		"saveAndPublish": "Save and publish",
+		"searchTips": "Can't find any",
+		"tools": "tool",
+		"toolsNum": "${num} tools",
+		"version": "version"
+	},
+	"form": {
+		"groupAvatar": "Group avatar",
+		"groupAvatarTip": "If not uploaded, the default group avatar will be used.",
+		"groupName": "Group name",
+		"placeholder": {
+			"groupName": "Please enter the group name"
+		},
+		"required": "Please Enter ${label}"
+	},
+	"home": {
+		"botAnimation": {
+			"tooltip1": "Don't worry, I'm here to assist you in completing each task effortlessly.",
+			"tooltip2": "Sure, I can send you a website URL.",
+			"tooltip3": "I can also assist you with tasks related to work.",
+			"tooltip4": "You can drag and drop the file here for me."
+		},
+		"description": "Effortlessly complete your work",
+		"welcomeTo": "Welcome to "
+	},
+	"inferface": {
+		"common": {
+			"upload": "Upload"
+		}
+	},
+	"invite": {
+		"backToPreviousStep": "Return to the previous step",
+		"haveInviteCode": "Already have an invitation code",
+		"inviteCode": "Invitation Code",
+		"inviteCodePlaceholder": "Please enter the invitation code.",
+		"inviteForm": {
+			"defaultValue": {
+				"industryType": "other",
+				"name": "Default Organization"
+			}
+		},
+		"joinShortlist": {
+			"alreadyJoin": "Added to the waitlist",
+			"alreadyJoinDescription": "We will send you an invitation code as soon as possible so that you can have priority access to our services.",
+			"alreadyJoinTitle": "You have successfully joined the \"Waitlist.\"",
+			"back": "Back",
+			"description": "We are currently in the beta testing phase. You can join the \"waiting list\" to receive an invitation code to experience our service.",
+			"emailInvalid": "Invalid email address",
+			"emailLabel": "Email",
+			"emailPlaceholder": "Please provide your frequently used contact email.",
+			"emailRequired": "Email is required",
+			"formDescription": "Please fill in the following information to join the waitlist",
+			"jobInfoLabel": "Job",
+			"jobInfoPlaceholder": "Please enter your job",
+			"joinShortlist": "Join the waitlist",
+			"socialMediaLabel": "Social media account",
+			"socialMediaPlaceholder": "Please provide the links to your personal profiles on LinkedIn, X, TikTok, Weibo, Douyin, Xiaohongshu, or other social media platforms. If you have multiple accounts, please provide them all to us.",
+			"submit": "Submit",
+			"tasksLabel": "What tasks would you like Magic AI to perform for you?",
+			"tasksPlaceholder": "What tasks would you like Magic AI to complete for you? Please let us know your ideas in detail; the more specific your ideas are, the better we can provide solutions for you.",
+			"tasksRequired": "Tasks is required",
+			"title": "Join the waitlist"
+		},
+		"leaveAccount": "Log out",
+		"nextStep": "Next",
+		"successRegister": "You have successfully registered for 「Magic AI」"
+	},
+	"memberCard": {
+		"assistantIntroduction": "Assistant introduction",
+		"baseInfo": "Basic information",
+		"call": "voice call",
+		"creator": "Creator",
+		"department": "department",
+		"email": "Mail",
+		"employeeProfile": "Employee information",
+		"employmentInfo": "Employment information",
+		"enterprise": {
+			"organization": "Business/Organization"
+		},
+		"enterprise_organization": "Business/Organization",
+		"origin": "source",
+		"phone": "Phone number",
+		"schedule": "",
+		"selfSpecification": "Personal instructions",
+		"sendMessage": "send message",
+		"share": "share",
+		"shareBusinessCard": "Share business card",
+		"tasksAssociatedWithMe": "Tasks associated with me",
+		"title": "Position",
+		"viewSchedule": "View schedule",
+		"viewSelfSpecification": "Check"
+	},
+	"memberDepartmentSelectPanel": {
+		"byGroup": "Chat by group",
+		"byOrganization": "By organizational structure",
+		"byPartner": "by partner",
+		"recentContacts": "recent contacts",
+		"selected": "Selected",
+		"selectedDepartments": "${count} departments",
+		"selectedGroups": "${count} group chats",
+		"selectedMembers": "${count}individuals",
+		"selectedPartner": "${count} partners"
+	},
+	"memberSearch": {
+		"noSearchResults": "No results",
+		"searchMembers": "Search for members"
+	},
+	"message": {
+		"DownloadFailed": "Download failed",
+		"FileNotFound": "",
+		"chat": {
+			"NotSupport": "Not supported yet",
+			"groupDisbanded": {
+				"content": "This group has been disbanded"
+			}
+		},
+		"drive": {
+			"modal": {}
+		},
+		"file": {
+			"uploadLimit": "Select up to {{count}} files"
+		}
+	},
+	"multipleCheckPanel": {
+		"back": "Return to chat",
+		"collect": "collect",
+		"delete": "delete",
+		"generateImage": "Generate pictures",
+		"report": "report",
+		"share": "Forward"
+	},
+	"networkTip": {
+		"offline": "The network has been interrupted, please check the network",
+		"online": "The network has been restored and data is being synchronized",
+		"websocketReloadTip": "Network abnormality, please click to refresh the page"
+	},
+	"noData": "no data",
+	"oauth": {
+		"address": "",
+		"email": "",
+		"openid": "",
+		"permission": "",
+		"phone": "",
+		"profile": "",
+		"title": ""
+	},
+	"organization": {
+		"header": "Organizational",
+		"instruction": "Department Manual",
+		"root": "Company"
+	},
+	"pageNotFound": "Page not found",
+	"pageNotFoundTip": "Sorry, the page you visited does not exist",
+	"placeholder": {
+		"login": {
+			"enterVerificationCode": "Enter the mobile phone verification code"
+		},
+		"magicInput": "Enter to Send | ⌘ + Enter to New Line",
+		"magicInputWindows": "",
+		"pleaseEnterMessage": "Please enter a message"
+	},
+	"pleaseInput1": "Please enter",
+	"pleaseInput2": "Confirm deletion after",
+	"result": {
+		"getAccountsError": "Failed to get user organization list"
+	},
+	"richEditor": {
+		"bold": "Bold",
+		"centerAlign": "center alignment",
+		"italic": "italics",
+		"justifyAlign": "Justify",
+		"leftAlign": "left aligned",
+		"paragraph": "paragraph",
+		"placeholder": "Please enter content",
+		"redo": "Redo",
+		"rightAlign": "Align right",
+		"undo": "Cancel"
+	},
+	"search": "Search",
+	"send": "Send",
+	"setting": {
+		"VerificationCode": "Code",
+		"aboutMagic": "About Magic",
+		"aboutUs": "About",
+		"accountManage": "Account",
+		"aiCompletion": "AI automatic completion",
+		"aiCompletionDescription": "Automatically complete based on input content",
+		"appearance": "Theme",
+		"appearanceDescription": "Set a comfortable visual experience",
+		"auto": "Auto",
+		"avatar": "Avatar",
+		"binded": "Bound",
+		"canUseInLoginMagic": "Used for logging into Magic",
+		"cancelBind": "Disconnect",
+		"change": "Change",
+		"changePassword": "Modify",
+		"changePhone": "Modify mobile phone number",
+		"currentDevices": "Current",
+		"dark": "Dark",
+		"debugMode": "Debug mode",
+		"developTools": "Developer Tools",
+		"email": "E-Mail",
+		"emailPlaceholder": "Please enter your E-Mail",
+		"enableDebug": "Turn on debugging",
+		"enableDebugMode": "Turn on debug mode to facilitate positioning errors",
+		"enterprise": "Company",
+		"exit": "Log out",
+		"fallback": "Feedback",
+		"fontSize": "Font Size",
+		"fontSizeDescription": "Chat content font size",
+		"generalSetting": "General",
+		"getVerificationCode": "Verificate",
+		"goToBind": "Connect",
+		"hotKeySetting": "Hotkey Settings",
+		"imStyle": "IM Style",
+		"imStyleDescription": "Adjust the style of the dialog box according to personal preference.",
+		"invalidPhone": "Invalid mobile number",
+		"language": "Language",
+		"languageDescription": "Support internationalization for free switching",
+		"languages": {
+			"auto": "Follow System",
+			"enUS": "English",
+			"zhCN": "Simplified Chinese"
+		},
+		"light": "Light",
+		"loginDevices": "Device",
+		"loginPassword": "Password",
+		"loginTime": "Last Login",
+		"magicId": "Magic ID",
+		"modern": "Modern",
+		"newPhone": "New mobile number",
+		"newPhoneCode": "New mobile phone number verification code",
+		"nickName": "Nickname",
+		"nickNamePlaceholder": "Please enter a nickname",
+		"notBind": "Not bound",
+		"phoneAreaCode": {
+			"china": "Mainland China(86)",
+			"malaysia": "Malaysia(60)"
+		},
+		"phoneNumberPlaceholder": "Please enter your phone number",
+		"phoneNumebr": "Phone Number",
+		"realName": "Real Name",
+		"realNamePlaceholder": "please enter your real name",
+		"reinput": "re-enter",
+		"reinputPassword": "Repeat Password",
+		"resendAfter": "s Resend",
+		"samePhone": "Duplicate mobile phone number",
+		"search": "Global Search",
+		"searchDescription": "Global Search Hotkey",
+		"shortcutKeyPlaceholder": "Please enter a shortcut key",
+		"standard": "Standard",
+		"system": "System",
+		"systemSetting": "System settings",
+		"thirdPartyPlatform": "Link To Platforms",
+		"timezone": "time zone",
+		"timezoneDescription": "The system displays relevant times based on this time zone setting",
+		"tip": {
+			"accountManageTip": "The organization has enabled DingTalk organization synchronization. The information comes from the DingTalk address book.",
+			"loginDevicesTip": "To ensure the security of your data, it is recommended to regularly log out of devices that are not used on a daily basis."
+		},
+		"toEdit": "Go to edit",
+		"unknownDevice": "Unknown Device",
+		"updateLog": "Update Log"
+	},
+	"sider": {
+		"LaunchAGroupChat": "Start a group chat",
+		"accountTitle": "Account",
+		"addAccount": "Add Account",
+		"addressBook": "Contacts",
+		"aiAssistants": "AI Assistant",
+		"approve": "Approval",
+		"apps": "Workplace",
+		"assistants": "assistant",
+		"calendar": "Schedule",
+		"cloudDisk": "Drive",
+		"createAIFriend": "Create AI friends",
+		"createGroupConversation": "Create group chat",
+		"discover": "Discover",
+		"exitContent": "If there are multiple accounts, they will switch to other accounts for you.",
+		"exitTitle": "Are you sure to log out of the current account?",
+		"favorites": "Favorites",
+		"logout": "Log Out",
+		"message": "Messenger",
+		"modal": {
+			"AIAvatar": "AI avatar",
+			"AIDescription": "AI capability description",
+			"AIName": "AI name",
+			"placeholder": {
+				"avatar": "Give your AI friend a unique name"
+			}
+		},
+		"notification": "notify",
+		"orgNotAuthorized": "The organization has not been authorized yet",
+		"setting": "Settings",
+		"superMagic": "",
+		"switchLanguage": "Switch Language",
+		"switchOrganization": "Change Enterprise",
+		"switchOrganizationConfirm": "The page will refresh automatically after switching. Do you want to continue?",
+		"task": "Tasks",
+		"wiki": "Wiki",
+		"workflow": "Workflow",
+		"workspace": "Workplace"
+	},
+	"spin": {
+		"loadingUserInfo": "Loading user information...",
+		"pullingMessage": "Fetching messages...",
+		"loadingConfig": "Loading configuration...",
+		"loadingAuth": "Loading page...",
+		"loadingCluster": "Loading environment...",
+		"loadingLogin": "Logging in..."
+	},
+	"today": "today",
+	"workspaces": {
+		"alwayUsedApplication": "Common applications",
+		"collapse": "close",
+		"noCollapse": "Expand"
+	}
+}

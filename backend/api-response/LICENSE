@@ -1,0 +1,36 @@
+**Open Source License Agreement**  
+
+Magic is licensed under a modified version of the Apache License 2.0, supplemented by the following terms:  
+
+### **Commercial Licensing Requirements**  
+Magic may be used for commercial purposes, such as supporting backend services for other applications or serving as an enterprise application development framework. However, a commercial license must be obtained from the licensor if the following conditions are not met:  
+
+#### **Multi-Tenancy Restrictions**  
+- **Usage Limitations**: Operating a multi-tenant environment using Magic’s source code is prohibited without explicit written consent from Magic.  
+- **Tenant Definition**: Under this agreement, a "tenant" refers to an independent  organization on Magic
+
+#### **Branding & Copyright Attribution**  
+- **Mandatory Attribution Requirements**: When using Magic’s frontend components, you may not remove or alter logos, trademarks, or copyright notices in the console or applications. This restriction does not apply to implementations that do not involve the frontend.  
+- **Frontend Definition**: The "frontend" includes all components in the `web/` directory in source code deployments or the "web" image in Docker containers.  
+
+For licensing inquiries, contact **bd@dtyq.com**.  
+
+---  
+
+### **Contribution Terms**  
+By submitting contributions, you agree to:  
+
+#### **License Flexibility**  
+- The licensor reserves the unilateral right to revise this agreement, imposing stricter or more lenient terms as necessary.  
+
+#### **Commercial Use of Contributions**  
+- Your contributed code may be utilized for commercial activities, including but not limited to cloud-based revenue-generating services.  
+
+All unspecified rights and restrictions adhere to the Apache License 2.0 ([full text](http://www.apache.org/licenses/LICENSE-2.0  )).  
+
+---  
+
+**Additional Provisions**  
+- The product’s interactive design is protected by registered design patents.  
+- © 2025 dtyq, Inc. All rights reserved.  
+

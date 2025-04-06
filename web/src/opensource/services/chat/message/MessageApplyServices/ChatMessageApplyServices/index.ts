@@ -1,0 +1,219 @@
+/* eslint-disable class-methods-use-this */
+import type {
+	AIImagesMessage,
+	AggregateAISearchCardConversationMessage,
+	ConversationMessage,
+} from "@/types/chat/conversation_message"
+import {
+	AIImagesDataType,
+	ConversationMessageStatus,
+	ConversationMessageType,
+	HDImageDataType,
+} from "@/types/chat/conversation_message"
+import type { SeqResponse } from "@/types/request"
+
+// 导入新的服务
+import MessageService from "@/opensource/services/chat/message/MessageService"
+
+// 消息存储和状态管理
+import type { CMessage } from "@/types/chat"
+import ConversationService from "@/opensource/services/chat/conversation/ConversationService"
+import { getSlicedText } from "@/opensource/services/chat/conversation/utils"
+import ConversationStore from "@/opensource/stores/chatNew/conversation"
+import MessageStore from "@/opensource/stores/chatNew/message"
+import chatTopicService from "@/opensource/services/chat/topic"
+import DotsService from "@/opensource/services/chat/dots/DotsService"
+import AiImageApplyService from "./AiImageApplyService"
+import AiSearchApplyService from "./AiSearchApplyService"
+import StreamMessageApplyService from "../StreamMessageApplyService"
+import type { ApplyMessageOptions } from "./types"
+import { bigNumCompare } from "@/utils/string"
+import OrganizationDotsStore from "@/opensource/stores/chatNew/dots/OrganizationDotsStore"
+import { userStore } from "@/opensource/models/user"
+
+/**
+ * 聊天消息应用服务
+ * 负责处理各种聊天类型的消息并应用相应的业务逻辑
+ */
+class ChatMessageApplyService {
+	/**
+	 * 判断是否为聊天消息
+	 * @param message 消息对象
+	 * @returns 是否为聊天消息
+	 */
+	isChatMessage(message: SeqResponse<CMessage>) {
+		return [
+			ConversationMessageType.Text,
+			ConversationMessageType.RichText,
+			ConversationMessageType.Markdown,
+			ConversationMessageType.MagicSearchCard,
+			ConversationMessageType.Files,
+			ConversationMessageType.Image,
+			ConversationMessageType.Video,
+			ConversationMessageType.Voice,
+			ConversationMessageType.AggregateAISearchCard,
+			ConversationMessageType.HDImage,
+			ConversationMessageType.AiImage,
+			ConversationMessageType.RecordingSummary,
+		].includes(message.message.type as ConversationMessageType)
+	}
+
+	/**
+	 * 判断是否为聊天消息
+	 * @param message 消息对象
+	 * @returns 是否为聊天消息
+	 */
+	isChatHistoryMessage(message: SeqResponse<CMessage>) {
+		if (message.message.type === ConversationMessageType.AiImage) {
+			return message.message.ai_image_card?.type === AIImagesDataType.GenerateComplete
+		}
+
+		if (message.message.type === ConversationMessageType.HDImage) {
+			return (
+				message.message.image_convert_high_card?.type === HDImageDataType.GenerateComplete
+			)
+		}
+
+		return [
+			ConversationMessageType.Text,
+			ConversationMessageType.RichText,
+			ConversationMessageType.Markdown,
+			ConversationMessageType.MagicSearchCard,
+			ConversationMessageType.Files,
+			ConversationMessageType.Image,
+			ConversationMessageType.Video,
+			ConversationMessageType.Voice,
+			ConversationMessageType.AggregateAISearchCard,
+			ConversationMessageType.HDImage,
+			ConversationMessageType.AiImage,
+			ConversationMessageType.RecordingSummary,
+		].includes(message.message.type as ConversationMessageType)
+	}
+
+	/**
+	 * 应用聊天类消息
+	 * @param message 待应用的消息
+	 * @param options 应用选项
+	 */
+	apply(message: SeqResponse<CMessage>, options: ApplyMessageOptions = {}) {
+		// const { isHistoryMessage = false } = options
+		console.log("ChatMessageApplyService apply message =====> ", message, options)
+		switch (message.message.type) {
+			case ConversationMessageType.Text:
+				StreamMessageApplyService.recordMessageInfo(
+					message as SeqResponse<ConversationMessage>,
+				)
+				this.applyConversationMessage(message as SeqResponse<ConversationMessage>, options)
+				break
+			case ConversationMessageType.Markdown:
+				StreamMessageApplyService.recordMessageInfo(
+					message as SeqResponse<ConversationMessage>,
+				)
+				this.applyConversationMessage(message as SeqResponse<ConversationMessage>, options)
+				break
+			case ConversationMessageType.RichText:
+			case ConversationMessageType.MagicSearchCard:
+			case ConversationMessageType.Files:
+			case ConversationMessageType.Image:
+			case ConversationMessageType.Video:
+			case ConversationMessageType.Voice:
+				this.applyConversationMessage(message as SeqResponse<ConversationMessage>, options)
+				break
+			case ConversationMessageType.AggregateAISearchCard:
+				this.applyAggregateAISearchCardMessage(
+					message as SeqResponse<AggregateAISearchCardConversationMessage>,
+				)
+				break
+			case ConversationMessageType.HDImage:
+			case ConversationMessageType.AiImage:
+				this.applyAiImageMessage(message as SeqResponse<AIImagesMessage>, options)
+				break
+			case ConversationMessageType.RecordingSummary:
+				// TODO: 实现录音摘要处理器
+				break
+			default:
+				break
+		}
+	}
+
+	/**
+	 * 应用会话消息
+	 * @param message 会话消息对象
+	 */
+	applyConversationMessage(
+		message: SeqResponse<ConversationMessage>,
+		options: ApplyMessageOptions = {},
+	) {
+		const { isHistoryMessage = false } = options
+		const conversation = ConversationStore.getConversation(message.conversation_id)
+
+		MessageService.addReceivedMessage(message)
+
+		// 如果是 AI 会话，并且当前没有话题 Id，自动设置上
+		if (conversation?.isAiConversation && !conversation.current_topic_id) {
+			ConversationService.switchTopic(message.conversation_id, message.message.topic_id ?? "")
+		}
+
+		// 如果是 AI 会话，此时消息列表的数量为 2，调用智能重命名
+		if (conversation?.isAiConversation && MessageStore.messages.length === 2) {
+			// 调用智能重命名
+			chatTopicService.getAndSetMagicTopicName(message.message.topic_id ?? "")
+		}
+
+		// 更新会话最后一条消息
+		ConversationService.updateLastReceiveMessage(message.conversation_id, {
+			time: message.message.send_time,
+			seq_id: message.seq_id,
+			type: message.message.type,
+			text: getSlicedText(message.message),
+			topic_id: message.message.topic_id ?? "",
+		})
+
+		if (!conversation.is_not_disturb) {
+			// 把会话顶到最上面
+			ConversationService.moveConversationFirst(message.conversation_id)
+
+			// 如果不是自己的消息且消息seqid大于组织红点seqid, 则添加会话红点（通知视图更新）
+			if (
+				!isHistoryMessage &&
+				message.message.sender_id !== userStore.user.userInfo?.user_id &&
+				message.message.status === ConversationMessageStatus.Unread &&
+				bigNumCompare(
+					message.seq_id,
+					OrganizationDotsStore.getOrganizationDotSeqId(
+						conversation.user_organization_code,
+					),
+				) > 0
+			) {
+				DotsService.addConversationUnreadDots(
+					conversation.user_organization_code,
+					message.conversation_id,
+					message.message.topic_id ?? "",
+					message.seq_id,
+					1,
+				)
+			}
+		}
+	}
+
+	/**
+	 * 应用聚合AI搜索卡片消息
+	 * @param message 聚合AI搜索卡片消息对象
+	 */
+	async applyAggregateAISearchCardMessage(
+		message: SeqResponse<AggregateAISearchCardConversationMessage>,
+	) {
+		AiSearchApplyService.apply(message)
+	}
+
+	/**
+	 * 应用AI图像消息
+	 * @param message AI图像消息对象
+	 * @param options 应用选项
+	 */
+	applyAiImageMessage(message: SeqResponse<AIImagesMessage>, options: ApplyMessageOptions = {}) {
+		AiImageApplyService.apply(message, options)
+	}
+}
+
+export default new ChatMessageApplyService()

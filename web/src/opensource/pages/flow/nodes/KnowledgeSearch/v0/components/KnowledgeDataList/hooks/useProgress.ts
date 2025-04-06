@@ -1,0 +1,73 @@
+import type { Knowledge } from "@/types/knowledge"
+import { useCurrentNode } from "@dtyq/magic-flow/MagicFlow/nodes/common/context/CurrentNode/useCurrentNode"
+import { useMemoizedFn } from "ahooks"
+import React, { useEffect, useRef } from "react"
+import { KnowledgeApi } from "@/apis"
+import { get } from "lodash-es"
+import { KnowledgeStatus } from "../../../constants"
+
+type UseProgressProps = {
+	knowledgeListName: string[]
+}
+
+export default function useProgress({ knowledgeListName }: UseProgressProps) {
+	const [progressList, setProgressList] = React.useState(
+		[] as Knowledge.TeamshareKnowledgeProgress[],
+	)
+
+	const { currentNode } = useCurrentNode()
+
+	const intervalId = useRef<NodeJS.Timeout>()
+
+	const clearProgressInterval = useMemoizedFn(() => {
+		if (intervalId.current) {
+			clearInterval(intervalId.current)
+			intervalId.current = undefined
+		}
+	})
+
+	const checkIsAllProgressDone = useMemoizedFn((list: Knowledge.TeamshareKnowledgeProgress[]) => {
+		return list.every((item) => item.vector_status !== KnowledgeStatus.Vectoring)
+	})
+
+	const searchProgress = useMemoizedFn(async () => {
+		const knowledgeList = get(
+			currentNode,
+			["params", ...knowledgeListName],
+			[],
+		) as Knowledge.TeamshareKnowledgeItem[]
+		if (knowledgeList.length > 0) {
+			const progressListResult = await KnowledgeApi.getTeamshareKnowledgeProgress({
+				knowledge_codes: knowledgeList.map((item) => item.knowledge_code),
+			})
+			if (progressListResult.list.length > 0) {
+				setProgressList(progressListResult.list)
+				// 如果没有正在进行中的progress，则停止
+				if (checkIsAllProgressDone(progressListResult.list)) {
+					clearProgressInterval()
+				}
+			}
+		}
+	})
+
+	const initInterval = useMemoizedFn(() => {
+		searchProgress()
+		// 设置3秒的定时器
+		intervalId.current = setInterval(searchProgress, 3000)
+		return intervalId.current
+	})
+
+	useEffect(() => {
+		const id = initInterval()
+		return () => {
+			clearInterval(id)
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [])
+
+	return {
+		progressList,
+		initInterval,
+		setProgressList,
+	}
+}

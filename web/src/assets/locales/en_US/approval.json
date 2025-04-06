@@ -1,0 +1,10 @@
+{
+	"formSchemaError": "No form data or incorrect form data",
+	"interface": {
+		"chat": {
+			"schedule_card": {
+				"participantDescription": "Please select participants"
+			}
+		}
+	}
+}

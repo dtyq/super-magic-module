@@ -1,0 +1,38 @@
+.magic-flow-record-item {
+
+	padding: 10px;
+	background: #f9f9f9;
+	border-radius: 4px;
+
+	.error-tip {
+		position: absolute;
+		font-size: 12px;
+		color: #ff4d4f;
+	}
+
+	&>.title {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 10px;
+
+		&>div:first-child {
+			display: flex;
+			align-items: center;
+			width: calc(100% - 20px);
+
+			.text {
+				white-space: nowrap;
+				width: calc(100% - 20px);
+				overflow: hidden;
+				text-overflow: ellipsis;
+			}
+		}
+
+		.anticon {
+			font-size: 16px;
+			margin-right: 5px;
+			cursor: pointer;
+		}
+	}
+}

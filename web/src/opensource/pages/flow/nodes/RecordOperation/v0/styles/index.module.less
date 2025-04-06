@@ -1,0 +1,61 @@
+.addRecord {
+	padding: 0 12px;
+	padding-bottom: 12px;
+
+	:global {
+		.form-label {
+			font-size: 12px;
+			line-height: 16px;
+			color: #1C1D2399;
+			margin-bottom: 6px;
+			padding: 0;
+			font-weight: 400;
+		}
+
+		.magic-form-item {
+			margin-bottom: 10px;
+
+			.magic-form-item-label {
+				padding: 0;
+
+				label {
+
+					font-size: 12px;
+					line-height: 16px;
+					color: #1C1D2399;
+					margin-bottom: 6px;
+					padding: 0;
+					font-weight: 400;
+				}
+			}
+		}
+
+	}
+
+	.addField {
+		display: inline-flex;
+		-webkit-box-align: center;
+		align-items: center;
+		-webkit-box-pack: justify;
+		justify-content: space-between;
+		background: rgba(46, 47, 56, 0.05);
+		padding: 6px 11px;
+		gap: 2px;
+		border-radius: 6px;
+		cursor: pointer;
+		color: rgba(28, 29, 35, 0.8);
+
+		&:hover {
+			opacity: 0.8;
+		}
+	}
+}
+
+.dropdown {
+	:global {
+
+		.magic-dropdown-menu-item {
+			padding: 8px !important;
+		}
+	}
+}

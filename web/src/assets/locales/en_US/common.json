@@ -1,0 +1,50 @@
+{
+	"format": {
+		"NthOfweek": "Week ${week}",
+		"date": "M/D HH:mm",
+		"dateWithMonthWeek": "MM / DD / (ddd)",
+		"dateWithMonthWeekTime": "MM / DD / (ddd) HH:mm",
+		"dateWithYear": "YYYY year MM month DD HH:mm",
+		"dateWithYearAndWeek": "YYYY year MM month DD (ddd)",
+		"time": "HH:mm",
+		"weekDay": {
+			"1": "Monday",
+			"2": "Tuesday",
+			"3": "Wednesday",
+			"4": "Thursday",
+			"5": "Friday",
+			"6": "Saturday",
+			"7": "Sunday"
+		},
+		"yearAndMonth": "YYYY - MMM",
+		"yearAndMonthDay": "YYYY - MMM - DD",
+		"yearMounthAndDay": "YYYY year MM month DD day",
+		"yesterday": "yesterday"
+	},
+	"interface": {
+		"chat": {
+			"aggregate_ai_search_card": {
+				"searching": ""
+			},
+			"chatHistory": {
+				"filter": {},
+				"tab": {
+					"media": "Pictures and Videos"
+				}
+			},
+			"groupNotice": {},
+			"urgentModal": {
+				"sendType": {}
+			}
+		},
+		"common": {
+			"format": {}
+		},
+		"explore": {
+			"descriptionPanel": {}
+		},
+		"memberCard": {
+			"assistantIntroduction": "Assistant introduction"
+		}
+	}
+}

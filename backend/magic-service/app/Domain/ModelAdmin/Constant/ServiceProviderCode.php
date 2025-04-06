@@ -1,0 +1,54 @@
+<?php
+
+declare(strict_types=1);
+/**
+ * Copyright (c) The Magic , Distributed under the software license
+ */
+
+namespace App\Domain\ModelAdmin\Constant;
+
+use App\Domain\ModelAdmin\Entity\ValueObject\ServiceProviderConfig;
+use Hyperf\Odin\Model\AzureOpenAIModel;
+use Hyperf\Odin\Model\DoubaoModel;
+use Hyperf\Odin\Model\OpenAIModel;
+
+/**
+ * 每个服务商的的编码
+ */
+enum ServiceProviderCode: string
+{
+    case Official = 'Official'; // 官方
+    case Volcengine = 'Volcengine'; // 火山
+    case OpenAI = 'OpenAI';
+    case MicrosoftAzure = 'MicrosoftAzure';
+    case Qwen = 'Qwen';
+    case DeepSeek = 'DeepSeek';
+    case Tencent = 'Tencent';
+    case TTAPI = 'TTAPI';
+    case MiracleVision = 'MiracleVision';
+
+    public function getImplementation(): string
+    {
+        return match ($this) {
+            self::MicrosoftAzure => AzureOpenAIModel::class,
+            self::Volcengine => DoubaoModel::class,
+            default => OpenAIModel::class,
+        };
+    }
+
+    public function getImplementationConfig(ServiceProviderConfig $config, string $name = ''): array
+    {
+        return match ($this) {
+            self::MicrosoftAzure => [
+                'api_key' => $config->getApiKey(),
+                'api_base' => $config->getUrl(),
+                'api_version' => $config->getApiVersion(),
+                'deployment_name' => $config->getDeploymentName() ?: $name,
+            ],
+            default => [
+                'api_key' => $config->getApiKey(),
+                'base_url' => $config->getUrl(),
+            ],
+        };
+    }
+}

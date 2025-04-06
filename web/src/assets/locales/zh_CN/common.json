@@ -1,0 +1,47 @@
+{
+	"format": {
+		"NthOfweek": "第${week}周",
+		"date": "M月D日 HH:mm",
+		"dateWithMonthWeekTime": "MM月DD日(ddd) HH:mm",
+		"dateWithMonthWeek": "MM月DD日(ddd)",
+		"dateWithYear": "YYYY年MM月DD日 HH:mm",
+		"dateWithYearAndWeek": "YYYY年MM月DD(ddd)",
+		"time": "HH:mm",
+		"weekDay": {
+			"1": "周一",
+			"2": "周二",
+			"3": "周三",
+			"4": "周四",
+			"5": "周五",
+			"6": "周六",
+			"7": "周日"
+		},
+		"yearAndMonth": "YYYY年MM月",
+		"yearAndMonthDay": "YYYY年MM月DD日",
+		"yearMounthAndDay": "YYYY年MM月DD日",
+		"yesterday": "昨天"
+	},
+	"interface": {
+		"chat": {
+			"aggregate_ai_search_card": {
+				"searching": ""
+			},
+			"chatHistory": {
+				"filter": {},
+				"tab": {
+					"media": "图片与视频"
+				}
+			},
+			"groupNotice": {},
+			"urgentModal": {
+				"sendType": {}
+			}
+		},
+		"explore": {
+			"descriptionPanel": {}
+		},
+		"memberCard": {
+			"assistantIntroduction": "助理介绍"
+		}
+	}
+}

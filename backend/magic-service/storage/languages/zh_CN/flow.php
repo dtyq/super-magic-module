@@ -1,0 +1,202 @@
+<?php
+
+declare(strict_types=1);
+/**
+ * Copyright (c) The Magic , Distributed under the software license
+ */
+return [
+    'error' => [
+        'common' => '通用错误',
+        'common_validate_failed' => '通用参数验证失败',
+        'common_business_exception' => '通用业务异常',
+        'flow_node_validate_failed' => '节点参数验证失败',
+        'message_error' => '通用消息错误',
+        'execute_failed' => '通用执行失败',
+        'execute_validate_failed' => '通用执行验证失败',
+        'knowledge_validate_failed' => '知识库验证失败',
+        'access_denied' => '访问被拒绝',
+    ],
+    'system' => [
+        'uid_not_found' => '用户 uid 缺失',
+        'unknown_authorization_type' => '未知的授权类型',
+        'unknown_node_params_config' => ':label 未知的节点配置',
+    ],
+    'common' => [
+        'not_found' => ':label 未找到',
+        'empty' => ':label 不能为空',
+        'repeat' => ':label 重复',
+        'exist' => ':label 已存在',
+        'invalid' => ':label 是无效的',
+    ],
+    'organization_code' => [
+        'empty' => '组织代码 不能为空',
+    ],
+    'knowledge_code' => [
+        'empty' => '知识库编码 不能为空',
+    ],
+    'content' => [
+        'empty' => '内容 不能为空',
+    ],
+    'flow_code' => [
+        'empty' => '流程代码 不能为空',
+    ],
+    'flow_entity' => [
+        'empty' => '流程实体 不能为空',
+    ],
+    'name' => [
+        'empty' => '名称 不能为空',
+    ],
+    'branches' => [
+        'empty' => '分支 不能为空',
+    ],
+    'conversation_id' => [
+        'empty' => '会话 ID 不能为空',
+    ],
+    'creator' => [
+        'empty' => '操作人 不能为空',
+    ],
+    'model' => [
+        'empty' => '模型 不能为空',
+        'not_found' => '[:model_name] 模型不存在',
+        'disabled' => '模型 [:model_name] 已禁用',
+        'not_support_embedding' => '[:model_name] 不支持嵌入',
+        'error_config_missing' => '配置项 :name 缺失，请检查相关设置或联系管理员处理。',
+    ],
+    'max_record' => [
+        'positive_integer' => '最大记录数 只能是 :min - :max 的正整数',
+    ],
+    'nodes' => [
+        'empty' => '没有任何节点',
+    ],
+    'node_id' => [
+        'empty' => '节点 ID 不能为空',
+    ],
+    'node_type' => [
+        'empty' => '节点类型 不能为空',
+        'unsupported' => '不支持的节点类型',
+    ],
+    'node_input' => [
+        'empty' => '节点[:label]输入 不能为空',
+    ],
+    'node_output' => [
+        'empty' => '节点[:label]输出 不能为空',
+    ],
+    'tool_set' => [
+        'not_edit_default_tool_set' => '不允许编辑默认工具集',
+    ],
+    'node' => [
+        'empty' => '节点 不能为空',
+        'execute_num_limit' => '节点[:name] 运行次数超过最大限制',
+        'duplication_node_id' => '节点ID[:node_id] 重复',
+        'single_debug_not_support' => '不支持单点调试',
+        'cache_key' => [
+            'empty' => '缓存键 不能为空',
+            'string_only' => '缓存键 必须是字符串',
+        ],
+        'cache_value' => [
+            'empty' => '缓存值 不能为空',
+            'string_only' => '缓存值 必须是字符串',
+        ],
+        'cache_ttl' => [
+            'empty' => '缓存时间 不能为空',
+            'int_only' => '缓存时间 必须是正整数',
+        ],
+        'code' => [
+            'empty' => '代码 不能为空',
+            'empty_language' => '代码语言 不能为空',
+            'unsupported_code_language' => '[:language] 不支持的代码语言',
+            'execute_failed' => '代码执行失败 | :error',
+        ],
+        'http' => [
+            'api_request_fail' => 'API 请求失败 | :error',
+            'output_error' => '输出不规范 | :error',
+        ],
+        'intent' => [
+            'empty' => '意图 不能为空',
+            'title_empty' => '标题 不能为空',
+            'desc_empty' => '描述 不能为空',
+        ],
+        'knowledge' => [
+            'knowledge_code_empty' => '知识库编码 不能为空',
+        ],
+        'knowledge_fragment_store' => [
+            'knowledge_code_empty' => '知识库编码 不能为空',
+            'content_empty' => '文本片段 不能为空',
+        ],
+        'knowledge_similarity' => [
+            'knowledge_codes_empty' => '知识库编码 不能为空',
+            'query_empty' => '搜索内容 不能为空',
+            'limit_valid' => '数量 只能是 :min - :max 之间的正整数',
+            'score_valid' => '相似度 只能是 0-1 之间的小数',
+        ],
+        'llm' => [
+            'tools_execute_failed' => '工具执行失败 | :error',
+        ],
+        'loop' => [
+            'relation_id_empty' => '关联循环体 ID 不能为空',
+            'origin_flow_not_found' => '[:label] 流程未找到',
+            'count_format_error' => '计数循环 必须是正整数',
+            'array_format_error' => '循环数组 必须是数组',
+            'max_loop_count_format_error' => '最大遍历次数 只能填写 :min - :max 的正整数',
+            'loop_flow_execute_failed' => '循环体执行失败 :error',
+        ],
+        'start' => [
+            'only_one' => '开始节点 不能有多个',
+            'must_exist' => '开始节点 必须存在',
+            'unsupported_trigger_type' => '[:trigger_type] 不支持的触发方式',
+            'unsupported_unit' => '[:unit] 不支持的时间单位',
+            'content_empty' => '消息 不能为空',
+            'interval_valid' => '间隔时间 必须为正整数',
+            'unsupported_routine_type' => '不支持的周期类型',
+        ],
+        'sub' => [
+            'flow_not_found' => '子流程 [:flow_code] 未找到',
+            'start_node_not_found' => '子流程[:flow_code] 开始节点未找到',
+            'end_node_not_found' => '子流程[:flow_code] 结束节点未找到',
+            'execute_failed' => '子流程[:flow_name] 执行失败 :error',
+            'flow_id_empty' => '子流程ID 不能为空',
+        ],
+        'tool' => [
+            'tool_id_empty' => '工具ID 不能为空',
+            'flow_not_found' => '工具 [:flow_code] 未找到',
+            'start_node_not_found' => '工具[:flow_code] 开始节点未找到',
+            'end_node_not_found' => '工具[:flow_code] 结束节点未找到',
+            'execute_failed' => '工具[:flow_name] 执行失败 :error',
+        ],
+        'end' => [
+            'must_exist' => '结束节点 必须存在',
+        ],
+        'text_embedding' => [
+            'text_empty' => '文本 不能为空',
+        ],
+        'text_splitter' => [
+            'text_empty' => '文本 不能为空',
+        ],
+        'variable' => [
+            'name_empty' => '变量名 不能为空',
+            'name_invalid' => '变量名 仅可包含字母、数字、下划线，且不允许以数字开头',
+            'value_empty' => '变量值 不能为空',
+            'value_format_error' => '变量值 格式错误',
+            'variable_not_exist' => '变量 [:var_name] 不存在',
+            'variable_not_array' => '变量 [:var_name] 不是数组',
+            'element_list_empty' => '元素列表 不能为空',
+        ],
+        'message' => [
+            'type_error' => '消息类型错误',
+            'unsupported_message_type' => '不支持的消息类型',
+            'content_error' => '消息内容错误',
+        ],
+        'knowledge_fragment_remove' => [
+            'metadata_business_id_empty' => '元数据或业务 ID 不能为空',
+        ],
+    ],
+    'executor' => [
+        'unsupported_node_type' => '[:node_type] 不支持的节点类型',
+        'has_circular_dependencies' => '[:label] 存在循环依赖',
+        'unsupported_trigger_type' => '不支持的触发方式',
+        'unsupported_flow_type' => '不支持的流程类型',
+    ],
+    'component' => [
+        'format_error' => '[:label] 格式错误',
+    ],
+];

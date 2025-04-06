@@ -1,0 +1,10 @@
+{
+	"formSchemaError": "无表单数据或者表单数据有误",
+	"interface": {
+		"chat": {
+			"schedule_card": {
+				"participantDescription": "请选择参与人"
+			}
+		}
+	}
+}

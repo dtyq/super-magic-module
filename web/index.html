@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<link rel="icon" type="image/svg+xml" href="/favicon1.svg" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>麦吉 (Magic) - 灯塔引擎新一代企业级 AI 应用创新引擎</title>
+		<script src="/config.js"></script>
+		<!-- <script src="https://unpkg.com/react-scan/dist/auto.global.js"></script> -->
+		<!-- 钉钉控制台远程调试 -->
+		<script src="https://g.alicdn.com/code/npm/@ali/dingtalk-h5-remote-debug/0.1.3/index.js"></script>
+		<!-- 钉钉登录 -->
+		<script
+			type="text/javascript"
+			src="https://g.alicdn.com/dingding/h5-dingtalk-login/0.21.0/ddlogin.js"
+		></script>
+		<!-- 飞书 js sdk -->
+		<script
+			type="text/javascript"
+			src="https://lf-scm-cn.feishucdn.com/lark/op/h5-js-sdk-1.5.35.js"
+		></script>
+		<!-- 飞书二维码登录 -->
+		<script
+			type="text/javascript"
+			src="https://lf-package-cn.feishucdn.com/obj/feishu-static/lark/passport/qrcode/LarkSSOSDKWebQRCode-1.0.3.js"
+		></script>
+		<!--    <script src="https://cdn.jsdelivr.net/npm/darkmode-js@1.5.7/lib/darkmode-js.min.js"></script>-->
+		<!--    <script>-->
+		<!--        function addDarkmodeWidget() {-->
+		<!--            new Darkmode().showWidget();-->
+		<!--        }-->
+		<!--        window.addEventListener('load', addDarkmodeWidget);-->
+		<!--    </script>-->
+		<style>
+			.module-qrcode-area {
+				background: red;
+			}
+		</style>
+		<script src="/vconsole.min.js"></script>
+		<script>
+			var url = new URL(window.location.href)
+			var searchParams = url.searchParams
+			// 防止重定向页面后，debug状态丢失
+			if (searchParams.get("debug") === "true") {
+				sessionStorage.setItem("debug", "true")
+			}
+			if (searchParams.get("debug") === "true" || sessionStorage.getItem("debug")) {
+				new VConsole()
+			}
+		</script>
+	</head>
+
+	<body>
+		<div id="root"></div>
+		<script type="module" src="/src/opensource/main.tsx"></script>
+		<script src="https://lf1-cdn-tos.bytegoofy.com/obj/iconpark/icons_12224_357.933fa41cd89163c9985c27baa8f99a43.js"></script>
+	</body>
+</html>

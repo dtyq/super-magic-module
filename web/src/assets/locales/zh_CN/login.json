@@ -1,0 +1,75 @@
+{
+	"account": {
+		"create": "添加账户"
+	},
+	"afterSecondsCan": "{{seconds}} 秒后可用",
+	"and": "和",
+	"authorizeCode": {
+		"label": "私有部署识别码",
+		"placeholder": "请输入私有部署识别码"
+	},
+	"autoRegisterTip": "未注册用户通过验证后将自动创建账号",
+	"button": {
+		"cancel": "取消",
+		"confirm": "确认"
+	},
+	"copyright": "Copyright © 2023 广东灯塔引擎科技有限公司 All Rights Reserved.",
+	"device": {
+		"app": "客户端",
+		"dingTalk": "钉钉",
+		"unknown": "未知"
+	},
+	"dingTalkLogin": "钉钉登录",
+	"dingTalkTip": "请使用钉钉扫描二维码登录",
+	"enterVerificationCode": "输入手机验证码",
+	"findPassword": "找回密码",
+	"hi": "👋 嗨，我的朋友",
+	"invalidCode": "无效的验证码",
+	"larkLogin": "飞书登录",
+	"larkTip": "请使用飞书扫描二维码登录。",
+	"login": "登录",
+	"loginPrivateDeployment": "私有部署登录",
+	"loginPublicDeployment": "公有部署登录",
+	"magicOrganizationSyncStep": {
+		"pleaseBindExistingAccount": "请绑定已有账号"
+	},
+	"nextStep": "下一步",
+	"otherLoginType": "或者使用以下方式登录",
+	"password": {
+		"label": "密码",
+		"placeholder": "请输入密码"
+	},
+	"passwordLogin": "密码登录",
+	"phone": {
+		"invalid": "手机号码格式错误",
+		"label": "手机号码",
+		"placeholder": "请输入手机号码"
+	},
+	"pleaseSendTo": "请输入并发送至",
+	"pleaseSendToEnd": "验证码为 ${count} 位数字，有效期 ${minutes} 分钟。",
+	"prevStep": "返回上一步",
+	"privacyPolicy": "隐私政策",
+	"privateConfig": "私有化配置",
+	"reSendVerificationCode": "重新发送验证码",
+	"readAndAgree": "使用即代表您同意我们的",
+	"refresh": "刷新",
+	"sendVerificationCode": "发送验证码",
+	"serviceAgreement": "用户协议",
+	"verificationCodeLogin": "验证码登录",
+	"wechatOfficialAccount": {
+		"agreePolicy": "请先同意用户协议",
+		"autoLogin": "关注微信公众号自动登录",
+		"backToPrevious": "返回上一步，使用手机号码登录",
+		"bindPhone": "绑定手机号码",
+		"bindPhoneDescription": "请绑定您的手机号码，未注册的手机号码将自动注册并绑定",
+		"bindPhoneTitle": "当前微信尚未绑定账号",
+		"cancelRegister": "我再考虑，取消注册",
+		"phoneAlreadyBound": "该手机号已被注册",
+		"qrCodeAlt": "微信扫码登录",
+		"qrCodeExpired": "二维码未扫或者过期",
+		"title": "微信安全登录"
+	},
+	"wechatOfficialAccountLogin": "微信",
+	"welcome": "欢迎使用麦吉 AI",
+	"welcomeLogin": "企业微信登录"
+}

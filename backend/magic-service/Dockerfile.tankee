@@ -1,0 +1,72 @@
+# syntax=docker/dockerfile:1.2
+# 这里加一个AS base
+FROM kkguan-registry.cn-shenzhen.cr.aliyuncs.com/brd/hyperf-dockerfile:8.3-alpine-3.20-swow-1.5.3-jsonpath-parle-xlswriter as base
+
+##
+# ---------- env settings ----------
+##
+# --build-arg timezone=Asia/Shanghai
+ARG timezone
+ENV TIMEZONE=${timezone:-"Asia/Shanghai"} \
+    SCAN_CACHEABLE=(true)
+
+# 在进行composer安装前重新FROM base
+FROM base AS encrypt
+
+
+WORKDIR /opt/www
+
+# Composer Cache
+# COPY ./composer.* /opt/www/
+# RUN composer install --no-dev --no-scripts
+
+COPY . /opt/www
+
+# dockerfile 中修改源,并安装所需的posix依赖,用于爬取duckduckgo内容
+RUN sed -i 's/mirrors.cloud.aliyuncs.com/mirrors.aliyun.com/g' /etc/apk/repositories && \
+    apk update && \
+    apk add --no-cache php-posix
+
+RUN --mount=type=secret,id=composer,target=/root/.composer/auth.json \
+    --mount=type=cache,id=magic-service-composer,target=/root/.cache/composer \
+    # 注意把下面的id改成你自己的项目名 防止和别人重复
+    --mount=type=cache,id=magic-service-phpstan,target=/tmp/phpstan \
+    export COMPOSER_ALLOW_SUPERUSER=1 ; \
+    # 安装依赖
+    composer install -o && \
+    # 必须的：生成缓存，代码加密所需
+    php bin/hyperf.php
+    # rm -rf /opt/www/runtime
+
+# 添加这个arg
+ARG TANKEE_ENDPOINT
+ARG TANKEE_CUSTOMER
+
+# 加密流程，下面的缓存id根据alpine版本修改！！！
+RUN --mount=type=cache,id=alpine-3.20,target=/var/run/apk \
+  --mount=type=secret,id=tkutil,target=/usr/bin/tkutil,mode=0755 \
+  # 打包加密项目
+  # 可根据项目需求修改增加exclude（php /usr/bin/tkutil encrypt . --exclude=.gitlab-ci.yml啥的）
+  php /usr/bin/tkutil encrypt .
+
+# 重新FROM base
+FROM base
+ARG TANKEE_CUSTOMER
+
+COPY --from=encrypt /tmp/encrypted.tar.zst /tmp/
+
+WORKDIR /opt/www
+# 下面的缓存id根据alpine版本修改！！！
+RUN --mount=type=cache,id=alpine-3.20,target=/var/run/apk \
+  --mount=type=secret,id=tkutil,target=/usr/bin/tkutil,mode=0755 \
+  php /usr/bin/tkutil install /opt/www /tmp/encrypted.tar.zst
+
+
+# 配置这个环境变量避免清空代理类
+ENV ACCESSOR_IS_DEBUG_MODE=false PHP_ACCESSOR_SCAN_CACHEABLE=true
+
+# 可选的：标记expose端口
+EXPOSE 9501
+EXPOSE 9502
+
+ENTRYPOINT ["sh", "/opt/www/start.sh"]

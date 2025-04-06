@@ -1,0 +1,75 @@
+{
+	"account": {
+		"create": "Add account"
+	},
+	"afterSecondsCan": "Available in {{seconds}} seconds",
+	"and": "and",
+	"authorizeCode": {
+		"label": "Private deployment identification code",
+		"placeholder": "Enter the private deployment identification code"
+	},
+	"autoRegisterTip": "Unregistered users will have their accounts automatically created after verification.",
+	"button": {
+		"cancel": "Cancel",
+		"confirm": "Confirm"
+	},
+	"copyright": "Copyright © 2023 Guangdong Lighthouse Engine Technology Co., Ltd. All Rights Reserved.",
+	"device": {
+		"app": "client",
+		"dingTalk": "DingTalk",
+		"unknown": "unknown"
+	},
+	"dingTalkLogin": "DingTalk login",
+	"dingTalkTip": "Please use DingTalk to scan the QR code for login.",
+	"enterVerificationCode": "Enter the mobile phone verification code",
+	"findPassword": "Retrieve password",
+	"hi": "👋 Hi, my friend",
+	"invalidCode": "Invalid verification code",
+	"larkLogin": "Lark login",
+	"larkTip": "Please use Lark to scan the QR code for login.。",
+	"login": "Log in",
+	"loginPrivateDeployment": "Private Service",
+	"loginPublicDeployment": "Public Service",
+	"magicOrganizationSyncStep": {
+		"pleaseBindExistingAccount": "Please bind an existing account"
+	},
+	"nextStep": "Step",
+	"otherLoginType": "OR",
+	"password": {
+		"label": "Password",
+		"placeholder": "Please enter password"
+	},
+	"passwordLogin": "Password login",
+	"phone": {
+		"invalid": "Invalid Phone Number",
+		"label": "Phone Number",
+		"placeholder": "Please enter your phone number."
+	},
+	"pleaseSendTo": "Please enter and send to",
+	"pleaseSendToEnd": "Verification code of ${count} digits, valid for ${minutes} minutes.",
+	"prevStep": "Return to previous step",
+	"privacyPolicy": "Privacy Policy",
+	"privateConfig": "Private Configuration",
+	"reSendVerificationCode": "Resend verification code",
+	"readAndAgree": "By signing up, you agree to our",
+	"refresh": "Refresh",
+	"sendVerificationCode": "Send verification code",
+	"serviceAgreement": "User Agreement",
+	"verificationCodeLogin": "SMSVerification login",
+	"wechatOfficialAccount": {
+		"agreePolicy": "Please agree to the user agreement",
+		"autoLogin": "Follow the WeChat official account to log in automatically.",
+		"backToPrevious": "Return to the previous step",
+		"bindPhone": "Bind Phone Number",
+		"bindPhoneDescription": "Please bind your mobile number. Unregistered mobile numbers will be automatically registered and bound.",
+		"bindPhoneTitle": "The current WeChat is not yet linked to an account.",
+		"cancelRegister": "I will reconsider and cancel the registration.",
+		"phoneAlreadyBound": "The phone number has already been bound",
+		"qrCodeAlt": "WeChat QR code login",
+		"qrCodeExpired": "QR code not scanned or expired",
+		"title": "WeChat Secure Login"
+	},
+	"wechatOfficialAccountLogin": "WeChat",
+	"welcome": "Welcome to Magic AI",
+	"welcomeLogin": "Enterprise WeChat login"
+}

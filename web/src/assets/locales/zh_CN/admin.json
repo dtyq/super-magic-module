@@ -1,0 +1,21 @@
+{
+	"title": "麦吉管理后台",
+	"nav": {
+		"enterprise": "企业管理",
+		"ai": "AI 管理",
+		"function": "功能管理",
+		"application": "应用管理",
+		"iam": "IAM 配置",
+		"security": "安全管控",
+		"cost": "费用中心",
+		"aiSubMenu": {
+			"functionConfig": "功能配置",
+			"modelManagement": "大模型管理",
+			"intelligentDrawing": "智能绘图管理",
+			"intelligentInteraction": "智能互动",
+			"agentManage": "助理管理",
+			"dataStatistics": "数据统计"
+		},
+		"collapseNav": "收起导航"
+	}
+}

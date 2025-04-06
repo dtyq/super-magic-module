@@ -1,0 +1,42 @@
+.checkBox {
+    position: relative;
+    width: 16px;
+    height: 16px;
+    // background: #ffffff;
+}
+
+.checkBox label {
+    cursor: pointer;
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    top: 0;
+    left: 0;
+    background: white;
+    border: 1px solid #c2c2c2;
+    border-radius: 4px;
+}
+
+.checkBox label::after {
+    content: '';
+    position: absolute;
+    width: 8px;
+    height: 2px;
+    border: 2px solid white;
+    border-top: none;
+    border-right: none;
+    border-left: none;
+    top: 48%;
+    left: 3px;
+    opacity: 0;
+}
+
+.checkBox input[type=checkbox]:checked+label::after {
+    opacity: 1;
+    /* background: rgba(49, 92, 236, 1); */
+    background-color: unset;
+}
+input[type=checkbox]:checked+label {
+    opacity: 1;
+    background: rgba(49, 92, 236, 1);
+}

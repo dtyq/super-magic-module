@@ -1,0 +1,91 @@
+import { Form } from "antd"
+import { useForm } from "antd/lib/form/Form"
+import { useMemoizedFn } from "ahooks"
+import { useFlow } from "@dtyq/magic-flow/MagicFlow/context/FlowContext/useFlow"
+import { useCurrentNode } from "@dtyq/magic-flow/MagicFlow/nodes/common/context/CurrentNode/useCurrentNode"
+import { set, cloneDeep } from "lodash-es"
+import DropdownCard from "@dtyq/magic-flow/common/BaseUI/DropdownCard"
+import MagicExpressionWrap from "@dtyq/magic-flow/common/BaseUI/MagicExpressionWrap"
+import { ExpressionMode } from "@dtyq/magic-flow/MagicExpressionWidget/constant"
+import { useMemo } from "react"
+import JSONSchemaRenderer from "@dtyq/magic-flow/common/BaseUI/JSONSchemaRenderer"
+import usePrevious from "@/opensource/pages/flow/common/hooks/usePrevious"
+import { customNodeType, templateMap } from "@/opensource/pages/flow/constants"
+import useCurrentNodeUpdate from "@/opensource/pages/flow/common/hooks/useCurrentNodeUpdate"
+import { useTranslation } from "react-i18next"
+import { getExpressionPlaceholder } from "@/opensource/pages/flow/utils/helpers"
+import styles from "./TextSplit.module.less"
+
+export default function TextSplitV0() {
+	const { t } = useTranslation()
+	const [form] = useForm()
+	const { updateNodeConfig } = useFlow()
+
+	const { currentNode } = useCurrentNode()
+
+	const { expressionDataSource } = usePrevious()
+
+	const onValuesChange = useMemoizedFn((changeValues) => {
+		if (!currentNode) return
+
+		Object.entries(changeValues).forEach(([changeKey, changeValue]) => {
+			if (changeKey === "output") {
+				set(currentNode, ["output", "form"], changeValue)
+			} else {
+				set(currentNode, ["params", changeKey], changeValue)
+			}
+		})
+
+		updateNodeConfig({
+			...currentNode,
+		})
+	})
+
+	const initialValues = useMemo(() => {
+		const currentNodeParams = currentNode?.params || {}
+		const cloneTemplateParams = cloneDeep(templateMap[customNodeType.TextSplit].v0.params)
+		const mergeParams = {
+			...cloneTemplateParams,
+			...currentNodeParams,
+		}
+		return {
+			...mergeParams,
+			output: currentNode?.output?.form,
+		}
+	}, [currentNode?.output, currentNode?.params])
+
+	useCurrentNodeUpdate({
+		form,
+		initialValues,
+	})
+
+	return (
+		<div className={styles.textSplitWrapper}>
+			<Form
+				form={form}
+				layout="vertical"
+				initialValues={initialValues}
+				onValuesChange={onValuesChange}
+			>
+				<Form.Item name={["content"]} label={t("textSplit.splitContent", { ns: "flow" })}>
+					<MagicExpressionWrap
+						onlyExpression
+						mode={ExpressionMode.TextArea}
+						placeholder={getExpressionPlaceholder(
+							t("textSplit.splitContentPlaceholder", { ns: "flow" }),
+						)}
+						dataSource={expressionDataSource}
+						minHeight="138px"
+					/>
+				</Form.Item>
+
+				<DropdownCard title={t("common.output", { ns: "flow" })} height="auto">
+					<JSONSchemaRenderer
+						// @ts-ignore
+						form={templateMap?.[customNodeType.TextSplit]?.v0?.output?.form?.structure}
+					/>
+				</DropdownCard>
+			</Form>
+		</div>
+	)
+}

@@ -1,0 +1,89 @@
+<?php
+
+declare(strict_types=1);
+/**
+ * Copyright (c) The Magic , Distributed under the software license
+ */
+
+namespace App\Application\KnowledgeBase\Event\Subscribe;
+
+use App\Domain\KnowledgeBase\Entity\KnowledgeBaseFragmentEntity;
+use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeBaseDataIsolation;
+use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeSyncStatus;
+use App\Domain\KnowledgeBase\Entity\ValueObject\Query\KnowledgeBaseFragmentQuery;
+use App\Domain\KnowledgeBase\Event\KnowledgeBaseDocumentRemovedEvent;
+use App\Domain\KnowledgeBase\Service\KnowledgeBaseDocumentDomainService;
+use App\Domain\KnowledgeBase\Service\KnowledgeBaseDomainService;
+use App\Domain\KnowledgeBase\Service\KnowledgeBaseFragmentDomainService;
+use App\Infrastructure\Core\ValueObject\Page;
+use Hyperf\Event\Annotation\Listener;
+use Hyperf\Event\Contract\ListenerInterface;
+use Psr\Container\ContainerInterface;
+use Throwable;
+
+use function di;
+
+#[Listener]
+readonly class KnowledgeBaseDocumentDestroySubscriber implements ListenerInterface
+{
+    public function __construct(private ContainerInterface $container)
+    {
+    }
+
+    public function listen(): array
+    {
+        return [
+            KnowledgeBaseDocumentRemovedEvent::class,
+        ];
+    }
+
+    public function process(object $event): void
+    {
+        if (! $event instanceof KnowledgeBaseDocumentRemovedEvent) {
+            return;
+        }
+        $document = $event->knowledgeBaseDocumentEntity;
+        $dataIsolation = KnowledgeBaseDataIsolation::create($document->getOrganizationCode());
+        /** @var KnowledgeBaseDomainService $knowledgeBaseDomainService */
+        $knowledgeBaseDomainService = di()->get(KnowledgeBaseDomainService::class);
+        /** @var KnowledgeBaseFragmentDomainService $knowledgeBaseFragmentDomainService */
+        $knowledgeBaseFragmentDomainService = di()->get(KnowledgeBaseFragmentDomainService::class);
+        /** @var KnowledgeBaseDocumentDomainService $documentDomainService */
+        $documentDomainService = $this->container->get(KnowledgeBaseDocumentDomainService::class);
+
+        $knowledgeBaseEntity = $knowledgeBaseDomainService->show($dataIsolation, $document->getKnowledgeBaseCode());
+
+        // 这里需要删除所有片段，在删除文档
+        $query = (new KnowledgeBaseFragmentQuery())->setDocumentCode($document->getCode());
+        /** @var KnowledgeBaseFragmentEntity[] $fragments */
+        $fragments = [];
+        $page = 1;
+        while (true) {
+            $queryResult = $knowledgeBaseFragmentDomainService->queries($dataIsolation, $query, new Page($page, 100));
+            if (empty($queryResult['list'])) {
+                break;
+            }
+            $fragments[] = $queryResult['list'];
+            ++$page;
+        }
+        $fragments = array_merge(...$fragments);
+        $documentSyncStatus = KnowledgeSyncStatus::Deleted;
+        // 先删除片段
+        foreach ($fragments as $fragment) {
+            try {
+                $knowledgeBaseEntity->getVectorDBDriver()->removePoint($knowledgeBaseEntity->getCollectionName(), $fragment->getPointId());
+                $knowledgeBaseFragmentDomainService->batchDestroyByPointIds($dataIsolation, $knowledgeBaseEntity, [$fragment->getPointId()]);
+
+                $fragment->setSyncStatus(KnowledgeSyncStatus::Deleted);
+            } catch (Throwable $throwable) {
+                $fragment->setSyncStatus(KnowledgeSyncStatus::DeleteFailed);
+                $fragment->setSyncStatusMessage($throwable->getMessage());
+                $documentSyncStatus = KnowledgeSyncStatus::DeleteFailed;
+            }
+            $knowledgeBaseDomainService->changeSyncStatus($fragment);
+        }
+        // 删除片段完成后，将文档同步标记为已删除
+        $knowledgeBaseDataIsolation = KnowledgeBaseDataIsolation::createByBaseDataIsolation($dataIsolation);
+        $documentDomainService->changeSyncStatus($knowledgeBaseDataIsolation, $document->setSyncStatus($documentSyncStatus->value));
+    }
+}

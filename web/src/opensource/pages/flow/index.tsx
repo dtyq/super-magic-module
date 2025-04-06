@@ -1,0 +1,441 @@
+/**
+ * magic-flow节点业务组件
+ */
+import MagicButton from "@/opensource/components/base/MagicButton"
+import { useTranslation } from "react-i18next"
+import type { MagicFlowInstance } from "@dtyq/magic-flow/MagicFlow"
+import { MaterialSourceProvider } from "@dtyq/magic-flow/MagicFlow/context/MaterialSourceContext/MaterialSourceContext"
+import MagicFlowComponent from "@dtyq/magic-flow/MagicFlow"
+import { NodeMapProvider } from "@dtyq/magic-flow/common/context/NodeMap/Provider"
+import { RoutePath } from "@/const/routes"
+import { ToastContainer } from "react-toastify"
+import { NodeChangeListenerProvider } from "@dtyq/magic-flow/MagicFlow/context/NodeChangeListenerContext/NodeChangeListenerContext"
+import { ExtraNodeConfigProvider } from "@dtyq/magic-flow/MagicFlow/context/ExtraNodeConfigContext/Provider"
+import { useEffect, useMemo, useRef, useState } from "react"
+import { ConfigProvider, message } from "antd"
+import { useMemoizedFn, useSize } from "ahooks"
+import { FlowType, type TestResult, type TriggerConfig } from "@/types/flow"
+import locale from "antd/es/locale/zh_CN"
+import { IconChevronLeft, IconMenu2 } from "@tabler/icons-react"
+import DefaultImage from "@/assets/logos/agent-avatar.jpg"
+import { cx } from "antd-style"
+import { useLocation, useNavigate, useParams } from "react-router"
+import { useGlobalLanguage } from "@/opensource/models/config/hooks"
+import { FlowApi } from "@/apis"
+import { customNodeType } from "./constants"
+import { installAllNodes } from "./utils"
+import styles from "./index.module.less"
+import TestFlowButton from "./components/TestFlowButton"
+import { CustomFlowProvider } from "./context/CustomFlowContext/Provider"
+import registerEditor from "./utils/editor"
+import DraftListButton from "./components/DraftListButton"
+import PublishFlowButton from "./components/PublishFlowButton"
+import GlobalVariablesButton from "./components/GlobalVariablesButton/GlobalVariablesButton"
+import PublishListButton from "./components/PublishListButton"
+import { ResourceTypes } from "./components/AuthControlButton/types"
+import { shadowFlow } from "./utils/helpers"
+import useAgent from "./hooks/useAgent"
+import useFlowDetail from "./hooks/useFlowDetail"
+import useCheckType from "./hooks/useCheckType"
+import useEditAgentModal from "./hooks/useEditAgentModal"
+import AgentInfoButton from "./components/AgentInfoButton"
+import PublishAgentButton from "./components/PublishAgentButton"
+import AuthControlButton from "./components/AuthControlButton/AuthControlButton"
+import QuickInstructionButton from "./components/QuickInstructionButton"
+import useRights from "./hooks/useRights"
+import useAutoSave from "./hooks/useAutoSave"
+import useCustomTagList from "./hooks/useCustomTagList"
+import "react-toastify/dist/ReactToastify.css"
+import useDataInit from "./hooks/useDataInit"
+import OperateMenu from "./components/OperateMenu"
+import ApiKeyButton from "./components/ApikeyButton"
+import useChangeListener from "./hooks/useChangeListener"
+import useDraftToast from "./hooks/useDraftToast"
+import { generateNodeVersionSchema } from "./utils/version"
+import useEvent from "./hooks/useEvent"
+import "./override.css"
+import useMaterialSource from "./hooks/useMaterialSource"
+
+registerEditor()
+installAllNodes()
+
+export default function BaseFlow() {
+	const navigate = useNavigate() // 在组件内
+	const location = useLocation()
+	const params = useParams()
+	const { t } = useTranslation()
+	// 是否正在试运行
+	const [isTesting, setIsTesting] = useState(false)
+
+	const flowInstance = useRef(null as null | MagicFlowInstance)
+
+	// 监听语言变化，重新安装节点
+	const language = useGlobalLanguage()
+
+	useEffect(() => {
+		installAllNodes()
+	}, [language])
+
+	// 浏览器相关事件拦截处理
+	useEvent()
+
+	const size = useSize(document.body)
+
+	const isCollapse = useMemo(() => {
+		return size?.width && size.width <= 1500
+	}, [size?.width])
+
+	// AI 助理相关状态
+	const { agent, defaultIcon, setAgent, initAgentPublishList } = useAgent()
+
+	const { showFlowIsDraftToast } = useDraftToast()
+
+	// 流程相关状态
+	const { currentFlow, setCurrentFlow, initDraftList, initPublishList } = useFlowDetail({
+		agent,
+		showFlowIsDraftToast,
+	})
+
+	// 收集初次加载依赖的数据并挂载到store
+	useDataInit({ currentFlow })
+
+	// 当前是否为Agent详情
+	const { isAgent } = useCheckType()
+
+	// 当前的权限
+	const { isEditRight, isAdminRight, isReleasedToMarket } = useRights({
+		flow: currentFlow!,
+		agent,
+	})
+
+	const { lastSaveTime, isSaving, saveDraft } = useAutoSave({
+		flowInstance,
+		isAgent,
+		initDraftList,
+		setCurrentFlow,
+	})
+
+	const { nodeChangeEventListener } = useChangeListener({ saveDraft })
+
+	// Agent编辑弹层
+	const { EditAgentModal, openAddAgentModal } = useEditAgentModal({
+		agent,
+		setAgent,
+		currentFlow,
+		setCurrentFlow,
+	})
+
+	const [testResult, setTestResult] = useState<TestResult["node_debug"]>()
+
+	useEffect(() => {
+		if (currentFlow?.id && !currentFlow?.icon) {
+			let icon = ""
+			// @ts-ignore
+			if (currentFlow?.type === FlowType.Main) {
+				icon = defaultIcon.bot
+				// @ts-ignore
+			} else if (currentFlow?.type === FlowType.Tools) {
+				icon = defaultIcon.tool_set
+			} else {
+				icon = defaultIcon.flow
+			}
+			setCurrentFlow({
+				...currentFlow,
+				icon,
+			})
+		}
+	})
+
+	const testFlow = useMemoizedFn(async (triggerConfig: TriggerConfig, closeModal: () => void) => {
+		const flow = flowInstance?.current?.getFlow()
+		// console.log("内部流程", flow, serverFlow)
+		if (!flow) return
+		setIsTesting(true)
+		const shadowedFlow = shadowFlow(flow)
+		try {
+			const res = await FlowApi.testFlow({
+				...shadowedFlow,
+				trigger_config: triggerConfig,
+			})
+			setTestResult(res.node_debug)
+			setIsTesting(false)
+			if (res?.success) {
+				message.success(t("common.testSuccess", { ns: "flow" }))
+			} else {
+				message.error(t("common.testFail", { ns: "flow" }))
+			}
+			closeModal?.()
+		} catch (err) {
+			setIsTesting(false)
+		}
+	})
+
+	const getDropdownItems = useMemoizedFn(() => {
+		return (
+			<>
+				{isAgent && isAdminRight && isReleasedToMarket && (
+					<MagicButton justify="flex-start" size="large" type="text" block>
+						<AuthControlButton
+							Icon
+							resourceId={agent.botEntity.id as string}
+							resourceType={ResourceTypes.Agent}
+						/>
+					</MagicButton>
+				)}
+				{isEditRight && (
+					<MagicButton justify="flex-start" size="large" type="text" block>
+						<ApiKeyButton flow={currentFlow!} Icon isAgent={isAgent} />
+					</MagicButton>
+				)}
+				<div className={styles.divider} />
+				<MagicButton justify="flex-start" size="large" type="text" block>
+					<GlobalVariablesButton
+						Icon
+						flow={currentFlow}
+						hasEditRight={isEditRight || isAdminRight}
+						flowInstance={flowInstance}
+					/>
+				</MagicButton>
+				{isAgent && isEditRight && (
+					<MagicButton justify="flex-start" size="large" type="text" block>
+						<QuickInstructionButton agent={agent} Icon />
+					</MagicButton>
+				)}
+			</>
+		)
+	})
+
+	const moreIcon = useMemo(() => {
+		return (
+			<MagicButton
+				className={styles.moreIcon}
+				icon={<IconMenu2 size={16} color="#000000" />}
+			/>
+		)
+	}, [])
+
+	const isMainFlow = useMemo(() => {
+		if (!currentFlow) return true
+		// @ts-ignore
+		return currentFlow?.type === FlowType.Main
+	}, [currentFlow])
+
+	const Buttons = useMemo(() => {
+		return (
+			<>
+				{isAgent && (
+					<>
+						<AgentInfoButton agent={agent} isAdminRight={isAdminRight} />
+						{!isCollapse && isAdminRight && isReleasedToMarket && (
+							<AuthControlButton
+								resourceId={agent.botEntity.id as string}
+								resourceType={ResourceTypes.Agent}
+							/>
+						)}
+					</>
+				)}
+				{isCollapse && (
+					<OperateMenu
+						useIcon
+						Icon={moreIcon}
+						menuItems={getDropdownItems()}
+						trigger="click"
+					/>
+				)}
+				<div className={styles.line} />
+				{!isCollapse && (
+					<>
+						<GlobalVariablesButton
+							flow={currentFlow}
+							hasEditRight={isEditRight || isAdminRight}
+							flowInstance={flowInstance}
+						/>
+						{isAgent && isEditRight && <QuickInstructionButton agent={agent} />}
+
+						<div className={styles.line} />
+						{isEditRight && <ApiKeyButton flow={currentFlow!} isAgent={isAgent} />}
+					</>
+				)}
+				{isEditRight && <PublishListButton isAgent={isAgent} flow={currentFlow} />}
+				{isEditRight && (
+					<>
+						<DraftListButton
+							flow={currentFlow}
+							flowInstance={flowInstance}
+							initDraftList={initDraftList}
+							showFlowIsDraftToast={showFlowIsDraftToast}
+						/>
+						<TestFlowButton
+							onFinished={testFlow}
+							loading={isTesting}
+							flow={currentFlow}
+							flowInstance={flowInstance}
+						/>
+						{/* <SaveDraftButton
+							flowInstance={flowInstance}
+							flow={currentFlow}
+							initDraftList={initDraftList}
+						/> */}
+						{!isAgent && (
+							<PublishFlowButton
+								flowInstance={flowInstance}
+								flow={currentFlow}
+								isMainFlow={isMainFlow}
+								initPublishList={initPublishList}
+							/>
+						)}
+					</>
+				)}
+
+				{isAgent && isEditRight && (
+					<PublishAgentButton
+						agent={agent}
+						setAgent={setAgent}
+						flowInstance={flowInstance}
+						initPublishList={initAgentPublishList}
+					/>
+				)}
+			</>
+		)
+	}, [
+		agent,
+		currentFlow,
+		getDropdownItems,
+		initDraftList,
+		initPublishList,
+		initAgentPublishList,
+		isAdminRight,
+		isAgent,
+		isCollapse,
+		isEditRight,
+		isMainFlow,
+		isReleasedToMarket,
+		isTesting,
+		moreIcon,
+		setAgent,
+		showFlowIsDraftToast,
+		testFlow,
+	])
+
+	const navigateBack = useMemoizedFn(() => {
+		// 检查历史记录栈中是否有前一页
+		if (window.history.length <= 1 || !window.history.state) {
+			// 从URL或params中获取type
+			const type = params.type || location.pathname.split("/").filter(Boolean)[1]
+
+			if (type) {
+				// 有type参数时，返回对应类型的列表页面
+				navigate(`/flow/${type}/list`)
+			} else {
+				// 没有type参数时，默认返回Agent列表
+				navigate(RoutePath.AgentList)
+			}
+		} else {
+			// 有历史记录时，正常返回
+			window.history.back()
+		}
+	})
+
+	// 自定义tag列表
+	const { customTags } = useCustomTagList({
+		flow: currentFlow,
+		isMainFlow,
+		isSaving,
+		lastSaveTime,
+		isAgent,
+		agent,
+		setCurrentFlow,
+	})
+
+	const flowHeader = useMemo(() => {
+		return {
+			buttons: Buttons,
+			backIcon: (
+				<IconChevronLeft stroke={2} className={styles.backIcon} onClick={navigateBack} />
+			),
+			defaultImage: DefaultImage,
+			editEvent: isAgent
+				? () => {
+						// TODO2 Agent 处理剩余编辑基础信息的相关接口调用和回显处理
+						openAddAgentModal()
+				  }
+				: null,
+			customTags,
+		}
+	}, [Buttons, navigateBack, isAgent, customTags, openAddAgentModal])
+
+	const nodeSchemaMap = useMemo(() => {
+		return generateNodeVersionSchema()
+	}, [])
+
+	const { subFlow, tools } = useMaterialSource()
+
+	return (
+		<NodeMapProvider nodeMap={nodeSchemaMap}>
+			{/* @ts-ignore */}
+			<MaterialSourceProvider subFlow={subFlow} tools={tools}>
+				{/* @ts-ignore */}
+				<NodeChangeListenerProvider customListener={nodeChangeEventListener}>
+					<ExtraNodeConfigProvider
+						nodeStyleMap={{
+							[customNodeType.Start]: {
+								width: isMainFlow ? "480px" : "900px",
+							},
+						}}
+					>
+						{/* @ts-ignore */}
+						<ConfigProvider locale={locale}>
+							<CustomFlowProvider
+								testFlowResult={testResult}
+								setCurrentFlow={setCurrentFlow}
+							>
+								<div
+									className={cx(styles.flowWrapper, {
+										// [styles.mainFlow]: isMainFlow,
+									})}
+								>
+									{/* @ts-ignore */}
+									<MagicFlowComponent
+										header={flowHeader}
+										showExtraFlowInfo={false}
+										ref={flowInstance}
+										flow={currentFlow}
+										onlyRenderVisibleElements={false}
+										layoutOnMount={false}
+										allowDebug
+										omitNodeKeys={[
+											"data",
+											"expandParent",
+											"extent",
+											"parentId",
+											"deletable",
+											"position",
+											"step",
+											"zIndex",
+											"type",
+										]}
+									/>
+								</div>
+
+								<ToastContainer
+									toastClassName="toast"
+									position="top-right"
+									autoClose={2000}
+									hideProgressBar
+									newestOnTop={false}
+									closeOnClick
+									rtl={false}
+									pauseOnFocusLoss
+									draggable
+									pauseOnHover
+									className={styles.toastContainer}
+								/>
+								{EditAgentModal}
+							</CustomFlowProvider>
+						</ConfigProvider>
+					</ExtraNodeConfigProvider>
+				</NodeChangeListenerProvider>
+			</MaterialSourceProvider>
+		</NodeMapProvider>
+	)
+}

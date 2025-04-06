@@ -1,0 +1,45 @@
+import Conversation from "@/opensource/models/chat/conversation"
+import { CMessage } from "@/types/chat"
+import {
+	ConversationMessageSend,
+	ChatFileUrlData,
+	RecordSummaryConversationMessage,
+} from "@/types/chat/conversation_message"
+import { ConversationTopic } from "@/types/chat/topic"
+import { SeqResponse } from "@/types/request"
+import Dexie, { EntityTable } from "dexie"
+
+export type ChatDb = Dexie & {
+	conversation: EntityTable<ReturnType<InstanceType<typeof Conversation>["toObject"]>, "id">
+	conversation_dots: EntityTable<{ conversation_id: string; count: number }, "conversation_id">
+	organization_dots: EntityTable<
+		{ organization_code: string; count: number },
+		"organization_code"
+	>
+	topic_dots: EntityTable<
+		{ conversation_topic_id: string; count: number },
+		"conversation_topic_id"
+	>
+	pending_messages: EntityTable<ConversationMessageSend, "message_id">
+	disband_group_unconfirm: EntityTable<
+		{ conversation_id: string; confirm: boolean },
+		"conversation_id"
+	>
+	file_urls: EntityTable<ChatFileUrlData & { file_id: string; message_id: string }, "file_id">
+	current_conversation_id: EntityTable<
+		{ conversation_id: string; organization_code: string },
+		"conversation_id"
+	>
+	record_summary_message_queue: EntityTable<
+		{
+			send_time: number
+			message: Pick<RecordSummaryConversationMessage, "type" | "recording_summary">
+			callFnName: string
+		},
+		"send_time"
+	>
+	topic_list: EntityTable<
+		{ conversation_id: string; topic_list: ConversationTopic[] },
+		"conversation_id"
+	>
+} & Record<string, EntityTable<SeqResponse<CMessage>, "seq_id">>

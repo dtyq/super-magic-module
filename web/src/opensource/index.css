@@ -1,0 +1,25 @@
+:root {
+	width: 100vw;
+	height: 100vh;
+	margin: 0;
+
+	/* scrollbar-gutter: stable; */
+	scroll-behavior: smooth;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+	overflow: hidden;
+	-webkit-font-smoothing: antialiased;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+.ant-popover-buttons {
+	display: flex;
+	justify-content: center;
+}

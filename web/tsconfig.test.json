@@ -1,0 +1,29 @@
+{
+	"compilerOptions": {
+		"moduleResolution": "node",
+		"target": "es5",
+		"module": "esnext",
+		"lib": ["es2015", "es2016", "es2017", "dom"],
+		"strict": true,
+		"allowJs": false,
+		"sourceMap": true,
+		"declaration": true,
+		"experimentalDecorators": true,
+		"allowSyntheticDefaultImports": true,
+		"emitDecoratorMetadata": true,
+		"declarationDir": "dist/types",
+		"outDir": "dist/lib",
+		"skipLibCheck": true,
+		"esModuleInterop": true,
+		"forceConsistentCasingInFileNames": true,
+		"resolveJsonModule": true,
+		"isolatedModules": true,
+		"composite": true,
+		"jsx": "react-jsx",
+		"typeRoots": ["./types"],
+		"paths": {
+			"@/*": ["./src/*"]
+		}
+	},
+	"include": ["src/**/__tests__/**/*.ts", "src/**/__tests__/**/*.tsx"]
+}

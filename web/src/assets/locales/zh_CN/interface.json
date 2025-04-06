@@ -1,0 +1,1323 @@
+{
+	"DINGDING_ENV": "钉钉环境",
+	"ErrorHappened": "发生了错误",
+	"FrontendVersionDetected": "检测到项目更新",
+	"GFDSAQ_DINGTALK_SSO_ENVIRONMENT": "钉钉免登环境",
+	"MagicChat": "麦吉聊聊",
+	"PleaseReloadThePage": "请刷新页面，重新加载内容",
+	"Reload": "重新加载",
+	"agent": {
+		"addInstruction": "添加指令",
+		"agentEmpty": "暂未发现可用的助理",
+		"agentInfo": "助理信息",
+		"agentManage": "管理AI助理",
+		"checkVersionRecord": "查看版本记录",
+		"createTime": "创建时间",
+		"createTo": "创建于",
+		"creator": "创建人",
+		"currentVersion": "当前版本",
+		"deleteAgent": "删除助理",
+		"dialog": "对话框",
+		"dialogHelp": "快捷指令将显示在助理对话输入框的底部区域，当在移动端时，将合并至顶部工具栏。",
+		"emptyQuickInstruction": "还没有添加任何快捷指令",
+		"instruction": "指令",
+		"instructionsDesc": "驱动 AI 助理的快捷指令",
+		"interaction": "交互指令",
+		"maxInstruction": "最多支持 5 组快捷指令",
+		"nameRepeatError": "名称不可重复",
+		"needPublishTips": "AI助理存在修改内容, 需发布后才能生效",
+		"needPublishTips2": "AI助理尚未发布到企业内部, 仅限创建人使用",
+		"noQuote": "未被引用",
+		"organization": "企业内部",
+		"publishNewVersion": "发布新版本",
+		"quickInstruction": "快捷指令",
+		"quote": "引用关系",
+		"quoteAgent": "${num} 个助理引用",
+		"select": "选择",
+		"status": "启用状态",
+		"switchMarketTip": "需发布至市场后启用",
+		"switchOrgTip": "需发布至企内部后启用",
+		"systemInstructionError": "系统指令不可移动",
+		"toolbar": "工具栏",
+		"toolbarHelp": "快捷指令将显示在助理对话输入框的顶部工具栏",
+		"transferCreator": "转交创建人",
+		"updateTime": "更新时间",
+		"upload": "上传",
+		"versionManagement": "版本管理",
+		"versionRecord": "版本记录",
+		"workFlow": "工作流配置"
+	},
+	"appList": {
+		"myApps": "我的应用",
+		"noDescription": "暂无描述",
+		"openApp": "打开",
+		"powerBy": "由 ${company} 提供技术支持"
+	},
+	"backHome": "返回首页",
+	"brand": {
+		"dingtalk": "钉钉",
+		"wechat": "微信"
+	},
+	"button": {
+		"add": "添加",
+		"agree": "",
+		"allow": "允许",
+		"cancel": "取消",
+		"close": "关闭",
+		"confirm": "确认",
+		"create": "创建",
+		"delete": "删除",
+		"edit": "编辑",
+		"publish": "发布",
+		"reject": "拒绝",
+		"save": "保存",
+		"send": "发送",
+		"view": "查看"
+	},
+	"calendar": {
+		"aiCalendar": "一句话让AI创建日程",
+		"holiday": "休",
+		"meetingRoom": {
+			"advanceBook": "可提前预定",
+			"allPeopleBook": "全员可预订",
+			"allow": "允许",
+			"baseInfo": "基本信息",
+			"bookMethod": "预定方式",
+			"bookRule": "预定规则",
+			"bookTime": "每天7:00 - 23:00",
+			"bookTimeSlot": "预定时长",
+			"booked": "已被他人预订",
+			"bookedApproval": "预定后审批",
+			"canBookTime": "${time1} 至 ${time2} 可预定",
+			"capacity": "容纳人数",
+			"changeBookTimeTip": "与日程时间不一致，是否将日程时间调整为",
+			"colorTip": "颜色说明",
+			"cycleBook": "周期预定",
+			"device": "设备支持",
+			"free": "空闲",
+			"hour": "小时",
+			"locate": "地点",
+			"location": "城市 · 建筑 · 楼层",
+			"minute": "分",
+			"myBooked": "我的预订",
+			"needApproval": "需审批",
+			"noResource": "没有查询到符合条件的会议室",
+			"notAllow": "不允许",
+			"openTime": "开放时间",
+			"search": "搜索会议室",
+			"selectMeetingRoom": "选择会议室",
+			"selectedTimeLine": "选中时段",
+			"support": "支持",
+			"total": "共",
+			"unavailable": "不可预订"
+		},
+		"moreNum": "还有 ${num} 项",
+		"newEvent": {
+			"accept": "接受",
+			"add": "新建日程",
+			"addFile": "添加附件",
+			"addLocation": "添加地理位置",
+			"addMeeting": "添加会议",
+			"addMeetingRoom": "添加会议室",
+			"addParticipant": "添加参与人",
+			"addParticipantTip": "你将添加参与人至重复日程, 请选择生效范围",
+			"allDay": "全天",
+			"busy": "忙碌",
+			"calendarDesc": "添加日程描述",
+			"calendarFile": "添加附件",
+			"calendarStatus": "日程状态",
+			"changeSuccess": "修改成功",
+			"checkAll": "查看全部",
+			"checkConflict": "查看参与人闲忙情况",
+			"checkIn": "发起签到",
+			"checkSummary": "查看摘要",
+			"comment": "输入评论内容, 可@人",
+			"confirmDelete": "确认删除该日程吗?",
+			"confirmTip": "确定要${text}该日程吗？",
+			"confirmTitle": "修改日程状态为",
+			"conflict": "时间冲突",
+			"createSummary": "创建摘要",
+			"currentLocation": "当前位置",
+			"datePlaceholder": "选择日期",
+			"delete": "删除日程",
+			"deleteTip": "你将删除此重复日程, 请选择生效范围",
+			"detail": "日程详情",
+			"edit": "编辑日程",
+			"editTip": "你将编辑此重复日程, 请选择生效范围",
+			"file": "附件 (共 ${num} 个)",
+			"finish": "完成",
+			"free": "空闲",
+			"hasConflictTip": "有 ${num} 人时间冲突",
+			"location": "地点",
+			"manageParticipant": "管理参与人",
+			"meetingLink": "链接",
+			"meetingNum": "会议号",
+			"meetingRoom": "会议室",
+			"moreOptions": "更多选项",
+			"nearlyLocation": "附近地点",
+			"newOrganizer": "新的组织人",
+			"noConflictTip": "所有人时间段内无冲突",
+			"notify": "提醒",
+			"notifyOptions": {
+				"noNotify": "不提醒",
+				"none": "无",
+				"notify0Min": "开始时",
+				"notify15Min": "15 分钟前",
+				"notify1Day": "1 天前",
+				"notify1Hour": "1 小时前",
+				"notify1Week": "1 周前",
+				"notify2Day": "2 天前",
+				"notify2Hour": "2 小时前",
+				"notify30Min": "提前 30 分钟",
+				"notify5Min": "5 分钟前"
+			},
+			"notifyOrganizer": "通过单聊消息通知新组织人",
+			"notifyOrganzier": "",
+			"organizer": "组织人",
+			"organizerWithdraw": "原组织人退出该日程",
+			"participant": "参与人",
+			"pending": "暂定日程",
+			"pendingTip": "你将暂定此重复日程, 请选择生效范围",
+			"placeholder": "添加日程标题",
+			"pleaseInputTitle": "请输入日程标题",
+			"reject": "拒绝日程",
+			"rejectTip": "你将拒绝此重复日程, 请选择生效范围",
+			"repeat": "重复",
+			"repeatOptions": {
+				"count": "次后",
+				"custom": "自定义重复",
+				"customCycle": "自定义周期",
+				"daily": "每天",
+				"day": "天",
+				"endRepeat": "结束重复",
+				"every": "每",
+				"friday": "五",
+				"monday": "一",
+				"month": "月",
+				"monthly": "每月",
+				"noRepeat": "不重复",
+				"repeatCount": "限定重复次数",
+				"repeatFrequency": "重复频率",
+				"repeatInfinite": "无限重复",
+				"repeatTimeEnd": "指定时间终止",
+				"saturday": "六",
+				"sunday": "日",
+				"theThDay": "第 ${num} 天",
+				"thursday": "四",
+				"tuesday": "二",
+				"wednesday": "三",
+				"week": "周",
+				"weekly": "每周",
+				"workday": "每个工作日(周一到周五)",
+				"year": "年",
+				"yearly": "每年"
+			},
+			"scope": {
+				"after": "后续每一次日程",
+				"all": "全部日程",
+				"only": "仅本次日程"
+			},
+			"searchLocation": "搜索位置",
+			"selectLocation": "选择地点",
+			"tabs": {
+				"comment": "评论",
+				"dynamics": "动态"
+			},
+			"tentative": "暂定",
+			"title": "新建日程",
+			"toGroup": "进入群聊",
+			"totalParticipant": "共 ${num} 人",
+			"transferOrganizer": "转让组织人",
+			"transferSuccess": "转让成功",
+			"videoConference": "视频会议"
+		},
+		"sider": {
+			"my": "我的",
+			"myAgent": "我的代办",
+			"myCalendar": "我的日程",
+			"myTask": "我的任务"
+		},
+		"title": "日历",
+		"today": "今天",
+		"today2": "今",
+		"work": "班"
+	},
+	"chat": {
+		"aggregate_ai_search_card": {
+			"deep_reading": "正在深度阅读",
+			"deep_searching": "正在深度搜索",
+			"event": "",
+			"eventDescription": "事件概述",
+			"eventName": "事件名称",
+			"eventTime": "事件时间",
+			"mind_map": "思维导图",
+			"questionReadCount": "已精读 ${count} 个网页",
+			"read_page": "阅读 {{number}} 个网页",
+			"read_pages_count": "已阅读 {{count}} 个网页",
+			"reading_pages": "正在阅读",
+			"reasoning": "正在深度思考",
+			"relatedEvents": "相关事件",
+			"search": "来源",
+			"searchSummary": "已检索到全网有 ${search_count} 篇相关资料，精读其中的 ${read_count} 篇，总字数约为 ${word_count} 字。",
+			"searchSummaryTips": "正常人每分钟的阅读速度在 200 ~ 500 字，阅读同等长度的内容需要约 ${time} 不等。",
+			"search_page": "搜索网页",
+			"searching": "正在搜索",
+			"searchingWebPage": "正在精读",
+			"searching_questions": "正在搜索问题",
+			"summarizing": "正在总结内容"
+		},
+		"aiImage": {
+			"Generating": "图片生成中",
+			"checkHistoryConversation": "查看历史对话",
+			"continueEdit": "继续编辑",
+			"empty": "未生成图片,请重试",
+			"makeTheSame": "做同款",
+			"reGenerate": "重新生成",
+			"startPageDescription": "灵感大爆发，点燃你的想象力"
+		},
+		"allRead": "全部已读",
+		"authorityAuthorizationManagement": {
+			"empty": "暂无权限授权",
+			"title": "权限授权管理"
+		},
+		"backToBottom": "回到底部",
+		"business_form": {
+			"approve_form": {
+				"reset": "重置",
+				"submit": "发起审批",
+				"submitted": "已"
+			},
+			"loading": "表单加载中",
+			"magic_table": {
+				"add_row": "新增",
+				"cancel": "取消",
+				"confirmDelete": "确认删除?",
+				"ok": "确认",
+				"operation": "操作",
+				"submit": "提交",
+				"submitted": "已提交",
+				"title": "表单"
+			},
+			"text": "[表单卡片]"
+		},
+		"busniess_form": {
+			"text": ""
+		},
+		"chat": {
+			"quickInstruction": {
+				"notFoundConfiguration": "未找到指令配置"
+			}
+		},
+		"chatHistory": {
+			"chatHistory": "聊天记录",
+			"filter": {
+				"sender": "发送者",
+				"senderPlaceholder": "输入名字查找发送者",
+				"time": "时间",
+				"timeOption": {
+					"noLimit": "不限时间",
+					"oneMonth": "最近 30 天",
+					"oneWeek": "最近 7天",
+					"today": "今天"
+				},
+				"timeRange": "时间范围",
+				"title": "筛选"
+			},
+			"search": {
+				"placeholder": "搜索聊天记录"
+			},
+			"tab": {
+				"all": "全部",
+				"file": "文件",
+				"link": "链接",
+				"media": "图片与视频"
+			},
+			"title": {
+				"chatHistory": "的聊天记录",
+				"groupChatHistory": "群聊聊天记录",
+				"with": "与"
+			}
+		},
+		"chatSetting": {
+			"deleteMessageRecords": "清空聊天记录",
+			"shareToOther": "分享给他人",
+			"shareToOthers": "分享给他人"
+		},
+		"collect": "收藏",
+		"copy": "复制",
+		"delete": "删除",
+		"echarts": {
+			"loading": "图表加载中"
+		},
+		"file": {
+			"download": "下载",
+			"preview": "预览",
+			"saveTo": "保存至",
+			"upload_failed": "文件上传失败"
+		},
+		"filePreview": {
+			"notFoundFile": "未找到该文件",
+			"notSupport": "暂不支持预览",
+			"title": "文件预览"
+		},
+		"floatButton": {
+			"AIFriendConfiguration": "AI 好友设置",
+			"Praise": "好评点赞",
+			"Praised": "已点赞",
+			"aiAssistantConfiguration": "AI 助理设置",
+			"cancelTopConversation": "取消置顶",
+			"clearChatMessages": "清空聊天记录",
+			"configuration": "好友设置",
+			"disableNoDisturbing": "关闭免打扰",
+			"enableNoDisturbing": "开启免打扰",
+			"moveToGroup": "移至分组",
+			"removeGroup": "移除会话",
+			"topConversation": "置顶会话",
+			"workflow": "工作流"
+		},
+		"folder": "文件",
+		"forward": "转发",
+		"groupCreateTip": {
+			"createGroup": "发起了群聊"
+		},
+		"groupDisbandTip": {
+			"disbandGroup": "本群聊已解散"
+		},
+		"groupDisbanded": {
+			"content": "该群已解散"
+		},
+		"groupInfo": "群聊信息",
+		"groupNotice": {
+			"empty": "暂无公告",
+			"placeholder": "请输入公告内容",
+			"postNewNotice": "发布新公告",
+			"title": "群公告"
+		},
+		"groupSetting": {
+			"addMember": {
+				"AddGroupMember": "邀请",
+				"PleaseSelectAtLeastOneMember": "请至少选择一位用户",
+				"selectedCount": "已选择 ${count} 人"
+			},
+			"addMemberSuccess": "添加成功",
+			"dissolveGroup": "解散群聊",
+			"groupAdmin": "管理",
+			"groupAdminTip": "群权限的相关设置",
+			"groupInWhich": "归属于 ${name}",
+			"groupName": "群名称",
+			"groupNamePlaceholder": "请输入群名称",
+			"groupNotice": "群公告",
+			"groupType": "群类型",
+			"leaveGroup": "退出群聊",
+			"leaveGroupConfirm": "",
+			"leaveGroupSuccess": "已退出群聊",
+			"ownerLeaveGroupTip": "群主不可退出群聊,请将群转让后再退出",
+			"remove": "移除",
+			"removeGroupConfirm": "",
+      "removeGroupConfirm": "确认解散群组？",
+			"removeGroupSuccess": "解散成功",
+			"removeMember": "移除群成员",
+			"title": "群设置",
+			"updateGroupName": "修改群名称",
+			"userSetting": "个性化设置(仅对自己生效)",
+			"viewAllMembers": "查看全部群成员(${count}/1000)"
+		},
+		"groupType": {
+			"external": "外部群",
+			"internal": "内部群",
+			"internalMeeting": "内部会议群",
+			"internalProject": "内部项目群",
+			"internalTraining": "内部培训群",
+			"internalWorkOrder": "内部工单群"
+		},
+		"groupUpdateTip": {
+			"updateGroupAvatar": "修复了群头像",
+			"updateGroupName": "将群名修改为: "
+		},
+		"groupUsersRemoveTip": {
+			"do": "",
+			"leaveGroup": "退出群聊",
+			"make": "将",
+			"removeMember": "移出群聊"
+		},
+		"imagePreview": {
+			"afterProcessing": "超清图",
+			"beforeProcessing": "原图",
+			"converting": "转换中",
+			"convertingCloseTip": "转换过程中，可关闭此窗口",
+			"defaultTitle": "预览内容",
+			"download": "下载",
+			"highDefinition": "超清",
+			"highDefinitionImage": "AI 超清",
+			"hightImageConverted": "已转超清",
+			"hightImageConverting": "AI 超清转换中 ${num}%",
+			"longPressCompare": "长按对比",
+			"navigateToMessage": "定位到消息",
+			"senderFiles": "{{username}}发送的文件",
+			"senderImage": "{{username}}发送的图片",
+			"senderVideo": "{{username}}发送的视频",
+			"transpond": "转发",
+			"useHightImageTip": "AI 超清功能会消耗大量算力资源，每月使用次数有限，是否确认使用？"
+		},
+		"input": {
+			"calendar": "日程",
+			"clearContext": "清除上下文",
+			"dragFile": {
+				"tip": "将文件拖至此处即可发送"
+			},
+			"emoji": "表情",
+			"internet": "互联网",
+			"microphone": "语音通话",
+			"newTopic": "新话题",
+			"people": "成员",
+			"quickInstruction": "快捷指令",
+			"referTo": "提及",
+			"task": "任务",
+			"todo": "待办",
+			"upload": "文件",
+			"videoPhone": "视频通话"
+		},
+		"inviteMemberTip": {
+			"invite": "邀请",
+			"joinGroupConversation": "加入群聊"
+		},
+		"link": {
+			"title": "标题"
+		},
+		"markdown": {
+			"citation": {
+				"viewSource": "查看来源页面"
+			},
+			"copy": "复制",
+			"graph": "图形",
+			"raw": "原始"
+		},
+		"markmap": {
+			"downloadPicture": "下载图片",
+			"enableInteraction": "开启交互",
+			"exitFullScreen": "退出全屏",
+			"fullScreen": "全屏查看",
+			"generatePPT": "演示模式"
+		},
+		"mentionPanel": {
+			"search": {
+				"placeholder": "搜索联系人、AI 助理、文件"
+			}
+		},
+		"mermaid": {
+			"error": "图形语法错误",
+			"loading": "流程图加载中"
+		},
+		"message": {
+			"BeThinking": "正在思考",
+			"groupSeenPopover": {
+				"title": "消息接收人列表"
+			},
+			"image": {
+				"longImage": "长图"
+			},
+			"loading": " 加载中",
+			"markdown": {
+				"image_is_not_exist": "资源不存在"
+			},
+			"networkError": {
+				"description": "网络异常，内容加载失败",
+				"reload": "重新加载"
+			},
+			"placeholder": {
+				"code": "[代码块]",
+				"echarts_card": "",
+				"image": "[图片]",
+				"mermaid": "流程图",
+				"sinan_card": ""
+			},
+			"thought_process": "思考过程"
+		},
+		"messageAttachments": {
+			"collapse": "收起",
+			"expandAllFiles": "展开全部文件(${count})"
+		},
+		"messageRevoked": "消息已撤回",
+		"messageTextRender": {
+			"aggregate_ai_search_card": "[搜索结果]",
+			"ai_image": "[AI图片]",
+			"files": "[文件]",
+			"image": "[图片]",
+			"link": "[链接]",
+			"magic_search_card": "[AI 搜索卡片]"
+		},
+		"mulitiple": "多选",
+		"oss_file": {
+			"loading": "资源加载中"
+		},
+		"quickInstruction": {
+			"instructionValue": "@ 指令值",
+			"noInstructionConfigure": "未配置指令",
+			"notFoundConfiguration": "未找到指令配置"
+		},
+		"read": "对方已读",
+		"recall": "撤回",
+		"reply": "回复",
+		"resend": "重新发送",
+		"revoke_one_message": "撤回了一条消息",
+		"schedule": "日程",
+		"schedule_card": {
+			"bookingMeetRoom": "",
+			"onlyCreateSchedule": "",
+			"participant": "",
+			"participantDescription": "",
+			"schedule": "",
+			"scheduleDescription": "",
+			"schedule_time": ""
+		},
+		"seenCount": "${count} 人已读",
+		"sendFailed": "发送失败",
+		"sending": "发送中...",
+		"setting": "聊天设置",
+		"sinan_card": {
+			"loading": "图表加载中"
+		},
+		"subSider": {
+			"aggregateAISearchCard": "[搜索结果]",
+			"aiBots": "AI 助理",
+			"atMe": "@ 我",
+			"conversation": "单聊",
+			"files": "[文件]",
+			"group": "分组",
+			"groupConversation": "群聊",
+			"message": "消息",
+			"pinned": "置顶",
+			"specialCardMessage": "[ 特殊卡片消息 ]"
+		},
+		"task": "任务",
+		"timedTask": {
+			"addTask": "添加任务",
+			"alwaysRepeat": "一直重复",
+			"changeTopic": "切换至关联话题",
+			"createTask": "创建定时任务",
+			"customRepeat": "自定义重复",
+			"dailyRepeat": "每天重复",
+			"deadline": "截止日期",
+			"deadlineTo": "截止至 ${time}",
+			"deleteTask": "删除任务",
+			"editTask": "编辑任务",
+			"editTimedTask": "编辑定时任务",
+			"monthlyRepeat": "每月重复",
+			"monthlyTimePlaceholder": "请选择哪天",
+			"neverEnding": "永不截止",
+			"noRepeat": "不重复",
+			"repeat": "重复",
+			"repeatPlaceholder": "请选择重复类型",
+			"taskContent": "任务内容",
+			"taskContentPlaceholder": "如：总结每天工作内容",
+			"taskDescription": "${per} [${time}] 执行 ${deadline}",
+			"taskDescription2": "[${day} ${time}] 执行 ${deadline}",
+			"timePlaceholder": "请选择时间",
+			"title": "定时任务",
+			"topic": "关联话题",
+			"topicPlaceholder": "请选择关联话题",
+			"unit": "个",
+			"weekdayRepeat": "每个工作日重复（星期一至星期五）",
+			"weekdayRepeat2": "工作日重复",
+			"weeklyRepeat": "每周重复",
+			"weeklyTimePlaceholder": "请选择周几",
+			"xDay": "${num}日",
+			"xMonth": "${num}月",
+			"yearlyTimePlaceholder": "请选择哪月"
+		},
+		"todo": "待办",
+		"topic": {
+			"backChat": "返回聊天",
+			"createTopic": "创建新话题",
+			"currentTopic": "当前话题",
+			"menu": {
+				"ai_rename": "智能重命名",
+				"delete_topic": "删除话题",
+				"rename_topic": "重命名",
+				"topicName": "话题名称"
+			},
+			"newTopic": "新话题",
+			"noTopic": "暂无话题",
+			"switchTopic": "选择话题",
+			"tip": {
+				"description": "使用话题，将更专注每一件事的讨论。",
+				"title": "话题列表"
+			},
+			"topic": "话题"
+		},
+		"translate": "翻译",
+		"unread": "对方未读",
+		"unreadCount": "${count} 人未读",
+		"unseenCount": "${count} 人未读",
+		"urgent": "加急",
+		"urgentModal": {
+			"form": {
+				"recipient": "接收人",
+				"sendType": "发送方式",
+				"timedTransmission": "定时发送",
+				"timedTransmissionOpenPlaceholder": "请选择日期及时间"
+			},
+			"sendType": {
+				"appAndMessage": "应用+短信",
+				"appAndPhone": "应用+电话",
+				"onlyApp": "仅应用"
+			},
+			"title": "加急"
+		},
+		"userSetting": {
+			"GroupInWhich": "所在分组",
+			"addMember": "添加",
+			"aiTranslateRealTime": "AI 实时翻译",
+			"disturbMessage": "消息免打扰",
+			"removeMember": "移除",
+			"specialAttention": "特别关注",
+			"startConversation": "发起群聊",
+			"topConversation": "置顶会话"
+		},
+		"wiki": {
+			"noContent": "无内容",
+			"noSources": "无来源",
+			"related": "延展",
+			"sources": "来源"
+		},
+		"you": "你"
+	},
+	"collectModal": {
+		"save": "保存",
+		"selectTip": "从现有标签中选择",
+		"tip": "收藏的消息内容发生变更时，收藏内的消息内容也将实时变更。",
+		"tip1": "当消息内容被撤回时，收藏内的消息内容将无法展示",
+		"tip2": "当消息内容被修改时，收藏内的消息内容也同步被修改"
+	},
+	"common": {
+		"calendar": {
+			"newEvent": {
+				"allDay": "全天"
+			}
+		},
+		"cancel": "取消",
+		"confirm": "确认",
+		"day": "天",
+		"format": {
+			"NthOfweek": "第${week}周",
+			"yearAndMonth": "YYYY年MM月"
+		},
+		"hour": "小时",
+		"loading": "加载中",
+		"max_upload_size_placeholder": "最多上传 {{count}} 个文件",
+		"minute": "分钟",
+		"noMore": "没有更多了",
+		"refresh": "刷新",
+		"reload": "刷新页面",
+		"save": "保存",
+		"select": "选择",
+		"tip": "提示",
+		"unknown": "未知",
+		"upload": "上传",
+		"upload_max_count_placeholder": "最大上传{{maxCount}}个文件",
+		"upload_max_size_placeholder": "每个文件最大 {{size}}MB"
+	},
+	"contacts": {
+		"organization": {
+			"noOrganizationOrMember": "暂无部门或人员"
+		},
+		"selectAll": "全选",
+		"subSider": {
+			"aiAssistant": "AI 助理",
+			"enterpriseInternal": "企业内部",
+			"followee": "关注的人",
+			"myFriends": "我的好友",
+			"myGroups": "我的群组",
+			"organization": "组织架构"
+		},
+		"topBar": {
+			"segmented": {
+				"architecturalView": "架构视图",
+				"list": "列表视图"
+			},
+			"title": "通讯录"
+		}
+	},
+	"deleteConfirm": "确认删除",
+	"deleteConfirmTip1": "为确保数据的安全，如需删除请将",
+	"deleteConfirmTip2": "输入至下方后确认",
+	"deleteConfirmTitle": "删除操作确认",
+	"diffTip": "当前输入内容与原内容不一致",
+	"drive": {
+		"all": "全部",
+		"common": "常用",
+		"favorite": "收藏",
+		"modal": {
+			"CollaboratorOrDepartment": "协作者 / 部门",
+			"classification": "分类",
+			"confirmMoveToTrash": "确认移入回收站吗?",
+			"inviteCollaborators": "邀请协作者",
+			"moveTo": "移动至",
+			"moveToTrash": "移入回收站",
+			"newSubFolder": "新建子文件夹",
+			"officialTemplate": "官方模板",
+			"permission": {
+				"all": "可管理",
+				"batchOperation": "批量操作",
+				"download": "可预览下载",
+				"edit": "可编辑",
+				"noticeNewCollaborator": "通知本次新增的协作者",
+				"read": "可预览",
+				"selectAll": "全选"
+			},
+			"personalTemplate": "个人模板",
+			"pleaseEnterFolderName": "请输入文件夹名称",
+			"rename": "重命名",
+			"searchFolder": "搜索文件夹",
+			"searchTemplate": "搜索模板",
+			"templateLibrary": "模板库"
+		},
+		"myCreated": "我创建的",
+		"personalDrive": "个人云盘",
+		"recentVisit": "最近访问",
+		"sharedDrive": "企业云盘",
+		"table": {
+			"addToFavorite": "添加至收藏",
+			"authorityManagement": "协作者管理",
+			"cancelFavorite": "取消收藏",
+			"copy": "创建副本",
+			"copyLink": "复制链接",
+			"creator": "创建者",
+			"download": "下载文件",
+			"modifyTime": "修改时间",
+			"moveTo": "移动至",
+			"moveToTrash": "移入回收站",
+			"name": "名称",
+			"new": "新建",
+			"newMenu": {
+				"all": "所有类型",
+				"cloudDocument": "云文档",
+				"excel": "Excel 文档",
+				"folder": "文件夹",
+				"magicTable": "神奇表格",
+				"ppt": "演示文档",
+				"whiteBoard": "白板",
+				"word": "Word 文档"
+			},
+			"openCurrentFolder": "打开所在目录",
+			"openOnNewTab": "在新标签页打开",
+			"remainDay": "过期天数",
+			"rename": "重命名",
+			"upload": "上传文件 / 文件夹"
+		},
+		"template": {
+			"new": "新建",
+			"usedTimeTip": "已被使用${used_time}次"
+		},
+		"trash": "回收站",
+		"trashMenu": {
+			"removePermanent": "彻底删除",
+			"restore": "恢复"
+		}
+	},
+	"explore": {
+		"assistantMarket": "助理市场",
+		"bestAssistant": "最佳助理",
+		"buttonText": {
+			"addOption": "添加选项",
+			"addStatus": "添加状态",
+			"authorityManagement": "管理权限",
+			"autoGenerate": "自动生成",
+			"conversationAssistant": "与 AI 助理对话",
+			"createAssistant": "创建AI助理",
+			"createInteraction": "添加交互指令",
+			"mangageAssistant": "管理AI助理",
+			"moreAll": "查看更多",
+			"publishAssistant": "发布 AI 助理",
+			"updateAssistant": "编辑 AI 助理",
+			"useDefaultIcon": "使用默认图标"
+		},
+		"byWhoCreate": "由 <span>{{nickname}}</span> 创建",
+		"descriptionPanel": {
+			"addFriendAndChat": "添加并发起会话",
+			"alreadyAddAgent": "已添加该助理",
+			"friendNum": "好友数",
+			"good": "好评",
+			"initiateAsession": "发起会话",
+			"onlyAddAgent": "仅添加助理",
+			"onlyAddFriend": ""
+		},
+		"findYour": "寻找你的",
+		"form": {
+			"addMemberOrDepartment": "添加成员/部门",
+			"allMember": "全员可用",
+			"assistantAvatarPlaceholder": "请上传头像",
+			"assistantDesc": "简介",
+			"assistantDescPlaceholder": "介绍 AI 助理，展示给使用者",
+			"assistantName": "名称",
+			"assistantNamePlaceholder": "给 AI 助理起一个独一无二的名字吧",
+			"baseInfo": "基础信息",
+			"chatInstruction": "对话指令",
+			"chatInstructionTip": "对话指令会将指令内容与用户对话文本结合于消息内容中，可由大模型直接读取",
+			"close": "关闭",
+			"comingSoon": "即将上线",
+			"conversationTip": "可通过下方按钮快速发起对话",
+			"defaultValue": "默认值",
+			"example": "示例",
+			"exampleDesc": "光影交错间，人物故事于画面中浮现",
+			"exampleTitle": "电影写真风格",
+			"flowInstruction": "流程指令",
+			"flowInstructionTip": "流程指令的指令值可用于流程节点判断或读取值时使用，在流程节点上可通过@调用",
+			"insertBefore": "消息内容前方",
+			"insertBehind": "消息内容后方",
+			"insertCursor": "消息内容中光标位置",
+			"insertInstruction": "插入指令值",
+			"insertLocation": "指令插入位置",
+			"insertLocationTip": "当选择“消息内容中光标位置”时，会根据光标所在位置插入指令，如光标失焦则补充至消息内容后方。",
+			"instructionContent": "指令内容",
+			"instructionContentPlaceholder": "输入指令发送的内容，将会在用户发送消息时，补充在消息中。支持使用@添加指令值。",
+			"instructionDesc": "指令描述",
+			"instructionDescPlaceholder": "输入快捷指令描述",
+			"instructionExpDesc": "指令说明描述",
+			"instructionExpDescPlaceholder": "输入描述",
+			"instructionExpImgTip1": "上传提示配图（非必填）",
+			"instructionExpImgTip2": "280*160像素",
+			"instructionExpName": "指令说明名称",
+			"instructionExpNamePlaceholder": "输入名称",
+			"instructionExplanation": "指令说明",
+			"instructionMode": "指令模式",
+			"instructionName": "指令名称",
+			"instructionNamePlaceholder": "输入快捷指令名称，显示于按钮位置",
+			"instructionResidency": "指令常驻",
+			"instructionResidencyTip": "开启后，用户选中的选项将固定于该指令上，同时对话指令的情况下，指令内容会插入到消息内容前方。",
+			"instructionSetting": "指令配置",
+			"instructionSwitchTip": "开关类型指令将在每次对话时传递给助理",
+			"instructionType": "指令类型",
+			"officialChannel": "官方渠道",
+			"open": "开启",
+			"option": "选项",
+			"optionName": "显示名称",
+			"optionNamePlaceholder": "请输入显示名称",
+			"optionPlaceholder": "请输入选项的值",
+			"optionValue": "指令值",
+			"optionValuePlaceholder": "请输入指令值",
+			"passTime": "通过时间",
+			"private": "个人使用",
+			"privatePlaceholder": "仅限创建人使用",
+			"publishOrg": "企业内部",
+			"publishOrgPlaceholder": "仅限企业内部人员使用",
+			"publishPublic": "AI 助理市场",
+			"publishPublicPlaceholder": "所有人均可使用",
+			"publishRecord": "发布记录",
+			"publishRecordPlaceholder": "请输入发布记录",
+			"publishScope": "发布范围",
+			"publishSuccess": "发布成功",
+			"sendCommand": "直接发送指令",
+			"sendCommandTip": "开启后，用户点击指令后将直接发送给助理。",
+			"singleChoice": "单选项",
+			"specificMember": "指定成员/部门可用",
+			"statusIcon": "图标",
+			"statusText": "状态文本",
+			"statusTextColor": "文本颜色",
+			"statusTextColorDefault": "默认",
+			"statusTextColorGreen": "绿色",
+			"statusTextColorOrange": "橙色",
+			"statusTextColorRed": "红色",
+			"statusTextPlaceholder": "显示的状态文本",
+			"statusTip": "触发状态按钮指令后，状态将根据设定的顺序变化，并将指令值直接发送给助理。",
+			"submitTime": "提交时间",
+			"switch": "开关",
+			"text": "文本",
+			"version": "版本号",
+			"versionPlaceholder": "请输入版本号，不可小于当前版本号",
+			"versionValidateTip": "格式有误, 示例: 1.0.1",
+			"visibleRange": "可见范围",
+			"visibleRangeDesc": "设置可使用该 AI 助理的成员/部门"
+		},
+		"noDescription": "暂无描述",
+		"promptsDesc": {
+			"innerAssistant": "面向企业自身场景的 AI 助理",
+			"mostPopular": "精选助理榜单，总有一个适合你"
+		},
+		"promptsTitle": {
+			"innerAssistant": "企业内部助理",
+			"mostPopular": "精选助理",
+			"newlyJoined": "最新加入"
+		},
+		"searchFriend": "搜索AI助理",
+		"searchResult": "搜索结果(${num})"
+	},
+	"favorite": {
+		"all": "全部",
+		"batchDelete": "批量删除",
+		"batchEdit": "批量编辑标签",
+		"chatRecord": "聊天记录",
+		"contact": "联系人",
+		"createLabel": "新建标签",
+		"createOrEditLabel": "新建/修改标签",
+		"creator": "创建人",
+		"deleteFavorite": "删除收藏",
+		"deleteLabel": "删除标签",
+		"doc": "文档",
+		"editLabel": "编辑标签",
+		"group": "群聊",
+		"label": "标签",
+		"loading": "加载中",
+		"noFavorite": "暂无收藏",
+		"noMoreData": "没有更多数据了",
+		"pleaseInputLabel": "请输入标签名称",
+		"recentAccessAt": "最近访问时间",
+		"rename": "重命名",
+		"selectAll": "全选",
+		"selectFromCurrentLabel": "从现有标签选择",
+		"untag": "未标签的"
+	},
+	"flow": {
+		"addTools": "添加工具",
+		"apiKey": {
+			"addKey": "新增 Key",
+			"clickToCopy": "单击复制 Key",
+			"confirmToDelete": "确认要删除此 Api Key 吗?",
+			"confirmToRebuild": "确认要重置此 Api Key 吗?",
+			"copy": "复制 Key",
+			"copyCurl": "复制 Curl",
+			"deleteKey": "删除 Key",
+			"descPlaceholder": "请输入 Key 描述",
+			"description": "描述",
+			"disabled": "禁用",
+			"editKey": "编辑 Key",
+			"emptyTips": "创建 Api Key 用于快速通过接口调用 Flow",
+			"enable": "启用",
+			"hideKey": "隐藏密钥",
+			"keyManager": "API Key 管理",
+			"keyName": "Key 名称",
+			"keyValue": "Key 值",
+			"lastUsed": "最近使用",
+			"name": "名称",
+			"namePlaceholder": "请输入 Key 名称",
+			"neverUsed": "暂未使用",
+			"resetKey": "重置 Key",
+			"showKey": "显示密钥",
+			"status": "状态",
+			"success": "成功"
+		},
+		"appAuth": "应用授权",
+		"changeInfo": "修改信息",
+		"emptyTips": "暂未添加任何${title}",
+		"flow": "流程",
+		"flowInput": "流程入参",
+		"hasToolsNum": "包含 ${num} 个工具",
+		"required": "必须",
+		"saveAndPublish": "发布",
+		"searchTips": "查询不到任何",
+		"tools": "工具",
+		"toolsNum": "${num} 个工具",
+		"version": "版本"
+	},
+	"form": {
+		"groupAvatar": "群头像",
+		"groupAvatarTip": "不上传则使用默认群头像",
+		"groupName": "群名称",
+		"placeholder": {
+			"groupName": "请输入群名称"
+		},
+		"required": "请输入${label}"
+	},
+	"home": {
+		"botAnimation": {
+			"tooltip1": "别焦虑，协助你轻松完成每项工作",
+			"tooltip2": "也可以给我发送一个网址",
+			"tooltip3": "我还能帮你处理工作上的事情",
+			"tooltip4": "你可以将文件拖进来给我哦~"
+		},
+		"description": "麦吉帮您轻松完成繁琐的工作任务",
+		"welcomeTo": "欢迎来到"
+	},
+	"inferface": {
+		"common": {
+			"upload": "上传"
+		}
+	},
+	"invite": {
+		"backToPreviousStep": "返回上一步",
+		"haveInviteCode": "已有邀请码",
+		"inviteCode": "邀请码",
+		"inviteCodePlaceholder": "请输入邀请码",
+		"inviteForm": {
+			"defaultValue": {
+				"industryType": "其他",
+				"name": "默认组织"
+			}
+		},
+		"joinShortlist": {
+			"alreadyJoin": "已加入候选名单",
+			"alreadyJoinDescription": "我们将尽快为您发送邀请码，以便您优先体验我们的服务。",
+			"alreadyJoinTitle": "您已成功加入“候选名单”",
+			"back": "返回上一步",
+			"description": "我们正处于内测阶段，您可以通过加入候选名单获得邀请码体验我们的服务",
+			"emailInvalid": "邮箱格式有误",
+			"emailLabel": "联系邮箱",
+			"emailPlaceholder": "请提供您的常用联系邮箱，如：mail@letsmagic.cn",
+			"emailRequired": "请输入联系邮箱",
+			"formDescription": "填写以下资料，申请加入「麦吉·Magic」候选名单，我们将很快为您发送邀请码",
+			"jobInfoLabel": "职业信息",
+			"jobInfoPlaceholder": "请提供您的公司名称、职位，或其他与职业相关的信息。",
+			"joinShortlist": "加入候选名单",
+			"socialMediaLabel": "社交媒体账号",
+			"socialMediaPlaceholder": "请提供您的LinkedIn、X、TikTok、微博、抖音、小红书或其他社交媒体的个人主页链接。如果您拥有多个账号，也请一并提供给我们。",
+			"submit": "提交申请",
+			"tasksLabel": "您希望麦吉为您执行哪些任务？",
+			"tasksPlaceholder": "您希望麦吉为您完成哪些任务？请将您的想法详细告知我们，您的想法越具体，我们就能更好地为您提供解决方案。",
+			"tasksRequired": "请输入任务描述",
+			"title": "申请加入候选名单"
+		},
+		"leaveAccount": "退出账号",
+		"nextStep": "下一步",
+		"successRegister": "您已成功注册「麦吉·Magic」"
+	},
+	"memberCard": {
+		"assistantIntroduction": "助理介绍",
+		"baseInfo": "基础信息",
+		"call": "语音通话",
+		"creator": "创建人",
+		"department": "部门",
+		"email": "邮箱",
+		"employeeProfile": "员工资料",
+		"employmentInfo": "任职信息",
+		"enterprise": {
+			"organization": "企业/组织"
+		},
+		"enterprise_organization": "企业/组织",
+		"origin": "来源",
+		"phone": "手机号",
+		"schedule": "",
+		"selfSpecification": "个人说明书",
+		"sendMessage": "发消息",
+		"share": "分享",
+		"shareBusinessCard": "分享名片",
+		"tasksAssociatedWithMe": "与我关联的任务",
+		"title": "职位",
+		"viewSchedule": "查看日程",
+		"viewSelfSpecification": "查看"
+	},
+	"memberDepartmentSelectPanel": {
+		"byGroup": "按群聊",
+		"byOrganization": "按组织架构",
+		"byPartner": "按合作伙伴",
+		"recentContacts": "最近联系",
+		"selected": "已选",
+		"selectedDepartments": "${count}个部门",
+		"selectedGroups": "${count}个群聊",
+		"selectedMembers": "${count}个人",
+		"selectedPartner": "${count}个合作伙伴"
+	},
+	"memberSearch": {
+		"noSearchResults": "无结果",
+		"searchMembers": "搜索成员"
+	},
+	"message": {
+		"DownloadFailed": "下载失败",
+		"FileNotFound": "",
+		"chat": {
+			"NotSupport": "暂不支持",
+			"groupDisbanded": {
+				"content": "该群已解散"
+			}
+		},
+		"drive": {
+			"modal": {}
+		},
+		"file": {
+			"uploadLimit": " 最多选择 {{count}} 个文件"
+		}
+	},
+	"multipleCheckPanel": {
+		"back": "返回聊天",
+		"collect": "收藏",
+		"delete": "删除",
+		"generateImage": "生成图片",
+		"report": "举报",
+		"share": "转发"
+	},
+	"networkTip": {
+		"offline": "网络已中断，请检查网络",
+		"online": "网络已恢复，正在同步数据",
+		"websocketReloadTip": "网络异常，请点击刷新页面"
+	},
+	"noData": "无数据",
+	"oauth": {
+		"address": "",
+		"email": "",
+		"openid": "",
+		"permission": "",
+		"phone": "",
+		"profile": "",
+		"title": ""
+	},
+	"organization": {
+		"header": "组织架构",
+		"instruction": "部门说明书",
+		"root": "企业"
+	},
+	"pageNotFound": "页面未找到",
+	"pageNotFoundTip": "抱歉，您访问的页面不存在",
+	"placeholder": {
+		"login": {
+			"enterVerificationCode": "输入手机验证码"
+		},
+		"magicInput": "Enter 发送 | ⌘ + Enter 换行",
+		"magicInputWindows": "",
+		"pleaseEnterMessage": "请输入消息"
+	},
+	"pleaseInput1": "请输入",
+	"pleaseInput2": "后确认删除",
+	"result": {
+		"getAccountsError": "获取用户组织列表失败"
+	},
+	"richEditor": {
+		"bold": "加粗",
+		"centerAlign": "居中对齐",
+		"italic": "斜体",
+		"justifyAlign": "两端对齐",
+		"leftAlign": "左对齐",
+		"paragraph": "段落",
+		"placeholder": "请输入内容",
+		"redo": "重做",
+		"rightAlign": "右对齐",
+		"undo": "撤销"
+	},
+	"search": "搜索",
+	"send": "发送",
+	"setting": {
+		"VerificationCode": "验证码",
+		"aboutMagic": "关于Magic",
+		"aboutUs": "关于我们",
+		"accountManage": "账号管理",
+		"aiCompletion": "AI 自动补全",
+		"aiCompletionDescription": "根据输入内容自动补全",
+		"appearance": "外观",
+		"appearanceDescription": "根据个人需求设置更舒适的视觉体验",
+		"auto": "自动",
+		"avatar": "头像",
+		"binded": "已绑定",
+		"canUseInLoginMagic": "可用于登录 Magic",
+		"cancelBind": "取消绑定",
+		"change": "更换",
+		"changePassword": "修改密码",
+		"changePhone": "修改手机号",
+		"currentDevices": "当前设备",
+		"dark": "深色",
+		"debugMode": "调试模式",
+		"developTools": "开发者工具",
+		"email": "电子邮箱",
+		"emailPlaceholder": "请设置电子邮箱",
+		"enableDebug": "开启调试",
+		"enableDebugMode": "开启调试模式，方便定位错误",
+		"enterprise": "企业",
+		"exit": "退出",
+		"fallback": "反馈与建议",
+		"fontSize": "字体大小",
+		"fontSizeDescription": "聊天内容的字体大小",
+		"generalSetting": "通用设置",
+		"getVerificationCode": "获取验证码",
+		"goToBind": "前往绑定",
+		"hotKeySetting": "快捷键配置",
+		"imStyle": "对话样式",
+		"imStyleDescription": "根据个人喜好调整对话框的样式",
+		"invalidPhone": "手机号码格式错误",
+		"language": "语言",
+		"languageDescription": "支持国际化自由切换",
+		"languages": {
+			"auto": "跟随系统",
+			"enUS": "英文",
+			"zhCN": "简体中文"
+		},
+		"light": "浅色",
+		"loginDevices": "登录设备",
+		"loginPassword": "登录密码",
+		"loginTime": "登录时间",
+		"magicId": "Magic ID",
+		"modern": "现代化",
+		"newPhone": "新手机号",
+		"newPhoneCode": "新手机号验证码",
+		"nickName": "昵称",
+		"nickNamePlaceholder": "请输入昵称",
+		"notBind": "未绑定",
+		"phoneAreaCode": {
+			"china": "中国大陆(+86)",
+			"malaysia": "马来西亚(+60)"
+		},
+		"phoneNumberPlaceholder": "请设置手机号码",
+		"phoneNumebr": "手机号码",
+		"realName": "真实姓名",
+		"realNamePlaceholder": "请输入真实姓名",
+		"reinput": "再次输入",
+		"reinputPassword": "重复密码",
+		"resendAfter": "秒后重新发送",
+		"samePhone": "手机号重复",
+		"search": "全局搜索",
+		"searchDescription": "全局搜索唤起快捷键",
+		"shortcutKeyPlaceholder": "",
+		"standard": "标准",
+		"system": "系统",
+		"systemSetting": "系统设置",
+		"thirdPartyPlatform": "第三方平台",
+		"timezone": "时区",
+		"timezoneDescription": "系统基于该时区设置显示相关时间",
+		"tip": {
+			"accountManageTip": "企业已开启钉钉组织同步，信息来自钉钉通讯录",
+			"loginDevicesTip": "为保障你的数据安全，建议定期退出部分非日常使用的设备"
+		},
+		"toEdit": "去编辑",
+		"unknownDevice": "未知设备",
+		"updateLog": "更新日志"
+	},
+	"sider": {
+		"LaunchAGroupChat": "发起群聊",
+		"accountTitle": "账号",
+		"addAccount": "添加账号",
+		"addressBook": "通讯录",
+		"aiAssistants": "AI 助理",
+		"approve": "审批",
+		"apps": "应用",
+		"assistants": "助理",
+		"calendar": "日程",
+		"cloudDisk": "云盘",
+		"createAIFriend": "创建 AI 好友",
+		"createGroupConversation": "创建群聊",
+		"discover": "发现",
+		"exitContent": "如存在多账号将会为你切换至其他账号。",
+		"exitTitle": "确定退出当前账号吗？",
+		"favorites": "收藏夹",
+		"logout": "退出登录",
+		"message": "消息",
+		"modal": {
+			"AIAvatar": "AI 头像",
+			"AIDescription": "AI 能力描述",
+			"AIName": "AI 名字",
+			"placeholder": {
+				"avatar": "给 AI 好友起一个独一无二的名字吧"
+			}
+		},
+		"notification": "通知",
+		"orgNotAuthorized": "组织暂未授权",
+		"setting": "设置",
+		"superMagic": "",
+		"switchLanguage": "切换语言",
+		"switchOrganization": "切换组织",
+		"switchOrganizationConfirm": "切换后页面将自动刷新，是否继续？",
+		"task": "任务",
+		"wiki": "知识库",
+		"workflow": "工作流",
+		"workspace": "工作台"
+	},
+	"spin": {
+		"loadingUserInfo": "正在加载用户信息...",
+		"pullingMessage": "正在拉取消息...",
+		"loadingConfig": "配置加载中...",
+		"loadingAuth": "页面加载中...",
+		"loadingCluster": "环境加载中...",
+		"loadingLogin": "登录中..."
+	},
+	"today": "今天",
+	"workspaces": {
+		"alwayUsedApplication": "常用应用",
+		"collapse": "收起",
+		"noCollapse": "展开"
+	}
+}

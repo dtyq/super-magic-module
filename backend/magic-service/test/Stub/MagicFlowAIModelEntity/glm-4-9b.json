@@ -1,0 +1,39 @@
+{
+  "id": 687616337564233700,
+  "organization_code": "DT001",
+  "name": "glm-4-9b",
+  "label": "glm-4-9b",
+  "tags": [
+    {
+      "type": 1,
+      "value": "GLM"
+    },
+    {
+      "type": 1,
+      "value": "本地模型"
+    }
+  ],
+  "default_configs": {
+    "temperature": 0.5
+  },
+  "enabled": true,
+  "implementation": "\\Hyperf\\Odin\\Model\\OpenAIModel",
+  "implementation_config": {
+    "api_key": "GLM_4_9B_API_KEY|123",
+    "base_url": "GLM_4_9B_BASE_URL|123"
+  },
+  "support_embedding": false,
+  "vector_size": 0,
+  "created_uid": "1",
+  "created_at": {
+    "date": "2024-08-29 11:01:50.000000",
+    "timezone_type": 3,
+    "timezone": "Asia\/Shanghai"
+  },
+  "updated_uid": "1",
+  "updated_at": {
+    "date": "2024-08-29 11:01:50.000000",
+    "timezone_type": 3,
+    "timezone": "Asia\/Shanghai"
+  }
+}

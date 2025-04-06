@@ -1,0 +1,88 @@
+{
+	"search": {
+		"askMagic": "Ask Magic",
+		"askAl": "AI Search",
+		"askTranslate": "Translate",
+		"askWrite": "Help Me Write",
+		"askAnswer": "Answer Questions",
+		"searchMagic": "Search Magic",
+		"appOpen": "Open App",
+		"fileSearchLocal": "Search Local Files",
+		"aiSkills": "AI Skills",
+		"searchHistory": "Search History",
+		"youMayWantToFind": "You May Want To Find",
+		"comprehensiveSkills": "Comprehensive Skills",
+		"magicOpenJourney": "Magic · Open the amazing search journey...",
+		"inputVoice": "Voice Input",
+		"keyboardSpace": "Space",
+		"magicOpen": "Open Magic"
+	},
+	"quickSearch": {
+		"search": "Search",
+		"settings": {
+			"approvalStatus": "Approval Status",
+			"approve": {
+				"all": "All",
+				"approved": "Approved",
+				"disallow": "Disallowed",
+				"rejected": "Rejected",
+				"revoked": "Revoked",
+				"underApproval": "Under Approval"
+			},
+			"clickToSelect": "Click to Select",
+			"currentConversation": "Current Conversation",
+			"dateTime": "Date & Time",
+			"empty": "No search results yet",
+			"endTime": "End Time",
+			"filter": "Filter",
+			"historicalSearch": "Historical searches",
+			"includeMembers": "Include Members",
+			"initiator": "Initiator",
+			"loading": "loading",
+			"messageContains": "Message Contains",
+			"messageType": {
+				"all": "All",
+				"file": "File",
+				"link": "Link",
+				"media": "Images & Videos"
+			},
+			"predictiveSearch": "you may be looking for",
+			"startTime": "Start Time",
+			"time": {
+				"almostAMonth": "Last 30 Days",
+				"almostAWeek": "Last 7 Days",
+				"today": "Today",
+				"unrestrictedTime": "No Time Restriction"
+			}
+		},
+		"tabs": {
+			"application": "Application",
+			"approve": "Approval",
+			"assistant": "AI Assistant",
+			"chat": "Chat",
+			"cloudDrive": "Cloud Drive",
+			"contacts": "Contacts",
+			"department": "Department",
+			"groups": "Groups",
+			"integrate": "Integrate",
+			"knowledge": "Knowledge",
+			"schedule": "Schedule",
+			"tasks": "Tasks",
+			"todoList": "To-Do List"
+		},
+		"label": {
+			"creator": "Creator",
+			"department": "Department",
+			"member": "Member",
+			"deadline": "Deadline",
+			"executor": "Executor",
+			"priority": "Priority",
+			"inProgress": "In Progress",
+			"completed": "Completed",
+			"lower": "Lower",
+			"ordinary": "Normal",
+			"urgent": "Urgent",
+			"veryUrgent": "Very Urgent"
+		}
+	}
+}

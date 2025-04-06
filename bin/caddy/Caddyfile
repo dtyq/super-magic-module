@@ -1,0 +1,31 @@
+{
+    # 全局配置
+    auto_https off
+    log {
+        output stdout
+        format console
+    }
+}
+
+# 文件服务
+:80 {
+    # 文件服务根目录
+    root * /srv/files
+    
+    # 启用文件浏览
+    file_server browse
+    
+    # 启用压缩
+    encode gzip
+    
+    # 设置缓存
+    header {
+        Cache-Control "public, max-age=3600"
+    }
+    
+    # 日志配置
+    log {
+        output stdout
+        format console
+    }
+} 

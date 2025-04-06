@@ -1,0 +1,137 @@
+{
+	"name": "@dtyq/eslint-config",
+	"version": "0.0.4",
+	"description": "ESLint 配置包，内置所有依赖",
+	"keywords": [
+		"eslint",
+		"eslintconfig",
+		"prettier",
+		"typescript",
+		"react",
+		"vue"
+	],
+	"license": "ISC",
+	"type": "module",
+	"exports": {
+		".": {
+			"import": "./dist/base/index.js",
+			"require": "./dist/base/index.cjs"
+		},
+		"./base": {
+			"import": "./dist/base/index.js",
+			"require": "./dist/base/index.cjs"
+		},
+		"./jsconfig": {
+			"import": "./dist/base/jsconfig.js",
+			"require": "./dist/base/jsconfig.cjs"
+		},
+		"./react": {
+			"import": "./dist/react/index.js",
+			"require": "./dist/react/index.cjs"
+		},
+		"./vue": {
+			"import": "./dist/vue/index.js",
+			"require": "./dist/vue/index.cjs"
+		},
+		"./vue2": {
+			"import": "./dist/vue/vue2.js",
+			"require": "./dist/vue/vue2.cjs"
+		},
+		"./typescript": {
+			"import": "./dist/typescript/index.js",
+			"require": "./dist/typescript/index.cjs"
+		},
+		"./prettier": {
+			"import": "./dist/prettier/index.js",
+			"require": "./dist/prettier/index.cjs"
+		},
+		"./prettier/config": {
+			"import": "./dist/prettier/config.js",
+			"require": "./dist/prettier/config.cjs"
+		},
+		"./commitlint": {
+			"import": "./dist/commitlint/index.js",
+			"require": "./dist/commitlint/index.cjs"
+		},
+		"./commitlint/emoji": {
+			"import": "./dist/commitlint/emoji.js",
+			"require": "./dist/commitlint/emoji.cjs"
+		},
+		"./stylelint": {
+			"import": "./dist/stylelint/index.js",
+			"require": "./dist/stylelint/index.cjs"
+		},
+		"./package.json": "./package.json"
+	},
+	"bin": {
+		"eslint-config-base": "./dist/bin/index.cjs"
+	},
+	"files": [
+		"dist",
+		"src",
+		"package.json",
+		"README.md",
+		"CHANGELOG.md"
+	],
+	"scripts": {
+		"build": "tsup",
+		"clean": "rm -rf dist",
+		"lint": "eslint ./packages --ext js --config .eslintrc.cjs",
+		"lint:fix": "eslint ./packages --ext js --config .eslintrc.cjs --fix && prettier --write ./packages/**/*.js"
+	},
+	"dependencies": {
+		"@commitlint/cli": "^19.2.2",
+		"@commitlint/config-conventional": "^19.8.0",
+		"@commitlint/types": "^19.0.3",
+		"@typescript-eslint/eslint-plugin": "^5.36.1",
+		"@typescript-eslint/parser": "^5.36.1",
+		"commander": "^12.0.0",
+		"commitlint-config-gitmoji": "^2.3.1",
+		"conventional-changelog-conventionalcommits": "^7.0.2",
+		"eslint": "^8.23.0",
+		"eslint-config-prettier": "^8.5.0",
+		"eslint-import-resolver-jsconfig": "^1.1.0",
+		"eslint-import-resolver-typescript": "^3.9.1",
+		"eslint-plugin-import": "^2.26.0",
+		"eslint-plugin-jsx-a11y": "^6.6.1",
+		"eslint-plugin-node": "^11.1.0",
+		"eslint-plugin-prettier": "^4.2.1",
+		"eslint-plugin-react": "^7.31.5",
+		"eslint-plugin-react-hooks": "^4.6.0",
+		"eslint-plugin-vue": "^9.4.0",
+		"husky": "^9.0.11",
+		"lint-staged": "^15.2.2",
+		"postcss": "^8.4.38",
+		"postcss-html": "^1.8.0",
+		"postcss-less": "^6.0.0",
+		"prettier": "^2.7.1",
+		"sort-package-json": "^2.10.0",
+		"stylelint": "^15.11.0",
+		"stylelint-config-prettier": "^3.3.0",
+		"stylelint-config-rational-order": "^0.1.2",
+		"stylelint-config-recommended-less": "^1.0.4",
+		"stylelint-config-standard": "^31.0.0",
+		"stylelint-declaration-block-no-ignored-properties": "^2.8.0",
+		"stylelint-prettier": "^3.0.0",
+		"vue-eslint-parser": "^9.0.3"
+	},
+	"devDependencies": {
+		"tsup": "^8.4.0",
+		"typescript": "^5.4.5"
+	},
+	"peerDependencies": {
+		"eslint": ">=8.0.0",
+		"typescript": ">=4.0.0"
+	},
+	"peerDependenciesMeta": {
+		"typescript": {
+			"optional": true
+		}
+	},
+	"engines": {
+		"node": ">=14.0.0"
+	},
+	"publishConfig": {
+		"access": "public"
+	}
+}

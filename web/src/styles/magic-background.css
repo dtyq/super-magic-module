@@ -1,0 +1,60 @@
+.magic-background {
+	position: relative;
+	width: 470px;
+	height: 470px;
+	border-radius: 8px;
+	background: white;
+	overflow: hidden;
+}
+
+.magic-background::before {
+	content: "";
+	position: absolute;
+	width: 200%;
+	height: 200%;
+	top: -50%;
+	left: -50%;
+	background: radial-gradient(circle at center, #fff0bd 0%, rgba(255, 150, 64, 0) 70%),
+		radial-gradient(circle at 10% 15%, #b7ffec 0%, rgba(64, 255, 191, 0) 70%),
+		radial-gradient(circle at 50% 25%, #fff240 0%, rgba(162, 255, 64, 0) 70%),
+		radial-gradient(circle at 90% 0%, #fff240 0%, rgba(162, 255, 64, 0) 70%),
+		radial-gradient(circle at 25% 65%, white 0%, rgba(255, 255, 255, 0) 70%),
+		radial-gradient(circle at 85% 65%, #d5c7ff 0%, rgba(223, 202, 255, 0) 70%),
+		radial-gradient(circle at 85% 95%, #c0dcff 0%, rgba(64, 219, 255, 0) 70%),
+		radial-gradient(circle at 45% 95%, #d9bcff 0%, rgba(204, 230, 255, 0) 70%),
+		radial-gradient(circle at 85% 65%, white 0%, rgba(255, 255, 255, 0) 70%);
+	animation: rotate 15s linear infinite;
+	opacity: 0.5;
+}
+
+.sparkle {
+	position: absolute;
+	width: 24px;
+	height: 24px;
+	background: linear-gradient(45deg, #fff73f, #ff5f5f);
+	clip-path: path(
+		"M233.771 223.465L240.103 232.647C240.556 233.304 241.583 233.194 241.94 232.481C242.43 231.501 243.112 230.322 243.861 229.572C244.389 229.042 245.141 228.535 245.863 228.114C246.632 227.664 246.59 226.447 245.757 226.127L234.945 221.974C234.034 221.623 233.217 222.661 233.771 223.465Z"
+	);
+	animation: twinkle 2s ease-in-out infinite;
+}
+
+@keyframes rotate {
+	from {
+		transform: rotate(0deg);
+	}
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+@keyframes twinkle {
+	0%,
+	100% {
+		opacity: 0.3;
+		transform: scale(0.8);
+	}
+	50% {
+		opacity: 1;
+		transform: scale(1.2);
+	}
+}
