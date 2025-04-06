@@ -28,12 +28,10 @@ WORKDIR /opt/www
 
 RUN ls -l
 
-# 创建必要的目录并设置权限
-RUN mkdir -p runtime/container && \
-    chmod -R 777 runtime
 
 # composer 改成阿里云镜像
-RUN composer config -g repo.packagist composer https://mirrors.aliyun.com/composer/
+# RUN composer config -g repo.packagist composer https://mirrors.aliyun.com/composer/
+
 
 # 使用 --mount=type=secret 挂载 secret 文件时，该挂载操作是在 RUN 指令执行 期间 进行的。
 # 这意味着 secret 文件只在 当前 RUN 指令的上下文中可用。一旦该 RUN 指令执行完毕，secret 文件就会被移除，并且不会被包含在下一层中。
