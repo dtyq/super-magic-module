@@ -28,12 +28,15 @@ class MagicAILocalModel extends AbstractModel implements ModelInterface, Embeddi
 {
     private string $accessToken;
 
+    private int $vectorSize;
+
     public function __construct(
         protected string $model,
         protected array $config,
         protected ?LoggerInterface $logger = null
     ) {
         $this->accessToken = defined('MAGIC_ACCESS_TOKEN') ? MAGIC_ACCESS_TOKEN : ($this->config['access_token'] ?? '');
+        $this->vectorSize = (int) ($this->config['vector_size'] ?? 2048);
         parent::__construct($this->model, $this->config, $this->logger);
     }
 
@@ -106,7 +109,7 @@ class MagicAILocalModel extends AbstractModel implements ModelInterface, Embeddi
 
     public function getVectorSize(): int
     {
-        return 1536;
+        return $this->vectorSize;
     }
 
     protected function getClient(): ClientInterface
