@@ -396,7 +396,6 @@ class ConversationService {
 	 */
 	notDisturbConversation(conversationId: string, isNotDisturb: 0 | 1) {
 		conversationStore.updateConversationDisturbStatus(conversationId, isNotDisturb)
-
 		// 更新数据库
 		ConversationDbServices.updateNotDisturbStatus(conversationId, isNotDisturb)
 	}

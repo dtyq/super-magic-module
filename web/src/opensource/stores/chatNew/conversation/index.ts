@@ -173,7 +173,6 @@ class ConversationStore {
 	updateConversationDisturbStatus(conversationId: string, isNotDisturb: 0 | 1) {
 		const conversation = this.conversations[conversationId]
 		if (!conversation) return
-
 		conversation.setNotDisturb(isNotDisturb)
 	}
 

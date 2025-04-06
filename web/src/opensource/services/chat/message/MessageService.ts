@@ -1055,7 +1055,6 @@ class MessageService {
 				return {
 					...message,
 					seen_status: seenMessage.message.status,
-					unread_count: seenMessage.message.unread_count,
 				}
 			})
 		}
