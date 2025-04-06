@@ -15,7 +15,7 @@ const TopConversationButton = observer(({ conversationId }: { conversationId: st
 	const onClick = useMemoizedFn(() => {
 		if (!conversation) return
 		const isTop = conversation.is_top ? 0 : 1
-		conversationService.updateTopStatus(conversationId, isTop)
+		conversationService.setTopStatus(conversationId, isTop)
 	})
 
 	if (!conversation) return null

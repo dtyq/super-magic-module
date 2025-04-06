@@ -140,12 +140,12 @@ const GroupSetting = observer(() => {
 
 	const onTopConversationChange = useMemoizedFn((value: boolean) => {
 		if (!conversation) return
-		ConversationService.updateTopStatus(conversation.id, value ? 1 : 0)
+		ConversationService.setTopStatus(conversation.id, value ? 1 : 0)
 	})
 
 	const onNotDisturbConversationChange = useMemoizedFn((value: boolean) => {
 		if (!conversation) return
-		ConversationService.notDisturbConversation(conversation.id, value ? 1 : 0)
+		ConversationService.setNotDisturbStatus(conversation.id, value ? 1 : 0)
 	})
 
 	const listItems = useMemo(() => {

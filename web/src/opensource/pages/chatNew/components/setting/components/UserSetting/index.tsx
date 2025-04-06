@@ -22,12 +22,12 @@ const NormalUserSetting = observer(() => {
 
 	const topConversation = useMemoizedFn((value: boolean) => {
 		if (!conversation) return
-		conversationService.updateTopStatus(conversation.id, value ? 1 : 0)
+		conversationService.setTopStatus(conversation.id, value ? 1 : 0)
 	})
 
 	const notDisturbConversation = useMemoizedFn((value: boolean) => {
 		if (!conversation) return
-		conversationService.notDisturbConversation(conversation.id, value ? 1 : 0)
+		conversationService.setNotDisturbStatus(conversation.id, value ? 1 : 0)
 	})
 
 	const listItems = useMemo(() => {
