@@ -58,15 +58,15 @@ export default function VectorKnowledgeDetail() {
 			document_code: code,
 		})
 		if (name) {
-			message.success(`删除文档成功：${name}`)
+			message.success(t("knowledgeDatabase.deleteDocumentSuccess", { name }))
 		}
 	})
 
 	// 删除单个文档
 	const handleDeleteSingleFile = useMemoizedFn(async (record: Knowledge.EmbedDocumentDetail) => {
 		Modal.confirm({
-			title: "删除文档",
-			content: `确定删除文档：${record.name}？`,
+			title: t("knowledgeDatabase.deleteDocument"),
+			content: t("knowledgeDatabase.confirmDeleteDocument", { name: record.name }),
 			onOk: async () => {
 				await handleDeleteFile(record.code)
 				getKnowledgeDocumentList(
@@ -83,11 +83,13 @@ export default function VectorKnowledgeDetail() {
 	const handleBatchDelete = useMemoizedFn(() => {
 		if (selectedRowKeys.length) {
 			Modal.confirm({
-				title: "批量删除文档",
-				content: `确定删除文档：${selectedRowKeys.length}个？`,
+				title: t("knowledgeDatabase.deleteDocument"),
+				content: t("knowledgeDatabase.confirmBatchDelete", {
+					count: selectedRowKeys.length,
+				}),
 				onOk: async () => {
 					await Promise.all(selectedRowKeys.map((code) => handleDeleteFile(code)))
-					message.success(`删除成功`)
+					message.success(t("common.deleteSuccess"))
 					getKnowledgeDocumentList(
 						knowledgeBaseCode,
 						searchText,
@@ -97,7 +99,7 @@ export default function VectorKnowledgeDetail() {
 				},
 			})
 		} else {
-			message.warning("请选择要删除的文档")
+			message.warning(t("knowledgeDatabase.selectDeleteDocument"))
 		}
 	})
 
@@ -107,25 +109,25 @@ export default function VectorKnowledgeDetail() {
 			case documentSyncStatusMap.Pending:
 				return (
 					<Tag className={styles.statusTag} bordered={false} color="default">
-						待嵌入
+						{t("knowledgeDatabase.pending")}
 					</Tag>
 				)
 			case documentSyncStatusMap.Processing:
 				return (
 					<Tag className={styles.statusTag} bordered={false} color="processing">
-						嵌入中
+						{t("knowledgeDatabase.processing")}
 					</Tag>
 				)
 			case documentSyncStatusMap.Success:
 				return (
 					<Tag className={styles.statusTag} bordered={false} color="success">
-						可用
+						{t("knowledgeDatabase.available")}
 					</Tag>
 				)
 			case documentSyncStatusMap.Failed:
 				return (
 					<Tag className={styles.statusTag} bordered={false} color="error">
-						嵌入失败
+						{t("knowledgeDatabase.failed")}
 					</Tag>
 				)
 		}
@@ -134,7 +136,7 @@ export default function VectorKnowledgeDetail() {
 	// 表格列定义
 	const columns = [
 		{
-			title: "文档",
+			title: t("knowledgeDatabase.document"),
 			dataIndex: "name",
 			key: "name",
 			render: (name: string) => (
@@ -147,26 +149,26 @@ export default function VectorKnowledgeDetail() {
 			),
 		},
 		{
-			title: "字符数",
+			title: t("knowledgeDatabase.wordCount"),
 			dataIndex: "word_count",
 			key: "word_count",
 			width: 160,
 		},
 		{
-			title: "创建时间",
+			title: t("knowledgeDatabase.createTime"),
 			dataIndex: "created_at",
 			key: "created_at",
 			width: 200,
 		},
 		{
-			title: "状态",
+			title: t("knowledgeDatabase.status"),
 			dataIndex: "sync_status",
 			key: "sync_status",
 			width: 120,
 			render: getStatusTag,
 		},
 		{
-			title: "操作",
+			title: t("knowledgeDatabase.operation"),
 			key: "operation",
 			width: 100,
 			render: (_: any, record: Knowledge.EmbedDocumentDetail) => (
@@ -174,7 +176,11 @@ export default function VectorKnowledgeDetail() {
 					menu={{
 						items: [
 							{
-								label: <div className={styles.deleteText}>删除</div>,
+								label: (
+									<div className={styles.deleteText}>
+										{t("knowledgeDatabase.delete")}
+									</div>
+								),
 								key: "delete",
 								onClick: () => handleDeleteSingleFile(record),
 							},
@@ -188,13 +194,6 @@ export default function VectorKnowledgeDetail() {
 			),
 		},
 	]
-
-	// 根据搜索文本过滤数据
-	const filteredData = useMemo(() => {
-		return searchText
-			? tableData.filter((item) => item.name.toLowerCase().includes(searchText.toLowerCase()))
-			: tableData
-	}, [searchText, tableData])
 
 	/**
 	 * 分页改变
@@ -272,7 +271,7 @@ export default function VectorKnowledgeDetail() {
 				},
 			})
 			if (res) {
-				message.success("上传成功")
+				message.success(t("knowledgeDatabase.uploadSuccess"))
 				getKnowledgeDocumentList(
 					knowledgeBaseCode,
 					searchText,
@@ -326,15 +325,13 @@ export default function VectorKnowledgeDetail() {
 			return (
 				<Flex vertical className={styles.rightContainer}>
 					<div>
-						<div className={styles.title}>文档</div>
-						<div className={styles.subTitle}>
-							知识库内的所有文件，整个知识库都可以被 AI 助理/子流程/工具进行索引。
-						</div>
+						<div className={styles.title}>{t("knowledgeDatabase.documentTitle")}</div>
+						<div className={styles.subTitle}>{t("knowledgeDatabase.documentDesc")}</div>
 
 						<Flex align="center" justify="space-between">
 							<Input
 								className={styles.searchBar}
-								placeholder="搜索"
+								placeholder={t("knowledgeDatabase.search")}
 								onChange={(e) => handleSearch(e.target.value)}
 								allowClear
 							/>
@@ -344,7 +341,9 @@ export default function VectorKnowledgeDetail() {
 										items: [
 											{
 												label: (
-													<div className={styles.deleteText}>删除</div>
+													<div className={styles.deleteText}>
+														{t("knowledgeDatabase.delete")}
+													</div>
 												),
 												key: "delete",
 												onClick: () => handleBatchDelete(),
@@ -353,7 +352,7 @@ export default function VectorKnowledgeDetail() {
 									}}
 								>
 									<Flex align="center" gap={4} className={styles.batchOperation}>
-										<div>批量操作</div>
+										<div>{t("knowledgeDatabase.batchOperation")}</div>
 										<IconChevronDown size={16} />
 									</Flex>
 								</Dropdown>
@@ -364,7 +363,7 @@ export default function VectorKnowledgeDetail() {
 									disabled={fileUploading}
 								>
 									<Button type="primary" icon={<IconPlus size={16} />}>
-										添加文档
+										{t("knowledgeDatabase.addDocument")}
 									</Button>
 								</Upload>
 							</Flex>
@@ -379,7 +378,7 @@ export default function VectorKnowledgeDetail() {
 								onChange: (codes) => setSelectedRowKeys(codes as string[]),
 							}}
 							columns={columns}
-							dataSource={filteredData}
+							dataSource={tableData}
 							scroll={{ scrollToFirstRowOnChange: true, y: 400 }}
 							pagination={{
 								position: ["bottomLeft"],
@@ -409,7 +408,7 @@ export default function VectorKnowledgeDetail() {
 
 		return null
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [selectedRowKeys, columns, filteredData, handleSearch, handleBatchDelete, currentDetailPage])
+	}, [selectedRowKeys, columns, tableData, handleSearch, handleBatchDelete, currentDetailPage])
 
 	return (
 		<Flex className={styles.wrapper}>

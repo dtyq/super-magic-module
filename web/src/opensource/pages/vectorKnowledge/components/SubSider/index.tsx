@@ -5,6 +5,7 @@ import { createStyles } from "antd-style"
 import { IconChevronRight, IconFileDescription, IconSettings } from "@tabler/icons-react"
 import { RoutePath } from "@/const/routes"
 import defaultFlowAvatar from "@/assets/logos/flow-avatar.png"
+import { useTranslation } from "react-i18next"
 import { useVectorKnowledgeSubSiderStyles } from "./styles"
 import type { Knowledge } from "@/types/knowledge"
 
@@ -16,6 +17,7 @@ interface SubSiderProps {
 export default function SubSider({ setCurrentDetailPage, knowledgeDetail }: SubSiderProps) {
 	const { styles } = useVectorKnowledgeSubSiderStyles()
 	const location = useLocation()
+	const { t } = useTranslation("flow")
 
 	// 获取当前页面路径
 	const isDocument = location.pathname.includes("/document")
@@ -42,7 +44,7 @@ export default function SubSider({ setCurrentDetailPage, knowledgeDetail }: SubS
 					<div className={styles.name}>{knowledgeDetail.name}</div>
 				</Flex>
 				<div>
-					<div className={styles.descLabel}>描述</div>
+					<div className={styles.descLabel}>{t("knowledgeDatabase.descLabel")}</div>
 					<div className={styles.descContent}>{knowledgeDetail.description}</div>
 				</div>
 			</div>
@@ -60,7 +62,7 @@ export default function SubSider({ setCurrentDetailPage, knowledgeDetail }: SubS
 								align="center"
 								className={styles.menuItem}
 							>
-								<div>文档</div>
+								<div>{t("knowledgeDatabase.document")}</div>
 								<IconChevronRight size={16} />
 							</Flex>
 						),
@@ -73,7 +75,7 @@ export default function SubSider({ setCurrentDetailPage, knowledgeDetail }: SubS
 								align="center"
 								className={styles.menuItem}
 							>
-								<div>设置</div>
+								<div>{t("knowledgeDatabase.setting")}</div>
 								<IconChevronRight size={16} />
 							</Flex>
 						),

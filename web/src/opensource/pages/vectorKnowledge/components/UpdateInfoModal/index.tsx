@@ -46,7 +46,7 @@ const useStyles = createStyles(({ css, token }) => {
 
 function UpdateInfoModal({ details, open, onClose, updateList }: UpdateInfoModalProps) {
 	const { t } = useTranslation()
-	const { t: globalT } = useTranslation()
+	const { t: flowT } = useTranslation("flow")
 
 	const { styles } = useStyles()
 
@@ -78,7 +78,7 @@ function UpdateInfoModal({ details, open, onClose, updateList }: UpdateInfoModal
 				})
 				if (data) {
 					updateList(data)
-					message.success(globalT("common.savedSuccess", { ns: "flow" }))
+					message.success(flowT("knowledgeDatabase.savedSuccess"))
 					handleCancel()
 				}
 			} catch (err: any) {
@@ -116,7 +116,7 @@ function UpdateInfoModal({ details, open, onClose, updateList }: UpdateInfoModal
 
 	return (
 		<MagicModal
-			title="更新向量知识库"
+			title={flowT("knowledgeDatabase.updateKnowledge")}
 			open={open}
 			onOk={handleOk}
 			onCancel={handleCancel}
@@ -148,19 +148,23 @@ function UpdateInfoModal({ details, open, onClose, updateList }: UpdateInfoModal
 
 				<Form.Item
 					name="name"
-					label="向量知识库名称"
+					label={flowT("knowledgeDatabase.knowledgeName")}
 					required
 					rules={[{ required: true }]}
 					className={styles.formItem}
 				>
-					<Input placeholder="请输入向量知识库名称" />
+					<Input placeholder={flowT("knowledgeDatabase.namePlaceholder")} />
 				</Form.Item>
-				<Form.Item name="description" label="向量知识库描述" className={styles.formItem}>
+				<Form.Item
+					name="description"
+					label={flowT("knowledgeDatabase.description")}
+					className={styles.formItem}
+				>
 					<Input.TextArea
 						style={{
 							minHeight: "138px",
 						}}
-						placeholder="请输入向量知识库描述"
+						placeholder={flowT("knowledgeDatabase.descriptionPlaceholder")}
 					/>
 				</Form.Item>
 			</Form>

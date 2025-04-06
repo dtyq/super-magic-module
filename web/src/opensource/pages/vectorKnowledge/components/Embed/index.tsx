@@ -5,6 +5,7 @@ import { LoadingOutlined } from "@ant-design/icons"
 import { useNavigate } from "react-router-dom"
 import { RoutePath } from "@/const/routes"
 import { useMemoizedFn } from "ahooks"
+import { useTranslation } from "react-i18next"
 import { fileTypeIconsMap, documentSyncStatusMap } from "../../constant"
 import { useVectorKnowledgeEmbedStyles } from "./styles"
 import type { CreatedKnowledge } from "../Create"
@@ -17,7 +18,7 @@ interface Props {
 
 export default function VectorKnowledgeEmbed({ createdKnowledge }: Props) {
 	const { styles } = useVectorKnowledgeEmbedStyles()
-
+	const { t } = useTranslation("flow")
 	const navigate = useNavigate()
 
 	/** 是否嵌入完成 */
@@ -109,18 +110,20 @@ export default function VectorKnowledgeEmbed({ createdKnowledge }: Props) {
 	return (
 		<Flex vertical justify="space-between" className={styles.container}>
 			<div className={styles.header}>
-				<div className={styles.headerTitle}>🎉 向量知识库已创建</div>
+				<div className={styles.headerTitle}>{t("knowledgeDatabase.createdSuccess")}</div>
 				<Flex align="center" justify="space-between">
 					<div className={styles.knowledgeInfo}>
 						<img className={styles.knowledgeIcon} src={createdKnowledge.icon} alt="" />
 						<div className={styles.knowledgeDetail}>
-							<div className={styles.knowledgeLabel}>知识库名称</div>
+							<div className={styles.knowledgeLabel}>
+								{t("knowledgeDatabase.knowledgeName")}
+							</div>
 							<div className={styles.knowledgeName}>{createdKnowledge.name}</div>
 						</div>
 					</div>
 
 					<Button type="primary" onClick={handleViewKnowledge}>
-						查看知识库
+						{t("knowledgeDatabase.viewKnowledge")}
 					</Button>
 				</Flex>
 			</div>
@@ -133,12 +136,12 @@ export default function VectorKnowledgeEmbed({ createdKnowledge }: Props) {
 								{isEmbed ? (
 									<div className={styles.statusInfo}>
 										<IconCircleCheck color="#32C436" size={24} />
-										<div>嵌入已完成</div>
+										<div>{t("knowledgeDatabase.vectoringCompleted")}</div>
 									</div>
 								) : (
 									<div className={styles.statusInfo}>
 										<IconLoader size={24} />
-										<div>嵌入处理中...</div>
+										<div>{t("knowledgeDatabase.vectoringProcessing")}</div>
 									</div>
 								)}
 							</div>
@@ -161,7 +164,7 @@ export default function VectorKnowledgeEmbed({ createdKnowledge }: Props) {
 						</>
 					) : (
 						<div className={styles.empty}>
-							<div>暂无文档</div>
+							<div>{t("knowledgeDatabase.noDocuments")}</div>
 						</div>
 					)}
 				</div>
