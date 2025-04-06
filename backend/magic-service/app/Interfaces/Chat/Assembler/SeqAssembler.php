@@ -132,13 +132,13 @@ class SeqAssembler
         $seqData = $statusChangeSeqEntity->toArray();
         if ($messageType === ControlMessageType::SeenMessages) {
             // 变更状态为已读
-            $statusChangeSeqEntity->setStatus(MagicMessageStatus::Seen);
+            $seqData['status'] = MagicMessageStatus::Seen->value;
             // 回写时将 $referMessageIds 拆开,每条消息生成一条已读消息
             $seqData['content'] = Json::encode(['refer_message_ids' => [$referMessageId]], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         }
         if ($messageType === ControlMessageType::RevokeMessage) {
             // 变更状态为已撤回
-            $statusChangeSeqEntity->setStatus(MagicMessageStatus::Revoked);
+            $seqData['status'] = MagicMessageStatus::Revoked->value;
             $seqData['content'] = Json::encode(['refer_message_id' => $referMessageId], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         }
         return self::generateStatusChangeSeqEntity($seqData, $referMessageId);
