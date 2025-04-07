@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react"
-import { Table, Input, Button, Flex, Tag, message, Dropdown, Upload, Modal } from "antd"
+import { Table, Input, Button, Flex, Tag, message, Dropdown, Modal } from "antd"
 import { IconPlus, IconChevronLeft, IconChevronDown, IconDots } from "@tabler/icons-react"
 import { useMemoizedFn } from "ahooks"
 import { replaceRouteParams } from "@/utils/route"
@@ -10,7 +10,7 @@ import { useNavigate, useSearchParams } from "react-router-dom"
 import { genFileData } from "@/opensource/pages/chatNew/components/MessageEditor/MagicInput/components/InputFiles/utils"
 import { useUpload } from "@/opensource/hooks/useUploadFiles"
 import { useTranslation } from "react-i18next"
-import { fileTypeIconsMap, supportedFileTypes, documentSyncStatusMap } from "../../constant"
+import { fileTypeIconsMap, documentSyncStatusMap } from "../../constant"
 import SubSider from "../SubSider"
 import { useVectorKnowledgeDetailStyles } from "./styles"
 import Setting from "../Setting"
@@ -167,24 +167,72 @@ export default function VectorKnowledgeDetail() {
 		}
 	})
 
+	// 防抖控制相关
+	const debounceTimerRef = useRef<NodeJS.Timeout | null>(null)
+	const lastParamsRef = useRef<{
+		code: string
+		name: string
+		page: number
+		pageSize: number
+	} | null>(null)
+
 	/**
 	 * 获取知识库文档列表
 	 */
 	const getKnowledgeDocumentList = useMemoizedFn(
 		async (code: string, name: string, page: number, pageSize: number) => {
-			const res = await KnowledgeApi.getKnowledgeDocumentList({
-				code,
-				name: name || undefined,
-				page,
-				pageSize,
-			})
-			if (res) {
-				setTableData(res.list)
-				setPageInfo((prev) => ({
-					...prev,
-					page: res.page,
-					total: res.total,
-				}))
+			// 检查参数是否和上次一致
+			const currentParams = { code, name, page, pageSize }
+			const isSameParams =
+				lastParamsRef.current &&
+				lastParamsRef.current.code === code &&
+				lastParamsRef.current.name === name &&
+				lastParamsRef.current.page === page &&
+				lastParamsRef.current.pageSize === pageSize
+
+			// 如果参数一致且存在定时器，清除之前的定时器
+			if (isSameParams && debounceTimerRef.current) {
+				clearTimeout(debounceTimerRef.current)
+			}
+
+			// 更新最后的参数引用
+			lastParamsRef.current = currentParams
+
+			// 如果参数一致，设置2秒防抖
+			if (isSameParams) {
+				debounceTimerRef.current = setTimeout(async () => {
+					const res = await KnowledgeApi.getKnowledgeDocumentList({
+						code,
+						name: name || undefined,
+						page,
+						pageSize,
+					})
+					if (res) {
+						setTableData(res.list)
+						setPageInfo((prev) => ({
+							...prev,
+							page: res.page,
+							total: res.total,
+						}))
+					}
+					debounceTimerRef.current = null
+				}, 2000)
+			} else {
+				// 参数不一致，直接执行
+				const res = await KnowledgeApi.getKnowledgeDocumentList({
+					code,
+					name: name || undefined,
+					page,
+					pageSize,
+				})
+				if (res) {
+					setTableData(res.list)
+					setPageInfo((prev) => ({
+						...prev,
+						page: res.page,
+						total: res.total,
+					}))
+				}
 			}
 		},
 	)
@@ -265,6 +313,28 @@ export default function VectorKnowledgeDetail() {
 			)
 		}
 	}, [knowledgeBaseCode, searchText, pageInfo.page, pageInfo.pageSize])
+
+	useEffect(() => {
+		if (
+			tableData.length &&
+			tableData.some((item) =>
+				[documentSyncStatusMap.Pending, documentSyncStatusMap.Processing].includes(
+					item.sync_status,
+				),
+			)
+		) {
+			// 随机2-5秒
+			const randomTime = Math.floor(Math.random() * (5000 - 2000 + 1)) + 2000
+			setTimeout(() => {
+				getKnowledgeDocumentList(
+					knowledgeBaseCode,
+					searchText,
+					pageInfo.page,
+					pageInfo.pageSize,
+				)
+			}, randomTime)
+		}
+	}, [tableData])
 
 	// 表格列定义
 	const columns = [
