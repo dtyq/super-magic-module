@@ -8,6 +8,9 @@ import TSIcon from "@/opensource/components/base/TSIcon"
 import useFormListRemove from "@/opensource/pages/flow/common/hooks/useFormListRemove"
 import styles from "./KnowledgeDataList.module.less"
 import usePanelConfig from "./hooks/usePanelConfig"
+import { useMemo } from "react"
+import { useCommercial } from "@/opensource/pages/flow/context/CommercialContext"
+import { getKnowledgeTypeOptions } from "../../helpers"
 
 type KnowledgeDataListProps = {
 	handleAdd: () => void
@@ -16,7 +19,7 @@ type KnowledgeDataListProps = {
 	scoreName?: string[]
 }
 
-export default function KnowledgeDataListV0({
+export default function KnowledgeDataListV1({
 	handleAdd,
 	limitName = ["limit"],
 	scoreName = ["score"],
@@ -25,12 +28,17 @@ export default function KnowledgeDataListV0({
 	const { t } = useTranslation()
 	const { removeFormListItem } = useFormListRemove()
 	const form = Form.useFormInstance()
+	const extraData = useCommercial()
 
 	const { limit, score } = usePanelConfig()
 
 	// 获取Form.List字段的值来判断是否有数据
 	const knowledgeList = Form.useWatch(knowledgeListName) || []
 	const hasKnowledgeData = Array.isArray(knowledgeList) && knowledgeList.length > 0
+
+	const knowledgeDataOptions = useMemo(() => {
+		return getKnowledgeTypeOptions(t, !!extraData)
+	}, [t, extraData])
 
 	return (
 		<div className={styles.knowledgeDataWrap}>
@@ -58,12 +66,16 @@ export default function KnowledgeDataListV0({
 															noStyle
 															name={[subField.name, "knowledge_type"]}
 														>
-															<MagicSelect options={[]} />
+															<MagicSelect
+																options={knowledgeDataOptions}
+															/>
 														</Form.Item>
 													</div>
 													<div className={styles.right}>
 														<Form.Item noStyle name={[subField.name]}>
-															<MagicSelect options={[]} />
+															<MagicSelect
+																options={knowledgeDataOptions}
+															/>
 														</Form.Item>
 													</div>
 													<span
