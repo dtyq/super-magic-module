@@ -54,6 +54,24 @@ cd magic
 ./bin/magic.sh logs
 ```
 
+###  Access Services
+- API Service: http://localhost:9501
+- Web Application: http://localhost:8080
+  - Account `13800138001`：Password `123456`
+  - Account `13800139001`：Password `123456`
+- RabbitMQ Management Interface: http://localhost:15672
+  - Username: admin
+  - Password: magic123456
+- OpenSearch: https://localhost:9200
+  - Username: admin
+  - Password: Qazwsxedc!@#123
+- OpenSearch Dashboards: http://localhost:5601
+  - Username: admin
+  - Password: Qazwsxedc!@#123 
+  
+
+
+
 ## 📚 Documentation
 
 For detailed documentation, please visit [Magic Documentation Center](http://docs.letsmagic.cn/).
