@@ -38,10 +38,10 @@ export const useStyles = createStyles(
 
 				position: relative;
 				display: inline-block;
-        overflow: hidden;
+        		overflow: hidden;
         
 				padding-inline: 1px;
-        color: var(--${prefixCls}-markdown-color);
+        		color: var(--${prefixCls}-markdown-color);
 
 				font-size: var(--${prefixCls}-markdown-font-size);
 				line-height: 1;

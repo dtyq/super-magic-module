@@ -13,7 +13,7 @@ interface MessageHeaderProps {
 /**
  * 消息头
  */
-const MessageHeader = memo(({ sendTime, isSelf, name }: MessageHeaderProps) => {
+const MessageHeader = memo(function MessageHeader({ sendTime, isSelf, name }: MessageHeaderProps) {
 	const { fontSize } = useFontSize()
 	const { styles } = useStyles({ fontSize })
 
@@ -21,9 +21,9 @@ const MessageHeader = memo(({ sendTime, isSelf, name }: MessageHeaderProps) => {
 
 	return (
 		<Flex
-      className={styles.messageInfo}
-      align="center"
-      gap={4}
+			className={styles.messageInfo}
+			align="center"
+			gap={4}
 			justify={isSelf ? "flex-end" : "flex-start"}
 		>
 			{!isSelf && <span className={styles.name}>{name}</span>}

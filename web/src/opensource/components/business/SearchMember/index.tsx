@@ -11,7 +11,7 @@ import type { MagicListItemData } from "@/opensource/components/MagicList/types"
 import MagicScrollBar from "@/opensource/components/base/MagicScrollBar"
 import { Flex, Spin } from "antd"
 import type { CSSProperties } from "react"
-import { ContactApi } from "@/opensource/apis"
+import { ContactApi } from "@/apis"
 import type { UserSelectItem } from "../MemberDepartmentSelectPanel/types"
 import type { CheckboxOptions } from "../OrganizationPanel/types"
 
@@ -58,88 +58,86 @@ const transformUserToListItem = (user: StructureUserItem): Data => {
 }
 
 // 优化：将搜索结果列表拆分为单独的组件
-const SearchResultList = memo(
-	({
-		debounceSearchValue,
-		listClassName,
-		data,
-		trigger,
-		onItemClick,
-		checkboxOptions,
-		isSearching,
-		showSearchResults,
-		containerHeight,
-	}: SearchResultListProps) => {
-		// 如果没有搜索词，不显示搜索结果
-		if (!debounceSearchValue) return null
+const SearchResultList = memo(function SearchResultList({
+	debounceSearchValue,
+	listClassName,
+	data,
+	trigger,
+	onItemClick,
+	checkboxOptions,
+	isSearching,
+	showSearchResults,
+	containerHeight,
+}: SearchResultListProps) {
+	// 如果没有搜索词，不显示搜索结果
+	if (!debounceSearchValue) return null
 
-		// 搜索已完成且没有结果才返回null
-		// 初次搜索或正在加载时仍然渲染组件以触发搜索
-		const hasNoResults = data && data.items && data.items.length === 0
+	// 搜索已完成且没有结果才返回null
+	// 初次搜索或正在加载时仍然渲染组件以触发搜索
+	const hasNoResults = data && data.items && data.items.length === 0
 
-		// 调整容器高度，确保在有搜索结果时占满剩余空间
-		const containerStyle = {
-			height: showSearchResults ? "calc(100% - 38px)" : "0", // 38px 是搜索框的高度
-			opacity: showSearchResults ? 1 : 0,
-			overflow: "hidden",
-			transition: "height 0.3s ease, opacity 0.3s ease",
-			flex: showSearchResults ? 1 : "none", // 让容器在显示时能占满空间
-			marginBottom: 0,
-			paddingBottom: 0,
-			display: "flex", // 添加flex布局
-			flexDirection: "column" as const, // 使用列方向排列
-		}
+	// 调整容器高度，确保在有搜索结果时占满剩余空间
+	const containerStyle = {
+		height: showSearchResults ? "calc(100% - 38px)" : "0", // 38px 是搜索框的高度
+		opacity: showSearchResults ? 1 : 0,
+		overflow: "hidden",
+		transition: "height 0.3s ease, opacity 0.3s ease",
+		flex: showSearchResults ? 1 : "none", // 让容器在显示时能占满空间
+		marginBottom: 0,
+		paddingBottom: 0,
+		display: "flex", // 添加flex布局
+		flexDirection: "column" as const, // 使用列方向排列
+	}
 
-		// 显示加载状态或搜索结果
-		return (
-			<div style={containerStyle}>
-				<MagicScrollBar
-					className={listClassName}
-					style={{
-						height: "100%",
-						overflowY: "auto",
-						flex: 1, // 让滚动容器占满空间
-						display: "flex",
-						flexDirection: "column",
-					}}
-				>
-					{isSearching && !data ? (
-						<Flex
-							justify="center"
-							align="center"
-							style={{ height: "100px", width: "100%" }}
-						>
-							<Spin />
-						</Flex>
-					) : (
-						<MagicInfiniteScrollList
-							data={data}
-							trigger={trigger}
-							itemsTransform={transformUserToListItem}
-							onItemClick={onItemClick}
-							// @ts-ignore - MagicInfiniteScrollList 组件期望的泛型类型与我们提供的不匹配
-							// 但在运行时会正常工作，因为所需属性都存在
-							checkboxOptions={
-								checkboxOptions
-									? {
-											checked: checkboxOptions.checked,
-											onChange: checkboxOptions.onChange,
-											disabled: checkboxOptions.disabled,
-											dataType: StructureItemType.User,
-									  }
-									: undefined
-							}
-							noDataFallback={hasNoResults ? null : undefined}
-							// 不设置固定高度，让列表高度自适应容器
-							style={{ flex: 1 }} // 让列表占满容器空间
-							containerHeight={containerHeight}
-						/>
-					)}
-				</MagicScrollBar>
-			</div>
-		)
-	},
-)
+	// 显示加载状态或搜索结果
+	return (
+		<div style={containerStyle}>
+			<MagicScrollBar
+				className={listClassName}
+				style={{
+					height: "100%",
+					overflowY: "auto",
+					flex: 1, // 让滚动容器占满空间
+					display: "flex",
+					flexDirection: "column",
+				}}
+			>
+				{isSearching && !data ? (
+					<Flex
+						justify="center"
+						align="center"
+						style={{ height: "100px", width: "100%" }}
+					>
+						<Spin />
+					</Flex>
+				) : (
+					<MagicInfiniteScrollList
+						data={data}
+						trigger={trigger}
+						itemsTransform={transformUserToListItem}
+						onItemClick={onItemClick}
+						// @ts-ignore - MagicInfiniteScrollList 组件期望的泛型类型与我们提供的不匹配
+						// 但在运行时会正常工作，因为所需属性都存在
+						checkboxOptions={
+							checkboxOptions
+								? {
+										checked: checkboxOptions.checked,
+										onChange: checkboxOptions.onChange,
+										disabled: checkboxOptions.disabled,
+										dataType: StructureItemType.User,
+								  }
+								: undefined
+						}
+						noDataFallback={hasNoResults ? null : undefined}
+						// 不设置固定高度，让列表高度自适应容器
+						style={{ flex: 1 }} // 让列表占满容器空间
+						containerHeight={containerHeight}
+					/>
+				)}
+			</MagicScrollBar>
+		</div>
+	)
+})
 
 const MemberSearch = (props: MemberSearchProps) => {
 	const { t } = useTranslation("interface")

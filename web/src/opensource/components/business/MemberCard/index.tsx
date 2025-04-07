@@ -9,17 +9,11 @@ import { UserType } from "@/types/user"
 import { useMemo, useRef } from "react"
 import MagicSegmented from "@/opensource/components/base/MagicSegmented"
 import { useMemoizedFn } from "ahooks"
-import { DriveItemFileType } from "@/types/drive"
-import { openNewTab } from "@/utils/route"
-import { getDriveFileRedirectUrl } from "@/utils/drive"
 import { useChatWithMember } from "@/opensource/hooks/chat/useChatWithMember"
 import MemberCardStore from "@/opensource/stores/display/MemberCardStore"
 import { observer } from "mobx-react-lite"
 import { useOrganization } from "@/opensource/models/user/hooks"
 import useStyles from "./styles"
-import useSWRMutation from "swr/mutation"
-import { RequestUrl } from "@/opensource/apis/constant"
-import { ContactApi } from "@/apis"
 
 const enum MemberCardTab {
 	BaseInfo = "baseInfo",
@@ -47,28 +41,6 @@ const MemberCard = observer(() => {
 	const userType = userInfo?.user_type
 	const isAi = userType === UserType.AI
 	const isNormalPerson = userType === UserType.Normal
-
-	const { trigger } = useSWRMutation(RequestUrl.getUserManual, (_, { arg }) =>
-		ContactApi.getUserManual(arg),
-	)
-
-	const toDoc = useMemoizedFn((docId: string) => {
-		const path = getDriveFileRedirectUrl(docId, DriveItemFileType.CLOUD_DOCX)
-		const url = window.location.origin
-		openNewTab(path, url)
-	})
-
-	const handleCheck = useMemoizedFn(async () => {
-		if (!userInfo) return
-
-		if (userInfo?.user_manual) {
-			toDoc(userInfo.user_manual)
-			return
-		}
-
-		const response = await trigger({ user_id: userInfo.user_id } as any)
-		if (typeof response === "string") toDoc(response)
-	})
 
 	const items = useMemo(() => {
 		if (!userInfo) return []
@@ -122,7 +94,7 @@ const MemberCard = observer(() => {
 			default:
 				return []
 		}
-	}, [organization?.organization_name, handleCheck, t, userInfo, userType])
+	}, [organization?.organization_name, t, userInfo, userType])
 
 	const options = useMemo(() => {
 		return [

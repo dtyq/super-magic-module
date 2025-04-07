@@ -55,22 +55,18 @@ export const useStyles = createStyles(({ css, isDarkMode, token }) => ({
 		padding: 10px;
 		border-radius: 12px;
 		user-select: text;
-
-		max-width: calc(100vw - 480px - var(--extra-section-width));
-
-		@media (max-width: 964px) {
-			max-width: 280px;
-		}
 	`,
 
 	defaultTheme: css`
 		background: ${token.magicColorUsages.bg[1]};
 		color: ${token.magicColorUsages.text[1]};
 		${isDarkMode ? "" : `border: 1px solid ${token.colorBorder};`}
+		margin-right: 50px;
 	`,
 	magicTheme: css`
 		color: ${token.magicColorUsages.text[1]};
 		background: ${isDarkMode ? token.magicColorUsages.primaryLight.default : "#E6F0FF"};
 		// background: linear-gradient(99deg, #4768d4 0%, #6c8eff 0.01%, #ca58ff 100%);
+		margin-left: 50px;
 	`,
 }))

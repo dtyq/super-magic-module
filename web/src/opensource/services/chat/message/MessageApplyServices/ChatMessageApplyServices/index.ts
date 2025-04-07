@@ -31,11 +31,68 @@ import { bigNumCompare } from "@/utils/string"
 import OrganizationDotsStore from "@/opensource/stores/chatNew/dots/OrganizationDotsStore"
 import { userStore } from "@/opensource/models/user"
 
+// 消息事件监听器类型
+type MessageEventListener = (message: SeqResponse<CMessage>, options?: ApplyMessageOptions) => void
+
 /**
  * 聊天消息应用服务
  * 负责处理各种聊天类型的消息并应用相应的业务逻辑
  */
 class ChatMessageApplyService {
+	// 事件监听器集合
+	private eventListeners: Record<string, MessageEventListener[]> = {
+		onApply: [], // 任何消息应用时触发
+	}
+
+	/**
+	 * 订阅消息应用事件
+	 * @param eventName 事件名称
+	 * @param listener 事件监听器函数
+	 * @returns 取消订阅的函数
+	 */
+	subscribe(eventName: string, listener: MessageEventListener): () => void {
+		if (!this.eventListeners[eventName]) {
+			this.eventListeners[eventName] = []
+		}
+		this.eventListeners[eventName].push(listener)
+
+		// 返回取消订阅函数
+		return () => {
+			this.unsubscribe(eventName, listener)
+		}
+	}
+
+	/**
+	 * 取消订阅消息应用事件
+	 * @param eventName 事件名称
+	 * @param listener 要移除的监听器函数
+	 */
+	unsubscribe(eventName: string, listener: MessageEventListener): void {
+		if (!this.eventListeners[eventName]) return
+
+		this.eventListeners[eventName] = this.eventListeners[eventName].filter(
+			(l) => l !== listener,
+		)
+	}
+
+	/**
+	 * 发布事件
+	 * @param eventName 事件名称
+	 * @param message 消息对象
+	 * @param options 应用选项
+	 */
+	private publish(
+		eventName: string,
+		message: SeqResponse<CMessage>,
+		options: ApplyMessageOptions = {},
+	): void {
+		if (!this.eventListeners[eventName]) return
+
+		for (const listener of this.eventListeners[eventName]) {
+			listener(message, options)
+		}
+	}
+
 	/**
 	 * 判断是否为聊天消息
 	 * @param message 消息对象
@@ -98,6 +155,10 @@ class ChatMessageApplyService {
 	apply(message: SeqResponse<CMessage>, options: ApplyMessageOptions = {}) {
 		// const { isHistoryMessage = false } = options
 		console.log("ChatMessageApplyService apply message =====> ", message, options)
+
+		// 发布全局消息应用事件
+		this.publish("onApply", message, options)
+
 		switch (message.message.type) {
 			case ConversationMessageType.Text:
 				StreamMessageApplyService.recordMessageInfo(
