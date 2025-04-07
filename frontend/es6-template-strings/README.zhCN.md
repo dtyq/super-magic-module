@@ -1,6 +1,15 @@
 # @dtyq/es6-template-strings
 
-> ES6 字符串模板解析引擎
+ES6 字符串模板解析引擎
+
+[![license][license-badge]][license-link]
+![NPM Version](https://img.shields.io/npm/v/@dtyq/es6-template-strings)
+[![codecov][codecov-badge]][codecov-link]
+
+[license-badge]: https://img.shields.io/badge/license-apache2-blue.svg
+[license-link]: LICENSE
+[codecov-badge]: https://codecov.io/gh/dtyq/es6-template-strings/branch/master/graph/badge.svg
+[codecov-link]: https://codecov.io/gh/dtyq/es6-template-strings
 
 ## 概述
 
