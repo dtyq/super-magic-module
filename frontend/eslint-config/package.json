@@ -15,56 +15,55 @@
 		"url": "https://github.com/dtyq/eslint-config"
 	},
 	"license": "Apache License 2.0",
-	"type": "module",
 	"exports": {
 		"./base": {
 			"import": "./dist/es/base/index.js",
-			"require": "./dist/lib/base/index.cjs"
+			"require": "./dist/lib/base/index.js"
 		},
 		"./jsconfig": {
 			"import": "./dist/es/base/jsconfig.js",
-			"require": "./dist/lib/base/jsconfig.cjs"
+			"require": "./dist/lib/base/jsconfig.js"
 		},
 		"./react": {
 			"import": "./dist/es/react/index.js",
-			"require": "./dist/lib/react/index.cjs"
+			"require": "./dist/lib/react/index.js"
 		},
 		"./vue": {
 			"import": "./dist/es/vue/index.js",
-			"require": "./dist/lib/vue/index.cjs"
+			"require": "./dist/lib/vue/index.js"
 		},
 		"./vue2": {
 			"import": "./dist/es/vue/vue2.js",
-			"require": "./dist/lib/vue/vue2.cjs"
+			"require": "./dist/lib/vue/vue2.js"
 		},
 		"./typescript": {
 			"import": "./dist/es/typescript/index.js",
-			"require": "./dist/lib/typescript/index.cjs"
+			"require": "./dist/lib/typescript/index.js"
 		},
 		"./prettier": {
 			"import": "./dist/es/prettier/index.js",
-			"require": "./dist/lib/prettier/index.cjs"
+			"require": "./dist/lib/prettier/index.js"
 		},
 		"./prettier/config": {
 			"import": "./dist/es/prettier/config.js",
-			"require": "./dist/lib/prettier/config.cjs"
+			"require": "./dist/lib/prettier/config.js"
 		},
 		"./commitlint": {
 			"import": "./dist/es/commitlint/index.js",
-			"require": "./dist/lib/commitlint/index.cjs"
+			"require": "./dist/lib/commitlint/index.js"
 		},
 		"./commitlint/emoji": {
 			"import": "./dist/es/commitlint/emoji.js",
-			"require": "./dist/lib/commitlint/emoji.cjs"
+			"require": "./dist/lib/commitlint/emoji.js"
 		},
 		"./stylelint": {
 			"import": "./dist/es/stylelint/index.js",
-			"require": "./dist/lib/stylelint/index.cjs"
+			"require": "./dist/lib/stylelint/index.js"
 		},
 		"./package.json": "./package.json"
 	},
 	"bin": {
-		"eslint-config-base": "./dist/bin/index.cjs"
+		"eslint-config-base": "./dist/lib/bin/index.js"
 	},
 	"files": [
 		"dist",
