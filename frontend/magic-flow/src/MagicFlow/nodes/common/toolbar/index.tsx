@@ -89,7 +89,7 @@ export default function ToolbarComponent({ id, showCopy = true }: ToolbarCompone
 			deleteNode(selectedNodeId)
 			setIsPopconfirmVisible(false)
 		}
-	}, [DeleteKey, EnterKey, selectedNodeId, trashRef, isPopconfirmVisible])
+	}, [DeleteKey, EnterKey])
 
 	return (
 		<div className={styles.toolbarWrapper}>
