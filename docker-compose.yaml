@@ -13,6 +13,9 @@ services:
       enableIngress: "true"
       crontabEnable: "false"
       useVolume: "false"
+    ports:
+      - "9501:9501"  
+      - "9502:9502"  
     depends_on:
       db:
         condition: service_healthy
@@ -69,7 +72,8 @@ services:
       MAGIC_SOCKET_BASE_URL: ${MAGIC_SOCKET_BASE_URL}
       MAGIC_SERVICE_BASE_URL: ${MAGIC_SERVICE_BASE_URL}
       MAGIC_VERSION: ${MAGIC_VERSION}
-
+    ports:
+      - "8080:8080"
     # volumes:
     #   - ./web:/app
     networks:

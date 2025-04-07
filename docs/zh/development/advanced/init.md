@@ -20,9 +20,9 @@
 
 > **重要：** 系统生产环境ID为10000，请确保在环境变量中将`MAGIC_ENV_ID`设置为`10000`。
 
-## 4. 执行和测试步骤
+## 3. 执行和测试步骤
 
-### 4.1 运行数据填充
+### 3.1 运行数据填充
 
 执行以下命令填充账号和环境数据：
 
@@ -31,7 +31,7 @@ php bin/hyperf.php db:seed --path=seeders/initial_account_and_user_seeder.php
 php bin/hyperf.php db:seed --path=seeders/initial_environment_seeder.php
 ```
 
-### 4.2 重启服务
+### 3.2 重启服务
 
 加载新的路由配置：
 
@@ -39,7 +39,7 @@ php bin/hyperf.php db:seed --path=seeders/initial_environment_seeder.php
 php bin/hyperf.php server:restart
 ```
 
-### 4.3 测试登录功能
+### 3.3 测试登录功能
 
 使用以下命令测试登录接口：
 
@@ -47,10 +47,9 @@ php bin/hyperf.php server:restart
 curl -X POST -H "Content-Type: application/json" -d '{"email":"admin@example.com","password":"138001","organization_code":""}' http://localhost:9501/api/v1/login/check
 ```
 
-## 5. 密码说明
+## 4. 密码说明
 
 本实现中使用手机号后 6 位作为默认密码：
-
 - 账号 `13800138001`：密码为 `123456`
 - 账号 `13800139001`：密码为 `123456`
 

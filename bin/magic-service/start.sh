@@ -18,8 +18,6 @@ if [ ! -f "${base_dirname}/.initialized" ]; then
     # 执行 composer update
     cd ${base_dirname}
     
-    composer update
-
 
     # 执行迁移
     php "${bin}" migrate --force

@@ -69,7 +69,7 @@ mkdir $TMP_DIR;
     # 复制 service 目录下的所有文件（包括隐藏文件）
     cp -a "${WEB_DIR}"/* .
     cp -a "${WEB_DIR}"/.gitignore .
-    # cp -R "${SCRIPT_DIR}"/magic-web/.github ./
+    cp -R "${WEB_DIR}"/.github ./
     cp -a "${SCRIPT_DIR}"/magic-web/Dockerfile.github ./
 
     # 还原原有的 Dockerfile
