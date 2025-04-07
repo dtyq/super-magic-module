@@ -18,7 +18,7 @@ export REGISTRY="ghcr.io"
 # 获取脚本所在目录的绝对路径
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # 获取 service 目录的绝对路径
-SERVICE_DIR="$(cd "${SCRIPT_DIR}/../web" && pwd)"
+SERVICE_DIR="$(cd "${SCRIPT_DIR}/../frontend/magic-web" && pwd)"
 
 function publish() {
     echo "Publishing "$TAG" ..."
@@ -85,7 +85,7 @@ if [[ ${TASK} == "build" ]]; then
     export DOCKER_BUILDKIT=1
     
     echo "正在构建镜像: ${REGISTRY}/${WEB_IMAGE}:${TAG}"
-    docker build -t ${REGISTRY}"/"${WEB_IMAGE}":"${TAG} -f ./web/Dockerfile ./web
+    docker build -t ${REGISTRY}"/"${WEB_IMAGE}":"${TAG} -f ./frontend/magic-web/Dockerfile.web ./frontend/magic-web
 fi
 
 if [[ ${TASK} == "publish" ]]; then

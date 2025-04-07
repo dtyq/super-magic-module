@@ -61,22 +61,21 @@ services:
           memory: 4G
           
   # Web 应用
-  # magic-web:
-  #   image: ghcr.io/dtyq/magic-web:${MAGIC_WEB_TAG}
-  #   container_name: magic-web
-  #   #restart: always
-  #   environment:
-  #     MODE: service
-  #     MAGIC_SOCKET_BASE_URL: ${MAGIC_SOCKET_BASE_URL}
-  #     MAGIC_SERVICE_BASE_URL: ${MAGIC_SERVICE_BASE_URL}
-  #     MAGIC_VERSION: ${MAGIC_VERSION}
+  magic-web:
+    image: ghcr.io/dtyq/magic-web:${MAGIC_WEB_TAG}
+    container_name: magic-web
+    #restart: always
+    environment:
+      MAGIC_SOCKET_BASE_URL: ${MAGIC_SOCKET_BASE_URL}
+      MAGIC_SERVICE_BASE_URL: ${MAGIC_SERVICE_BASE_URL}
+      MAGIC_VERSION: ${MAGIC_VERSION}
 
-  #   volumes:
-  #     - ./web:/app
-  #   networks:
-  #     - default 
-  #   env_file:
-  #     - .env
+    # volumes:
+    #   - ./web:/app
+    networks:
+      - default 
+    env_file:
+      - .env
 
  # Caddy 文件服务
   caddy:

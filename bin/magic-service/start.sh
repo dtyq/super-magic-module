@@ -25,7 +25,7 @@ if [ ! -f "${base_dirname}/.initialized" ]; then
     php "${bin}" migrate --force
     
     # 执行数据库种子
-    php ${base_dirname}/bin/hyperf.php db:seed
+    php bin/hyperf.php init-magic:data
 
   
     
