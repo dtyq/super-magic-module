@@ -63,14 +63,17 @@ readonly class FlowMemoryManager
                     if (isset($messageArray['content']) && is_string($messageArray['content'])) {
                         $message->setContent($messageArray['content']);
                     } elseif (isset($messageArray['content']) && is_array($messageArray['content'])) {
+                        $content = '';
                         foreach ($messageArray['content'] as $item) {
                             if (isset($item['text'])) {
                                 $message->addContent(UserMessageContent::text($item['text']));
+                                $content .= $item['text'];
                             }
                             if (isset($item['image_url']['url'])) {
                                 $message->addContent(UserMessageContent::imageUrl($item['image_url']['url']));
                             }
                         }
+                        $message->setContent($content);
                     }
                     $message->setParams($messageArrayList['params'] ?? []);
                     break;
