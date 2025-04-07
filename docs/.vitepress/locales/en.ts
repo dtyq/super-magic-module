@@ -139,6 +139,7 @@ export default {
           collapsed: false,
           items: [
             { text: 'Initialization Guide', link: '/development/advanced/init' },
+            { text: 'Environment Variables', link: '/development/deploy/environment' },
             { text: 'Permission Configuration', link: '/development/advanced/permission' },
             { text: 'File Driver', link: '/development/deploy/file-driver' },
           ]
