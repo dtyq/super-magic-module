@@ -26,18 +26,6 @@ export const useCurrentMagicOrganization = (): User.MagicOrganization | null => 
 	}, [organizationCode, magicOrganizationMap])
 }
 
-/**
- * @description 获取当前账号所处组织信息 Hook
- * @return {User.UserOrganization | undefined}
- */
-export const useCurrentMagicOrganization = (): User.MagicOrganization | null => {
-	const { organizationCode, magicOrganizationMap } = useOrganization()
-
-	return useMemo(() => {
-		return magicOrganizationMap[organizationCode]
-	}, [organizationCode, magicOrganizationMap])
-}
-
 export * from "./useAccount"
 export * from "./useOrganization"
 export * from "./useAuthorization"

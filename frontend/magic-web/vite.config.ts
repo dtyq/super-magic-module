@@ -71,14 +71,14 @@ export default defineConfig({
 		exclude: ["antd/locale"],
 	},
 	assetsInclude: ["**/*.md", "**/*.mdx"],
-	resolve: {
-		alias: [
-			{
-				find: "@dtyq/magic-flow",
-				replacement: join(__dirname, "packages/magic-flow/dist"),
-			},
-		],
-	},
+	// resolve: {
+	// 	alias: [
+	// 		{
+	// 			find: "@dtyq/magic-flow",
+	// 			replacement: join(__dirname, "packages/magic-flow/dist"),
+	// 		},
+	// 	],
+	// },
 	plugins: [
 		tsConfig(),
 		react({

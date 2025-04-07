@@ -431,7 +431,7 @@ export class UserService {
 		// 检查所有组织的渲染序列号
 		MessageSeqIdService.checkAllOrganizationRenderSeqId()
 
-		if (this.userId !== magicUser.user_id) {
+		if (this.userId !== magicUser.user_id || this.magicId !== magicUser.magic_id) {
 			// 重置消息数据视图
 			conversationService.switchConversation() // 切换到空会话
 			MessageService.reset()

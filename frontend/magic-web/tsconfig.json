@@ -26,7 +26,8 @@
 
 		/* alias */
 		"paths": {
-			"@/*": ["./src/*"]
+			"@/*": ["./src/*"],
+			"@dtyq/magic-flow/*": ["./node_modules/@dtyq/magic-flow/dist/*"]
 		}
 	},
 	"include": ["src/**/*", "types/**/*"],
