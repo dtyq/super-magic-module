@@ -1053,20 +1053,6 @@ JSON,
                 "encryption": false,
                 "encryption_value": null,
                 "items": {
-                    "type": "object",
-                    "key": "",
-                    "sort": 0,
-                    "title": "",
-                    "description": "",
-                    "required": [],
-                    "value": null,
-                    "encryption": false,
-                    "encryption_value": null,
-                    "items": null,
-                    "properties": null
-                },
-                "properties": [
-                    {
                         "type": "object",
                         "key": "0",
                         "sort": 0,
@@ -1074,7 +1060,7 @@ JSON,
                         "description": "",
                         "required": [
                             "platform",
-                            "limt"
+                            "limit"
                         ],
                         "value": null,
                         "encryption": false,
@@ -1094,9 +1080,9 @@ JSON,
                                 "items": null,
                                 "properties": null
                             },
-                            "limt": {
+                            "limit": {
                                 "type": "string",
-                                "key": "limt",
+                                "key": "limit",
                                 "sort": 1,
                                 "title": "",
                                 "description": "条数",
@@ -1108,7 +1094,9 @@ JSON,
                                 "properties": null
                             }
                         }
-                    }
+                    },
+                "properties": [
+
                 ]
             }
         }
@@ -1118,7 +1106,46 @@ JSON
             , true);
         $form = ComponentFactory::fastCreate($json)->getForm();
         $jsonSchema = $form->toJsonSchema();
-        var_dump($jsonSchema);
+        $this->assertEquals(
+            <<<'JSON'
+{
+    "type": "object",
+    "required": [
+        "options"
+    ],
+    "properties": {
+        "options": {
+            "type": "array",
+            "required": [],
+            "description": "配置",
+            "items": {
+                "type": "object",
+                "required": [
+                    "platform",
+                    "limit"
+                ],
+                "description": "",
+                "properties": {
+                    "platform": {
+                        "type": "string",
+                        "required": [],
+                        "description": "平台；可选：头条、网易、微博"
+                    },
+                    "limit": {
+                        "type": "string",
+                        "required": [],
+                        "description": "条数"
+                    }
+                }
+            }
+        }
+    }
+}
+JSON
+            ,
+            json_encode($jsonSchema, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+        );
+        $this->assertTrue(true);
     }
 
     public function testAppendProperties()
