@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { Table, Input, Button, Flex, Tag, message, Dropdown, Upload, Modal } from "antd"
 import { IconPlus, IconChevronLeft, IconChevronDown, IconDots } from "@tabler/icons-react"
 import { useMemoizedFn } from "ahooks"
@@ -145,6 +145,7 @@ export default function VectorKnowledgeDetail() {
 			title: t("knowledgeDatabase.document"),
 			dataIndex: "name",
 			key: "name",
+			width: 300,
 			render: (name: string) => (
 				<Flex align="center">
 					<span className={styles.fileTypeIcon}>
@@ -309,6 +310,33 @@ export default function VectorKnowledgeDetail() {
 		return false
 	})
 
+	const rightContainerRef = useRef<HTMLDivElement>(null)
+	const headerRef = useRef<HTMLDivElement>(null)
+	const [tableHeight, setTableHeight] = useState<number | string>("100%")
+
+	// 计算表格高度
+	useEffect(() => {
+		const calculateTableHeight = () => {
+			if (rightContainerRef.current && headerRef.current) {
+				const containerHeight = rightContainerRef.current.clientHeight
+				const headerHeight = headerRef.current.clientHeight
+				const tableHeaderHeight = 45 // 表格头部高度，根据实际调整
+				const paginationHeight = 64 // 分页器高度，根据实际调整
+				const padding = 40 // 根据实际内边距调整
+				setTableHeight(
+					containerHeight - headerHeight - tableHeaderHeight - paginationHeight - padding,
+				)
+			}
+		}
+
+		calculateTableHeight()
+		window.addEventListener("resize", calculateTableHeight)
+
+		return () => {
+			window.removeEventListener("resize", calculateTableHeight)
+		}
+	}, [])
+
 	useEffect(() => {
 		if (knowledgeBaseCode) {
 			updateKnowledgeDetail(knowledgeBaseCode)
@@ -329,8 +357,8 @@ export default function VectorKnowledgeDetail() {
 	const PageContent = useMemo(() => {
 		if (currentDetailPage === "document") {
 			return (
-				<Flex vertical className={styles.rightContainer}>
-					<div>
+				<Flex vertical className={styles.rightContainer} ref={rightContainerRef}>
+					<div ref={headerRef}>
 						<div className={styles.title}>{t("knowledgeDatabase.documentTitle")}</div>
 						<div className={styles.subTitle}>{t("knowledgeDatabase.documentDesc")}</div>
 
@@ -386,13 +414,13 @@ export default function VectorKnowledgeDetail() {
 							}}
 							columns={columns}
 							dataSource={tableData}
-							scroll={{ scrollToFirstRowOnChange: true, y: 400 }}
+							scroll={{ scrollToFirstRowOnChange: true, y: tableHeight }}
 							pagination={{
 								position: ["bottomLeft"],
 								total: pageInfo.total,
 								pageSize: pageInfo.pageSize,
 								showSizeChanger: true,
-								showQuickJumper: true,
+								showQuickJumper: false,
 								pageSizeOptions: ["10", "20", "50"],
 								onChange: handlePageChange,
 							}}
