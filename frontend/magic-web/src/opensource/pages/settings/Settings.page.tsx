@@ -15,9 +15,22 @@ import ShortcutKeyInput from "./featrues/ShortcutKeyInput"
 import { SettingSection } from "./types"
 import AccountManageTip from "./components/AccountManageTip"
 import { useStyles } from "./styles"
+import { useLocation } from "react-router"
+import { useEffect } from "react"
 
 function SettingPage() {
 	const { t } = useTranslation("interface")
+	const { state } = useLocation()
+
+	useEffect(() => {
+		if (state?.type) {
+			// 滚动到指定位置
+			const target = document.getElementById(state.type)
+			if (target) {
+				target.scrollIntoView({ behavior: "smooth" })
+			}
+		}
+	}, [state?.type])
 
 	const { styles } = useStyles()
 
@@ -132,15 +145,15 @@ function SettingPage() {
 							</>
 						),
 					},
-					{
-						key: SettingSection.LOGIN_DEVICES,
-						label: (
-							<span id={SettingSection.LOGIN_DEVICES}>
-								{t("setting.loginDevices")}
-							</span>
-						),
-						children: <LoginDevices />,
-					},
+					// {
+					// 	key: SettingSection.LOGIN_DEVICES,
+					// 	label: (
+					// 		<span id={SettingSection.LOGIN_DEVICES}>
+					// 			{t("setting.loginDevices")}
+					// 		</span>
+					// 	),
+					// 	children: <LoginDevices />,
+					// },
 				]}
 			/>
 		</PageContainer>

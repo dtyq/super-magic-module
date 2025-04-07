@@ -67,3 +67,7 @@ export function textToTextColor(name?: string) {
 	// 截取英文名的第一个大写字母
 	return name[0]?.toUpperCase() ?? ""
 }
+
+export const isValidUrl = (url: string) => {
+    return /^https?:\/\//.test(url);
+};

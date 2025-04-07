@@ -1,58 +1,75 @@
 import type { AvatarProps, BadgeProps } from "antd"
 import { Avatar, Badge } from "antd"
-import { createStyles } from "antd-style"
-import { forwardRef, memo } from "react"
-import { textToTextColor, textToBackgroundColor } from "./utils"
-
-const isValidUrl = (url: string) => {
-	return /^https?:\/\//.test(url)
-}
+import { forwardRef, memo, useCallback, useMemo, useState, ReactNode } from "react"
+import { useStyles } from "./style"
+import { isValidUrl } from "./utils"
 
 export interface MagicAvatarProps extends AvatarProps {
 	badgeProps?: BadgeProps
 }
 
-const useStyles = createStyles(
-	({ css, token }, { url, content }: { url: string; content: string }) => {
-		return {
-			avatar: css`
-				user-select: none;
-				border: 1px solid ${token.magicColorUsages.border};
-				font-weight: 500;
-				text-shadow: 0px 1px 1px #00000030;
-				${!url
-					? `
-        background: ${textToBackgroundColor(content)};
-        color: ${textToTextColor(content)};
-      `
-					: ""}
-			`,
-		}
-	},
-)
-
 const MagicAvatar = memo(
 	forwardRef<HTMLSpanElement, MagicAvatarProps>(
 		({ children, src, size = 40, style, badgeProps, className, ...props }, ref) => {
-			const isUrl = typeof src === "string" ? isValidUrl(src) : true
+			const isUrl = useMemo(() => {
+				return typeof src === "string" ? isValidUrl(src) : true
+			}, [src])
+
+			const [innerSrc, setInnerSrc] = useState(isUrl ? src : undefined)
+
+			const handleError = useCallback(() => {
+				setInnerSrc(undefined)
+				return true
+			}, [])
+			
+			const isStringChildren = useMemo(() => 
+				typeof children === "string"
+			, [children])
+			
+			const displayChildren = useMemo(() => {
+				if (isStringChildren && children) {
+					return (children as string).slice(0, 2)
+				}
+				return children
+			}, [children, isStringChildren])
+			
+			const mergedStyle = useMemo(() => ({ 
+				flex: "none", 
+				...style 
+			}), [style])
+
 			const { styles, cx } = useStyles({
 				url: typeof src === "string" && isUrl ? src : "",
-				content: typeof children === "string" ? children : "",
+				content: isStringChildren ? (children as string) || "" : "",
 			})
+			
+			const avatarClassNames = useMemo(() => 
+				cx(styles.avatar, className)
+			, [styles.avatar, className, cx])
+			
+			const avatarContent = (
+				<Avatar
+					ref={ref}
+					style={mergedStyle}
+					size={size}
+					shape="square"
+					draggable={false}
+					className={avatarClassNames}
+					src={innerSrc}
+					onError={handleError}
+					{...props}
+				>
+					{displayChildren}
+				</Avatar>
+			)
+			
+			if (!badgeProps) {
+				return avatarContent
+			}
+			
 			return (
 				<Badge offset={[-size, 0]} {...badgeProps}>
-					<Avatar
-						ref={ref}
-						style={{ flex: "none", ...style }}
-						size={size}
-						shape="square"
-						draggable={false}
-						className={cx(styles.avatar, className)}
-						src={isUrl ? src : undefined}
-						{...props}
-					>
-						{typeof children === "string" ? children.slice(0, 2) : children}
-					</Avatar>
+					{avatarContent}
 				</Badge>
 			)
 		},
