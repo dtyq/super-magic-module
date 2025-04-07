@@ -10,9 +10,7 @@ services:
     environment:
       type: main
       suffix: -open
-      enableIngress: "true"
-      crontabEnable: "false"
-      useVolume: "false"
+      CRONTAB_ENABLE: "false"
     ports:
       - "9501:9501"  
       - "9502:9502"  
@@ -42,9 +40,7 @@ services:
     environment:
       type: daemon
       suffix: -daemon
-      enableIngress: "true"
-      crontabEnable: "true"
-      useVolume: "false"
+      CRONTAB_ENABLE: "true"
     depends_on:
       db:
         condition: service_healthy
