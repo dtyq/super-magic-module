@@ -8,6 +8,7 @@ declare(strict_types=1);
 namespace Dtyq\FlowExprEngine\Test\Structure\Form;
 
 use Dtyq\FlowExprEngine\Builder\FormBuilder;
+use Dtyq\FlowExprEngine\ComponentFactory;
 use Dtyq\FlowExprEngine\Structure\Form\Form;
 use Dtyq\FlowExprEngine\Test\BaseTestCase;
 
@@ -1018,6 +1019,133 @@ JSON,
 
         $this->assertTrue($form->isMatch($input));
         $this->assertFalse($form->isMatch([]));
+    }
+
+    public function testJsonScheme2()
+    {
+        $json = json_decode(<<<'JSON'
+{
+    "id": "component-677d3b00a3807",
+    "version": "1",
+    "type": "form",
+    "structure": {
+        "type": "object",
+        "key": "root",
+        "sort": 0,
+        "title": null,
+        "description": null,
+        "required": [
+            "options"
+        ],
+        "value": null,
+        "encryption": false,
+        "encryption_value": null,
+        "items": null,
+        "properties": {
+            "options": {
+                "type": "array",
+                "key": "options",
+                "sort": 0,
+                "title": "",
+                "description": "配置",
+                "required": null,
+                "value": null,
+                "encryption": false,
+                "encryption_value": null,
+                "items": {
+                        "type": "object",
+                        "key": "0",
+                        "sort": 0,
+                        "title": "",
+                        "description": "",
+                        "required": [
+                            "platform",
+                            "limit"
+                        ],
+                        "value": null,
+                        "encryption": false,
+                        "encryption_value": null,
+                        "items": null,
+                        "properties": {
+                            "platform": {
+                                "type": "string",
+                                "key": "platform",
+                                "sort": 0,
+                                "title": "",
+                                "description": "平台；可选：头条、网易、微博",
+                                "required": null,
+                                "value": null,
+                                "encryption": false,
+                                "encryption_value": null,
+                                "items": null,
+                                "properties": null
+                            },
+                            "limit": {
+                                "type": "string",
+                                "key": "limit",
+                                "sort": 1,
+                                "title": "",
+                                "description": "条数",
+                                "required": null,
+                                "value": null,
+                                "encryption": false,
+                                "encryption_value": null,
+                                "items": null,
+                                "properties": null
+                            }
+                        }
+                    },
+                "properties": [
+
+                ]
+            }
+        }
+    }
+}
+JSON
+            , true);
+        $form = ComponentFactory::fastCreate($json)->getForm();
+        $jsonSchema = $form->toJsonSchema();
+        $this->assertEquals(
+            <<<'JSON'
+{
+    "type": "object",
+    "required": [
+        "options"
+    ],
+    "properties": {
+        "options": {
+            "type": "array",
+            "required": [],
+            "description": "配置",
+            "items": {
+                "type": "object",
+                "required": [
+                    "platform",
+                    "limit"
+                ],
+                "description": "",
+                "properties": {
+                    "platform": {
+                        "type": "string",
+                        "required": [],
+                        "description": "平台；可选：头条、网易、微博"
+                    },
+                    "limit": {
+                        "type": "string",
+                        "required": [],
+                        "description": "条数"
+                    }
+                }
+            }
+        }
+    }
+}
+JSON
+            ,
+            json_encode($jsonSchema, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+        );
+        $this->assertTrue(true);
     }
 
     public function testAppendProperties()
