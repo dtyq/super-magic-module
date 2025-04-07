@@ -16,6 +16,10 @@
 	},
 	"license": "Apache License 2.0",
 	"exports": {
+		".": {
+			"import": "./dist/es/base/index.js",
+			"require": "./dist/lib/base/index.js"
+		},
 		"./base": {
 			"import": "./dist/es/base/index.js",
 			"require": "./dist/lib/base/index.js"
