@@ -8,9 +8,9 @@ import MagicInput from "@dtyq/magic-flow/common/BaseUI/Input"
 import MagicSlider from "@dtyq/magic-flow/common/BaseUI/Slider"
 import { useFlowStore } from "@/opensource/stores/flow"
 import { useTranslation } from "react-i18next"
+import { createStyles } from "antd-style"
 import LLMSelect from "../LLMSelect"
 import useLLMParameters from "./hooks/useLLMParameters"
-import styles from "./index.module.less"
 
 export type LLMParametersValue = {
 	temperature: string | number
@@ -19,9 +19,92 @@ export type LLMParametersValue = {
 	max_record: number
 }
 
+const useStyles = createStyles(({ css, token }) => {
+	return {
+		LLMParameters: css`
+			.magic-switch-checked {
+				background-color: ${token.colorPrimary};
+			}
+			.magic-slider-handle {
+				margin-top: 0;
+			}
+			.magic-select-dropdown {
+				overflow: visible;
+			}
+			.magic-select-selector {
+				padding: 0 11px 0 3px !important;
+			}
+		`,
+		panel: css``,
+		header: css`
+			height: 56px;
+			display: flex;
+			padding: 0 12px;
+			justify-content: space-between;
+			align-items: center;
+		`,
+		h1Title: css`
+			font-weight: 600;
+			line-height: 20px;
+			font-size: 14px;
+			color: ${token.colorText};
+		`,
+		LLMSelect: css`
+			width: 400px !important;
+		`,
+		body: css`
+			border-top: 1px solid ${token.colorBorderSecondary};
+			padding: 11px 12px;
+		`,
+		parameters: css`
+			margin-bottom: 10px;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+		`,
+		left: css`
+			display: flex;
+			align-items: center;
+		`,
+		title: css`
+			line-height: 20px;
+			font-size: 14px;
+			color: ${token.colorText};
+		`,
+		icon: css`
+			margin-left: 2px;
+		`,
+		switch: css`
+			margin-left: 12px;
+		`,
+		right: css`
+			width: 300px;
+			display: flex;
+			align-items: center;
+			justify-content: flex-end;
+		`,
+		slider: css`
+			width: 224px;
+			display: flex;
+			align-items: center;
+			margin-right: 16px;
+		`,
+		input: css`
+			width: 68px;
+		`,
+		formItem: css`
+			padding: 0 12px 12px 12px !important;
+			.magic-form-item-label {
+				margin-bottom: 6px;
+			}
+		`,
+	}
+})
+
 export default function LLMParametersV0() {
 	const { t } = useTranslation()
 	const { autoMemory, temperature, maxRecord } = useLLMParameters()
+	const { styles } = useStyles()
 
 	const { models: options } = useFlowStore()
 
@@ -155,7 +238,7 @@ export default function LLMParametersV0() {
 							</Tooltip>
 						</div>
 						<Form.Item name={["model_config", "auto_memory"]} valuePropName="checked">
-							<Switch className={styles.slider} />
+							<Switch />
 						</Form.Item>
 					</div>
 					<div className={styles.parameters}>
