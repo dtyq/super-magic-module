@@ -11,8 +11,8 @@ import resolveToString from "@/common/utils/template"
 import { MagicExpressionWidget } from "@/index"
 import MagicSelect from "@/common/BaseUI/Select"
 import MagicInput from "@/common/BaseUI/Input"
-import { useExportFields } from "@/MagicJsonSchemaEditor/context/ExportFieldsContext/useExportFields.js"
-import { InputExpressionValue } from "@/MagicExpressionWidget/types.js"
+import { useExportFields } from "@/MagicJsonSchemaEditor/context/ExportFieldsContext/useExportFields"
+import { InputExpressionValue } from "@/MagicExpressionWidget/types"
 import { SchemaMobxContext } from "../../.."
 import {
 	JSONPATH_JOIN_CHAR,

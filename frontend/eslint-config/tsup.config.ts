@@ -31,7 +31,8 @@ export default defineConfig([
 		...moduleOptions,
 		format: "esm",
 		outDir: "dist/es",
-		clean: true
+		clean: true,
+		bundle: true,
 	},
 	{
 		...moduleOptions,

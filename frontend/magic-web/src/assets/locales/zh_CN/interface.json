@@ -1304,7 +1304,9 @@
 		"task": "任务",
 		"wiki": "知识库",
 		"workflow": "工作流",
-		"workspace": "工作台"
+		"workspace": "工作台",
+		"accountManagement": "账号管理",
+		"deviceManagement": "设备管理"
 	},
 	"spin": {
 		"loadingUserInfo": "正在加载用户信息...",

@@ -295,11 +295,11 @@ const CascaderDropdown = ({
 					{RenderComponent ? (
 						<>
 							<div className="title">
-								{i18next.t("expression.constants", { ns: "magicFlow" })}
+								{i18next.t("expression.const", { ns: "magicFlow" })}
 							</div>
 							{RenderComponent}
 							<div className="title">
-								{i18next.t("expression.variables", { ns: "magicFlow" })}
+								{i18next.t("expression.expression", { ns: "magicFlow" })}
 							</div>
 						</>
 					) : null}

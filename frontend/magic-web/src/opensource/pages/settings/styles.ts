@@ -16,8 +16,6 @@ export const useStyles = createStyles(({css, prefixCls, token, isDarkMode}) => {
 			padding: 20px;
 			height: calc(100vh - ${ (token.titleBarHeight ?? 0) + 55 }px);
 			overflow-y: auto;
-			margin-top: 55px;
-			transform: translateY(-55px);
 
 			.${ prefixCls }-collapse-item {
 				border-radius: 8px !important;

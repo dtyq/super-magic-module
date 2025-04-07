@@ -11,10 +11,8 @@ import { RoutePath } from "@/const/routes"
 import { useNavigate } from "@/opensource/hooks/useNavigate"
 import type { LoginFormValuesMap, OnSubmitFn } from "./types"
 import { withLoginService, useLoginServiceContext } from "./providers/LoginServiceProvider"
-import Footer from "./components/Footer"
 import MobilePhonePasswordForm from "./components/MobilePhonePasswordForm"
 import { Form } from "antd"
-import { useUserAgreedPolicy } from "./hooks/useUserAgreedPolicy"
 
 const console = new Logger("sso")
 
@@ -25,7 +23,6 @@ function LoginPage() {
 	const { clusterCode } = useLoginServiceContext()
 
 	const [loading, setLoading] = useState(false)
-	const { agree, setAgree, triggerUserAgreedPolicy } = useUserAgreedPolicy()
 
 	const [form] = Form.useForm<LoginFormValuesMap[Login.LoginType.MobilePhonePassword]>()
 
@@ -52,10 +49,6 @@ function LoginPage() {
 			},
 		) => {
 			await form.validateFields()
-
-			if (!agree) {
-				await triggerUserAgreedPolicy()
-			}
 
 			setLoading(true)
 			values.device = await getDeviceInfo(i18n)
@@ -105,7 +98,6 @@ function LoginPage() {
 	return (
 		<MagicSpin spinning={loading}>
 			<MobilePhonePasswordForm form={form} onSubmit={onSubmit} />
-			<Footer agree={agree} onAgreeChange={setAgree} />
 		</MagicSpin>
 	)
 }

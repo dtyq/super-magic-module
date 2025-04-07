@@ -1,6 +1,5 @@
 import { ConversationMessageType, RecordSummaryStatus } from "@/types/chat/conversation_message"
 import { useMemoizedFn, useNetwork } from "ahooks"
-import { ReadyState } from "@feb/react-use-websocket"
 import { useMemo } from "react"
 import MagicIcon from "@/opensource/components/base/MagicIcon"
 import { IconMicrophone } from "@tabler/icons-react"
@@ -12,6 +11,15 @@ import { ChatWebSocket } from "@/opensource/apis/clients/chatWebSocket"
 type UseRecordingSummaryProps = {
 	conversationId?: string
 }
+
+const enum ReadyState {
+	UNINSTANTIATED = -1,
+	CONNECTING = 0,
+	OPEN = 1,
+	CLOSING = 2,
+	CLOSED = 3,
+}
+
 export default function useRecordingSummary({ conversationId }: UseRecordingSummaryProps) {
 	// useChatStore 已废弃，需重新实现
 	// const { isRecording, updateIsRecording } = useChatStore((s) => s)

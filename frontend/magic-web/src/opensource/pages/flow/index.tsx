@@ -57,6 +57,7 @@ import FlowAssistant from "./components/FlowAssistant/index"
 import { useGlobalLanguage } from "@/opensource/models/config/hooks"
 import { flowService } from "@/opensource/services"
 import { ComponentVersionMap } from "./nodes"
+import CommercialProvider from "./context/CommercialContext"
 // import flow from "./mock/flow"
 
 registerEditor()
@@ -403,85 +404,87 @@ export default function BaseFlow({ extraData }: BaseFlowProps) {
 	const { subFlow, tools } = useMaterialSource()
 
 	return (
-		<NodeMapProvider nodeMap={nodeSchemaMap}>
-			{/* @ts-ignore */}
-			<MaterialSourceProvider subFlow={subFlow} tools={tools}>
+		<CommercialProvider extraData={extraData}>
+			<NodeMapProvider nodeMap={nodeSchemaMap}>
 				{/* @ts-ignore */}
-				<NodeChangeListenerProvider customListener={nodeChangeEventListener}>
-					<ExtraNodeConfigProvider
-						nodeStyleMap={{
-							[customNodeType.Start]: {
-								width: isMainFlow ? "480px" : "900px",
-							},
-						}}
-					>
-						{/* @ts-ignore */}
-						<ConfigProvider locale={locale}>
-							<CustomFlowProvider
-								testFlowResult={testResult}
-								setCurrentFlow={setCurrentFlow}
-							>
-								<div
-									className={cx(styles.flowWrapper, {
-										// [styles.mainFlow]: isMainFlow,
-									})}
+				<MaterialSourceProvider subFlow={subFlow} tools={tools}>
+					{/* @ts-ignore */}
+					<NodeChangeListenerProvider customListener={nodeChangeEventListener}>
+						<ExtraNodeConfigProvider
+							nodeStyleMap={{
+								[customNodeType.Start]: {
+									width: isMainFlow ? "480px" : "900px",
+								},
+							}}
+						>
+							{/* @ts-ignore */}
+							<ConfigProvider locale={locale}>
+								<CustomFlowProvider
+									testFlowResult={testResult}
+									setCurrentFlow={setCurrentFlow}
 								>
-									{/* @ts-ignore */}
-									<MagicFlowComponent
-										header={flowHeader}
-										showExtraFlowInfo={false}
-										ref={flowInstance}
-										flow={currentFlow}
-										onlyRenderVisibleElements
-										layoutOnMount={false}
-										allowDebug
-										// @ts-ignore
-										flowInteractionRef={flowInteractionRef}
-										omitNodeKeys={[
-											"data",
-											"expandParent",
-											"extent",
-											"parentId",
-											"deletable",
-											"position",
-											"step",
-											"zIndex",
-											"type",
-										]}
-									/>
-								</div>
+									<div
+										className={cx(styles.flowWrapper, {
+											// [styles.mainFlow]: isMainFlow,
+										})}
+									>
+										{/* @ts-ignore */}
+										<MagicFlowComponent
+											header={flowHeader}
+											showExtraFlowInfo={false}
+											ref={flowInstance}
+											flow={currentFlow}
+											onlyRenderVisibleElements
+											layoutOnMount={false}
+											allowDebug
+											// @ts-ignore
+											flowInteractionRef={flowInteractionRef}
+											omitNodeKeys={[
+												"data",
+												"expandParent",
+												"extent",
+												"parentId",
+												"deletable",
+												"position",
+												"step",
+												"zIndex",
+												"type",
+											]}
+										/>
+									</div>
 
-								{/* 添加FlowAssistant组件 */}
-								{showFlowAssistant && isEditRight && (
-									<FlowAssistant
-										flowInteractionRef={flowInteractionRef}
-										flow={currentFlow}
-										onClose={() => setShowFlowAssistant(false)}
-										isAgent={isAgent}
-										saveDraft={saveDraft}
-										isEditRight={isEditRight}
-									/>
-								)}
+									{/* 添加FlowAssistant组件 */}
+									{showFlowAssistant && isEditRight && (
+										<FlowAssistant
+											flowInteractionRef={flowInteractionRef}
+											flow={currentFlow}
+											onClose={() => setShowFlowAssistant(false)}
+											isAgent={isAgent}
+											saveDraft={saveDraft}
+											isEditRight={isEditRight}
+										/>
+									)}
 
-								<ToastContainer
-									toastClassName="toast"
-									position="top-right"
-									autoClose={2000}
-									hideProgressBar
-									newestOnTop={false}
-									closeOnClick
-									rtl={false}
-									pauseOnFocusLoss
-									draggable
-									pauseOnHover
-									className={styles.toastContainer}
-								/>
-								{EditAgentModal}
-							</CustomFlowProvider>
-						</ConfigProvider>
-					</ExtraNodeConfigProvider>
-				</NodeChangeListenerProvider>
-			</MaterialSourceProvider>
-		</NodeMapProvider>
+									<ToastContainer
+										toastClassName="toast"
+										position="top-right"
+										autoClose={2000}
+										hideProgressBar
+										newestOnTop={false}
+										closeOnClick
+										rtl={false}
+										pauseOnFocusLoss
+										draggable
+										pauseOnHover
+										className={styles.toastContainer}
+									/>
+									{EditAgentModal}
+								</CustomFlowProvider>
+							</ConfigProvider>
+						</ExtraNodeConfigProvider>
+					</NodeChangeListenerProvider>
+				</MaterialSourceProvider>
+			</NodeMapProvider>
+		</CommercialProvider>
 	)
 }

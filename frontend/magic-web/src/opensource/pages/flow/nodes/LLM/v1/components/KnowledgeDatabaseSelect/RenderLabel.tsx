@@ -1,6 +1,6 @@
 import { IconWindowMaximize } from "@tabler/icons-react"
 import { Flex, Tooltip } from "antd"
-import styles from "../../KnowledgeDatabaseSelect/KnowledgeDatabaseSelect.module.less"
+import styles from "./KnowledgeDatabaseSelect.module.less"
 
 type RenderLabelProps = {
 	item: {
