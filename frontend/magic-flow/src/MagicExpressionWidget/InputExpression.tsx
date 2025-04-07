@@ -2,7 +2,6 @@
 import { useControllableValue, useMemoizedFn, useUpdateEffect } from "ahooks"
 import { Cascader, ConfigProvider, Modal } from "antd"
 import "antd/dist/reset.css"
-import zhCN from "antd/locale/zh_CN"
 // import { FIELDS_NAME, VALUE_TYPE } from "cai-json-edit/dist/JsonSchemaEditor/constants"
 import _, { cloneDeep, isEqual } from "lodash"
 import React, { useEffect, useMemo, useRef, useState } from "react"
@@ -491,7 +490,6 @@ const CustomInputExpression = (props: InputExpressionProps) => {
 				onPopoverModalClick={onPopoverModalClick}
 				closeArgsModal={closeArgsModal}
 			>
-				<ConfigProvider locale={zhCN}>
 					<GlobalProvider
 						dataSource={_dataSource || ([] as ExpressionSource)}
 						allowExpression={allowExpression}
@@ -633,7 +631,6 @@ const CustomInputExpression = (props: InputExpressionProps) => {
 							</InputExpressionStyle>
 						</TextareaModeProvider>
 					</GlobalProvider>
-				</ConfigProvider>
 			</ArgsModalProvider>
 		</ErrorBoundary>
 	)
