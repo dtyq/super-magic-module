@@ -75,6 +75,7 @@
 		"addKnowledgeDatabase": "新增知识库",
 		"tips": "提示",
 		"confirmAndNext": "确认并继续",
+        "teamshareKnowledgeDatabase": "天书知识库",
 		"knowledgeDatabase": "向量知识库",
 		"reVector": "重新向量化",
 		"retry": "重试",
