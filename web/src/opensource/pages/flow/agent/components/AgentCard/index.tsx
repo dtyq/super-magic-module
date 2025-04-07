@@ -22,7 +22,7 @@ const useStyles = createStyles(({ css, isDarkMode, token }) => {
 			padding: 12px;
 			border-radius: 8px;
 			color: ${isDarkMode ? token.magicColorScales.grey[2] : token.magicColorUsages.text[2]};
-			border: 1px solid ${isDarkMode ? token.magicColorScales.grey[4] : token.colorBorder};
+			border: 1px solid ${token.colorBorder};
 			position: relative;
 			cursor: pointer;
 			min-height: 142px;
@@ -168,7 +168,7 @@ function Card({ card, dropdownItems, onCardClick }: AgentCardProps) {
 	)
 }
 
-const AgentCard = memo((props: AgentCardProps) => {
+const AgentCard = memo(function AgentCard(props: AgentCardProps) {
 	return (
 		<OperateMenu
 			trigger="contextMenu"

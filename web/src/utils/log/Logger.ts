@@ -55,31 +55,37 @@ class Logger {
 	// 记录普通日志
 	log(...args: unknown[]): void {
 		if (!isProduction() && this.enableConfig?.console) {
-			console.log(
+			console.groupCollapsed(
 				`%c [${this.namespace}] `,
 				`color: white; background: ${this.color};`,
 				...args,
 			)
+			console.trace("trace")
+			console.groupEnd()
 		}
 	}
 
 	warn(...args: unknown[]) {
 		if (!isProduction() && this.enableConfig?.warn) {
-			console.warn(
+			console.groupCollapsed(
 				`%c [${this.namespace} warn] `,
 				"color: white; background: yellow;",
 				...args,
 			)
+			console.trace("trace")
+			console.groupEnd()
 		}
 	}
 
 	error(...args: unknown[]) {
 		if (!isProduction() && this.enableConfig?.error) {
-			console.error(
+			console.groupCollapsed(
 				`%c [${this.namespace} error] `,
 				"color: white; background: red;",
 				...args,
 			)
+			console.trace("trace")
+			console.groupEnd()
 		}
 		const logData = {
 			traceId: this.traceId,
@@ -109,13 +115,16 @@ class Logger {
 
 	trace(...args: unknown[]) {
 		if (!isProduction() && this.enableConfig?.trace) {
-			console.trace(
+			console.groupCollapsed(
 				`%c [${this.namespace} trace] `,
 				"color: white; background: blue;",
 				...args,
 			)
+			console.trace("trace")
+			console.groupEnd()
 		}
 	}
+
 	static reportLogs(logData: Record<string, any>): void {
 		if (isDev) return
 		try {

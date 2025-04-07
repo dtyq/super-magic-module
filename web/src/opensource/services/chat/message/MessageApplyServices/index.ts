@@ -16,11 +16,62 @@ type ApplyMessageOptions = {
 }
 
 /**
+ * 自定义消息处理器接口
+ */
+export interface ICustomMessageHandler {
+	// 是否匹配
+	isMatch: (message: SeqResponse<CMessage>) => boolean
+	// 处理消息
+	apply: (message: SeqResponse<CMessage>, options: ApplyMessageOptions) => void
+}
+
+/**
  * 消息应用服务
  * 负责处理和应用各种类型的消息（控制类、聊天类和流式消息）
  */
 class MessageApplyService {
+	// 正在拉取的会话列表
 	fetchingPromiseMap: Record<string, Promise<void>> = {}
+
+	// 自定义消息处理器注册表
+	private customHandlers: Map<string, ICustomMessageHandler> = new Map()
+
+	/**
+	 * 注册自定义消息处理器
+	 * @param id 处理器唯一标识
+	 * @param handler 自定义消息处理器
+	 * @param overwrite 是否覆盖已存在的处理器，默认为true
+	 * @returns 是否成功注册
+	 */
+	registerCustomHandler(
+		id: string,
+		handler: ICustomMessageHandler,
+		overwrite: boolean = true,
+	): boolean {
+		if (this.customHandlers.has(id) && !overwrite) {
+			console.warn(`处理器 ${id} 已存在，无法重复注册`)
+			return false
+		}
+		this.customHandlers.set(id, handler)
+		return true
+	}
+
+	/**
+	 * 取消注册自定义消息处理器
+	 * @param id 要移除的处理器ID
+	 * @returns 是否成功移除
+	 */
+	unregisterCustomHandler(id: string): boolean {
+		return this.customHandlers.delete(id)
+	}
+
+	/**
+	 * 获取已注册的自定义处理器
+	 * @returns 当前已注册的所有处理器
+	 */
+	getCustomHandlers(): Record<string, ICustomMessageHandler> {
+		return Object.fromEntries(this.customHandlers.entries())
+	}
 
 	/**
 	 * 应用一条消息
@@ -76,6 +127,13 @@ class MessageApplyService {
 				ChatMessageApplyService.apply(message, options)
 				break
 			default:
+				// 检查是否有自定义处理器可以处理该消息
+				for (const handler of this.customHandlers.values()) {
+					if (handler.isMatch(message)) {
+						handler.apply(message, options)
+						return
+					}
+				}
 				break
 		}
 	}

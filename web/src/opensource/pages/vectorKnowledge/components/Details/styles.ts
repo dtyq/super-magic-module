@@ -7,15 +7,15 @@ export const useVectorKnowledgeDetailStyles = createStyles(
 				height: calc(100vh - 44px);
 			`,
 			leftContainer: css`
-				flex: 1;
 				min-width: 250px;
 				border-right: 1px solid
 					${isDarkMode ? token.magicColorScales.grey[8] : token.magicColorUsages.border};
 			`,
 			rightContainer: css`
-				flex: 4;
+				flex: 1;
 				height: 100%;
 				padding: 20px;
+				overflow-x: auto;
 			`,
 			header: css`
 				padding: 13px 20px;

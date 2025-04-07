@@ -58,7 +58,7 @@ const useChatMessageStyles = createStyles(
 									? token.magicColorScales.grey[8]
 									: token.magicColorUsages.primaryLight.default};
 							}
-						`
+					  `
 					: ""}
 			`,
 			blockContainer: css`
@@ -125,13 +125,25 @@ const useChatMessageStyles = createStyles(
 					border-radius: 10px;
 				}
 				.${prefixCls}-dropdown-menu-item.${prefixCls}-dropdown-menu-item:hover {
-					background-color: ${isDarkMode ? token.magicColorUsages.primaryLight.hover : token.magicColorUsages.primaryLight.default};
+					background-color: ${
+						isDarkMode
+							? token.magicColorUsages.primaryLight.hover
+							: token.magicColorUsages.primaryLight.default
+					};
 				}
 				.${prefixCls}-dropdown-menu-item-divider.${prefixCls}-dropdown-menu-item-divider {
-					background-color: ${isDarkMode ? token.magicColorUsages.border : token.magicColorUsages.primaryLight.default};
+					background-color: ${
+						isDarkMode
+							? token.magicColorUsages.border
+							: token.magicColorUsages.primaryLight.default
+					};
 				}
 				.${prefixCls}-dropdown-menu-item-danger.${prefixCls}-dropdown-menu-item-danger:not(.${prefixCls}-dropdown-menu-item-disabled):hover {
-					background-color: ${isDarkMode ? token.magicColorUsages.danger.default : token.magicColorScales.red[0]} !important;
+					background-color: ${
+						isDarkMode
+							? token.magicColorUsages.danger.default
+							: token.magicColorScales.red[0]
+					} !important;
 					color: ${isDarkMode ? "white" : token.magicColorUsages.danger.default} !important;
 				}
 			`,
@@ -142,7 +154,7 @@ const useChatMessageStyles = createStyles(
 				border-radius: 12px;
 				user-select: text;
 
-				max-width: calc(100vw - 480px - var(--extra-section-width));
+				max-width: calc(100vw - 480px);
 
 				@media (max-width: 964px) {
 					max-width: 280px;
