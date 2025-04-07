@@ -299,7 +299,7 @@ class Form extends Structure
         if (! is_null($this->getDescription())) {
             $data['description'] = $this->getDescription();
         }
-        if ($this->getType()->isObject()) {
+        if (! is_null($properties)) {
             $data['properties'] = $properties;
         }
         if ($this->getType()->isArray()) {
