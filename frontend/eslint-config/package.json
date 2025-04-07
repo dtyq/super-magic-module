@@ -1,6 +1,6 @@
 {
 	"name": "@dtyq/eslint-config",
-	"version": "0.0.4",
+	"version": "0.0.10",
 	"description": "ESLint 配置包，内置所有依赖",
 	"keywords": [
 		"eslint",
@@ -16,6 +16,10 @@
 	},
 	"license": "Apache License 2.0",
 	"exports": {
+		".": {
+			"import": "./dist/es/base/index.js",
+			"require": "./dist/lib/base/index.js"
+		},
 		"./base": {
 			"import": "./dist/es/base/index.js",
 			"require": "./dist/lib/base/index.js"

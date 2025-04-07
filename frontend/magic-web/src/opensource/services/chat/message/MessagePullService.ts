@@ -337,10 +337,8 @@ class MessagePullService {
 				// const magicAccount = useUserStore
 				// 	.getState()
 				// 	.accounts.find((account) => account.magic_id === message.magic_id)
-
-				const organization = Object.values(userStore.user.magicOrganizationMap).find(
-					(o) => o.magic_organization_code === m.organization_code,
-				)
+				
+				const organization = userStore.user.magicOrganizationMap?.[m.organization_code]
 
 				const isSelf = organization?.magic_user_id === m.message.sender_id
 

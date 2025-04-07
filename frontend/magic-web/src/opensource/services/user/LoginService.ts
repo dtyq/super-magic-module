@@ -86,7 +86,7 @@ export class LoginService {
 					clusterCode,
 					teamshareOrganizationCode,
 				)
-				const magicOrganizationMap = keyBy(result, "third_platform_organization_code")
+				const magicOrganizationMap = keyBy(result, "magic_organization_code")
 				return { access_token, magicOrganizationMap }
 			} catch (error: any) {
 				const newMessage = `magicOrganizationSyncStep: ${error.message}`
@@ -108,15 +108,18 @@ export class LoginService {
 					organizations,
 					teamshareOrganizationCode,
 				} = params
-
+				
 				const magicOrgs = Object.values(magicOrganizationMap)
-
+				
 				const orgCode =
 					teamshareOrganizationCode ?? magicOrgs?.[0]?.third_platform_organization_code
+				
+				const magicOrg = keyBy(Object.values(magicOrganizationMap), "third_platform_organization_code")
+				
 				if (orgCode) {
 					const userInfo = await this.service
 						.get<UserService>("userService")
-						.fetchUserInfo(magicOrganizationMap?.[orgCode]?.magic_user_id)
+						.fetchUserInfo(magicOrg?.[orgCode]?.magic_user_id)
 					if (userInfo) {
 						// 登录完成后构造用户信息，维护在账号体系中
 						const userAccount: User.UserAccount = {

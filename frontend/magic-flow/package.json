@@ -1,6 +1,6 @@
 {
 	"name": "@dtyq/magic-flow",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"description": "An expression component that allows you to set user-defined content, block content, and function blocks",
 	"repository": {
 		"type": "git",
@@ -81,7 +81,7 @@
 		"zustand": "^4.5.2"
 	},
 	"devDependencies": {
-		"@dtyq/eslint-config": "~0.0.4",
+		"@dtyq/eslint-config": "~0.0.10",
 		"@types/dagre": "^0.7.52",
 		"@types/lodash": "^4.14.186",
 		"@types/react": "^18.3.2",

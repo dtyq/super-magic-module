@@ -39,7 +39,7 @@
 		"esniff": "~1.1.0"
 	},
 	"devDependencies": {
-		"@dtyq/eslint-config": "~0.0.9",
+		"@dtyq/eslint-config": "~0.0.10",
 		"@jest/globals": "^29.7.0",
 		"@swc/core": "~1.11.11",
 		"@types/jest": "~29.5.12",

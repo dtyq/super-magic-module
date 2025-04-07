@@ -1303,7 +1303,9 @@
 		"task": "Tasks",
 		"wiki": "Wiki",
 		"workflow": "Workflow",
-		"workspace": "Workplace"
+		"workspace": "Workplace",
+		"accountManagement": "Account",
+		"deviceManagement": "Device"
 	},
 	"spin": {
 		"loadingUserInfo": "Loading user information...",

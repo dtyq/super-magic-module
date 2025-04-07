@@ -1,25 +1,37 @@
 import MagicIcon from "@/opensource/components/base/MagicIcon"
 import MagicMenu from "@/opensource/components/base/MagicMenu"
 import { useAccount } from "@/opensource/stores/authentication"
-import { IconChevronRight, IconLanguage, IconLogout } from "@tabler/icons-react"
+import {
+	IconCheck,
+	IconChevronRight,
+	IconDeviceImacCog,
+	IconLogout,
+	IconUserCog,
+	IconWorld,
+} from "@tabler/icons-react"
 import { useBoolean, useMemoizedFn } from "ahooks"
 import type { MenuProps } from "antd"
-import { Popover, Modal } from "antd"
+import { Popover, Modal, Flex } from "antd"
 import { useMemo, type PropsWithChildren } from "react"
 import { useTranslation } from "react-i18next"
 import { last } from "lodash-es"
-import { useAccount as useAccountHook } from "@/opensource/models/user/hooks"
+import { useUserStore } from "@/stores/user"
+import { useShallow } from "zustand/react/shallow"
 import { RoutePath } from "@/const/routes"
-import { useNavigate } from "@/opensource/hooks/useNavigate"
-import { configStore } from "@/opensource/models/config"
-import { useGlobalLanguage, useSupportLanguageOptions } from "@/opensource/models/config/hooks"
-import { userStore } from "@/opensource/models/user"
 import { useStyles } from "./styles"
 import { UserMenuKey } from "./constants"
+import { ItemType } from "antd/es/menu/interface"
+import { useTheme } from "antd-style"
+import { setGlobalLanguage, useGlobalLanguage, useSupportLanguageOptions } from "@/opensource/models/config/hooks"
+import { SettingSection } from "@/opensource/pages/settings/types"
+import useNavigate from "@/opensource/hooks/useNavigate"
 
-function UserMenus({ children }: PropsWithChildren) {
+interface UserMenusProps extends PropsWithChildren {}
+
+function UserMenus({ children }: UserMenusProps) {
 	const { t } = useTranslation("interface")
 	const { styles, cx } = useStyles()
+	const { 	magicColorUsages  } = useTheme()
 
 	const navigate = useNavigate()
 	const [modal, contextHolder] = Modal.useModal()
@@ -30,7 +42,7 @@ function UserMenus({ children }: PropsWithChildren) {
 	const { accountLogout, accountSwitch } = useAccount()
 
 	/** 获取当前已登录的帐号 */
-	const { accounts } = useAccountHook()
+	const accounts = useUserStore(useShallow((store) => store.accounts))
 
 	/** 登出 */
 	const handleLogout = useMemoizedFn(async () => {
@@ -42,7 +54,7 @@ function UserMenus({ children }: PropsWithChildren) {
 		if (confirmed) {
 			// 当且仅当存在多个账号下，优先切换帐号，再移除帐号
 			if (accounts?.length > 1) {
-				const info = userStore.user.userInfo
+				const { info } = useUserStore.getState()
 				const otherAccount = accounts.filter(
 					(account) => account.magic_id !== info?.magic_id,
 				)?.[0]
@@ -52,8 +64,9 @@ function UserMenus({ children }: PropsWithChildren) {
 				)
 
 				accountSwitch(
-					otherAccount?.magic_id,
-					targetOrganization?.third_platform_organization_code ?? "",
+					targetOrganization?.magic_id ?? "",
+					targetOrganization?.magic_id ?? "",
+					targetOrganization?.magic_organization_code ?? "",
 				).catch(console.error)
 
 				if (info?.magic_id) {
@@ -66,50 +79,74 @@ function UserMenus({ children }: PropsWithChildren) {
 		}
 	})
 
+	const accountManagement = useMemoizedFn(() => {
+		navigate(RoutePath.Settings, { state: { type: SettingSection.ACCOUNT_MANAGE } })
+	})
+
+	const deviceManagement = useMemoizedFn(() => {
+		navigate(RoutePath.Settings, { state: { type: SettingSection.LOGIN_DEVICES } })
+	})
+
 	/** 当前语言 */
 	const language = useGlobalLanguage(true)
-	const languageSelected = useGlobalLanguage(false)
 	/** 语言列表 */
 	const languageList = useSupportLanguageOptions()
 
 	const languageOptions = useMemo(() => {
-		return languageList.map((item) => {
+		return languageList.reduce((acc, item) => {
 			const label = item.translations?.[item.value] ?? item.label
-			const tip = item.translations?.[languageSelected] ?? item.value
 
-			return {
+			acc.push({
 				key: item.value,
-				selectable: item.value === language,
 				label: (
-					<div className={styles.menuItem}>
-						<div className={styles.menuItemLeft}>
-							<div className={styles.menuItemTop}>
-								<span className={styles.menuItemTopName}>{label}</span>
-							</div>
-							<div className={styles.menuItemBottom}>{tip}</div>
-						</div>
-					</div>
+					<Flex align="center" justify="space-between">
+						<span className={styles.menuItemTopName}>{label}</span>
+						{item.value === language && (
+							<MagicIcon
+								className={styles.arrow}
+								component={IconCheck}
+								color={magicColorUsages.primary.default}
+							/>
+						)}
+					</Flex>
 				),
+			})
+
+			if (item.value === "auto") {
+				acc.push({
+					type: "divider",
+				})
 			}
-		})
-	}, [
-		language,
-		languageSelected,
-		languageList,
-		styles.menuItem,
-		styles.menuItemBottom,
-		styles.menuItemLeft,
-		styles.menuItemTop,
-		styles.menuItemTopName,
-	])
+
+			return acc
+		}, [] as ItemType[])
+	}, [languageList, styles.menuItemTopName, styles.arrow, language, magicColorUsages.primary.default])
 
 	const menu = useMemo<MenuProps["items"]>(() => {
 		return [
 			{
-				label: t("sider.switchLanguage"),
+				label: (
+					<Flex align="center" justify="center" gap={24}>
+						<span>{t("sider.switchLanguage")}</span>
+						<MagicIcon className={styles.arrow} component={IconChevronRight} />
+					</Flex>
+				),
 				key: UserMenuKey.SwitchLanguage,
-				icon: <MagicIcon size={20} component={IconLanguage} color="currentColor" />,
+				icon: <MagicIcon size={20} component={IconWorld} color="currentColor" />,
 				children: languageOptions,
+			},
+			{
+				label: t("sider.accountManagement"),
+				key: UserMenuKey.AccountManagement,
+				icon: <MagicIcon size={20} component={IconUserCog} color="currentColor" />,
+			},
+			// {
+			// 	label: t("sider.deviceManagement"),
+			// 	key: UserMenuKey.DeviceManagement,
+			// 	icon: <MagicIcon size={20} component={IconDeviceImacCog} color="currentColor" />,
+			// },
+			{
+				type: "divider",
 			},
 			{
 				label: t("sider.logout"),
@@ -118,9 +155,12 @@ function UserMenus({ children }: PropsWithChildren) {
 				key: UserMenuKey.Logout,
 			},
 		]
-	}, [t, languageOptions])
+	}, [t, styles.arrow, languageOptions])
 
-	const selectKeys = useMemo(() => [language], [language])
+	const selectKeys = useMemo(
+		() => (language ? [UserMenuKey.SwitchLanguage, language] : []),
+		[language],
+	)
 
 	const handleMenuClick = useMemoizedFn<Exclude<MenuProps["onClick"], undefined>>(
 		({ key, keyPath }) => {
@@ -129,7 +169,13 @@ function UserMenus({ children }: PropsWithChildren) {
 					handleLogout()
 					break
 				case UserMenuKey.SwitchLanguage:
-					configStore.i18n.setLanguage(key)
+					setGlobalLanguage(key)
+					break
+				case UserMenuKey.AccountManagement:
+					accountManagement()
+					break
+				case UserMenuKey.DeviceManagement:
+					deviceManagement()
 					break
 				default:
 					break
@@ -141,22 +187,16 @@ function UserMenus({ children }: PropsWithChildren) {
 	return (
 		<>
 			<Popover
-				overlayClassName={styles.popover}
-				placement="rightBottom"
+				classNames={{ root: styles.popover }}
+				placement="rightTop"
 				arrow={false}
 				open={open}
 				onOpenChange={set}
 				content={
 					<MagicMenu
 						rootClassName={cx(styles.menu)}
-						expandIcon={
-							<MagicIcon
-								className={styles.arrow}
-								size={20}
-								component={IconChevronRight}
-							/>
-						}
 						items={menu}
+						expandIcon={null}
 						onClick={handleMenuClick}
 						selectedKeys={selectKeys}
 					/>
