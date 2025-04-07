@@ -207,7 +207,7 @@ export class UserService {
 	setTeamshareOrganizationCode(organizationCode: string) {
 		const user = new UserRepository()
 		const { magicOrganizationMap } = userStore.user
-		const orgMap = keyBy(magicOrganizationMap, "third_platform_organization_code")
+		const orgMap = keyBy(Object.values(magicOrganizationMap), "third_platform_organization_code")
 		const orgCode = orgMap?.[organizationCode]?.magic_organization_code
 		user.setOrganizationCode(orgCode)
 		user.setTeamshareOrganizationCode(organizationCode)
