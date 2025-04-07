@@ -1,3 +1,36 @@
+import { TFunction } from "i18next";
+
+/** 知识数据类型 */
+export enum KnowledgeType {
+	/** 知识库 */
+	KnowledgeDatabase = 2,
+	/** 云文档 */
+	Document = 3,
+}
+
+
+export const getDefaultKnowledge = (isCommercial: boolean) => {
+
+	return {
+		knowledge_code: "",
+		knowledge_type: isCommercial ? KnowledgeType.KnowledgeDatabase : "",
+		business_id: "",
+		name: "",
+		description: "",
+	}
+}
+
+
+
+export const getKnowledgeTypeOptions = (t: TFunction, isCommercial: boolean) => [
+	...(isCommercial ? [{
+		label: t("common.teamshareKnowledgeDatabase", { ns: "flow" }),
+		value: KnowledgeType.KnowledgeDatabase,
+	}] : [])
+]
+
+
+
 export const getLLMRoleConstantOptions = () => {
 	return [
 		{

@@ -203,7 +203,7 @@ export namespace Knowledge {
 	}>
 
 	// 天书知识库单个项
-	export type TeamshareKnowledgeItem = {
+	export type KnowledgeDatabaseItem = {
 		knowledge_code: string
 		knowledge_type: KnowledgeType
 		business_id: string
@@ -220,7 +220,7 @@ export namespace Knowledge {
 		knowledge_id: string
 	}
 
-	export interface TeamshareKnowledgeProgress extends TeamshareKnowledgeItem {
+	export interface KnowledgeDatabaseProgress extends KnowledgeDatabaseItem {
 		vector_status: KnowledgeStatus
 		expected_num: number
 		completed_num: number

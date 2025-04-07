@@ -8,6 +8,12 @@ import TSIcon from "@/opensource/components/base/TSIcon"
 import useFormListRemove from "@/opensource/pages/flow/common/hooks/useFormListRemove"
 import styles from "./KnowledgeDataList.module.less"
 import usePanelConfig from "./hooks/usePanelConfig"
+import { useMemo } from "react"
+import { useCommercial } from "@/opensource/pages/flow/context/CommercialContext"
+import { getKnowledgeTypeOptions } from "../../helpers"
+import KnowledgeDatabaseSelectV1 from "../KnowledgeDatabaseSelect/KnowledgeDatabaseSelect"
+import useKnowledgeDatabases from "./hooks/useKnowledgeDatabase"
+import useProgress from "./hooks/useProgress"
 
 type KnowledgeDataListProps = {
 	handleAdd: () => void
@@ -25,12 +31,25 @@ export default function KnowledgeDataListV1({
 	const { t } = useTranslation()
 	const { removeFormListItem } = useFormListRemove()
 	const form = Form.useFormInstance()
+	const extraData = useCommercial()
 
 	const { limit, score } = usePanelConfig()
+
+	const { teamshareDatabaseOptions } = useKnowledgeDatabases()
+
+	const { progressList, initInterval, setProgressList } = useProgress({
+		knowledgeListName,
+	})
+
+	const isCommercial = useMemo(() => !!extraData, [extraData])
 
 	// 获取Form.List字段的值来判断是否有数据
 	const knowledgeList = Form.useWatch(knowledgeListName) || []
 	const hasKnowledgeData = Array.isArray(knowledgeList) && knowledgeList.length > 0
+
+	const knowledgeDataOptions = useMemo(() => {
+		return getKnowledgeTypeOptions(t, isCommercial)
+	}, [t, isCommercial])
 
 	return (
 		<div className={styles.knowledgeDataWrap}>
@@ -58,12 +77,27 @@ export default function KnowledgeDataListV1({
 															noStyle
 															name={[subField.name, "knowledge_type"]}
 														>
-															<MagicSelect options={[]} />
+															<MagicSelect
+																options={knowledgeDataOptions}
+															/>
 														</Form.Item>
 													</div>
 													<div className={styles.right}>
 														<Form.Item noStyle name={[subField.name]}>
-															<MagicSelect options={[]} />
+															{isCommercial ? (
+																<KnowledgeDatabaseSelectV1
+																	options={
+																		teamshareDatabaseOptions
+																	}
+																	progressList={progressList}
+																	setProgressList={
+																		setProgressList
+																	}
+																	initInterval={initInterval}
+																/>
+															) : (
+																<MagicSelect options={[]} />
+															)}
 														</Form.Item>
 													</div>
 													<span
