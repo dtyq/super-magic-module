@@ -3,7 +3,6 @@ import { create } from "zustand"
 import { DEFAULT_FONT_SIZE_BASE } from "@/const/style"
 import { createJSONStorage, persist } from "zustand/middleware"
 import { platformKey } from "@/utils/storage"
-import type { Timezone } from "@feb/timezone"
 import { immer } from "zustand/middleware/immer"
 
 export const enum IMStyle {
@@ -13,7 +12,7 @@ export const enum IMStyle {
 
 export interface AppearanceState {
 	theme: ThemeMode
-	timezone: Timezone
+	timezone: string
 	imStyle: IMStyle
 	chatFontSize: number
 	aiCompletion: boolean
