@@ -54,6 +54,6 @@ jobs:
             -t ${{ env.REGISTRY }}/${{ env.WEB_IMAGE }}:${{ inputs.tag || github.ref_name }} \
             -t ${{ env.REGISTRY }}/${{ env.WEB_IMAGE }}:latest \
             --build-arg IMAGE_NAME=${{ env.REGISTRY }}/${{ env.BASE_IMAGE }} \
-            -f ./Dockerfile.web \
+            -f ./Dockerfile.github \
             --push \
             ./

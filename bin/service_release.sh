@@ -71,7 +71,7 @@ mkdir $TMP_DIR;
     # 复制 service 目录下的所有文件（包括隐藏文件）
     cp -a "${SERVICE_DIR}"/* .
     cp -a "${SERVICE_DIR}"/.gitignore ./
-    # cp -R "${SCRIPT_DIR}"/magic-service/.github ./
+    cp -R "${SERVICE_DIR}"/.github ./
     cp -a "${SCRIPT_DIR}"/magic-service/Dockerfile.github ./
     #判断REMOTE_URL 是github 才执行这一步
     if [[ $REMOTE_URL == *"github"* ]]; then
