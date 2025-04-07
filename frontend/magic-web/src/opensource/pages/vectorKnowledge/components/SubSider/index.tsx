@@ -62,7 +62,7 @@ export default function SubSider({ setCurrentDetailPage, knowledgeDetail }: SubS
 								align="center"
 								className={styles.menuItem}
 							>
-								<div>{t("knowledgeDatabase.document")}</div>
+								<div>{t("knowledgeDatabase.documentTitle")}</div>
 								<IconChevronRight size={16} />
 							</Flex>
 						),

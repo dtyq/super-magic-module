@@ -1,14 +1,12 @@
 import { useTranslation } from "react-i18next"
 import { useState, useEffect } from "react"
-import { useUpload } from "@/opensource/hooks/useUploadFiles"
-import { Flex, message, Upload, Input, Button } from "antd"
-import { IconPhotoPlus } from "@tabler/icons-react"
+import { Flex, message, Input, Button } from "antd"
 import { useMemoizedFn } from "ahooks"
-import { genFileData } from "@/opensource/pages/chatNew/components/MessageEditor/MagicInput/components/InputFiles/utils"
 import { cx } from "antd-style"
 import { useVectorKnowledgeSettingStyles } from "./styles"
 import { KnowledgeApi } from "@/apis"
 import type { Knowledge } from "@/types/knowledge"
+import ImageUpload from "../Upload/ImageUpload"
 interface Props {
 	knowledgeBaseCode: string
 	updateKnowledgeDetail: (code: string) => void
@@ -35,50 +33,6 @@ export default function Setting({ knowledgeBaseCode, updateKnowledgeDetail }: Pr
 		setKnowledgeDescription(res.description)
 		setKnowledgeEnabled(res.enabled)
 		updateKnowledgeDetail(res.code)
-	})
-
-	const { uploading: iconUploading, uploadAndGetFileUrl } = useUpload({
-		storageType: "private",
-	})
-
-	/**
-	 * 上传图标文件
-	 * @param iconFiles 图标文件
-	 */
-	const handleIconFileUpload = useMemoizedFn(async (iconFiles: File[]) => {
-		// 创建本地URL用于预览
-		const localPreviewUrl = URL.createObjectURL(iconFiles[0])
-		const newFiles = iconFiles.map(genFileData)
-		// 先上传文件
-		const { fullfilled } = await uploadAndGetFileUrl(newFiles)
-		if (fullfilled.length) {
-			const { path } = fullfilled[0].value
-			setIconUploadUrl(path)
-			setIconPreviewUrl(localPreviewUrl)
-			message.success(t("knowledgeDatabase.uploadSuccess"))
-		} else {
-			message.error(t("file.uploadFail", { ns: "message" }))
-		}
-	})
-
-	/**
-	 * 上传图标文件 - 预校验
-	 * @param file 图标文件
-	 * @returns
-	 */
-	const beforeIconUpload = useMemoizedFn((file: File) => {
-		const isJpgOrPng = ["image/jpeg", "image/png"].includes(file.type)
-		if (!isJpgOrPng) {
-			message.error(t("knowledgeDatabase.onlySupportJpgPng"))
-			return false
-		}
-		const isLt200K = file.size / 1024 < 200
-		if (!isLt200K) {
-			message.error(t("knowledgeDatabase.imageSizeLimit", { size: "200KB" }))
-			return false
-		}
-		handleIconFileUpload([file])
-		return false
 	})
 
 	/**
@@ -133,25 +87,12 @@ export default function Setting({ knowledgeBaseCode, updateKnowledgeDetail }: Pr
 				{/* 图标 */}
 				<Flex align="center" justify="space-between">
 					<div className={cx(styles.required, styles.settingLabel)}>图标</div>
-					<Flex align="center" gap={8} className={styles.settingValue}>
-						<img className={styles.icon} src={iconPreviewUrl} alt="" />
-						<Upload
-							accept="image/jpg,image/png,image/jpeg"
-							disabled={iconUploading}
-							showUploadList={false}
-							beforeUpload={beforeIconUpload}
-						>
-							<Flex align="center" gap={8} className={styles.iconUploader}>
-								<IconPhotoPlus size={20} />
-								<div style={{ whiteSpace: "nowrap" }}>
-									{t("knowledgeDatabase.uploadNewIcon")}
-								</div>
-							</Flex>
-						</Upload>
-						<div className={styles.iconUploaderTip}>
-							{t("knowledgeDatabase.iconFileLimit")}
-						</div>
-					</Flex>
+					<ImageUpload
+						className={styles.settingValue}
+						previewIconUrl={iconPreviewUrl}
+						setPreviewIconUrl={setIconPreviewUrl}
+						setUploadIconUrl={setIconUploadUrl}
+					/>
 				</Flex>
 
 				{/* 知识库名称 */}
