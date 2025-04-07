@@ -25,8 +25,8 @@
 		"dev": "tsup src/index.ts --format cjs,esm --dts --watch",
 		"lint": "eslint ./src --ext ts,tsx --config .eslintrc.cjs",
 		"lint:fix": "eslint ./src --ext ts,tsx --config .eslintrc.cjs --fix && prettier --write ./src/**/*.{js,jsx,ts,tsx,md}",
-		"test": "npx jest --config=jest.config.mjs",
-		"test:watch": "npx jest --watch --config=jest.config.mjs"
+		"test": "npx jest --config=jest.config.js",
+		"test:watch": "npx jest --watch --config=jest.config.js"
 	},
 	"lint-staged": {
 		"./src/**/*.{ts,tsx}": [
@@ -39,7 +39,7 @@
 		"esniff": "~1.1.0"
 	},
 	"devDependencies": {
-		"@dtyq/eslint-config": "~0.0.4",
+		"@dtyq/eslint-config": "~0.0.9",
 		"@jest/globals": "^29.7.0",
 		"@swc/core": "~1.11.11",
 		"@types/jest": "~29.5.12",

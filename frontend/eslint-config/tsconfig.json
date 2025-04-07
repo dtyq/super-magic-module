@@ -2,7 +2,10 @@
 	"references": [{ "path": "./tsconfig.node.json" }],
 	"compilerOptions": {
 		"target": "ESNext",
-		"moduleResolution": "node"
+		"moduleResolution": "node",
+		"module": "CommonJS",
+		"esModuleInterop": false,  // 禁用 ESM 兼容逻辑
+		"skipLibCheck": true
 	},
 	"include": ["src/**/*", "test/**/*"],
 	"exclude": ["dist"]

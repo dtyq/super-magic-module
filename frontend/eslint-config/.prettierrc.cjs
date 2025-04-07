@@ -1,1 +1,1 @@
-module.exports = require("./dist/prettier/config.cjs")
+module.exports = require("./dist/lib/prettier/config")

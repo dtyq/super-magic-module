@@ -13,6 +13,9 @@ services:
       enableIngress: "true"
       crontabEnable: "false"
       useVolume: "false"
+    ports:
+      - "9501:9501"  
+      - "9502:9502"  
     depends_on:
       db:
         condition: service_healthy
@@ -59,23 +62,24 @@ services:
       resources:
         limits:
           memory: 4G
+          
   # Web 应用
-  # magic-web:
-  #   image: ghcr.io/dtyq/magic-web:v1.0.1
-  #   # image: magic/magic-web
-  #   # build:
-  #   #   context: ./web
-  #   #   dockerfile: Dockerfile
-  #   container_name: magic-web
-  #   #restart: always
-  #   environment:
-  #     MODE: service
-  #   volumes:
-  #     - ./web:/app
-  #   networks:
-  #     - default
-  #   env_file:
-  #     - .env
+  magic-web:
+    image: ghcr.io/dtyq/magic-web:${MAGIC_WEB_TAG}
+    container_name: magic-web
+    #restart: always
+    environment:
+      MAGIC_SOCKET_BASE_URL: ${MAGIC_SOCKET_BASE_URL}
+      MAGIC_SERVICE_BASE_URL: ${MAGIC_SERVICE_BASE_URL}
+      MAGIC_VERSION: ${MAGIC_VERSION}
+    ports:
+      - "8080:8080"
+    # volumes:
+    #   - ./web:/app
+    networks:
+      - default 
+    env_file:
+      - .env
 
  # Caddy 文件服务
   caddy:

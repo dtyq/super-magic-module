@@ -2,7 +2,7 @@
   "name": "dtyq/code-executor",
   "description": "A multi-language code execution system",
   "type": "library",
-  "license": "MIT",
+  "license": "Apache License 2.0",
   "keywords": [],
   "require": {
     "ext-zip": "*",

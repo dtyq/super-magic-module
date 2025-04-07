@@ -1,3 +1,7 @@
 module.exports = {
-	extends: ["./dist/base/index.cjs", "./dist/typescript/index.cjs", "./dist/prettier/index.cjs"],
+	extends: [
+		"./dist/lib/base/index.js",
+		"./dist/lib/typescript/index.js",
+		"./dist/lib/prettier/index.js",
+	],
 }

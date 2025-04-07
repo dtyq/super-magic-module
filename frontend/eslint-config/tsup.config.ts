@@ -37,6 +37,8 @@ export default defineConfig([
 		...moduleOptions,
 		format: "cjs",
 		outDir: "dist/lib",
-		clean: false
+		clean: false,
+		treeshake: true,
+		bundle: true,
 	},
 ])
