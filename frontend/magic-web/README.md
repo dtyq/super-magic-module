@@ -29,21 +29,6 @@ pnpm test
 -   SWR
 -   Antd
 
-## 项目结构
-
-```
-src/
-├── assets/          # 静态资源文件
-├── components/      # 组件
-│   ├── base/       # 基础组件
-│   ├── business/   # 业务组件
-│   └── ...
-├── services/       # API 服务
-├── stores/         # 状态管理
-├── utils/          # 工具函数
-└── ...
-```
-
 ## 开发规范
 
 ### 代码风格
@@ -115,31 +100,8 @@ type(scope): commit message
 3. 开发新功能时，建议先写好类型定义
 4. 代码提交前进行自测，确保功能正常且测试用例通过
 
-## 常见问题
-
-1. 如何添加新的依赖？
-
-    ```bash:README.md
-    pnpm add <package-name>
-    ```
-
-2. 私有桶文件上传跨越问题, 运维侧配置了白名单 (域名+端口限制)
-
-`vite.config.ts` 中已配置了 `mkcert` 用于 https 证书生成, 并且端口已改成 `443`
-
-本地开发时正常使用, 还需要本地配置host `127.0.0.1 magic.t.teamshare.cn`, 通过 `https://magic.t.teamshare.cn` 访问可解决问题
-
-> PS: 本地host 设置可使用 [`SwitchHosts`](https://switchhosts.vercel.app/zh) 插件
-
 ## Vscode 插件安装推荐
 
 -   i18n Ally
 -   Vitest, Vitest Runner
 -   Git Graph
-
-## 相关文档
-
--   [React 文档](https://react.dev/)
--   [Vite 文档](https://vitejs.dev/)
--   [Ant Design 文档](https://ant.design/)
--   [SWR 文档](https://swr.vercel.app/)

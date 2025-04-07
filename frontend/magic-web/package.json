@@ -145,7 +145,7 @@
 		"re-resizable": "^6.11.2"
 	},
 	"devDependencies": {
-		"@dtyq/eslint-config": "~0.0.9",
+		"@dtyq/eslint-config": "~0.0.10",
 		"@testing-library/jest-dom": "^6.0.0",
 		"@testing-library/react": "^14.0.0",
 		"@types/crypto-js": "^4.2.2",
