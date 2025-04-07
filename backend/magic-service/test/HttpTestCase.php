@@ -7,8 +7,6 @@ declare(strict_types=1);
 
 namespace HyperfTest;
 
-use Dtyq\MagicEnterprise\Domain\Favorite\Repository\FavoriteRepository;
-use Dtyq\MagicEnterprise\Domain\Tag\Repository\TagRepository;
 use Hyperf\Testing;
 use Mockery;
 use PHPUnit\Framework\TestCase;
@@ -55,16 +53,6 @@ abstract class HttpTestCase extends TestCase
             // 换成自己的
             'Authorization' => env('TEST_TOKEN'),
         ];
-    }
-
-    protected function clearTestFavoriteData(): void
-    {
-        di(FavoriteRepository::class)->clearTestData();
-    }
-
-    protected function clearTestTagData(): void
-    {
-        di(TagRepository::class)->clearTestData();
     }
 
     /**
