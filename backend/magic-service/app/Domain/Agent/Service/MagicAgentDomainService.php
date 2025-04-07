@@ -73,9 +73,14 @@ class MagicAgentDomainService
         } else {
             // 是否能修改
             $agent = $this->getAgentById($agentEntity->getId());
+            $agent->setRobotName($agentEntity->getAgentName());
+            $agent->setRobotDescription($agentEntity->getAgentDescription());
+            $agent->setRobotAvatar($agentEntity->getAgentAvatar());
+
             $agent->setAgentName($agentEntity->getAgentName());
             $agent->setAgentDescription($agentEntity->getAgentDescription());
             $agent->setAgentAvatar($agentEntity->getAgentAvatar());
+
             $agent->setStartPage($agentEntity->getStartPage());
             $agent = $this->agentRepository->updateById($agent);
         }

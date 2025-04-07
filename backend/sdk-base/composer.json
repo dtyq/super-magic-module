@@ -1,7 +1,7 @@
 {
     "name": "dtyq/sdk-base",
     "description": "作为 SDK 的基础包，提供通用组件能力",
-    "license": "MIT",
+    "license": "Apache License 2.0",
     "authors": [
         {
             "name": "lihq1403",

@@ -5,6 +5,7 @@ declare(strict_types=1);
  * Copyright (c) The Magic , Distributed under the software license
  */
 return [
+    'agent_not_found' => '助理未找到',
     'agent_name_cannot_be_empty' => '助理人名称不可为空',
     'organization_code_cannot_be_empty' => '组织编码不可为空',
     'creator_cannot_be_empty' => '创建者不可为空',

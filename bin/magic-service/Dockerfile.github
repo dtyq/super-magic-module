@@ -17,6 +17,8 @@ ENV TIMEZONE=${timezone:-"Asia/Shanghai"} \
 RUN mkdir -p /etc/php/conf.d && \
     echo "memory_limit = -1" > /etc/php/conf.d/memory-limit.ini && \
     echo "max_execution_time = 0" > /etc/php/conf.d/max-execution-time.ini
+    
+
 
 # 安装 PostgreSQL 客户端库及其他依赖
 RUN apk add --no-cache  git openssh-client
@@ -26,22 +28,13 @@ COPY . /opt/www
 
 WORKDIR /opt/www
 
-RUN ls -l
-
 
 # composer 改成阿里云镜像
 # RUN composer config -g repo.packagist composer https://mirrors.aliyun.com/composer/
 
 
-# 使用 --mount=type=secret 挂载 secret 文件时，该挂载操作是在 RUN 指令执行 期间 进行的。
-# 这意味着 secret 文件只在 当前 RUN 指令的上下文中可用。一旦该 RUN 指令执行完毕，secret 文件就会被移除，并且不会被包含在下一层中。
-# 要解决这个问题，你需要将所有需要访问 secret 文件的操作放在 同一个 RUN 指令中
-RUN --mount=type=cache,id=magic-service-composer,target=/root/.cache/composer \
-    export COMPOSER_ALLOW_SUPERUSER=1 ;
-
-
-# 安装依赖并优化自动加载
-# RUN composer install --no-dev --prefer-dist
+# 关闭swow扩展 再安装, 因为安装swow扩展后 再执行composer update 时会陷入curl 死循环
+RUN  php -d swow.enable=0  $(which composer) update 
 
 # 可选的：标记expose端口
 EXPOSE 9501

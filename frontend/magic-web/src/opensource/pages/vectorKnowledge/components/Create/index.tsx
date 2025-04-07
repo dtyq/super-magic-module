@@ -20,15 +20,12 @@ import { RoutePath } from "@/const/routes"
 import { FlowRouteType } from "@/types/flow"
 import MagicIcon from "@/opensource/components/base/MagicIcon"
 import { useVectorKnowledgeCreateStyles } from "./styles"
-import {
-	supportedFileTypes,
-	fileTypeIconsMap,
-	DEFAULT_ICON_OSS_KEY,
-	supportedEmbedFileTypes,
-} from "../../constant"
+import { fileTypeIconsMap, DEFAULT_ICON_OSS_KEY } from "../../constant"
 import VectorKnowledgeEmbed from "../Embed"
 import { KnowledgeApi } from "@/apis"
 import type { Knowledge } from "@/types/knowledge"
+import DocumentUpload from "../Upload/DocumentUpload"
+import ImageUpload from "../Upload/ImageUpload"
 
 type DataType = {
 	name: string
@@ -68,7 +65,7 @@ export default function VectorKnowledgeCreate() {
 	// 上传文件列表
 	const [fileList, setFileList] = useState<UploadFileItem[]>([])
 
-	const { uploading: iconUploading, uploadAndGetFileUrl } = useUpload({
+	const { uploadAndGetFileUrl } = useUpload({
 		storageType: "private",
 	})
 
@@ -85,40 +82,7 @@ export default function VectorKnowledgeCreate() {
 		}
 	}, [])
 
-	/** 上传图标文件 */
-	const handleIconFileUpload = useMemoizedFn(async (iconFiles: File[]) => {
-		// 创建本地URL用于预览
-		const localPreviewUrl = URL.createObjectURL(iconFiles[0])
-		const newFiles = iconFiles.map(genFileData)
-		// 先上传文件
-		const { fullfilled } = await uploadAndGetFileUrl(newFiles)
-		if (fullfilled.length) {
-			const { path } = fullfilled[0].value
-			setPreviewIconUrl(localPreviewUrl)
-			setUploadIconUrl(path)
-			message.success(t("knowledgeDatabase.uploadSuccess"))
-		} else {
-			message.error(t("file.uploadFail", { ns: "message" }))
-		}
-	})
-
-	/** 上传图标文件 - 预校验 */
-	const beforeIconUpload = useMemoizedFn((file: File) => {
-		const isJpgOrPng = ["image/jpeg", "image/png"].includes(file.type)
-		if (!isJpgOrPng) {
-			message.error(t("knowledgeDatabase.onlySupportJpgPng"))
-			return false
-		}
-		const isLt200K = file.size / 1024 < 200
-		if (!isLt200K) {
-			message.error(t("knowledgeDatabase.imageSizeLimit", { size: "200KB" }))
-			return false
-		}
-		handleIconFileUpload([file])
-		return false
-	})
-
-	/** 上传文件 */
+	/** 上传文档 */
 	const handleFileUpload = useMemoizedFn(async (file: File, uid?: string) => {
 		// 更新上传的文件列表
 		const newUid = uid || `${file.name}-${Date.now()}`
@@ -153,27 +117,6 @@ export default function VectorKnowledgeCreate() {
 				),
 			)
 		}
-	})
-
-	/** 上传文件 - 预校验 */
-	const beforeFileUpload = useMemoizedFn((file: File) => {
-		const fileExtension = file.name.split(".").pop()?.toLowerCase() || ""
-
-		if (!supportedFileTypes.includes(fileExtension)) {
-			message.error(t("knowledgeDatabase.unsupportedFileType", { type: fileExtension }))
-			return false
-		}
-
-		// 验证文件大小
-		const isLt15M = file.size / 1024 / 1024 < 15
-		if (!isLt15M) {
-			message.error(t("knowledgeDatabase.fileSizeLimit", { size: "15MB" }))
-			return false
-		}
-
-		handleFileUpload(file)
-		// 直接return flase，不进行组件上传，使用自定义上传
-		return false
 	})
 
 	/** 删除文件 */
@@ -300,25 +243,11 @@ export default function VectorKnowledgeCreate() {
 								},
 							]}
 						>
-							<Flex align="center" gap={8}>
-								<img className={styles.icon} src={previewIconUrl} alt="" />
-								<Upload
-									accept="image/jpg,image/png,image/jpeg"
-									disabled={iconUploading}
-									showUploadList={false}
-									beforeUpload={beforeIconUpload}
-								>
-									<Flex align="center" gap={8} className={styles.iconUploader}>
-										<IconPhotoPlus size={20} />
-										<div style={{ whiteSpace: "nowrap" }}>
-											{t("knowledgeDatabase.uploadNewIcon")}
-										</div>
-									</Flex>
-								</Upload>
-								<div className={styles.iconUploaderTip}>
-									{t("knowledgeDatabase.iconFileLimit")}
-								</div>
-							</Flex>
+							<ImageUpload
+								previewIconUrl={previewIconUrl}
+								setPreviewIconUrl={setPreviewIconUrl}
+								setUploadIconUrl={setUploadIconUrl}
+							/>
 						</Form.Item>
 
 						<Form.Item
@@ -356,12 +285,7 @@ export default function VectorKnowledgeCreate() {
 							label={<div className={styles.label}>{t("common.uploadFile")}</div>}
 						>
 							<div>
-								<Upload.Dragger
-									accept={supportedEmbedFileTypes}
-									multiple
-									showUploadList={false}
-									beforeUpload={beforeFileUpload}
-								>
+								<DocumentUpload handleFileUpload={handleFileUpload}>
 									<div className={styles.uploadIcon}>
 										<IconFileUpload size={40} stroke={1} />
 									</div>
@@ -371,11 +295,11 @@ export default function VectorKnowledgeCreate() {
 									<div className={styles.uploadDescription}>
 										{`${t(
 											"common.supported",
-										)} TXT、MARKDOWN、PDF、HTML、XLSX、XLS、DOC、DOCX、CSV、XML、HTM`}
+										)} TXT、MARKDOWN、PDF、HTML、XLSX、XLS、DOCX、CSV、XML、HTM`}
 										<br />
 										{t("common.fileSizeLimit", { size: "15MB" })}
 									</div>
-								</Upload.Dragger>
+								</DocumentUpload>
 								{fileList.map((file) => (
 									<Flex
 										align="center"
@@ -415,13 +339,10 @@ export default function VectorKnowledgeCreate() {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [
 		allowSubmit,
-		beforeFileUpload,
-		beforeIconUpload,
 		previewIconUrl,
 		uploadIconUrl,
 		fileList,
 		form,
-		iconUploading,
 		createdKnowledge,
 		handleFileRemove,
 		handleSubmit,

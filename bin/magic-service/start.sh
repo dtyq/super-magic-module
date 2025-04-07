@@ -17,14 +17,15 @@ if [ ! -f "${base_dirname}/.initialized" ]; then
     
     # 执行 composer update
     cd ${base_dirname}
-    composer update
     
-    # 执行数据库种子
-    php ${base_dirname}/bin/hyperf.php db:seed
 
-    # ........................
     # 执行迁移
     php "${bin}" migrate --force
+    
+    # 执行数据库种子
+    php bin/hyperf.php init-magic:data
+
+  
     
     # 创建标记文件，表示已经初始化过
     touch ${base_dirname}/.initialized

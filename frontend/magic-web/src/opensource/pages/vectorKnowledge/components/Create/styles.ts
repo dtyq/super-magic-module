@@ -51,26 +51,6 @@ export const useVectorKnowledgeCreateStyles = createStyles(({ css, token, isDark
 				color: red;
 			}
 		`,
-		icon: css`
-			width: 45px;
-			height: 45px;
-			border-radius: 6px;
-		`,
-		iconUploader: css`
-			height: 45px;
-			padding: 0 10px;
-			font-weight: 500;
-			font-size: 13px;
-			color: rgba(28, 29, 35, 0.6);
-			background: rgba(46, 47, 56, 0.05);
-			border: 1px dashed rgba(28, 29, 35, 0.08);
-			border-radius: 6px;
-			cursor: pointer;
-		`,
-		iconUploaderTip: css`
-			font-size: 12px;
-			color: #999;
-		`,
 		uploadIcon: css`
 			color: rgba(28, 29, 35);
 			margin-bottom: 5px;

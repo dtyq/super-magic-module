@@ -1,7 +1,7 @@
 {
     "name": "dtyq/flow-expr-engine",
     "description": "A powerful engine for handling flow components and expressions.",
-    "license": "MIT",
+    "license": "Apache License 2.0",
     "authors": [
         {
             "name": "lihq1403",
