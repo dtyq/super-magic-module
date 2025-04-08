@@ -1,7 +1,7 @@
 export default {
   label: 'English',
   lang: 'en',
-  link: '/',
+  link: '/en',
   themeConfig: {
     nav: [
       { text: 'Home', link: '/' },

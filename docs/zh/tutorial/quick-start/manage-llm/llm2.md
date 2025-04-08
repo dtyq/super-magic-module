@@ -64,7 +64,7 @@
 
 
 - 5.3 发起调试，如果没用开通，会要求开通模型，并要求授权 API Key
-
+![alt text](https://cdn.letsmagic.cn/static/img/FsqFvaxlu7MiQB7Jg8zsgmlyBoeU.png)
 
 ![FrLzQgYd-R0cPuh-grhOffzgNyLR.png](https://cdn.letsmagic.cn/static/img/FrLzQgYd-R0cPuh-grhOffzgNyLR.png)
 
