@@ -1,7 +1,7 @@
 {
     "name": "dtyq/async-event",
     "type": "library",
-    "license": "MIT",
+    "license": "Apache License 2.0",
     "keywords": [
         "php",
         "hyperf"
@@ -56,7 +56,7 @@
             "config": "Dtyq\\AsyncEvent\\ConfigProvider"
         },
         "branch-alias": {
-            "dev-master": "0.0-dev"
+            "dev-master": "0.1-dev"
         }
     }
 }

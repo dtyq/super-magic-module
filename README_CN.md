@@ -3,8 +3,8 @@
 <div align="center">
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
-[![Docker Pulls](https://img.shields.io/docker/pulls/dtyq/magic.svg)](https://hub.docker.com/r/dtyq/magic)
-[![GitHub stars](https://img.shields.io/github/stars/dtyq/magic.svg?style=social&label=Star)](https://github.com/dtyq/magic)
+<!-- [![Docker Pulls](https://img.shields.io/docker/pulls/dtyq/magic.svg)](https://hub.docker.com/r/dtyq/magic) -->
+<!-- [![GitHub stars](https://img.shields.io/github/stars/dtyq/magic.svg?style=social&label=Star)](https://github.com/dtyq/magic) -->
 
 </div>
 
@@ -53,7 +53,21 @@ cd magic
 # 查看日志
 ./bin/magic.sh logs
 ```
-
+### 访问服务
+- API 服务: http://localhost:9501
+- Web 应用: http://localhost:8080
+  - 账号 `13800138001`：密码为 `123456`
+  - 账号 `13800139001`：密码为 `123456`
+- RabbitMQ 管理界面: http://localhost:15672
+  - 用户名: admin
+  - 密码: magic123456
+- OpenSearch: https://localhost:9200
+  - 用户名: admin
+  - 密码: Qazwsxedc!@#123
+- OpenSearch Dashboards: http://localhost:5601
+  - 用户名: admin
+  - 密码: Qazwsxedc!@#123
+  
 ## 📚 文档
 
 详细的文档请访问 [Magic 文档中心](http://docs.letsmagic.cn/)。

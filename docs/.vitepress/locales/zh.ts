@@ -169,6 +169,7 @@ export default {
           items: [
             // { text: '贡献指南', link: '/zh/development/advanced/CONTRIBUTING' },
             { text: '初始化说明', link: '/zh/development/advanced/init' },
+            { text: '环境变量', link: '/zh/development/deploy/environment' },
             { text: '权限配置', link: '/zh/development/advanced/permission' },
             { text: '文件驱动', link: '/zh/development/deploy/file-driver' },
           ]

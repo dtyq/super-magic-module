@@ -1,9 +1,0 @@
-{
-	"references": [{ "path": "./tsconfig.node.json" }],
-	"compilerOptions": {
-		"target": "ESNext",
-		"moduleResolution": "node"
-	},
-	"include": ["src/**/*", "test/**/*"],
-	"exclude": ["dist"]
-}

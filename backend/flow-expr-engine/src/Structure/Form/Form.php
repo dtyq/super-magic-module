@@ -303,7 +303,16 @@ class Form extends Structure
             $data['properties'] = $properties;
         }
         if ($this->getType()->isArray()) {
-            $data['items'] = $this->getItems()?->toJsonSchema();
+            $items = $this->getItems();
+            if (! $items) {
+                // 尝试从 properties 中获取
+                $items = $this->getProperties()[0] ?? null;
+            }
+            // 如果 items 有值，但是是空的对象，那么尝试从 properties 中获取
+            if ($items->getType()->isObject() && empty($items->getProperties())) {
+                $items = $this->getProperties()[0] ?? null;
+            }
+            $data['items'] = $items?->toJsonSchema();
         }
 
         return $data;

@@ -899,7 +899,7 @@ class MagicAgentAppService extends AbstractAppService
      */
     private function enrichCreatorInfo(array &$agentVersions): void
     {
-        $agentIds = array_column($agentVersions, 'root_id');
+        $agentIds = array_column($agentVersions, 'agent_id');
         $agents = $this->magicAgentDomainService->getAgentByIds($agentIds);
         $users = $this->magicUserDomainService->getUserByIdsWithoutOrganization(array_column($agents, 'created_uid'));
         $userMap = array_column($users, null, 'user_id');

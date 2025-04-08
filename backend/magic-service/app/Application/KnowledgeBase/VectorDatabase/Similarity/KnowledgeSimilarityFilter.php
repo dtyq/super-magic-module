@@ -30,7 +30,7 @@ class KnowledgeSimilarityFilter extends AbstractValueObject
         if (empty($this->knowledgeCodes)) {
             ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'common.empty', ['label' => 'knowledgeCodes']);
         }
-        if ($this->query === '' || $this->question == '') {
+        if ($this->query === '' && $this->question == '') {
             ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'common.empty', ['label' => 'query']);
         }
     }

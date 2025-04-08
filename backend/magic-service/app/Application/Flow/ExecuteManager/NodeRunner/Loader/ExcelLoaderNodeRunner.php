@@ -35,11 +35,11 @@ class ExcelLoaderNodeRunner extends NodeRunner
 
         $filesSpreadsheet = [];
         foreach ($files as $file) {
-            $fileUrl = $file['file_url'] ?? '';
+            $fileUrl = $file['file_url'] ?? ($file['url'] ?? '');
             if (empty($fileUrl)) {
-                ExceptionBuilder::throw(FlowErrorCode::FlowNodeValidateFailed, 'common.empty', ['label' => $fileUrl]);
+                ExceptionBuilder::throw(FlowErrorCode::FlowNodeValidateFailed, 'common.empty', ['label' => 'file_url']);
             }
-            $fileName = $file['file_name'] ?? $fileUrl;
+            $fileName = $file['file_name'] ?? ($file['name'] ?? $fileUrl);
 
             $link = SSRFUtil::getSafeUrl($fileUrl, replaceIp: false);
 

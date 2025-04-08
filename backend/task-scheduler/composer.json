@@ -1,7 +1,7 @@
 {
     "name": "dtyq/task-scheduler",
     "type": "library",
-    "license": "MIT",
+    "license": "Apache License 2.0",
     "keywords": [
         "php",
         "hyperf"
@@ -54,7 +54,7 @@
             "config": "Dtyq\\TaskScheduler\\ConfigProvider"
         },
         "branch-alias": {
-            "dev-master": "0.0-dev"
+            "dev-master": "0.1-dev"
         }
     }
 }
