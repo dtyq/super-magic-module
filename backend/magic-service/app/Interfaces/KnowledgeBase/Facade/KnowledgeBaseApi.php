@@ -14,6 +14,7 @@ use App\Infrastructure\Core\ValueObject\Page;
 use App\Interfaces\Flow\DTO\Knowledge\KnowledgeBaseDTO;
 use App\Interfaces\Flow\DTO\Knowledge\MagicFlowKnowledgeListDTO;
 use App\Interfaces\Kernel\DTO\PageDTO;
+use App\Interfaces\KnowledgeBase\Assembler\KnowledgeBaseAssembler;
 use App\Interfaces\KnowledgeBase\DTO\Request\CreateKnowledgeBaseRequestDTO;
 use App\Interfaces\KnowledgeBase\DTO\Request\UpdateKnowledgeBaseRequestDTO;
 use Dtyq\ApiResponse\Annotation\ApiResponse;
@@ -27,7 +28,7 @@ class KnowledgeBaseApi extends AbstractKnowledgeBaseApi
         $userAuthorization = $this->getAuthorization();
         $entity = (new KnowledgeBaseEntity($dto->toArray()))->setType(KnowledgeType::UserKnowledgeBase);
         $entity = $this->knowledgeBaseAppService->save($userAuthorization, $entity, $dto->getDocumentFiles());
-        return KnowledgeBaseDTO::fromEntity($entity);
+        return KnowledgeBaseAssembler::entityToDTO($entity);
     }
 
     public function updateKnowledgeBase()
@@ -37,7 +38,7 @@ class KnowledgeBaseApi extends AbstractKnowledgeBaseApi
 
         $entity = (new KnowledgeBaseEntity($dto->toArray()))->setType(KnowledgeType::UserKnowledgeBase);
         $entity = $this->knowledgeBaseAppService->save($userAuthorization, $entity);
-        return KnowledgeBaseDTO::fromEntity($entity);
+        return KnowledgeBaseAssembler::entityToDTO($entity);
     }
 
     public function getKnowledgeBaseList()
@@ -56,10 +57,7 @@ class KnowledgeBaseApi extends AbstractKnowledgeBaseApi
         $knowledgeBaseCodes = array_map(fn ($item) => $item->getCode(), $result['list']);
         // 补充文档数量
         $knowledgeBaseDocumentCountMap = $this->knowledgeBaseDocumentAppService->getDocumentCountByKnowledgeBaseCodes($userAuthorization, $knowledgeBaseCodes);
-        $list = array_map(
-            fn (KnowledgeBaseEntity $entity) => MagicFlowKnowledgeListDTO::fromEntity($entity, $result['users'], $knowledgeBaseDocumentCountMap),
-            $result['list'],
-        );
+        $list = KnowledgeBaseAssembler::entitiesToListDTO($result['list'], $result['users'], $knowledgeBaseDocumentCountMap);
         return new PageDTO($page->getPage(), $result['total'], $list);
     }
 
@@ -69,7 +67,7 @@ class KnowledgeBaseApi extends AbstractKnowledgeBaseApi
         $magicFlowKnowledgeEntity = $this->knowledgeBaseAppService->show($userAuthorization, $code);
         // 补充文档数量
         $knowledgeBaseDocumentCountMap = $this->knowledgeBaseDocumentAppService->getDocumentCountByKnowledgeBaseCodes($userAuthorization, [$code]);
-        return KnowledgeBaseDTO::fromEntity($magicFlowKnowledgeEntity)->setDocumentCount($knowledgeBaseDocumentCountMap[$code] ?? 0);
+        return KnowledgeBaseAssembler::entityToDTO($magicFlowKnowledgeEntity)->setDocumentCount($knowledgeBaseDocumentCountMap[$code] ?? 0);
     }
 
     public function destroyKnowledgeBase(string $code)
