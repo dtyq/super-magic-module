@@ -36,7 +36,10 @@ class InitMagicDataCommand extends HyperfCommand
         protected ApplicationRepositoryInterface $applicationRepository,
         protected ModelConfigRepositoryInterface $modelConfigRepository,
     ) {
-        // php bin/hyperf.php init-magic:data --type=model-gateway
+        // 正常模式（不初始化模型网关数据）
+        // php bin/hyperf.php init-magic:data --type=all
+        // 单元测试模式（会初始化模型网关数据）
+        // php bin/hyperf.php init-magic:data --type=all --unit-test
         parent::__construct('init-magic:data');
     }
 
@@ -49,6 +52,8 @@ class InitMagicDataCommand extends HyperfCommand
         $this->addOption('type', 't', InputOption::VALUE_REQUIRED, '指定初始化数据类型，支持：all, user, model-gateway 等', 'all');
         // 添加选项，控制遇到错误时是否继续执行
         $this->addOption('continue-on-error', 'c', InputOption::VALUE_NONE, '遇到错误时是否继续执行，默认遇到错误终止执行');
+        // 添加选项，控制在type=all时是否执行model-gateway初始化
+        $this->addOption('unit-test', 'u', InputOption::VALUE_NONE, '单元测试模式，用于控制type=all时是否执行model-gateway初始化');
     }
 
     public function handle()
@@ -80,6 +85,7 @@ class InitMagicDataCommand extends HyperfCommand
     {
         $this->logger->info('初始化所有数据');
         $continueOnError = $this->input->getOption('continue-on-error');
+        $isUnitTest = $this->input->getOption('unit-test');
 
         try {
             // 调用各个初始化方法
@@ -91,13 +97,18 @@ class InitMagicDataCommand extends HyperfCommand
             }
         }
 
-        try {
-            $this->initModelGatewayData();
-        } catch (Throwable $e) {
-            $this->logger->error('初始化模型网关数据失败: ' . $e->getMessage());
-            if (! $continueOnError) {
-                throw $e;
+        // 只有在单元测试模式下才初始化模型网关数据
+        if ($isUnitTest) {
+            try {
+                $this->initModelGatewayData();
+            } catch (Throwable $e) {
+                $this->logger->error('初始化模型网关数据失败: ' . $e->getMessage());
+                if (! $continueOnError) {
+                    throw $e;
+                }
             }
+        } else {
+            $this->logger->info('跳过初始化模型网关数据（非单元测试模式）');
         }
 
         try {

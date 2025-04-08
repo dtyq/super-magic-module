@@ -4,7 +4,6 @@ import {
 	IconPDFFile,
 	IconHtmlFile,
 	IconExcelFile,
-	IconDocFile,
 	IconDocxFile,
 	IconXMindFile,
 	IconOtherFile,
