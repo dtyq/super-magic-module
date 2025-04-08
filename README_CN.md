@@ -9,8 +9,7 @@
 </div>
 
 Magic 是一个强大的企业级 AI 应用创新引擎，旨在帮助开发者快速构建和部署 AI 应用。它提供了完整的开发框架、丰富的工具链和最佳实践，让 AI 应用的开发变得简单而高效。
-
-![flow](docs/magic_flow.jpg)
+![flow](https://cdn.letsmagic.cn/static/img/showmagic.jpg)
 
 
 ## ✨ 特性

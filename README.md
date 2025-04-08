@@ -11,7 +11,7 @@
 
 Magic is a powerful enterprise-grade AI application innovation engine designed to help developers quickly build and deploy AI applications. It provides a complete development framework, rich toolchain, and best practices, making AI application development simple and efficient.
 
-![flow](docs/magic_flow.jpg)
+![flow](https://cdn.letsmagic.cn/static/img/showmagic.jpg)
 
 ## ✨ Features
 
