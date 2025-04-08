@@ -83,4 +83,11 @@ interface MagicDepartmentRepositoryInterface
      * 获取组织的根部门ID.
      */
     public function getDepartmentRootId(string $organizationCode): ?string;
+
+    /**
+     * 批量获取多个组织的根部门信息.
+     * @param array $organizationCodes 组织代码数组
+     * @return MagicDepartmentEntity[] 根部门实体数组
+     */
+    public function getOrganizationsRootDepartment(array $organizationCodes): array;
 }

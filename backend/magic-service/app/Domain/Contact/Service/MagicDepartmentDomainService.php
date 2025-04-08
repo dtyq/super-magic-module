@@ -177,6 +177,29 @@ class MagicDepartmentDomainService extends AbstractContactDomainService
     }
 
     /**
+     * 批量获取多个组织的根部门信息.
+     * @param array $organizationCodes 组织代码数组
+     * @return array<string,MagicDepartmentEntity> 以组织代码为键，根部门实体为值的关联数组
+     */
+    public function getOrganizationsRootDepartment(array $organizationCodes): array
+    {
+        $rootDepartments = $this->departmentRepository->getOrganizationsRootDepartment($organizationCodes);
+
+        // 检查是否有根部门数据
+        if (empty($rootDepartments)) {
+            return [];
+        }
+
+        // 处理数据格式，以组织代码为键，根部门实体为值
+        $result = [];
+        foreach ($rootDepartments as $department) {
+            $result[$department->getOrganizationCode()] = $department;
+        }
+
+        return $result;
+    }
+
+    /**
      * 获取部门的所有子部门.
      * @param MagicDepartmentEntity[] $allDepartments
      */
