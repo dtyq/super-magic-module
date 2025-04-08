@@ -11,7 +11,7 @@
     "require": {
         "php": ">=8.1",
         "ext-json": "*",
-        "dtyq/sdk-base": "~0.0",
+        "dtyq/sdk-base": "~0.1",
         "guzzlehttp/guzzle": "^6.0|^7.0",
         "ext-openssl": "*",
         "ext-curl": "*"
@@ -65,7 +65,7 @@
             "config": "Dtyq\\FlowExprEngine\\Hyperf\\ConfigProvider"
         },
         "branch-alias": {
-            "dev-master": "0.0-dev"
+            "dev-master": "0.1-dev"
         }
     }
 }
