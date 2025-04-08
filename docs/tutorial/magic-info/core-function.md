@@ -10,16 +10,16 @@ In terms of group management, it has powerful permission settings:
 
 Through this instant messaging functionality, internal enterprise communication becomes faster and more efficient, enabling timely information delivery and significantly improving work efficiency.
 
-![Real-time Chat Interface](/static/img/chat-interface.png)
+![Real-time Chat Interface](https://cdn.letsmagic.cn/static/img/chat-interface.png)
 
 ## 2. AI Assistant Creation and Management
 
 - **Internal Enterprise**: Allows publishing AI assistant lists within the enterprise
 - **Assistant Management**: Version release, enable/disable status control, etc.
 
-![AI Assistant Management Interface](/static/img/ai-assistant-1.png)
+![AI Assistant Management Interface](https://cdn.letsmagic.cn/static/img/ai-assistant-1.png)
 
-![AI Assistant List](/static/img/ai-assistant-2.png)
+![AI Assistant List](https://cdn.letsmagic.cn/static/img/ai-assistant-2.png)
 
 ## 3. Workflow Orchestration
 
@@ -27,37 +27,37 @@ Through this instant messaging functionality, internal enterprise communication 
 - **Node Combination**: Provides numerous flexible and combinable nodes, including large language models, custom code, judgment logic, etc.
 - **Template Support**: Platform provides workflow templates to lower the barrier to entry
 
-![Workflow Orchestration Interface](/static/img/workflow-1.png)
+![Workflow Orchestration Interface](https://cdn.letsmagic.cn/static/img/workflow-1.png)
 
 ### Process
 
-![Process Interface](/static/img/workflow-process.png)
+![Process Interface](https://cdn.letsmagic.cn/static/img/workflow-process.png)
 
 ### Toolset
 
-![Toolset Interface](/static/img/tools.png)
+![Toolset Interface](https://cdn.letsmagic.cn/static/img/tools.png)
 
 ## 4. Memory Functionality
 
 - **Long-term Memory**: Provides variable, database, and file memory functions, giving bots long-term memory capabilities
 - **Database Memory**: Convenient database memory capabilities for AI interaction, enabling persistent storage of important user conversation parameters or content
 
-![Memory Function Interface](/static/img/memory-1.png)
+![Memory Function Interface](https://cdn.letsmagic.cn/static/img/memory-1.png)
 
-![Database Memory Interface](/static/img/memory-2.png)
+![Database Memory Interface](https://cdn.letsmagic.cn/static/img/memory-2.png)
 
 ## 5. Multimodal Interaction
 
 - **Multiple Interaction Methods**: Supports text, voice, image, and other interaction methods, providing a richer user experience
 - **Creative Creation**: Users can utilize AI image generation, AI portrait, and other functions for creative work
 
-![Multimodal Interaction Interface](/static/img/multimodal.png)
+![Multimodal Interaction Interface](https://cdn.letsmagic.cn/static/img/multimodal.png)
 
 ## 6. Application Publishing
 
 - **Multi-platform Publishing**: Supports publishing developed AI applications to multiple platforms such as WeChat Work and DingTalk
 
-![Application Publishing Interface](/static/img/app-publishing.png)
+![Application Publishing Interface](https://cdn.letsmagic.cn/static/img/app-publishing.png)
 
 ## 7. Enterprise Edition and Commercial Capabilities
 

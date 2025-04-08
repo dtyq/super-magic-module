@@ -6,7 +6,7 @@ The Tool Node is a powerful node in Magic Flow that allows you to call and use v
 **Image Description:**
 
 The Tool Node interface mainly consists of a call mode selection area and a parameter configuration area. At the top, you can choose between "Large Model Call" or "Parameter Call" modes, while below is the system's custom input parameter configuration area, supporting the addition of multiple parameters and their expressions.
-![Tool Node](/static/img/Tool.png)
+![Tool Node](https://cdn.letsmagic.cn/static/img/Tool.png)
 
 ## Why Do We Need a Tool Node?
 When building intelligent workflows, you often need to execute standardized tasks or call specific functions. The Tool Node exists to solve this problem:

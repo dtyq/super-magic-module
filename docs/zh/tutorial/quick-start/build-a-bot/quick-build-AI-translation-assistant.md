@@ -6,7 +6,7 @@
 
 # AI 翻译助手介绍
 您只需要在 AI 助手设置中设置目标翻译语言，然后就可以直接通过对话向 AI 助手提供需要翻译的文本。AI 助手会直接返回大模型翻译后的语言，高效快捷。
-![翻译截图](/static/img/Translation-assistant-1.png)
+![翻译截图](https://cdn.letsmagic.cn/static/img/Translation-assistant-1.png)
 
 ## 1. 设计预期效果
 这个 AI 翻译应用的核心功能是满足用户的文本翻译需求。不需要额外的文本介绍，用户输入需要翻译的内容，直接返回对应的翻译文本。翻译功能可以通过创建工作流，包含大模型节点来实现。
@@ -22,21 +22,21 @@
 2. 点击左侧菜单栏的"AI 助手"，然后点击右侧的"创建 AI 助手"
 3. 上传助手图片，填写助手的名称和简介
 4. 点击"创建"，成功进入 AI 助手的工作流编排界面
-![翻译截图](/static/img/Translation-assistant-2.png)
+![翻译截图](https://cdn.letsmagic.cn/static/img/Translation-assistant-2.png)
 
 ## 3. 编排工作流
 ### 1. 点击创建"开始节点"
-![翻译截图](/static/img/Translation-assistant-3.png)
+![翻译截图](https://cdn.letsmagic.cn/static/img/Translation-assistant-3.png)
 
 ### 2. 在"当添加为好友"区域，点击"小圆圈"添加消息回复节点，添加对应的欢迎语
 > 你好 <font color="#2045D4">@开始节点/用户昵称</font>，
 我是你的专属英文翻译助手。你可以直接告诉我需要翻译的任何文本，我会尽快为你提供最地道的本地化翻译。
 
-![翻译截图](/static/img/Translation-assistant-4.png)
+![翻译截图](https://cdn.letsmagic.cn/static/img/Translation-assistant-4.png)
 
 ### 3. 接收新消息时添加"大模型调用节点"
 3.1. 在模型区域，选择支持的大模型节点，其他参数保持不变，同时开启视觉理解能力（默认选择 GPT-4）
-![翻译截图](/static/img/Translation-assistant-5.png)
+![翻译截图](https://cdn.letsmagic.cn/static/img/Translation-assistant-5.png)
 
 3.2. 在输入区域，在 System 输入框中填写大模型的提示词，在 User 区域通过 @ 引用上一个节点的用户内容
 ```
@@ -51,16 +51,16 @@
 - 只进行翻译工作，不回答与翻译无关的问题。
 - 严格遵循用户要求的目标语言，不要擅自更改。
 ```
-![翻译截图](/static/img/Translation-assistant-6.png)
+![翻译截图](https://cdn.letsmagic.cn/static/img/Translation-assistant-6.png)
 
 ### 4. 添加消息回复节点
 4.1 选择消息类型为"文本"，在消息内容中通过 @ 引用大模型的响应内容返回给用户
-![翻译截图](/static/img/Translation-assistant-7.png)
+![翻译截图](https://cdn.letsmagic.cn/static/img/Translation-assistant-7.png)
 
 ### 5. 发布助手
 发布分为"个人使用"和"企业内部"。区别在于个人使用仅自己可见可用，而发布到企业内部支持更多的权限管理，如版本号记录、设置可见范围、发布到第三方平台等。本次发布直接选择"个人使用"。
 5.1 可以直接与 AI 助手对话，快速帮你将不同语言翻译成英文
-![翻译截图](/static/img/Translation-assistant-8.png)
+![翻译截图](https://cdn.letsmagic.cn/static/img/Translation-assistant-8.png)
 
 ## 4. 重要说明
 ### 1. 什么是系统提示词？

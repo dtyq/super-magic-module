@@ -11,10 +11,10 @@ export default {
     sidebar: {
       '/zh/tutorial/': [
         {
-          text: 'magic介绍',
+          text: 'Magic介绍',
           collapsed: false,
           items: [
-            { text: '什么是magic', link: '/zh/tutorial/magic-info/index' },
+            { text: '什么是Magic', link: '/zh/tutorial/magic-info/index' },
             { text: '名称解释', link: '/zh/tutorial/magic-info/names' },
             { text: '核心功能', link: '/zh/tutorial/magic-info/core-function' },
             // { text: '开源版和企业版', link: '/zh/tutorial/magic-info/opensource-enterprise' },

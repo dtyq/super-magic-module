@@ -7,7 +7,7 @@ The Start Node is the beginning of a workflow, acting like a starting gun that d
 
 The Start Node interface mainly consists of several parts: the top section contains the node title and trigger condition description; the middle area includes system inputs (such as session ID, topic ID, message content, etc.), file list, and user information; the bottom area supports configuration of custom system inputs and large model parameter inputs. Through these configurations, you can control the workflow's startup conditions and initial data.
 
-![Start Node](/static/img/start-node-1.png)
+![Start Node](https://cdn.letsmagic.cn/static/img/start-node-1.png)
 
 ## Why Do We Need a Start Node?
 When building workflows, the Start Node is indispensable because it solves the following key problems:

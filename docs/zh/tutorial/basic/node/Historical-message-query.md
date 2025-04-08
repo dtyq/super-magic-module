@@ -6,7 +6,7 @@
 **界面说明：**
 
 历史消息查询节点界面展示了节点的主要配置区域，包括最大记录数设置区和时间范围筛选区。最大数量默认设置为10条记录，时间范围可以通过选择起始和结束日期自定义。底部输出区显示查询结果将包含历史消息列表(history_messages)、消息角色(role)和消息内容(content)。
-![历史消息查询节点](/static/img/Historical-message-query.png)
+![历史消息查询节点](https://cdn.letsmagic.cn/static/img/Historical-message-query.png)
 
 ## 为什么需要历史消息查询节点？
 在智能对话系统中，理解上下文和历史交互是提供连贯、个性化服务的关键。历史消息查询节点帮助您：

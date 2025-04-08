@@ -6,7 +6,7 @@ The Historical Message Query Node is a functional node in Magic Flow used for re
 **Image Description:**
 
 The Historical Message Query Node interface shows the main configuration area of the node, including the maximum record count setting area and time range filtering area. The maximum count is set to 10 records by default, and the time range can be customized by selecting start and end dates. The bottom output area shows that query results will include the historical message list (history_messages), message roles (role), and message content (content).
-![Historical Message Query Node](/static/img/Historical-message-query.png)
+![Historical Message Query Node](https://cdn.letsmagic.cn/static/img/Historical-message-query.png)
 
 ## Why Do We Need Historical Message Query Node?
 In intelligent dialogue systems, understanding context and historical interactions is key to providing coherent, personalized service. The Historical Message Query Node helps you:

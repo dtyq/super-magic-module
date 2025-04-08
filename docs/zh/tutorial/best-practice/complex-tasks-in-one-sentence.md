@@ -20,28 +20,28 @@
 2、通过意图节点，判断是走任务拆分还是走任务执行
 3、描述需要用到的工具，和工具能力
 
-![主流程](/static/img/flow1.png)
+![主流程](https://cdn.letsmagic.cn/static/img/flow1.png)
 
 
 二、搭建任务拆分流程，按照推理出的用户意图，拆解步骤和任务
 1、创建一个任务拆分流程
 
-![任务拆分流程](/static/img/flow2.png)
+![任务拆分流程](https://cdn.letsmagic.cn/static/img/flow2.png)
 
 
 2、选择GPT4o 作为任务拆分的模型 
 
-![选择模型](/static/img/flow3.png)
+![选择模型](https://cdn.letsmagic.cn/static/img/flow3.png)
 
 三、搭建任务执行流程，加载相应的工具
 1、创建执行任务的流程
 
-![执行任务流程](/static/img/flow4.png)
+![执行任务流程](https://cdn.letsmagic.cn/static/img/flow4.png)
 
 2、加载所需要执行任务的工具
 
-![加载工具](/static/img/flow5.png)
+![加载工具](https://cdn.letsmagic.cn/static/img/flow5.png)
 
 四、观测并验证效果
 
-![验证效果](/static/img/flow5.png)
+![验证效果](https://cdn.letsmagic.cn/static/img/flow5.png)

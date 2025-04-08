@@ -32,8 +32,8 @@ SRM 系统在实际的业务过程中使用广泛，用户需要频繁的去查�
 4. 点击【知识助理工具集】，右边点击【添加工具】
 5. 输入【srm_knowledge_search】，并增加对应描述，如：“检索 SRM 知识库内容”
 
-![工具截图](/static/img/tool-1.png)
-![工具截图](/static/img/tool-2.png)
+![工具截图](https://cdn.letsmagic.cn/static/img/tool-1.png)
+![工具截图](https://cdn.letsmagic.cn/static/img/tool-2.png)
 
 ## 三、编排工作流
 ### 1、点击创建【开始节点】
@@ -41,7 +41,7 @@ SRM 系统在实际的业务过程中使用广泛，用户需要频繁的去查�
 
 1.2 输入对应大模型参数输入内容如下图
 
-![工具截图](/static/img/tool-3.png)
+![工具截图](https://cdn.letsmagic.cn/static/img/tool-3.png)
 
 ### 2、连接并创建【向量搜索节点】
 2.1 选择知识库：固定值，选择供应链知识库
@@ -52,12 +52,12 @@ SRM 系统在实际的业务过程中使用广泛，用户需要频繁的去查�
 
 （参数名：**knowledge_base_id**、参数值：**固定值、716406779765358592**）
 
-![工具截图](/static/img/tool-4.png)
+![工具截图](https://cdn.letsmagic.cn/static/img/tool-4.png)
 
 ### 3、连接并创建【大模型节点】
 3.1 模型区域，选择已支持的大模型节点，其他参数保持不变，同时也开启视觉理解能力（这里 默认选择 GPT-4o） 
 
-![工具截图](/static/img/tool-5.png)
+![工具截图](https://cdn.letsmagic.cn/static/img/tool-5.png)
 
 3.2、输入区域， System 输入框填写输入给大模型的提示词，User 区域 通过 @引用**开始节点的问题**和**向量搜索节点的片段列表**
 
@@ -84,24 +84,24 @@ SRM 系统在实际的业务过程中使用广泛，用户需要频繁的去查�
 2、从fragment列表中选择关联性较高的若干个片段；根据第二步选择的关联性较高的若干个片段，根据问题Q组织答案，并且返回；
 3、答案可以稍加润色，使得语法通畅；
 ```
-![工具截图](/static/img/tool-6.png)
+![工具截图](https://cdn.letsmagic.cn/static/img/tool-6.png)
 ### 4、连接并创建【结束节点】
 4.1、添加对应结束参数值（参数名：**response**、参数值：**固定值，并通过 @引用大模型文本字符串**）
       
-![工具截图](/static/img/tool-7.png)
+![工具截图](https://cdn.letsmagic.cn/static/img/tool-7.png)
 
 ### 5、工具发布
 5.1、点击发布，填上对应的版本命名和版本描述即可
 
-![工具截图](/static/img/tool-8.png)
+![工具截图](https://cdn.letsmagic.cn/static/img/tool-8.png)
 
 ### 6、AI 知识助理引用
 
 6.1、选择需要支持 SRM 问答的 AI 助理，在大模型节点点击【添加工具】
 
 6.2、选择【知识助理工具集】，添加【srm_knowledge_search】工具，也可以通过搜索栏快速搜索
-![工具截图](/static/img/tool-9.png)
-![工具截图](/static/img/tool-10.png)
+![工具截图](https://cdn.letsmagic.cn/static/img/tool-9.png)
+![工具截图](https://cdn.letsmagic.cn/static/img/tool-10.png)
 
 ---
 完成上述配置，对应的 AI 助理就能支持查询 SRM知识库的内容啦。

@@ -5,7 +5,7 @@
 **图片说明：**
 
 意图识别节点界面包括模型选择、分支设置区域，您可以在这里定义多个意图分支，每个分支包含意图名称和描述，以及不同意图对应的流程走向。
-![意图识别节点](/static/img/Intent-recognition.png)
+![意图识别节点](https://cdn.letsmagic.cn/static/img/Intent-recognition.png)
 
 ## 为什么需要意图识别节点？
 在构建智能应用过程中，意图识别节点发挥着"智能导航"的关键作用：

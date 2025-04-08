@@ -6,7 +6,7 @@ The Vector Deletion Node is a node used to remove specific knowledge segments fr
 **Image Description:**
 
 The Vector Deletion Node interface mainly consists of three parts: knowledge base selection area, metadata matching settings, and business ID area. From top to bottom, you can select the knowledge base to operate on, set deletion conditions including deletion by ID, deletion by keywords, and other methods.
-![Vector Deletion Node](/static/img/Vector-deletion.png)
+![Vector Deletion Node](https://cdn.letsmagic.cn/static/img/Vector-deletion.png)
 
 ## Why Do We Need a Vector Deletion Node?
 **During the use of vector knowledge bases, you may encounter the following situations requiring deletion of some knowledge over time:**

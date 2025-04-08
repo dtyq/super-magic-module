@@ -13,7 +13,7 @@
 ### 1.打开麦吉审批助理
 登录钉钉 → 点击导航栏「工作台」 → 在全部列表->技术中心中找到「麦吉审批助理」（支持搜索框快速定位）
 
-![FtUNa8IxFjkcfEg2UC-uWpRA940-.png](/static/img/FtUNa8IxFjkcfEg2UC-uWpRA940-.png)
+![FtUNa8IxFjkcfEg2UC-uWpRA940-.png](https://cdn.letsmagic.cn/static/img/FtUNa8IxFjkcfEg2UC-uWpRA940-.png)
 
 
 
@@ -24,7 +24,7 @@
     - 例："因岗位职责工作需要，申请Cursor软件使用权限，有效期3个月"
 - 支持手动微调（点击表单字段直接编辑）
 
-![FlyOUkKFCAvCyLxvM4htsdh-4OYz.png](/static/img/FlyOUkKFCAvCyLxvM4htsdh-4OYz.png)
+![FlyOUkKFCAvCyLxvM4htsdh-4OYz.png](https://cdn.letsmagic.cn/static/img/FlyOUkKFCAvCyLxvM4htsdh-4OYz.png)
 
 
 
@@ -32,13 +32,13 @@
 
 ### 3.确认无误发起审批
 
-![Fl6uG5gelQ-R11RYAJ-qbrZqLXtJ.png](/static/img/Fl6uG5gelQ-R11RYAJ-qbrZqLXtJ.png)
+![Fl6uG5gelQ-R11RYAJ-qbrZqLXtJ.png](https://cdn.letsmagic.cn/static/img/Fl6uG5gelQ-R11RYAJ-qbrZqLXtJ.png)
 
 
 
 点击 [**跳转链接]** 即可展开审批详情信息：
 
-![Fu5EkV5qL7kZvGoO5cUWX1GaJ-lT.png](/static/img/Fu5EkV5qL7kZvGoO5cUWX1GaJ-lT.png)
+![Fu5EkV5qL7kZvGoO5cUWX1GaJ-lT.png](https://cdn.letsmagic.cn/static/img/Fu5EkV5qL7kZvGoO5cUWX1GaJ-lT.png)
 
 
 
@@ -50,7 +50,7 @@
 - 🟡 需人工介入：审批存在可疑风险，需要进一步确认或人工审核
 - 🔴 高风险：审批存在严重风险，必须拒绝
 
-![FqHb3EVycdONpMYH5GY7uPMIquAk.png](/static/img/FqHb3EVycdONpMYH5GY7uPMIquAk.png)
+![FqHb3EVycdONpMYH5GY7uPMIquAk.png](https://cdn.letsmagic.cn/static/img/FqHb3EVycdONpMYH5GY7uPMIquAk.png)
 
 
 
@@ -64,7 +64,7 @@
 |❓ 辅助提问|信息模糊/需补充材料（AI置信度＜80%）|未注明客户名的招待费、缺少合同编号|
 
 
-![FgDB0f8MfADgydzEWEqJL6dpBvJL.png](/static/img/FgDB0f8MfADgydzEWEqJL6dpBvJL.png)
+![FgDB0f8MfADgydzEWEqJL6dpBvJL.png](https://cdn.letsmagic.cn/static/img/FgDB0f8MfADgydzEWEqJL6dpBvJL.png)
 
 
 

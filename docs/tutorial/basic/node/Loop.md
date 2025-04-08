@@ -5,7 +5,7 @@ The Loop Node is a flow control node in Magic Flow workflow that allows you to r
 
 **Image Description:**
 The Loop Node interface includes two main parts: the outer "Loop" component and the inner "Start Node". In the Loop component, you can set the loop type, loop conditions, or count; the Start Node represents the starting point of each loop iteration.
-![Loop Node](/static/img/Loop.png)
+![Loop Node](https://cdn.letsmagic.cn/static/img/Loop.png)
 
 ## Why Do We Need Loop Node?
 In building intelligent applications, the Loop Node solves the problem of needing to repeat certain operations, it can:
