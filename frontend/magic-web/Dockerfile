@@ -1,6 +1,7 @@
 # ===== 基础镜像配置 =====
 # 基础镜像: node:18-alpine
-ARG NODE_IMAGE=node:18-alpine
+ARG IMAGE_SOURCE
+ARG NODE_IMAGE=${IMAGE_SOURCE}node:18-alpine
 # =================================================
 
 # build
