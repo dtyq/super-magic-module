@@ -115,12 +115,12 @@ function SettingPage() {
 									extra={
 										<Flex align="center" gap={10}>
 											<MagicAvatar
-												// src={organization?.organization_logo?.[0]?.url}
+												src={organization?.organization_logo}
 												size={32}
 											>
-												{organization?.magic_organization_code}
+												{organization?.organization_name}
 											</MagicAvatar>
-											{organization?.magic_organization_code}
+											{organization?.organization_name}
 										</Flex>
 									}
 								/>

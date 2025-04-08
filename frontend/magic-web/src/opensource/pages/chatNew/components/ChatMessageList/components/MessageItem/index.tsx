@@ -16,6 +16,7 @@ import MessageSendStatus from "../MessageSendStatus"
 import useStyles from "./style"
 import MagicAvatar from "@/opensource/components/base/MagicAvatar"
 import MemberCardStore from "@/opensource/stores/display/MemberCardStore"
+import useInfoStore from "@/opensource/stores/userInfo"
 
 interface MessageItemProps {
 	message_id: string
@@ -45,7 +46,13 @@ const Avatar = memo(
 		uid: string
 	}) {
 		// 使用 useMemo 缓存 info 对象，避免每次渲染都创建新对象
-		const info = useMemo(() => ({ name, avatar_url: getAvatarUrl(avatar) }), [name, avatar])
+		const info = useMemo(() => {
+			if (avatar) {
+				return { name, avatar_url: getAvatarUrl(avatar) }
+			}
+
+			return { name, avatar_url: useInfoStore.get(uid)?.avatar_url }
+		}, [avatar, name, uid])
 
 		return (
 			<MagicAvatar

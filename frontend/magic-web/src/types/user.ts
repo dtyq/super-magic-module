@@ -18,14 +18,20 @@ export namespace User {
 	export interface MagicOrganization {
 		/** magic 用户UnionID（整个magic生态下唯一） */
 		magic_id: string
-		/** magic 用户OpenId（当前组织下唯一） */
-		magic_user_id: string
 		/** magic 组织编码 */
 		magic_organization_code: string
-		/** teamshare 组织编码 */
+		/** magic 用户OpenId（当前组织下唯一） */
+		magic_user_id: string
+		/** 组织Logo */
+		organization_name: string
+		/** 组织名称 */
+		organization_logo: string | null
+		/** 第三方平台 组织编码 */
 		third_platform_organization_code: string
-		/** teamshare 用户Id */
-		teamshare_user_id: string
+		/** 第三方平台 用户Id */
+		third_platform_user_id: string
+		/** 第三方平台类型 */
+		third_platform_type: string | null
 	}
 
 	/** Teamshare 账号组织 */

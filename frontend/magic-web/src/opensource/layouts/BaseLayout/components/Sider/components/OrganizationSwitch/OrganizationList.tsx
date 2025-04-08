@@ -115,16 +115,16 @@ const OrganizationItem = observer((props: OrganizationItemProps) => {
 		>
 			<div className={styles.itemIcon}>
 				<MagicAvatar
-					// src={organization.organization_logo?.[0]?.url}
+					src={organization.organization_logo}
 					size={30}
 					className={cx(styles.avatar, {
 						[styles.avatarDisabled]: disabled,
 					})}
 				>
-					{organization.magic_organization_code}
+					{organization.organization_name}
 				</MagicAvatar>
 			</div>
-			<div className={styles.itemText}>{organization.magic_organization_code}</div>
+			<div className={styles.itemText}>{organization.organization_name}</div>
 			<Flex>
 				{isSelected ? (
 					<MagicIcon

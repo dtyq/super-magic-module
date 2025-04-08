@@ -26,11 +26,11 @@ const OrganizationSwitch = memo(function OrganizationSwitch({
 
 	const ChildrenContent = children ?? (
 		<MagicAvatar
-			// src={currentAccount?.organization_logo?.[0]?.url}
+			src={currentAccount?.organization_logo}
 			size={30}
 			className={cx(className, styles.avatar)}
 		>
-			{currentAccount?.magic_organization_code}
+			{currentAccount?.organization_name}
 		</MagicAvatar>
 	)
 

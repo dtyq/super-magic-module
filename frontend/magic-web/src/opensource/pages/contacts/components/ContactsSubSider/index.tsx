@@ -75,14 +75,14 @@ function CurrentOrganization({ onItemClick }: CurrentOrganizationProps) {
 			<Flex gap={8}>
 				<MagicAvatar
 					size={42}
-					// src={organization.organization_logo?.[0]?.url}
+					src={organization.organization_logo}
 					className={styles.avatar}
 				>
-					{organization.magic_organization_code}
+					{organization.organization_name}
 				</MagicAvatar>
 				<Flex vertical justify="center">
 					<AutoTooltipText className={styles.organizationName}>
-						{organization.magic_organization_code}
+						{organization.organization_name}
 					</AutoTooltipText>
 				</Flex>
 			</Flex>
