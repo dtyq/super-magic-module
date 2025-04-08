@@ -63,7 +63,7 @@ class KnowledgeBaseFragmentEntity extends AbstractEntity
 
     protected float $score = 0;
 
-    protected int $wordCount;
+    protected int $wordCount = 0;
 
     public function shouldCreate(): bool
     {

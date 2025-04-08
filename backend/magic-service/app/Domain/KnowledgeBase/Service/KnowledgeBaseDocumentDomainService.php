@@ -23,7 +23,6 @@ use App\Infrastructure\Core\Embeddings\VectorStores\VectorStoreDriver;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Infrastructure\Core\ValueObject\Page;
 use Dtyq\AsyncEvent\AsyncEventUtil;
-use Exception;
 
 /**
  * 知识库文档领域服务

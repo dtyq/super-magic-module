@@ -1,0 +1,52 @@
+<?php
+
+namespace App\Interfaces\KnowledgeBase\Assembler;
+
+use App\Domain\KnowledgeBase\Entity\KnowledgeBaseEntity;
+use App\Interfaces\Flow\DTO\Knowledge\KnowledgeBaseDTO;
+use App\Interfaces\Flow\DTO\Knowledge\MagicFlowKnowledgeListDTO;
+
+class KnowledgeBaseAssembler
+{
+    public static function entityToDTO(KnowledgeBaseEntity $entity): KnowledgeBaseDTO
+    {
+        $dto = new KnowledgeBaseDTO();
+        $dto->setId($entity->getId());
+        $dto->setCode($entity->getCode());
+        $dto->setName($entity->getName());
+        $dto->setDescription($entity->getDescription());
+        $dto->setType($entity->getType()->value);
+        $dto->setEnabled($entity->isEnabled());
+        $dto->setBusinessId($entity->getBusinessId());
+        $dto->setSyncStatus($entity->getSyncStatus()->value);
+        $dto->setSyncStatusMessage($entity->getSyncStatusMessage());
+        $dto->setModel($entity->getModel());
+        $dto->setVectorDB($entity->getVectorDB());
+        $dto->setOrganizationCode($entity->getOrganizationCode());
+        $dto->setCreator($entity->getCreator());
+        $dto->setCreatedAt($entity->getCreatedAt());
+        $dto->setModifier($entity->getModifier());
+        $dto->setUpdatedAt($entity->getUpdatedAt());
+
+        $dto->setFragmentCount($entity->getFragmentCount());
+        $dto->setExpectedCount($entity->getExpectedCount());
+        $dto->setCompletedCount($entity->getCompletedCount());
+        $dto->setUserOperation($entity->getUserOperation());
+        $dto->setExpectedNum($entity->getExpectedNum());
+        $dto->setCompletedNum($entity->getCompletedNum());
+        $dto->setDocumentCount(0);
+        $dto->setWordCount($entity->getWordCount());
+        $dto->setIcon($entity->getIcon());
+
+        return $dto;
+    }
+
+    public static function entitiesToListDTO(array $entities, array $users = [], array $knowledgeBaseDocumentCountMap = []): array
+    {
+        return array_map(
+            fn (KnowledgeBaseEntity $entity) => MagicFlowKnowledgeListDTO::fromEntity($entity, $users, $knowledgeBaseDocumentCountMap),
+            $entities,
+        );
+    }
+
+}

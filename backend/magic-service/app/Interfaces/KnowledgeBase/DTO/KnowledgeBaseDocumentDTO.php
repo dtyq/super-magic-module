@@ -66,11 +66,6 @@ class KnowledgeBaseDocumentDTO extends AbstractDTO
 
     public string $organizationCode;
 
-    public static function fromEntity(KnowledgeBaseDocumentEntity $entity): self
-    {
-        // todo 后续补充属性
-        return new self($entity->toArray());
-    }
 
     public function getId(): ?int
     {
