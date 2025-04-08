@@ -48,7 +48,7 @@ class KnowledgeBaseApi extends AbstractKnowledgeBaseApi
         $userAuthorization = $this->getAuthorization();
 
         $query->setOrder(['updated_at' => 'desc']);
-        $query->setType(KnowledgeType::UserKnowledgeBase->value);
+        $query->setType($params['type'] ?? KnowledgeType::UserKnowledgeBase->value);
         $query->setSearchType($params['search_type'] ?? null);
         isset($params['name']) && $query->setName($params['name']);
         $page = new Page((int) ($params['page'] ?? 1), (int) ($params['page_size'] ?? 100));

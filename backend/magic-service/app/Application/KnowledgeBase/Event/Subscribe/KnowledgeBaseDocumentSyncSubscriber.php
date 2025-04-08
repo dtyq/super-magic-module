@@ -74,7 +74,7 @@ readonly class KnowledgeBaseDocumentSyncSubscriber implements ListenerInterface
             if ($file) {
                 $tokenSplitter = new TokenTextSplitter(chunkSize: 500, chunkOverlap: 50);
                 $documentEntity->setSyncStatus(KnowledgeSyncStatus::Syncing->value);
-                $documentEntity = $knowledgeBaseDocumentDomainService->save($dataIsolation, $knowledge, $documentEntity);
+                $documentEntity = $knowledgeBaseDocumentDomainService->update($dataIsolation, $knowledge, $documentEntity);
                 $logger->info('正在解析文件，文件名：' . $file->getName());
                 $content = $fileParser->parse($file->getFileLink()->getUrl());
                 $logger->info('解析文件完成，正在文件分段，文件名：' . $file->getName());
