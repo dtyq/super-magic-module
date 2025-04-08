@@ -41,7 +41,7 @@
 		"@dnd-kit/sortable": "^10.0.0",
 		"@dnd-kit/utilities": "^3.2.2",
 		"@dtyq/es6-template-strings": "~0.0.4",
-		"@dtyq/magic-flow": "~0.0.1",
+		"@dtyq/magic-flow": "~0.0.2",
 		"@dtyq/upload-sdk": "~0.0.4",
 		"@floating-ui/react": "^0.26.15",
 		"@fullcalendar/common": "^5.11.5",
