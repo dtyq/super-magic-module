@@ -2,7 +2,7 @@ import { UserService } from "@/opensource/services/user/UserService"
 import { LoginService } from "@/opensource/services/user/LoginService"
 import * as globalApis from "@/apis"
 import { type Container, ServiceContainer } from "@/opensource/services/ServiceContainer"
-import { UserApi as openSourceUserApi, CommonApi as openSourceCommonApi } from "@/opensource/apis"
+import { UserApi as openSourceUserApi, CommonApi as openSourceCommonApi } from "@/apis"
 import { ConfigService } from "@/opensource/services/config/ConfigService"
 /**
  * @description 创建服务实例(在完全新的react根节点实例下，需要重新实例化业务层)

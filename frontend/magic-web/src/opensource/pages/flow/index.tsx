@@ -89,6 +89,10 @@ export default function BaseFlow({ extraData }: BaseFlowProps) {
 	// 监听语言变化，重新安装节点
 	const language = useGlobalLanguage(true)
 
+	const isCommercial = useMemo(() => {
+		return !!extraData
+	}, [extraData])
+
 	useEffect(() => {
 		installAllNodes(extraData)
 	}, [language, extraData])
@@ -457,7 +461,7 @@ export default function BaseFlow({ extraData }: BaseFlowProps) {
 									</div>
 
 									{/* 添加FlowAssistant组件 */}
-									{showFlowAssistant && isEditRight && (
+									{isCommercial && showFlowAssistant && isEditRight && (
 										<FlowAssistant
 											flowInteractionRef={flowInteractionRef}
 											flow={currentFlow}

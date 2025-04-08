@@ -227,11 +227,11 @@ const OrganizationPanel = memo(function OrganizationPanel(props: OrganizationPan
 		return (
 			<Flex className={styles.breadcrumb} align="center" gap={4} wrap="wrap">
 				<MagicAvatar
-					// src={organization?.organization_logo?.[0]?.url}
+					src={organization?.organization_logo}
 					size={42}
 					className={styles.avatar}
 				>
-					{organization?.magic_organization_code}
+					{organization?.organization_name}
 				</MagicAvatar>
 
 				<Flex flex={1} align="center" style={{ flexWrap: "wrap" }}>
@@ -239,7 +239,7 @@ const OrganizationPanel = memo(function OrganizationPanel(props: OrganizationPan
 						className={styles.breadcrumbItem}
 						onClick={() => enchancedSetSelectPath([])}
 					>
-						{organization?.magic_organization_code ?? t("organization.root")}
+						{organization?.organization_name ?? t("organization.root")}
 					</span>
 					{selectedPath?.map((item, index) => {
 						const arrowKey = `arrow-${index}`

@@ -80,7 +80,7 @@ readonly class KnowledgeBaseSyncSubscriber implements ListenerInterface
                     ->setEmbeddingModel(EmbeddingGenerator::defaultModel())
                     ->setFragmentConfig([])
                     ->setVectorDb(VectorStoreDriver::default()->value);
-                $knowledgeBaseDocumentDomainService->save($dataIsolation, $knowledge, $documentEntity, $file);
+                $knowledgeBaseDocumentDomainService->create($dataIsolation, $knowledge, $documentEntity, $file);
             }
         } catch (Throwable $throwable) {
             $logger->error($throwable->getMessage() . PHP_EOL . $throwable->getTraceAsString());

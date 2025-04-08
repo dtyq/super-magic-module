@@ -4,7 +4,6 @@ import { useAccount } from "@/opensource/stores/authentication"
 import {
 	IconCheck,
 	IconChevronRight,
-	IconDeviceImacCog,
 	IconLogout,
 	IconUserCog,
 	IconWorld,
@@ -15,8 +14,6 @@ import { Popover, Modal, Flex } from "antd"
 import { useMemo, type PropsWithChildren } from "react"
 import { useTranslation } from "react-i18next"
 import { last } from "lodash-es"
-import { useUserStore } from "@/stores/user"
-import { useShallow } from "zustand/react/shallow"
 import { RoutePath } from "@/const/routes"
 import { useStyles } from "./styles"
 import { UserMenuKey } from "./constants"
@@ -25,10 +22,12 @@ import { useTheme } from "antd-style"
 import { setGlobalLanguage, useGlobalLanguage, useSupportLanguageOptions } from "@/opensource/models/config/hooks"
 import { SettingSection } from "@/opensource/pages/settings/types"
 import useNavigate from "@/opensource/hooks/useNavigate"
+import { userStore } from "@/opensource/models/user"
+import { observer } from "mobx-react-lite"
 
 interface UserMenusProps extends PropsWithChildren {}
 
-function UserMenus({ children }: UserMenusProps) {
+const UserMenus = observer(function UserMenus({ children }: UserMenusProps) {
 	const { t } = useTranslation("interface")
 	const { styles, cx } = useStyles()
 	const { 	magicColorUsages  } = useTheme()
@@ -41,8 +40,6 @@ function UserMenus({ children }: UserMenusProps) {
 	/** 清除授权 */
 	const { accountLogout, accountSwitch } = useAccount()
 
-	/** 获取当前已登录的帐号 */
-	const accounts = useUserStore(useShallow((store) => store.accounts))
 
 	/** 登出 */
 	const handleLogout = useMemoizedFn(async () => {
@@ -52,9 +49,11 @@ function UserMenus({ children }: UserMenusProps) {
 		}
 		const confirmed = await modal.confirm(config)
 		if (confirmed) {
+			const accounts = userStore.account.accounts
+
 			// 当且仅当存在多个账号下，优先切换帐号，再移除帐号
 			if (accounts?.length > 1) {
-				const { info } = useUserStore.getState()
+				const info = userStore.user.userInfo
 				const otherAccount = accounts.filter(
 					(account) => account.magic_id !== info?.magic_id,
 				)?.[0]
@@ -208,6 +207,6 @@ function UserMenus({ children }: UserMenusProps) {
 			{contextHolder}
 		</>
 	)
-}
+})
 
 export default UserMenus
