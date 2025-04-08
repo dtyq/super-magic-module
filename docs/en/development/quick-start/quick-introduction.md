@@ -91,8 +91,8 @@ Magic uses the [Apache License 2.0](LICENSE).
 
 ## 📞 Contact Us
 
-- Email: support@letsmagic.cn
-- Website: https://letsmagic.cn
+- Email: bd@dtyq.com
+- Website: https://www.letsmagic.cn
 
 ## 🙏 Acknowledgements
 

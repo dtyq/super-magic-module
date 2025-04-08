@@ -89,8 +89,8 @@ Magic 使用 [Apache License 2.0](LICENSE) 许可证。
 
 ## 📞 联系我们
 
-- 邮箱：support@letsmagic.cn
-- 官网：https://letsmagic.cn
+- 邮箱：bd@dtyq.com
+- 官网：https://www.letsmagic.cn
 
 ## 🙏 致谢
 
