@@ -7,7 +7,7 @@ declare(strict_types=1);
 
 namespace App\Domain\Flow\Entity\ValueObject\NodeParamsConfig\Knowledge\Structure;
 
-use App\Domain\Flow\Entity\ValueObject\FlowDataIsolation;
+use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeBaseDataIsolation;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeType;
 use App\Domain\KnowledgeBase\Entity\ValueObject\Query\KnowledgeBaseQuery;
 use App\Domain\KnowledgeBase\Service\KnowledgeBaseDomainService;
@@ -82,7 +82,7 @@ class KnowledgeConfig
         }
         $query = new KnowledgeBaseQuery();
         $query->setCodes($knowledgeCodes);
-        $knowledgeEntitiesData = di(KnowledgeBaseDomainService::class)->queries(FlowDataIsolation::create()->disabled(), $query, Page::createNoPage())['list'];
+        $knowledgeEntitiesData = di(KnowledgeBaseDomainService::class)->queries(KnowledgeBaseDataIsolation::create()->disabled(), $query, Page::createNoPage())['list'];
         $knowledgeEntities = [];
         foreach ($knowledgeEntitiesData as $knowledgeEntity) {
             $knowledgeEntities[$knowledgeEntity->getCode()] = $knowledgeEntity;
