@@ -48,7 +48,7 @@ const useStyles = createStyles(({ css, token }) => {
 		footer: css`
 			width: 100%;
 			height: 44px;
-			border-top: 1px solid var(--Light-usage-border---color-border, rgba(28, 29, 35, 0.08));
+			border-top: 1px solid ${token.magicColorUsages.border};
 			background: ${token.magicColorScales.grey[0]};
 			padding: 6px 10px;
 			border-radius: 0 0 8px 8px;

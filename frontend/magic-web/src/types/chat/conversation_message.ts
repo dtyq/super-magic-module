@@ -42,7 +42,6 @@ export const enum ConversationMessageType {
 
 	/** 录音纪要 */
 	RecordingSummary = "recording_summary",
-	
 }
 
 /**

@@ -22,6 +22,7 @@ import { encodeSocketIoMessage } from "@/utils/socketio"
 import MessageSeqIdService from "@/opensource/services/chat/message/MessageSeqIdService"
 import MessageService from "@/opensource/services/chat/message/MessageService"
 import conversationService from "@/opensource/services/chat/conversation/ConversationService"
+import MessagePullService from "../chat/message/MessagePullService"
 
 export interface OrganizationResponse {
 	magicOrganizationMap: Record<string, User.MagicOrganization>
@@ -296,6 +297,8 @@ export class UserService {
 	 */
 	deleteAccount = (unionId?: string) => {
 		const allClean = () => {
+			MessageService.destroy()
+
 			// 移除当前token
 			const user = new UserRepository()
 			user.setAuthorization("")

@@ -6,7 +6,10 @@ import { MessageReceiveType, type CMessage } from "@/types/chat"
 import { ConversationStatus } from "@/types/chat/conversation"
 import { groupBy, last } from "lodash-es"
 import { getDataContext } from "@/opensource/providers/DataContextProvider/hooks"
-import type { ConversationMessage } from "@/types/chat/conversation_message"
+import type {
+	AggregateAISearchCardConversationMessage,
+	ConversationMessage,
+} from "@/types/chat/conversation_message"
 import conversationService from "@/opensource/services/chat/conversation/ConversationService"
 import MessageStore from "@/opensource/stores/chatNew/message"
 import { ChatApi } from "@/apis"
@@ -16,9 +19,14 @@ import ChatMessageApplyServices from "./MessageApplyServices/ChatMessageApplySer
 import ControlMessageApplyService from "./MessageApplyServices/ControlMessageApplyService"
 import type { ApplyMessageOptions } from "./MessageApplyServices/ChatMessageApplyServices/types"
 import MessageService from "./MessageService"
-import { ConversationMessageStatus } from "@/types/chat/conversation_message"
+import {
+	AggregateAISearchCardDataType,
+	ConversationMessageStatus,
+	ConversationMessageType,
+} from "@/types/chat/conversation_message"
 import DotsService from "../dots/DotsService"
 import { userStore } from "@/opensource/models/user"
+import AiSearchApplyService from "./MessageApplyServices/ChatMessageApplyServices/AiSearchApplyService"
 
 interface PullMessagesFromServerOptions {
 	conversationId: string
@@ -51,6 +59,15 @@ class MessagePullService {
 		this.pullMessageInterval = setInterval(() => {
 			this.pullOfflineMessages()
 		}, this.messagePullFrequency)
+	}
+
+	/**
+	 * 注销消息拉取循环
+	 */
+	public unregisterMessagePullLoop() {
+		if (this.pullMessageInterval) {
+			clearInterval(this.pullMessageInterval)
+		}
 	}
 
 	/**
@@ -97,29 +114,106 @@ class MessagePullService {
 		}
 
 		if (res.items && res.items.length > 0) {
-			const conversationMessages = res.items.filter(
-				(item) =>
-					ChatMessageApplyServices.isChatHistoryMessage(item.seq) ||
-					ControlMessageApplyService.isControlMessageShouldRender(item.seq),
-			)
+			let conversationMessages = res.items
+				.filter(
+					(item) =>
+						ChatMessageApplyServices.isChatHistoryMessage(item.seq) ||
+						ControlMessageApplyService.isControlMessageShouldRender(item.seq),
+				)
+				.map((item) => item.seq)
+
+			// 合并AI搜索消息
+			conversationMessages = this.handleCombineAiSearchMessage(conversationMessages)
 
 			// 异步写入数据库
 			requestIdleCallback(() => {
-				MessageService.addHistoryMessagesToDB(
-					conversationId,
-					conversationMessages.map((item) => item.seq),
-				)
+				MessageService.addHistoryMessagesToDB(conversationId, conversationMessages)
 			})
 
 			// 更新会话的拉取序列号
 			MessageSeqIdService.updateConversationPullSeqId(
 				conversationId,
-				conversationMessages[0]?.seq.seq_id ?? "",
+				conversationMessages[0]?.seq_id ?? "",
 			)
 
-			return conversationMessages.map((item) => item.seq)
+			return conversationMessages
 		}
 		return []
+	}
+
+	/**
+	 * 合并AI搜索消息
+	 * @param conversationMessages
+	 * @returns
+	 */
+	handleCombineAiSearchMessage(
+		conversationMessages: SeqResponse<
+			ConversationMessage | AggregateAISearchCardConversationMessage<true>
+		>[],
+	) {
+		let index = conversationMessages.findIndex(
+			(item) => item.message.type !== ConversationMessageType.AggregateAISearchCard,
+		)
+
+		const array = [] as SeqResponse<ConversationMessage>[]
+
+		if (index > 0) {
+			// 有AI搜索消息
+			const aiSearchMessages = conversationMessages.slice(0, index) as SeqResponse<
+				AggregateAISearchCardConversationMessage<true>
+			>[]
+			// 符合合并条件
+			if (
+				aiSearchMessages[0].message.aggregate_ai_search_card?.type ===
+				AggregateAISearchCardDataType.PingPong
+			) {
+				const combinedMessage =
+					AiSearchApplyService.combineAiSearchMessage(aiSearchMessages)
+				if (combinedMessage) {
+					array.push(combinedMessage)
+				}
+			}
+		}
+
+		if (index === -1) index = 0
+
+		while (index < conversationMessages.length) {
+			if (
+				conversationMessages[index].message.type !==
+				ConversationMessageType.AggregateAISearchCard
+			) {
+				array.push(conversationMessages[index] as SeqResponse<ConversationMessage>)
+				index++
+			} else {
+				let nextIndex = conversationMessages.findIndex(
+					(item, i) =>
+						item.message.type !== ConversationMessageType.AggregateAISearchCard &&
+						i > index,
+				)
+
+				if (nextIndex > 0) {
+					const aiSearchMessages = conversationMessages.slice(
+						index,
+						nextIndex,
+					) as SeqResponse<AggregateAISearchCardConversationMessage<true>>[]
+					const combinedMessage =
+						AiSearchApplyService.combineAiSearchMessage(aiSearchMessages)
+					if (combinedMessage) {
+						array.push(combinedMessage)
+					}
+				} else {
+					nextIndex = conversationMessages.length
+				}
+
+				index = nextIndex
+			}
+
+			if (index >= conversationMessages.length) {
+				break
+			}
+		}
+
+		return array
 	}
 
 	/**

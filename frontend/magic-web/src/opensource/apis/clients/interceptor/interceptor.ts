@@ -63,11 +63,17 @@ export function generateSuccessResInterceptor() {
 	return async (response: ResponseData) => {
 		const jsonResponse = response.data
 		if (jsonResponse?.code !== BusinessResponseCode.Success) {
-			if (jsonResponse?.message) {
+			if (response.options?.showErrorMessage && jsonResponse?.message) {
 				message.error(jsonResponse.message)
 			}
 			throw jsonResponse
 		}
-		return jsonResponse.data
+
+		// 解包数据
+		if (response.options?.unwrapData) {
+			return jsonResponse.data
+		}
+
+		return response
 	}
 }

@@ -4,15 +4,16 @@ import { memo, useMemo } from "react"
 
 const ConversationBadge = memo(
 	({ count = 0, children, ...props }: BadgeProps & { count?: number }) => {
-		const offset = useMemo<[number, number]>(() => {
-			if (count && count > 99) {
-				return [-30, 0]
+		const offsetXSize = useMemo(()=>{
+			if(count) {
+				const stringCount = count.toString()
+				return -40 + stringCount.length * 2.5
 			}
-			return [-40, 0]
-		}, [count])
+			return -40
+		},[count])
 
 		return (
-			<Badge offset={offset} count={count} {...props}>
+			<Badge offset={[offsetXSize, 0]} count={count} {...props}>
 				{children}
 			</Badge>
 		)

@@ -73,9 +73,10 @@ const EmojiSelect = memo(
 					onMouseDown={handleMouseDown}
 					onMouseUp={handleMouseUp}
 					onMouseLeave={handleMouseLeave}
+					style={{ height: 48 }}
 				>
 					<MagicEmoji
-						ns={tooltipOpen && !popverOpen ? animatedNs : ns}
+						ns={ns}
 						code={config.code}
 						className={emojiClassName}
 					/>

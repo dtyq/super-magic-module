@@ -1,4 +1,17 @@
+import { pick } from "lodash-es"
 import { UrlUtils } from "../utils"
+
+/** 请求配置 */
+export interface RequestOptions {
+	/** 基础URL */
+	baseURL?: string
+	/** 请求URL */
+	url?: string
+	/** 是否解包数据 */
+	unwrapData?: boolean
+	/** 是否显示错误信息 */
+	showErrorMessage?: boolean
+}
 
 /** 请求响应体 */
 export interface ResponseData {
@@ -6,6 +19,7 @@ export interface ResponseData {
 	statusText: string
 	headers: Headers
 	data: any
+	options: RequestOptions
 }
 
 /** 请求拦截器 */
@@ -15,11 +29,9 @@ export type ResponseInterceptor = (response: ResponseData) => Promise<any>
 /** 异常拦截器 */
 export type ErrorInterceptor = (error: any) => any
 
-export interface RequestConfig extends RequestInit {
-	baseURL?: string
-	url?: string
-	unwrapData?: boolean
-}
+
+
+export interface RequestConfig extends RequestOptions, RequestInit {}
 
 export class HttpClient {
 	private requestInterceptors: RequestInterceptor[] = []
@@ -55,6 +67,7 @@ export class HttpClient {
 		return UrlUtils.join(this.baseURL, url)
 	}
 
+	/** 运行请求拦截器 */
 	private async runRequestInterceptors(config: RequestConfig): Promise<RequestConfig> {
 		return this.requestInterceptors.reduce(async (promiseConfig, interceptor) => {
 			const currentConfig = await promiseConfig
@@ -62,7 +75,8 @@ export class HttpClient {
 		}, Promise.resolve(config))
 	}
 
-	private async runResponseInterceptors(response: Response): Promise<any> {
+	/** 运行响应拦截器 */
+	private async runResponseInterceptors(response: Response, options: RequestOptions): Promise<any> {
 		// 首先克隆 response 对象以保留原始状态信息
 		const responseForStatus = response.clone()
 
@@ -82,6 +96,7 @@ export class HttpClient {
 			statusText: responseForStatus.statusText,
 			headers: responseForStatus.headers,
 			data: jsonData,
+			options,
 		}
 
 		// 运行拦截器链
@@ -109,17 +124,38 @@ export class HttpClient {
 				url: this.getFullURL(config.url || ""),
 			})
 
+			const options = this.genRequestOptions(finalConfig)
+
 			const response = await fetch(url!, finalConfig)
-			return await this.runResponseInterceptors(response)
+			return await this.runResponseInterceptors(response, options)
 		} catch (error) {
 			console.error("Request failed:", error)
 			return this.runErrorInterceptors(error)
 		}
 	}
 
+	/**
+	 * 获取请求配置
+	 * @param config 请求配置
+	 * @returns 请求配置
+	 */
+	public genRequestOptions(config: RequestConfig): RequestOptions {
+		return {
+			unwrapData: true,
+			showErrorMessage: true,
+			...pick(config, ["url"]),
+		}
+	}
+
+	/**
+	 * get 请求
+	 * @param url 请求URL
+	 * @param config 请求配置
+	 * @returns unwrapData 为 true 时，返回数据为 T，否则返回 ResponseData
+	 */
 	public async get<T = any>(
 		url: string,
-		config?: Omit<RequestConfig, "url"> | { showMessage?: boolean },
+		config?: Omit<RequestConfig, "url">,
 	): Promise<T> {
 		return this.request({
 			...config,
@@ -131,7 +167,7 @@ export class HttpClient {
 	public async post<T = any>(
 		url: string,
 		data?: any,
-		config?: Omit<RequestConfig, "url" | "body"> | { showMessage?: boolean },
+		config?: Omit<RequestConfig, "url" | "body">,
 	): Promise<T> {
 		return this.request({
 			...config,

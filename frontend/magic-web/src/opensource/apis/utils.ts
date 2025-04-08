@@ -13,16 +13,39 @@ export class UrlUtils {
 
 	/**
 	 * 安全地拼接 URL
+	 * @param origin - 基础URL
+	 * @param pathname - 路径
+	 * @returns 拼接后的URL
 	 */
 	static join(origin: string, pathname: string): string {
-		const originUrl = new URL(origin)
-		const originPathname = originUrl.pathname
-		const url = new URL(
-			((originPathname === "/" ? "" : originPathname) + pathname) as string,
-			originUrl.origin,
-		)
-		
-		return url.toString()
+		// 处理绝对URL的情况
+		if (pathname.startsWith("http://") || pathname.startsWith("https://")) {
+			return pathname
+		}
+
+		if (pathname.startsWith("//")) {
+			return pathname
+		}
+
+		// 处理无效URL的情况
+		try {
+			const originUrl = new URL(origin)
+			const originPathname = originUrl.pathname
+
+			// 规范化路径，去除多余的斜杠
+			const normalizedPathname = originPathname.endsWith("/")
+				? originPathname.slice(0, -1)
+				: originPathname
+
+			const normalizedPath = pathname.startsWith("/") ? pathname : `/${pathname}`
+
+			const url = new URL(normalizedPathname + normalizedPath, originUrl.origin)
+
+			return url.toString()
+		} catch (e) {
+			// 简单处理无效URL的情况
+			return origin + (origin.endsWith("/") ? "" : "/") + pathname.replace(/^\.\/|^\/+/, "")
+		}
 	}
 
 	/**
@@ -50,7 +73,7 @@ export class UrlUtils {
 			}
 		}
 	}
-	
+
 	/**
 	 * 将WebSocket连接地址转换为Socket.io连接地址
 	 * @param url WebSocket连接地址

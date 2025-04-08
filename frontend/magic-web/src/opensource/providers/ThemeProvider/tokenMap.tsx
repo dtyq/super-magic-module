@@ -58,6 +58,10 @@ const commonComponentsToken: Partial<ComponentsToken> = {
 		motionDurationMid: "0.05s",
 		motionDurationSlow: "0.1s",
 	},
+	Menu: {
+		itemHeight: 34,
+		borderRadiusLG: 12,
+	},
 }
 
 export const genComponentTokenMap: (

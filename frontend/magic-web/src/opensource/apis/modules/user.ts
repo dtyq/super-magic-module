@@ -240,7 +240,7 @@ export const generateUserApi = (fetch: HttpClient) => ({
 			genRequestUrl(RequestUrl.wechatBindAccount),
 			params,
 			{
-				showMessage: false,
+				showErrorMessage: false,
 			},
 		)
 	},

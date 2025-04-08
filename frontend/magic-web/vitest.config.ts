@@ -10,10 +10,7 @@ export default defineConfig({
 	test: {
 		environment: "jsdom",
 		globals: true,
-		setupFiles: [
-			resolve(__dirname, "src/test/setup.ts"),
-			resolve(__dirname, "packages/magic-ui/src/test/setup.tsx"),
-		],
+		setupFiles: [resolve(__dirname, "src/test/setup.ts")],
 		env: {
 			CI: process.env.CI === "true" ? "true" : undefined,
 		},

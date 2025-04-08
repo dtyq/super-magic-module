@@ -43,23 +43,18 @@ vi.mock("../hooks", () => {
 })
 
 // 模拟上下文 hooks
-vi.mock("@/components/providers/AppearanceProvider/hooks", () => ({
-	useChatFontSize: vi.fn(() => ({
+vi.mock("@/opensource/providers/AppearanceProvider/hooks", () => ({
+	useFontSize: vi.fn(() => ({
 		fontSize: 16,
 	})),
 }))
 
-vi.mock(
-	"@/opensource/components/business/ConversationMessageRender/components/MessageRenderProvider/hooks",
-	() => ({
-		useMessageRenderContext: vi.fn(() => ({
-			hiddenDetail: false,
-		})),
-	}),
-)
+vi.mock("@/opensource/components/business/MessageRenderProvider", () => ({
+	default: vi.fn(({ children }) => <div>{children}</div>),
+}))
 
 // 模拟样式 hooks
-vi.mock("../markdown.style", () => ({
+vi.mock("../styles/markdown.style", () => ({
 	useStyles: vi.fn(() => ({
 		styles: {
 			root: "md-root",
@@ -82,7 +77,7 @@ vi.mock("../markdown.style", () => ({
 	})),
 }))
 
-vi.mock("../stream.style", () => ({
+vi.mock("../styles/stream.style", () => ({
 	useStreamStyles: vi.fn(() => ({
 		styles: {
 			cursor: "stream-cursor",

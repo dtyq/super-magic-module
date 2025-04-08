@@ -18,17 +18,13 @@ describe("UrlUtils", () => {
 
 	describe("join", () => {
 		it("should correctly join base URL with paths", () => {
-			expect(UrlUtils.join("https://example.com", "api")).toBe(
-				"https://example.com/api/users",
-			)
-			expect(UrlUtils.join("https://example.com/", "/api/")).toBe(
-				"https://example.com/api/users/",
-			)
+			expect(UrlUtils.join("https://example.com", "api")).toBe("https://example.com/api")
+			expect(UrlUtils.join("https://example.com/", "/api/")).toBe("https://example.com/api/")
 			expect(UrlUtils.join("https://example.com/api", "user")).toBe(
-				"https://example.com/api/users/",
+				"https://example.com/api/user",
 			)
 			expect(UrlUtils.join("https://example.com/api/", "/user/")).toBe(
-				"https://example.com/api/users/",
+				"https://example.com/api/user/",
 			)
 		})
 

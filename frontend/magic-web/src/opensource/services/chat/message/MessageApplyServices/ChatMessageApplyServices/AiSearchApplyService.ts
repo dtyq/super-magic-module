@@ -9,6 +9,7 @@ import { cloneDeep, merge } from "lodash-es"
 import { makeObservable, observable, toJS } from "mobx"
 import MessageService from "../../MessageService"
 import StreamMessageApplyService from "../StreamMessageApplyService"
+import { bigNumCompare } from "@/utils/string"
 
 interface RelationInfo {
 	message_id: string
@@ -297,30 +298,27 @@ class AiSearchApplyService {
 		if (!localMessage) return
 		localMessage.aggregate_ai_search_card!.associate_questions = Object.entries(
 			associate_questions,
-		).reduce(
-			(acc, [key, value]) => {
-				if (typeof value === "string") {
-					acc[key] = {
+		).reduce((acc, [key, value]) => {
+			if (typeof value === "string") {
+				acc[key] = {
+					title: value,
+					llm_response: null,
+					search_keywords: null,
+					total_words: 0,
+				}
+			} else {
+				acc[key] = merge(
+					{
 						title: value,
 						llm_response: null,
 						search_keywords: null,
 						total_words: 0,
-					}
-				} else {
-					acc[key] = merge(
-						{
-							title: value,
-							llm_response: null,
-							search_keywords: null,
-							total_words: 0,
-						},
-						value,
-					)
-				}
-				return acc
-			},
-			{} as Record<string, AssociateQuestion>,
-		)
+					},
+					value,
+				)
+			}
+			return acc
+		}, {} as Record<string, AssociateQuestion>)
 	}
 
 	/**
@@ -534,6 +532,133 @@ class AiSearchApplyService {
 				)
 			})
 		}
+	}
+
+	/**
+	 * 合并AI搜索消息
+	 * @param aiSearchMessages
+	 * @returns
+	 */
+	combineAiSearchMessage(
+		aiSearchMessages: SeqResponse<AggregateAISearchCardConversationMessage<true>>[],
+	) {
+		if (aiSearchMessages.length === 0) return
+
+		aiSearchMessages.sort((a, b) =>
+			bigNumCompare(
+				a.message.aggregate_ai_search_card?.id ?? "",
+				b.message.aggregate_ai_search_card?.id ?? "",
+			),
+		)
+
+		const combinedMessage = this.createAggregateAISearchCardMessage(aiSearchMessages[0])
+		for (let i = 1; i < aiSearchMessages.length; i++) {
+			const message = aiSearchMessages[i]
+			switch (message.message.aggregate_ai_search_card?.type) {
+				case AggregateAISearchCardDataType.SearchDeepLevel:
+					combinedMessage.message.aggregate_ai_search_card!.search_deep_level =
+						message.message.aggregate_ai_search_card!.search_deep_level
+					break
+				case AggregateAISearchCardDataType.AssociateQuestion:
+					combinedMessage.message.aggregate_ai_search_card!.associate_questions =
+						Object.entries(
+							message.message.aggregate_ai_search_card!.associate_questions ?? {},
+						).reduce((acc, [key, value]) => {
+							if (typeof value === "string") {
+								acc[key] = {
+									title: value,
+									llm_response: null,
+									search_keywords: null,
+									total_words: 0,
+								}
+							} else {
+								acc[key] = merge(
+									{
+										title: value,
+										llm_response: null,
+										search_keywords: null,
+										total_words: 0,
+									},
+									value,
+								)
+							}
+							return acc
+						}, {} as Record<string, AssociateQuestion>)
+					break
+				case AggregateAISearchCardDataType.MindMap:
+					combinedMessage.message.aggregate_ai_search_card!.mind_map =
+						message.message.aggregate_ai_search_card!.mind_map
+					break
+				case AggregateAISearchCardDataType.Search:
+					const parentId = message.message.aggregate_ai_search_card!.parent_id
+
+					if (parentId !== "0") {
+						if (
+							!combinedMessage.message.aggregate_ai_search_card!
+								.associate_questions?.[parentId]
+						) {
+							combinedMessage.message.aggregate_ai_search_card!.associate_questions[
+								parentId
+							] = {
+								title: "",
+								llm_response: null,
+								search_keywords: null,
+								total_words: 0,
+							}
+						}
+						combinedMessage.message.aggregate_ai_search_card!.associate_questions[
+							parentId
+						].search_keywords =
+							message.message.aggregate_ai_search_card!.search_keywords ?? []
+
+						// 更新总字数
+						combinedMessage.message.aggregate_ai_search_card!.associate_questions[
+							parentId
+						].total_words = message.message.aggregate_ai_search_card!.total_words ?? 0
+
+						// 更新检索到的页面总数
+						combinedMessage.message.aggregate_ai_search_card!.associate_questions[
+							parentId
+						].match_count = message.message.aggregate_ai_search_card!.match_count ?? 0
+
+						// 更新阅读的页面总数
+						combinedMessage.message.aggregate_ai_search_card!.associate_questions[
+							parentId
+						].page_count = message.message.aggregate_ai_search_card!.page_count ?? 0
+
+						combinedMessage.message.aggregate_ai_search_card!.search[parentId] =
+							message.message.aggregate_ai_search_card!.search ?? []
+					}
+					break
+				case AggregateAISearchCardDataType.LLMResponse:
+					if (message.message.aggregate_ai_search_card?.parent_id === "0") {
+						combinedMessage.message.aggregate_ai_search_card!.llm_response =
+							message.message.aggregate_ai_search_card!.llm_response
+					} else if (message.message.aggregate_ai_search_card?.parent_id) {
+						const parentId = message.message.aggregate_ai_search_card!.parent_id
+						combinedMessage.message.aggregate_ai_search_card!.associate_questions[
+							parentId
+						].llm_response =
+							message.message.aggregate_ai_search_card!.llm_response ?? null
+					}
+					break
+				case AggregateAISearchCardDataType.Event:
+					combinedMessage.message.aggregate_ai_search_card!.event =
+						message.message.aggregate_ai_search_card!.event
+					break
+				case AggregateAISearchCardDataType.PingPong:
+					combinedMessage.message.aggregate_ai_search_card!.finish = true
+					break
+				case AggregateAISearchCardDataType.Terminate:
+					combinedMessage.message.aggregate_ai_search_card!.error = true
+					break
+				case AggregateAISearchCardDataType.PPT:
+					combinedMessage.message.aggregate_ai_search_card!.ppt =
+						message.message.aggregate_ai_search_card!.ppt
+					break
+			}
+		}
+		return combinedMessage
 	}
 }
 

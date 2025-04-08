@@ -53,7 +53,7 @@ export const generateAuthApi = (fetch: HttpClient) => ({
 					authorization,
 					["Organization-Code"]: teamshareOrganizationCode || "",
 				},
-				showMessage: false,
+				showErrorMessage: false,
 			},
 		)
 	},

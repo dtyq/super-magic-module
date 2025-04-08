@@ -53,7 +53,7 @@ describe("MagicListItem 组件", () => {
 		expect(screen.getByText("测试项目1")).toBeInTheDocument()
 
 		// 验证类名是否正确应用
-		const container = screen.getAllByTestId("antd-flex")[0]
+		const container = screen.getByTestId("magic-list-item")
 		expect(container).toHaveClass("mock-container")
 		expect(container).not.toHaveClass("mock-active")
 	})
@@ -71,7 +71,7 @@ describe("MagicListItem 组件", () => {
 		render(<MagicListItem data={item} active />)
 
 		// 验证 active 类名是否正确应用
-		const container = screen.getAllByTestId("antd-flex")[0]
+		const container = screen.getByTestId("magic-list-item")
 		expect(container).toHaveClass("mock-container")
 		expect(container).toHaveClass("mock-active")
 	})
@@ -251,21 +251,15 @@ describe("MagicListItem 组件", () => {
 			title: "测试项目1",
 		}
 
-		render(
-			<MagicListItem
-				data={item}
-				className="custom-container-class"
-				classNames={{
-					container: "custom-container",
-					avatar: "custom-avatar",
-					title: "custom-title",
-					content: "custom-content",
-				}}
-			/>,
-		)
+		const customClass = "custom-container-class"
+		const classNames = {
+			container: "custom-container",
+		}
+
+		render(<MagicListItem data={item} className={customClass} classNames={classNames} />)
 
 		// 验证自定义类名是否被应用
-		const container = screen.getAllByTestId("antd-flex")[0]
+		const container = screen.getByTestId("magic-list-item")
 		expect(container).toHaveClass("custom-container-class")
 		expect(container).toHaveClass("custom-container")
 	})
