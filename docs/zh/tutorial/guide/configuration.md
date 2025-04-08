@@ -55,7 +55,7 @@ export default defineConfig({
     
     // 页脚
     footer: {
-      message: '基于 MIT 许可发布',
+      message: '基于 Apache 2.0 许可发布',
       copyright: 'Copyright © 2024-present Magic Docs'
     },
     
@@ -125,7 +125,7 @@ sidebar: {
 
 ```typescript
 footer: {
-  message: '基于 MIT 许可发布',
+  message: '基于 Apache 2.0 许可发布',
   copyright: 'Copyright © 2024-present Magic Docs'
 }
 ```
