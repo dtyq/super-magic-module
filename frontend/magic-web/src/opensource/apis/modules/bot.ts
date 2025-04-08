@@ -83,9 +83,11 @@ export const generateBotApi = (fetch: HttpClient) => ({
 
 	/** 机器人注册并添加好友 */
 	registerAndAddFriend(agentVersionId: string) {
-		return fetch.post<Bot.AddFriend>(genRequestUrl(RequestUrl.registerAndAddFriend), {
-			agentVersionId,
-		})
+		return fetch.post<Bot.AddFriend>(
+			genRequestUrl(RequestUrl.registerAndAddFriend, {
+				agentVersionId,
+			}),
+		)
 	},
 
 	/** 获取机器人详情 */
@@ -95,9 +97,9 @@ export const generateBotApi = (fetch: HttpClient) => ({
 
 	/** 获取机器人版本详情 */
 	getBotVersionDetail(agentVersionId: string) {
-		return fetch.post<Bot.Detail>(genRequestUrl(RequestUrl.getBotVersionDetail), {
+		return fetch.post<Bot.Detail>(genRequestUrl(RequestUrl.getBotVersionDetail, {
 			agentVersionId,
-		})
+		}))
 	},
 
 	/** 判断机器人是否修改过 */
