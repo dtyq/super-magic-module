@@ -156,6 +156,9 @@ export default function BaseFlow({ extraData }: BaseFlowProps) {
 			} else {
 				icon = defaultIcon.flow
 			}
+
+			if (!icon) return
+
 			setCurrentFlow({
 				...currentFlow,
 				icon,
