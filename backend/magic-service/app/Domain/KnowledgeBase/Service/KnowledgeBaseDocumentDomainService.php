@@ -13,6 +13,7 @@ use App\Domain\KnowledgeBase\Entity\KnowledgeBaseEntity;
 use App\Domain\KnowledgeBase\Entity\ValueObject\DocType;
 use App\Domain\KnowledgeBase\Entity\ValueObject\DocumentFileVO;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeBaseDataIsolation;
+use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeSyncStatus;
 use App\Domain\KnowledgeBase\Event\KnowledgeBaseDocumentRemovedEvent;
 use App\Domain\KnowledgeBase\Event\KnowledgeBaseDocumentSavedEvent;
 use App\Domain\KnowledgeBase\Repository\Facade\KnowledgeBaseDocumentRepositoryInterface;
@@ -131,23 +132,24 @@ readonly class KnowledgeBaseDocumentDomainService
 
     public function getOrCreatorDefaultDocument(KnowledgeBaseDataIsolation $dataIsolation, KnowledgeBaseEntity $knowledgeBaseEntity): KnowledgeBaseDocumentEntity
     {
-        try {
-            // 尝试获取默认文档
-            return $this->show($dataIsolation, KnowledgeBaseDocumentEntity::getDefaultDocumentCode());
-        } catch (Exception $e) {
-            // 如果文档不存在，创建新的默认文档
-            $documentEntity = (new KnowledgeBaseDocumentEntity())
-                ->setName('未命名文档')
-                ->setKnowledgeBaseCode($knowledgeBaseEntity->getCode())
-                ->setCreatedUid($knowledgeBaseEntity->getCreator())
-                ->setUpdatedUid($knowledgeBaseEntity->getCreator())
-                ->setDocType(DocType::TXT->value)->setSyncStatus(0)
-                ->setOrganizationCode($knowledgeBaseEntity->getOrganizationCode())
-                ->setEmbeddingModel(EmbeddingGenerator::defaultModel())
-                ->setFragmentConfig([])
-                ->setVectorDb(VectorStoreDriver::default()->value);
-            return $this->create($dataIsolation, $knowledgeBaseEntity, $documentEntity);
+        // 尝试获取默认文档
+        $documentEntity = $this->magicFlowDocumentRepository->show($dataIsolation, $knowledgeBaseEntity->getCode());
+        if ($documentEntity) {
+            return $documentEntity;
         }
+        // 如果文档不存在，创建新的默认文档
+        $documentEntity = (new KnowledgeBaseDocumentEntity())
+            ->setName('未命名文档')
+            ->setKnowledgeBaseCode($knowledgeBaseEntity->getCode())
+            ->setCreatedUid($knowledgeBaseEntity->getCreator())
+            ->setUpdatedUid($knowledgeBaseEntity->getCreator())
+            ->setDocType(DocType::TXT->value)
+            ->setSyncStatus(KnowledgeSyncStatus::Synced->value)
+            ->setOrganizationCode($knowledgeBaseEntity->getOrganizationCode())
+            ->setEmbeddingModel(EmbeddingGenerator::defaultModel())
+            ->setFragmentConfig([])
+            ->setVectorDb(VectorStoreDriver::default()->value);
+        return $this->create($dataIsolation, $knowledgeBaseEntity, $documentEntity);
     }
 
     /**
