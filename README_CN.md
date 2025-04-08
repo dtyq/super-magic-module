@@ -6,6 +6,8 @@
 <!-- [![Docker Pulls](https://img.shields.io/docker/pulls/dtyq/magic.svg)](https://hub.docker.com/r/dtyq/magic) -->
 <!-- [![GitHub stars](https://img.shields.io/github/stars/dtyq/magic.svg?style=social&label=Star)](https://github.com/dtyq/magic) -->
 
+**[English](README.md) | [中文简体](README_CN.md)**
+
 </div>
 
 Magic 是一个强大的企业级 AI 应用创新引擎，旨在帮助开发者快速构建和部署 AI 应用。它提供了完整的开发框架、丰富的工具链和最佳实践，让 AI 应用的开发变得简单而高效。
