@@ -151,7 +151,9 @@ class LoopMainNodeRunner extends NodeRunner
         }
         // 去除父 id 属性，不然会被过滤
         foreach ($childNodes as $node) {
-            $node->setMeta(['parent_id' => '']);
+            $meta = $node->getMeta();
+            $meta['parent_id'] = '';
+            $node->setMeta($meta);
         }
         // 更换执行的节点
         $loopMagicFlow->setNodes($childNodes);

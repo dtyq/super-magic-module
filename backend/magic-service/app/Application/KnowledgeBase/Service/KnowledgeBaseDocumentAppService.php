@@ -11,6 +11,7 @@ use App\Application\File\Service\FileAppService;
 use App\Domain\Flow\Entity\ValueObject\Query\KnowledgeBaseDocumentQuery;
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseDocumentEntity;
 use App\Domain\KnowledgeBase\Entity\ValueObject\DocumentFileVO;
+use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeSyncStatus;
 use App\Infrastructure\Core\Embeddings\EmbeddingGenerator\EmbeddingGenerator;
 use App\Infrastructure\Core\Embeddings\VectorStores\VectorStoreDriver;
 use App\Infrastructure\Core\ValueObject\Page;
@@ -48,7 +49,11 @@ class KnowledgeBaseDocumentAppService extends AbstractKnowledgeAppService
         }
 
         $knowledgeBaseEntity = $this->knowledgeBaseDomainService->show($dataIsolation, $documentEntity->getKnowledgeBaseCode());
-        return $this->knowledgeBaseDocumentDomainService->save($dataIsolation, $knowledgeBaseEntity, $documentEntity, DocumentFileVO::fromDTO($documentFile));
+        if (! $documentEntity->getCode()) {
+            // 新建文档
+            return $this->knowledgeBaseDocumentDomainService->create($dataIsolation, $knowledgeBaseEntity, $documentEntity, DocumentFileVO::fromDTO($documentFile));
+        }
+        return $this->knowledgeBaseDocumentDomainService->update($dataIsolation, $knowledgeBaseEntity, $documentEntity);
     }
 
     /**
@@ -64,7 +69,16 @@ class KnowledgeBaseDocumentAppService extends AbstractKnowledgeAppService
         $this->checkKnowledgeBaseOperation($dataIsolation, 'r', $query->getKnowledgeBaseCode(), $query->getCode());
 
         // 调用领域服务查询文档
-        return $this->knowledgeBaseDocumentDomainService->queries($dataIsolation, $query, $page);
+        $entities = $this->knowledgeBaseDocumentDomainService->queries($dataIsolation, $query, $page);
+        $documentCodeFinalSyncStatusMap = $this->knowledgeBaseFragmentDomainService->getFinalSyncStatusByDocumentCodes(
+            $dataIsolation,
+            array_map(fn ($entity) => $entity->getCode(), $entities['list'])
+        );
+        // 获取文档同步状态
+        foreach ($entities['list'] as $entity) {
+            $entity->setSyncStatus($documentCodeFinalSyncStatusMap[$entity->getCode()]?->value ?? KnowledgeSyncStatus::NotSynced->value);
+        }
+        return $entities;
     }
 
     /**
@@ -76,7 +90,10 @@ class KnowledgeBaseDocumentAppService extends AbstractKnowledgeAppService
         $this->checkKnowledgeBaseOperation($dataIsolation, 'r', $knowledgeBaseCode, $documentCode);
 
         // 获取文档
-        return $this->knowledgeBaseDocumentDomainService->show($dataIsolation, $documentCode);
+        $entity = $this->knowledgeBaseDocumentDomainService->show($dataIsolation, $documentCode);
+        $documentCodeFinalSyncStatusMap = $this->knowledgeBaseFragmentDomainService->getFinalSyncStatusByDocumentCodes($dataIsolation, [$documentCode]);
+        $entity->setSyncStatus($documentCodeFinalSyncStatusMap[$documentCode]?->value ?? KnowledgeSyncStatus::NotSynced->value);
+        return $entity;
     }
 
     /**

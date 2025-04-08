@@ -9,6 +9,7 @@ namespace App\Domain\KnowledgeBase\Repository\Facade;
 
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseFragmentEntity;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeBaseDataIsolation;
+use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeSyncStatus;
 use App\Domain\KnowledgeBase\Entity\ValueObject\Query\KnowledgeBaseFragmentQuery;
 use App\Infrastructure\Core\ValueObject\Page;
 
@@ -40,4 +41,9 @@ interface KnowledgeFragmentRepositoryInterface
     public function rebuildByKnowledgeCode(KnowledgeBaseDataIsolation $dataIsolation, string $knowledgeCode): void;
 
     public function fragmentBatchDestroyByPointIds(KnowledgeBaseDataIsolation $dataIsolation, string $knowledgeCode, array $pointIds): void;
+
+    /**
+     * @return array<string, KnowledgeSyncStatus>
+     */
+    public function getFinalSyncStatusByDocumentCodes(KnowledgeBaseDataIsolation $dataIsolation, array $documentCodes): array;
 }

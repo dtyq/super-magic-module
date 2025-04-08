@@ -115,6 +115,11 @@ class FileParser
             // 如果是.doc文件，先转换为.docx
             if ($fileExtension === 'doc') {
                 // todo 这里有问题 会读取失败
+                /**
+                 * phpword 不支持旧格式的.doc
+                 * Throw an exception since making further calls on the ZipArchive would cause a fatal error.
+                 * This prevents fatal errors on corrupt archives and attempts to open old "doc" files.
+                 */
                 $reader = IOFactory::load($tempFile, 'MsDoc');
             } elseif ($fileExtension === 'docx') {
                 $reader = IOFactory::load($tempFile, 'Word2007');

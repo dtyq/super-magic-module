@@ -31,14 +31,6 @@ class MagicFlowKnowledgeFragmentDTO extends AbstractFlowDTO
 
     public float $score;
 
-    public static function fromEntity(KnowledgeBaseFragmentEntity $entity): MagicFlowKnowledgeFragmentDTO
-    {
-        $dto = new MagicFlowKnowledgeFragmentDTO($entity->toArray());
-        $dto->setKnowledgeBaseCode($entity->getKnowledgeCode());
-        unset($dto->knowledgeCode);
-        return $dto;
-    }
-
     public function getKnowledgeCode(): string
     {
         return $this->knowledgeCode;

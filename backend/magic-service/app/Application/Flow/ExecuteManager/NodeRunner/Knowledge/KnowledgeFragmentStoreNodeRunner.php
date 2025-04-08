@@ -12,6 +12,7 @@ use App\Domain\Flow\Entity\ValueObject\NodeParamsConfig\Knowledge\KnowledgeFragm
 use App\Domain\Flow\Entity\ValueObject\NodeType;
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseFragmentEntity;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeBaseDataIsolation;
+use App\Domain\KnowledgeBase\Service\KnowledgeBaseDocumentDomainService;
 use App\Domain\KnowledgeBase\Service\KnowledgeBaseDomainService;
 use App\Domain\KnowledgeBase\Service\KnowledgeBaseFragmentDomainService;
 use App\ErrorCode\FlowErrorCode;
@@ -54,11 +55,14 @@ class KnowledgeFragmentStoreNodeRunner extends AbstractKnowledgeNodeRunner
             ExceptionBuilder::throw(FlowErrorCode::ExecuteValidateFailed, 'flow.node.knowledge_fragment_store.business_id_empty');
         }
 
-        $knowledgeBase = di(KnowledgeBaseDomainService::class);
+        $knowledgeBaseDomainService = di(KnowledgeBaseDomainService::class);
+        $documentDomainService = di(KnowledgeBaseDocumentDomainService::class);
         $fragmentDomainService = di(KnowledgeBaseFragmentDomainService::class);
         $dataIsolation = $executionData->getDataIsolation();
         $knowledgeBaseDataIsolation = KnowledgeBaseDataIsolation::create($dataIsolation->getCurrentOrganizationCode(), $dataIsolation->getCurrentUserId(), $dataIsolation->getMagicId());
-        $knowledgeBase->show($knowledgeBaseDataIsolation, $knowledgeCode);
+        $knowledgeBaseEntity = $knowledgeBaseDomainService->show($knowledgeBaseDataIsolation, $knowledgeCode);
+        // 这里要建立一个归纳的文档
+        $documentEntity = $documentDomainService->getOrCreatorDefaultDocument($knowledgeBaseDataIsolation, $knowledgeBaseEntity);
 
         $savingMagicFlowKnowledgeFragmentEntity = new KnowledgeBaseFragmentEntity();
         $savingMagicFlowKnowledgeFragmentEntity->setKnowledgeCode($knowledgeCode);
@@ -68,10 +72,11 @@ class KnowledgeFragmentStoreNodeRunner extends AbstractKnowledgeNodeRunner
         $savingMagicFlowKnowledgeFragmentEntity->setCreator($executionData->getOperator()->getUid());
         $savingMagicFlowKnowledgeFragmentEntity->setCreatedAt(new DateTime());
 
-        // todo 这里要建立一个归纳的文档
-        //        $fragmentDomainService->save(
-        //            $knowledgeBaseDataIsolation,
-        //            $savingMagicFlowKnowledgeFragmentEntity,
-        //        );
+        $fragmentDomainService->save(
+            $knowledgeBaseDataIsolation,
+            $knowledgeBaseEntity,
+            $documentEntity,
+            $savingMagicFlowKnowledgeFragmentEntity,
+        );
     }
 }

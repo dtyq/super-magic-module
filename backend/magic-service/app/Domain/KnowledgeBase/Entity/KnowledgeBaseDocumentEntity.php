@@ -358,28 +358,6 @@ class KnowledgeBaseDocumentEntity extends AbstractEntity
         return $this;
     }
 
-    /**
-     * 从创建DTO创建实体.
-     */
-    public static function fromCreateDTO(CreateDocumentRequestDTO $dto, MagicUserAuthorization $auth): self
-    {
-        $data = $dto->toArray();
-        $data['created_uid'] = $auth->getId();
-        $data['updated_uid'] = $auth->getId();
-        $data['name'] = $dto->getDocumentFile()->getName();
-        return new self($data);
-    }
-
-    /**
-     * 从更新DTO创建实体.
-     */
-    public static function fromUpdateDTO(UpdateDocumentRequestDTO $dto, MagicUserAuthorization $auth): self
-    {
-        $data = $dto->toArray();
-        $data['updated_uid'] = $auth->getId();
-        return new self($data);
-    }
-
     public function getVectorDBDriver(): VectorStoreInterface
     {
         $driver = VectorStoreDriver::tryFrom($this->vectorDb);
@@ -387,5 +365,10 @@ class KnowledgeBaseDocumentEntity extends AbstractEntity
             ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, "向量数据库 [{$this->vectorDb}] 不存在");
         }
         return $driver->get();
+    }
+
+    public static function getDefaultDocumentCode(): string
+    {
+        return 'DOCUMENT-default';
     }
 }

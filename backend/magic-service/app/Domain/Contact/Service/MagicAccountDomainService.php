@@ -172,7 +172,7 @@ class MagicAccountDomainService extends AbstractContactDomainService
     {
         Db::beginTransaction();
         try {
-            if (empty($userDTO->getAvatarUrl()) || empty($userDTO->getNickname()) || empty($userDTO->getDescription())) {
+            if (empty($userDTO->getNickname()) || empty($userDTO->getDescription())) {
                 ExceptionBuilder::throw(ChatErrorCode::INPUT_PARAM_ERROR);
             }
             $accountEntity = $this->accountRepository->getAccountInfoByAiCode($accountDTO->getAiCode());

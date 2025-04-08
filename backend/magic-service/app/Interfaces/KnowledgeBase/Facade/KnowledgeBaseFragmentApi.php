@@ -12,6 +12,7 @@ use App\Domain\KnowledgeBase\Entity\ValueObject\Query\KnowledgeBaseFragmentQuery
 use App\Infrastructure\Core\ValueObject\Page;
 use App\Interfaces\Flow\DTO\Knowledge\MagicFlowKnowledgeFragmentDTO;
 use App\Interfaces\Kernel\DTO\PageDTO;
+use App\Interfaces\KnowledgeBase\Assembler\KnowledgeBaseFragmentAssembler;
 use App\Interfaces\KnowledgeBase\DTO\Request\CreateFragmentRequestDTO;
 use App\Interfaces\KnowledgeBase\DTO\Request\GetFragmentListRequestDTO;
 use App\Interfaces\KnowledgeBase\DTO\Request\UpdateFragmentRequestDTO;
@@ -37,7 +38,7 @@ class KnowledgeBaseFragmentApi extends AbstractKnowledgeBaseApi
             ->setKnowledgeCode($dto->getKnowledgeBaseCode())
             ->setCreatedAt(new DateTime());
         $entity = $this->knowledgeBaseFragmentAppService->save($userAuthorization, $entity);
-        return MagicFlowKnowledgeFragmentDTO::fromEntity($entity);
+        return KnowledgeBaseFragmentAssembler::entityToDTO($entity);
     }
 
     public function updateFragment()
@@ -49,7 +50,7 @@ class KnowledgeBaseFragmentApi extends AbstractKnowledgeBaseApi
             ->setKnowledgeCode($dto->getKnowledgeBaseCode())
             ->setCreatedAt(new DateTime());
         $entity = $this->knowledgeBaseFragmentAppService->save($userAuthorization, $entity);
-        return MagicFlowKnowledgeFragmentDTO::fromEntity($entity);
+        return KnowledgeBaseFragmentAssembler::entityToDTO($entity);
     }
 
     public function getFragmentList()
@@ -59,7 +60,7 @@ class KnowledgeBaseFragmentApi extends AbstractKnowledgeBaseApi
         $page = new Page($dto->getPage(), $dto->getPageSize());
         $result = $this->knowledgeBaseFragmentAppService->queries($this->getAuthorization(), $query, $page);
         $list = array_map(function (KnowledgeBaseFragmentEntity $entity) {
-            return MagicFlowKnowledgeFragmentDTO::fromEntity($entity);
+            return KnowledgeBaseFragmentAssembler::entityToDTO($entity);
         }, $result['list']);
         return new PageDTO($page->getPage(), $result['total'], $list);
     }
@@ -67,7 +68,7 @@ class KnowledgeBaseFragmentApi extends AbstractKnowledgeBaseApi
     public function fragmentShow(string $knowledgeBaseCode, string $documentCode, int $id)
     {
         $entity = $this->knowledgeBaseFragmentAppService->show($this->getAuthorization(), $knowledgeBaseCode, $documentCode, $id);
-        return MagicFlowKnowledgeFragmentDTO::fromEntity($entity);
+        return KnowledgeBaseFragmentAssembler::entityToDTO($entity);
     }
 
     public function fragmentDestroy(string $knowledgeBaseCode, string $documentCode, int $id)

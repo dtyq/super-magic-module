@@ -11,6 +11,7 @@ use App\Domain\Flow\Entity\ValueObject\Query\KnowledgeBaseDocumentQuery;
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseDocumentEntity;
 use App\Infrastructure\Core\ValueObject\Page;
 use App\Interfaces\Kernel\DTO\PageDTO;
+use App\Interfaces\KnowledgeBase\Assembler\KnowledgeBaseDocumentAssembler;
 use App\Interfaces\KnowledgeBase\DTO\KnowledgeBaseDocumentDTO;
 use App\Interfaces\KnowledgeBase\DTO\Request\CreateDocumentRequestDTO;
 use App\Interfaces\KnowledgeBase\DTO\Request\DocumentQueryRequestDTO;
@@ -28,9 +29,10 @@ class KnowledgeBaseDocumentApi extends AbstractKnowledgeBaseApi
         $dto = CreateDocumentRequestDTO::fromRequest($this->request);
         $userAuthorization = $this->getAuthorization();
 
-        $entity = KnowledgeBaseDocumentEntity::fromCreateDTO($dto, $userAuthorization);
+        $entity = KnowledgeBaseDocumentAssembler::createDTOToEntity($dto, $userAuthorization);
         $entity = $this->knowledgeBaseDocumentAppService->save($userAuthorization, $entity, $dto->getDocumentFile());
-        return KnowledgeBaseDocumentDTO::fromEntity($entity)->toArray();
+        return KnowledgeBaseDocumentAssembler::entityToDTO($entity)->toArray();
+        
     }
 
     /**
@@ -41,9 +43,9 @@ class KnowledgeBaseDocumentApi extends AbstractKnowledgeBaseApi
         $dto = UpdateDocumentRequestDTO::fromRequest($this->request);
         $userAuthorization = $this->getAuthorization();
 
-        $entity = KnowledgeBaseDocumentEntity::fromUpdateDTO($dto, $userAuthorization);
+        $entity = KnowledgeBaseDocumentAssembler::updateDTOToEntity($dto, $userAuthorization);
         $entity = $this->knowledgeBaseDocumentAppService->save($userAuthorization, $entity);
-        return KnowledgeBaseDocumentDTO::fromEntity($entity)->toArray();
+        return KnowledgeBaseDocumentAssembler::entityToDTO($entity)->toArray();
     }
 
     /**
@@ -68,7 +70,7 @@ class KnowledgeBaseDocumentApi extends AbstractKnowledgeBaseApi
         return new PageDTO(
             $page->getPage(),
             $result['total'],
-            array_map(fn ($entity) => KnowledgeBaseDocumentDTO::fromEntity($entity)->toArray(), $result['list'])
+            array_map(fn ($entity) => KnowledgeBaseDocumentAssembler::entityToDTO($entity)->toArray(), $result['list'])
         );
     }
 
@@ -78,7 +80,7 @@ class KnowledgeBaseDocumentApi extends AbstractKnowledgeBaseApi
     public function getDocumentDetail(string $knowledgeBaseCode, string $code)
     {
         $entity = $this->knowledgeBaseDocumentAppService->show($this->getAuthorization(), $knowledgeBaseCode, $code);
-        return KnowledgeBaseDocumentDTO::fromEntity($entity)->toArray();
+        return KnowledgeBaseDocumentAssembler::entityToDTO($entity)->toArray();
     }
 
     /**

@@ -1058,6 +1058,20 @@ JSON,
                         "sort": 0,
                         "title": "",
                         "description": "",
+                        "required": [],
+                        "value": null,
+                        "encryption": false,
+                        "encryption_value": null,
+                        "items": null,
+                        "properties": null
+                    },
+                "properties": [
+                    {
+                        "type": "object",
+                        "key": "0",
+                        "sort": 0,
+                        "title": "",
+                        "description": "",
                         "required": [
                             "platform",
                             "limit"
@@ -1094,9 +1108,7 @@ JSON,
                                 "properties": null
                             }
                         }
-                    },
-                "properties": [
-
+                    }
                 ]
             }
         }
@@ -1145,6 +1157,19 @@ JSON
             ,
             json_encode($jsonSchema, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
         );
+        $form->appendConstValue([
+            'options' => [
+                [
+                    'platform' => '头条',
+                    'limit' => '10',
+                ],
+                [
+                    'platform' => '网易',
+                    'limit' => '20',
+                ],
+            ],
+        ]);
+        var_dump($form->getKeyValue());
         $this->assertTrue(true);
     }
 
