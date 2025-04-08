@@ -1,7 +1,7 @@
 export default {
   label: '简体中文',
   lang: 'zh',
-  link: '/zh/',
+  link: '/zh',
   themeConfig: {
     nav: [
       { text: '首页', link: '/zh/' },

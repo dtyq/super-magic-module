@@ -9,10 +9,10 @@ hero:
   actions:
     - theme: brand
       text: Tutorial
-      link: /tutorial/quick-start/quick-introduction.md
+      link: /en/tutorial/quick-start/quick-introduction.md
     - theme: alt
       text: Development Guide
-      link: /development/quick-start/quick-introduction.md
+      link: /en/development/quick-start/quick-introduction.md
 
 # features:
 #   - icon: 🚀
