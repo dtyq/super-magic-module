@@ -8,8 +8,6 @@ declare(strict_types=1);
 namespace App\Command;
 
 use App\Domain\Flow\Entity\ValueObject\Query\KnowledgeBaseDocumentQuery;
-use App\Domain\KnowledgeBase\Entity\KnowledgeBaseDocumentEntity;
-use App\Domain\KnowledgeBase\Entity\ValueObject\DocType;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeBaseDataIsolation;
 use App\Domain\KnowledgeBase\Entity\ValueObject\Query\KnowledgeBaseFragmentQuery;
 use App\Domain\KnowledgeBase\Service\KnowledgeBaseDocumentDomainService;
@@ -97,21 +95,9 @@ class ProcessKnowledgeBaseDataCommand extends HyperfCommand
                     Db::beginTransaction();
                     try {
                         // 创建知识库文档
-                        $documentEntity = new KnowledgeBaseDocumentEntity($knowledgeBase->toArray());
-                        $documentEntity->setKnowledgeBaseCode($knowledgeBase->getCode())
-                            ->setName('未命名文档')
-                            ->setDocType(DocType::TXT->value)
-                            ->setCode('')
-                            ->setEmbeddingModel($knowledgeBase->getModel())
-                            ->setFragmentConfig($knowledgeBase->getFragmentConfig() ?? [])
-                            ->setCreatedUid($dataIsolation->getCurrentUserId())
-                            ->setUpdatedUid($dataIsolation->getCurrentUserId())
-                            ->setOrganizationCode($dataIsolation->getCurrentOrganizationCode());
-
-                        $documentEntity = $this->knowledgeBaseDocumentDomainService->save(
+                        $documentEntity = $this->knowledgeBaseDocumentDomainService->getOrCreatorDefaultDocument(
                             $dataIsolation,
                             $knowledgeBase,
-                            $documentEntity
                         );
 
                         // 循环获取全量知识库文档片段

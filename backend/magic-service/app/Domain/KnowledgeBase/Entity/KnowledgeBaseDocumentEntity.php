@@ -388,4 +388,9 @@ class KnowledgeBaseDocumentEntity extends AbstractEntity
         }
         return $driver->get();
     }
+
+    public static function getDefaultDocumentCode(): string
+    {
+        return 'DOCUMENT-default';
+    }
 }

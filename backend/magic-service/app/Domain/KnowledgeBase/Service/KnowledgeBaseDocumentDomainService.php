@@ -17,9 +17,12 @@ use App\Domain\KnowledgeBase\Event\KnowledgeBaseDocumentRemovedEvent;
 use App\Domain\KnowledgeBase\Event\KnowledgeBaseDocumentSavedEvent;
 use App\Domain\KnowledgeBase\Repository\Facade\KnowledgeBaseDocumentRepositoryInterface;
 use App\ErrorCode\FlowErrorCode;
+use App\Infrastructure\Core\Embeddings\EmbeddingGenerator\EmbeddingGenerator;
+use App\Infrastructure\Core\Embeddings\VectorStores\VectorStoreDriver;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Infrastructure\Core\ValueObject\Page;
 use Dtyq\AsyncEvent\AsyncEventUtil;
+use Exception;
 
 /**
  * 知识库文档领域服务
@@ -31,25 +34,21 @@ readonly class KnowledgeBaseDocumentDomainService
     ) {
     }
 
-    /**
-     * 保存知识库文档.
-     */
-    public function save(KnowledgeBaseDataIsolation $dataIsolation, KnowledgeBaseEntity $knowledgeBaseEntity, KnowledgeBaseDocumentEntity $documentEntity, ?DocumentFileVO $documentFile = null): KnowledgeBaseDocumentEntity
+    public function create(KnowledgeBaseDataIsolation $dataIsolation, KnowledgeBaseEntity $knowledgeBaseEntity, KnowledgeBaseDocumentEntity $documentEntity, ?DocumentFileVO $documentFile = null): KnowledgeBaseDocumentEntity
     {
-        if (! $documentEntity->getCode()) {
-            // 新建文档
-            $this->prepareForCreation($documentEntity, $documentFile);
-            $entity = $this->magicFlowDocumentRepository->create($dataIsolation, $documentEntity);
-            // 如果有文件，同步文件
-            if ($documentFile) {
-                $event = new KnowledgeBaseDocumentSavedEvent($knowledgeBaseEntity, $entity, true, $documentFile);
-                $event->setIsSync(true);
-                AsyncEventUtil::dispatch($event);
-            }
-            return $entity;
+        $this->prepareForCreation($documentEntity, $documentFile);
+        $entity = $this->magicFlowDocumentRepository->create($dataIsolation, $documentEntity);
+        // 如果有文件，同步文件
+        if ($documentFile) {
+            $event = new KnowledgeBaseDocumentSavedEvent($knowledgeBaseEntity, $entity, true, $documentFile);
+            $event->setIsSync(true);
+            AsyncEventUtil::dispatch($event);
         }
+        return $entity;
+    }
 
-        // 更新文档
+    public function update(KnowledgeBaseDataIsolation $dataIsolation, KnowledgeBaseEntity $knowledgeBaseEntity, KnowledgeBaseDocumentEntity $documentEntity): KnowledgeBaseDocumentEntity
+    {
         $oldDocument = $this->show($dataIsolation, $documentEntity->getCode());
         $this->prepareForUpdate($documentEntity, $oldDocument);
         return $this->magicFlowDocumentRepository->update($dataIsolation, $documentEntity);
@@ -131,6 +130,27 @@ readonly class KnowledgeBaseDocumentDomainService
         $this->magicFlowDocumentRepository->changeSyncStatus($dataIsolation, $documentEntity);
     }
 
+    public function getOrCreatorDefaultDocument(KnowledgeBaseDataIsolation $dataIsolation, KnowledgeBaseEntity $knowledgeBaseEntity): KnowledgeBaseDocumentEntity
+    {
+        try {
+            // 尝试获取默认文档
+            return $this->show($dataIsolation, KnowledgeBaseDocumentEntity::getDefaultDocumentCode());
+        } catch (Exception $e) {
+            // 如果文档不存在，创建新的默认文档
+            $documentEntity = (new KnowledgeBaseDocumentEntity())
+                ->setName('未命名文档')
+                ->setKnowledgeBaseCode($knowledgeBaseEntity->getCode())
+                ->setCreatedUid($knowledgeBaseEntity->getCreator())
+                ->setUpdatedUid($knowledgeBaseEntity->getCreator())
+                ->setDocType(DocType::TXT->value)->setSyncStatus(0)
+                ->setOrganizationCode($knowledgeBaseEntity->getOrganizationCode())
+                ->setEmbeddingModel(EmbeddingGenerator::defaultModel())
+                ->setFragmentConfig([])
+                ->setVectorDb(VectorStoreDriver::default()->value);
+            return $this->create($dataIsolation, $knowledgeBaseEntity, $documentEntity);
+        }
+    }
+
     /**
      * 删除文档下的所有片段.
      */
@@ -163,7 +183,7 @@ readonly class KnowledgeBaseDocumentDomainService
 
         $documentEntity->setUpdatedAt($documentEntity->getCreatedAt());
         $documentEntity->setUpdatedUid($documentEntity->getCreatedUid());
-        $documentEntity->setDocType(DocType::fromExtension($documentFile->getFileLink()->getUrl() ?? '')->value);
+        $documentEntity->setDocType(DocType::fromExtension($documentFile?->getFileLink()->getUrl() ?? '')->value);
         $documentEntity->setSyncStatus(0); // 0 表示未同步
     }
 
