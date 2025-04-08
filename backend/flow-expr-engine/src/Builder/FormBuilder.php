@@ -88,8 +88,19 @@ JSON
 
     private function buildChildren(Form $parent, array $data): void
     {
+        $items = null;
+        if ($parent->getType()->isArray()) {
+            // 兼容多种 items 获取
+            $items = $data['items'] ?? [];
+            if (empty($items)) {
+                $items = $data['properties'][0] ?? [];
+            }
+            if ($items['type'] === 'object' && empty($items['properties'])) {
+                $items = $data['properties'][0] ?? [];
+            }
+        }
         // 处理items
-        if ($dataItems = $data['items'] ?? []) {
+        if ($dataItems = $items) {
             $itemForm = new Form(
                 type: FormType::from($dataItems['type'] ?? ''),
                 key: $dataItems['key'] ?? '',
