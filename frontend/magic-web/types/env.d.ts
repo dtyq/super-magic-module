@@ -24,6 +24,7 @@ interface ImportMetaEnv {
 	readonly MAGIC_APP_VERSION?: string
 	readonly MAGIC_TEAMSHARE_WEB_URL?: string
 	readonly MAGIC_KEEWOOD_WEB_URL?: string
+	readonly MAGIC_EDITION?: string
 }
 
 interface ImportMeta {
