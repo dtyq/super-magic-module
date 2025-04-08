@@ -12,6 +12,7 @@ use App\Domain\KnowledgeBase\Entity\KnowledgeBaseEntity;
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseFragmentEntity;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeBaseDataIsolation;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeFragmentQuery;
+use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeSyncStatus;
 use App\Domain\KnowledgeBase\Entity\ValueObject\Query\KnowledgeBaseFragmentQuery;
 use App\Domain\KnowledgeBase\Event\KnowledgeBaseFragmentRemovedEvent;
 use App\Domain\KnowledgeBase\Event\KnowledgeBaseFragmentSavedEvent;
@@ -165,5 +166,13 @@ readonly class KnowledgeBaseFragmentDomainService
     public function batchDestroyByPointIds(KnowledgeBaseDataIsolation $dataIsolation, KnowledgeBaseEntity $knowledgeEntity, array $pointIds): void
     {
         $this->magicFlowKnowledgeFragmentRepository->fragmentBatchDestroyByPointIds($dataIsolation, $knowledgeEntity->getCode(), $pointIds);
+    }
+
+    /**
+     * @return array<string, KnowledgeSyncStatus>
+     */
+    public function getFinalSyncStatusByDocumentCodes(KnowledgeBaseDataIsolation $dataIsolation, array $documentCodes): array
+    {
+        return $this->magicFlowKnowledgeFragmentRepository->getFinalSyncStatusByDocumentCodes($dataIsolation, $documentCodes);
     }
 }

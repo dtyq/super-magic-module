@@ -349,8 +349,7 @@ class KnowledgeBaseApiTest extends HttpTestCase
         $this->assertArrayHasKey('total', $res['data']);
         $this->assertArrayHasKey('list', $res['data']);
         $this->assertIsArray($res['data']['list']);
-        $this->assertCount(2, $res['data']['list']);
-        var_dump($res['data']['list']);
+        $this->assertCount(4, $res['data']['list']);
     }
 
     public function testGetFragmentDetail()

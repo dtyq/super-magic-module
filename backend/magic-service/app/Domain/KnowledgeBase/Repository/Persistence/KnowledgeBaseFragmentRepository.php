@@ -167,4 +167,50 @@ class KnowledgeBaseFragmentRepository extends KnowledgeBaseAbstractRepository im
         $builder = $this->createBuilder($dataIsolation, KnowledgeBaseFragmentsModel::query());
         $builder->where('knowledge_code', $knowledgeCode)->whereIn('point_id', $pointIds)->delete();
     }
+
+    /**
+     * @return array<string, KnowledgeSyncStatus>
+     */
+    public function getFinalSyncStatusByDocumentCodes(KnowledgeBaseDataIsolation $dataIsolation, array $documentCodes): array
+    {
+        if (empty($documentCodes)) {
+            return [];
+        }
+
+        $builder = $this->createBuilder($dataIsolation, KnowledgeBaseFragmentsModel::query());
+        $results = $builder
+            ->select('document_code', 'sync_status')
+            ->whereIn('document_code', $documentCodes)
+            ->get();
+
+        // 按document_code分组
+        $groupedResults = [];
+        foreach ($results as $result) {
+            if (! isset($groupedResults[$result->document_code])) {
+                $groupedResults[$result->document_code] = [];
+            }
+            $groupedResults[$result->document_code][] = KnowledgeSyncStatus::from($result->sync_status);
+        }
+
+        // 确保所有请求的文档代码都有对应的状态组
+        foreach ($documentCodes as $documentCode) {
+            if (! isset($groupedResults[$documentCode])) {
+                $groupedResults[$documentCode] = [KnowledgeSyncStatus::NotSynced];
+            }
+        }
+
+        // 判断每个文档的整体状态
+        $statusMap = [];
+        foreach ($groupedResults as $documentCode => $statuses) {
+            if (in_array(KnowledgeSyncStatus::Syncing, $statuses)) {
+                $statusMap[$documentCode] = KnowledgeSyncStatus::Syncing;
+            } elseif (count(array_unique($statuses)) === 1 && $statuses[0] === KnowledgeSyncStatus::NotSynced) {
+                $statusMap[$documentCode] = KnowledgeSyncStatus::NotSynced;
+            } else {
+                $statusMap[$documentCode] = KnowledgeSyncStatus::Synced;
+            }
+        }
+
+        return $statusMap;
+    }
 }
