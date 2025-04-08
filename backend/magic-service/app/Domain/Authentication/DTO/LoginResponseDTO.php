@@ -17,6 +17,10 @@ class LoginResponseDTO extends AbstractEntity implements LoginResponseInterface
 
     protected string $magicUserId = '';
 
+    protected string $organizationName = '';
+
+    protected ?string $organizationLogo = null;
+
     protected string $magicOrganizationCode = '';
 
     protected string $thirdPlatformOrganizationCode = '';
@@ -96,6 +100,28 @@ class LoginResponseDTO extends AbstractEntity implements LoginResponseInterface
         } else {
             $this->thirdPlatformType = PlatformType::from($thirdPlatformType);
         }
+        return $this;
+    }
+
+    public function getOrganizationName(): string
+    {
+        return $this->organizationName ?? '';
+    }
+
+    public function setOrganizationName(string $organizationName): static
+    {
+        $this->organizationName = $organizationName;
+        return $this;
+    }
+
+    public function getOrganizationLogo(): ?string
+    {
+        return $this->organizationLogo ?? null;
+    }
+
+    public function setOrganizationLogo(?string $organizationLogo): static
+    {
+        $this->organizationLogo = $organizationLogo;
         return $this;
     }
 }

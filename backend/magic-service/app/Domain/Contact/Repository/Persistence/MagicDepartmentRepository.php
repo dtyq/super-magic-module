@@ -233,6 +233,28 @@ class MagicDepartmentRepository implements MagicDepartmentRepositoryInterface
     }
 
     /**
+     * 批量获取多个组织的根部门信息.
+     * @param array $organizationCodes 组织代码数组
+     * @return MagicDepartmentEntity[] 根部门实体数组
+     */
+    public function getOrganizationsRootDepartment(array $organizationCodes): array
+    {
+        if (empty($organizationCodes)) {
+            return [];
+        }
+
+        $departments = $this->model->newQuery()
+            ->whereIn('organization_code', $organizationCodes)
+            ->where(function (Builder $query) {
+                $query->where('parent_department_id', '=', '')
+                    ->orWhereNull('parent_department_id');
+            });
+
+        $departments = Db::select($departments->toSql(), $departments->getBindings());
+        return $this->getDepartmentsEntity($departments);
+    }
+
+    /**
      * @return MagicDepartmentEntity[]
      */
     protected function getDepartmentsEntity(array $departments, bool $keyById = false): array
