@@ -13,6 +13,7 @@ use App\Application\KnowledgeBase\VectorDatabase\Similarity\Driver\HybridSimilar
 use App\Application\KnowledgeBase\VectorDatabase\Similarity\Driver\SemanticSimilaritySearchInterface;
 use App\Application\KnowledgeBase\VectorDatabase\Similarity\Driver\SimilaritySearchDriverInterface;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeBaseDataIsolation;
+use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeRetrievalResult;
 use App\Domain\KnowledgeBase\Entity\ValueObject\Query\KnowledgeBaseQuery;
 use App\Domain\KnowledgeBase\Entity\ValueObject\RetrievalMethod;
 use App\Domain\KnowledgeBase\Entity\ValueObject\RetrieveConfig;
@@ -28,6 +29,9 @@ class KnowledgeSimilarityManager
     ) {
     }
 
+    /**
+     * @return array<KnowledgeRetrievalResult>
+     */
     public function similarity(KnowledgeBaseDataIsolation $dataIsolation, KnowledgeSimilarityFilter $filter, ?RetrieveConfig $retrieveConfig = null): array
     {
         $filter->validate();
