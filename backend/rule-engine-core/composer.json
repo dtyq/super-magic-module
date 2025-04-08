@@ -21,7 +21,7 @@
         "php": ">=8.0",
         "hyperf/di": "*",
         "hyperf/framework": "*",
-        "dtyq/sandbox": "~0.0",
+        "dtyq/sandbox": "~0.1",
         "twig/twig": "^3.4"
     },
     "require-dev": {
@@ -55,7 +55,7 @@
             "config": "Dtyq\\RuleEngineCore\\ConfigProvider"
         },
         "branch-alias": {
-            "dev-master": "0.0-dev"
+            "dev-master": "0.1-dev"
         }
     },
     "repositories": [
