@@ -2,12 +2,12 @@
 
 # Magic企业级AI应用开发平台
 
-![flow界面](/static/img/showmagic.jpg)
+![flow界面](https://cdn.letsmagic.cn/static/img/showmagic.jpg)
 
 ## 一、平台概述  
 **「零代码构建智能体，赋能企业高效转型」**  
 
-![Magic企业级AI应用开发平台](/static/img/magic-platform.png)
+![Magic企业级AI应用开发平台](https://cdn.letsmagic.cn/static/img/magic-platform.png)
 
 Magic是新一代企业级AI应用开发平台，基于大模型技术构建，通过模块化AI智能体实现复杂业务场景的快速落地。无论用户是否具备编程基础，均可通过可视化交互在数小时内完成智能审批、数据分析、政策解读等场景的智能体搭建，并一键部署至企业内部系统，实现人机协作效率300%提升。
 

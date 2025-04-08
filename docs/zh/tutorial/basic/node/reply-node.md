@@ -7,11 +7,11 @@
 
 消息回复节点界面主要由消息类型选择区和内容编辑区组成。顶部可以选择要发送的消息类型（文本、Markdown、图片等），下方的内容编辑区会根据所选类型显示相应的配置选项，如文本编辑框或附件链接输入框等。您可以在这里配置要发送给用户的具体内容。
 
-![消息回复节点](/static/img/reply-node-1.png)
+![消息回复节点](https://cdn.letsmagic.cn/static/img/reply-node-1.png)
 
-![消息回复节点类型](/static/img/reply-node-2.png)
+![消息回复节点类型](https://cdn.letsmagic.cn/static/img/reply-node-2.png)
 
-![消息回复节点类型](/static/img/reply-node-3.png)
+![消息回复节点类型](https://cdn.letsmagic.cn/static/img/reply-node-3.png)
 
 ## 为什么需要消息回复节点？
 在构建智能工作流时，消息回复节点解决了以下关键问题：

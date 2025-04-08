@@ -5,7 +5,7 @@
 **图片说明：**
 
 向量知识库匹配节点界面主要由两部分组成 - 上方的"配置筛选条件"区域，用于设置向量知识库的筛选条件；下方的"输出"区域，显示筛选后的向量知识库列表。筛选条件支持按ID或名称进行等于、不等于、包含、不包含等多种匹配方式。
-![开始节点](/static/img/Vector-knowledge-base-matching.png)
+![开始节点](https://cdn.letsmagic.cn/static/img/Vector-knowledge-base-matching.png)
 
 ## 为什么需要向量知识库匹配节点？
 **在智能应用的构建过程中，向量知识库匹配节点扮演着"知识筛选器"的角色，它能够帮助您：**

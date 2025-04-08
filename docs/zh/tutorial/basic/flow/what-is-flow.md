@@ -53,7 +53,7 @@
 - **通过信息化系统自动化执行**
 #### 优化与迭代
 - **分析瓶颈，改进低效环节**
-![what-is-flow](/static/img/markmap.png)
+![what-is-flow](https://cdn.letsmagic.cn/static/img/markmap.png)
 
 ## 总结
 流程是组织运作的"骨架"，通过标准化、协作化、可控化的设计，将资源转化为价值。无论是简单审批还是复杂生产，流程的高效管理能显著提升质量、降低成本，并为企业构建长期竞争力。

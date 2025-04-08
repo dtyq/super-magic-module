@@ -6,7 +6,7 @@ The Vector Search Node is a functional node in Magic Flow workflows used for qui
 **Image Description:**
 
 The vector search node interface displays the main configuration areas of the node, including knowledge base selection, query text input, similarity threshold settings, and result quantity limits.
-![Vector Search Node](/static/img/Vector-search.png)
+![Vector Search Node](https://cdn.letsmagic.cn/static/img/Vector-search.png)
 
 ## Why Do We Need a Vector Search Node?
 **In building intelligent applications, the vector search node solves the challenge of accurately finding relevant information from large amounts of unstructured data:**

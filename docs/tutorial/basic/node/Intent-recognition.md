@@ -6,7 +6,7 @@ The Intent Recognition Node is an intelligent analysis node in Magic Flow workfl
 **Image Description:**
 
 The Intent Recognition Node interface includes model selection and branch setting areas, where you can define multiple intent branches. Each branch includes an intent name and description, as well as different process paths corresponding to different intents.
-![Intent Recognition Node](/static/img/Intent-recognition.png)
+![Intent Recognition Node](https://cdn.letsmagic.cn/static/img/Intent-recognition.png)
 
 ## Why Do We Need Intent Recognition Node?
 In building intelligent applications, the Intent Recognition Node plays a key role as "intelligent navigation":

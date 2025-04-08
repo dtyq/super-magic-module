@@ -6,7 +6,7 @@ The Vector Knowledge Base Matching Node is a specialized node in Magic Flow work
 **Image Description:**
 
 The Vector Knowledge Base Matching Node interface mainly consists of two parts - the "Configure Filter Conditions" area at the top for setting vector knowledge base filter conditions, and the "Output" area at the bottom displaying the filtered vector knowledge base list. Filter conditions support various matching methods such as equals, not equals, contains, not contains, etc., by ID or name.
-![Start Node](/static/img/Vector-knowledge-base-matching.png)
+![Start Node](https://cdn.letsmagic.cn/static/img/Vector-knowledge-base-matching.png)
 
 ## Why Do We Need a Vector Knowledge Base Matching Node?
 **In the process of building intelligent applications, the Vector Knowledge Base Matching Node plays the role of a "knowledge filter", helping you:**

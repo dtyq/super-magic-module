@@ -5,7 +5,7 @@
 **图片说明：**
 
 创建群聊节点界面包含群名称、群主、群成员、群类型等配置项，以及将当前用户和助理添加进群聊的选项。您可以通过简单的配置，自动创建满足业务需求的各类群聊。
-![创建群聊节点](/static/img/Create-group-chat.png)
+![创建群聊节点](https://cdn.letsmagic.cn/static/img/Create-group-chat.png)
 
 
 ## 为什么需要创建群聊节点？

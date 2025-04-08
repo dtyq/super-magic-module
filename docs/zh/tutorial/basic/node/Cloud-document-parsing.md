@@ -5,7 +5,7 @@
 **图片说明：**
 
 云文档解析节点的配置界面包含文档选择区域，在文档选择区域，您可以通过选择器指定需要解析的云文档。
-![云文档解析节点](/static/img/Cloud-document-parsing.png)
+![云文档解析节点](https://cdn.letsmagic.cn/static/img/Cloud-document-parsing.png)
 
 ## 为什么需要云文档解析节点？
 在构建智能工作流时，我们经常需要参考、分析或处理企业内部已有的文档资料。云文档解析节点解决了以下问题：

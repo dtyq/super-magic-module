@@ -7,11 +7,11 @@ The Message Reply Node is a basic node used to send information to users. When u
 
 The Message Reply Node interface mainly consists of a message type selection area and a content editing area. At the top, you can select the message type to send (text, Markdown, image, etc.), and the content editing area below will display corresponding configuration options based on the selected type, such as text editing boxes or attachment link input fields. Here you can configure the specific content to send to users.
 
-![Message Reply Node](/static/img/reply-node-1.png)
+![Message Reply Node](https://cdn.letsmagic.cn/static/img/reply-node-1.png)
 
-![Message Reply Node Types](/static/img/reply-node-2.png)
+![Message Reply Node Types](https://cdn.letsmagic.cn/static/img/reply-node-2.png)
 
-![Message Reply Node Types](/static/img/reply-node-3.png)
+![Message Reply Node Types](https://cdn.letsmagic.cn/static/img/reply-node-3.png)
 
 ## Why Do We Need a Message Reply Node?
 When building intelligent workflows, the Message Reply Node solves the following key problems:

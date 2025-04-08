@@ -1,11 +1,11 @@
 # Magic Enterprise AI Application Development Platform
 
-![Flow Interface](/static/img/showmagic.jpg)
+![Flow Interface](https://cdn.letsmagic.cn/static/img/showmagic.jpg)
 
 ## 1. Platform Overview  
 **"Build AI Agents with Zero Code, Empower Enterprise Digital Transformation"**  
 
-![Magic Enterprise AI Application Development Platform](/static/img/magic-platform.png)
+![Magic Enterprise AI Application Development Platform](https://cdn.letsmagic.cn/static/img/magic-platform.png)
 
 Magic is a next-generation enterprise AI application development platform, built on large language model technology, enabling rapid implementation of complex business scenarios through modular AI agents. Whether users have programming experience or not, they can build agents for scenarios like intelligent approval, data analysis, and policy interpretation through visual interaction within hours, and deploy them to internal enterprise systems with one click, achieving a 300% improvement in human-machine collaboration efficiency.
 
