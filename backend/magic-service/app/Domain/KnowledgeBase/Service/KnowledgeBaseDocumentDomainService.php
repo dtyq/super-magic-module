@@ -41,7 +41,6 @@ readonly class KnowledgeBaseDocumentDomainService
         // 如果有文件，同步文件
         if ($documentFile) {
             $event = new KnowledgeBaseDocumentSavedEvent($knowledgeBaseEntity, $entity, true, $documentFile);
-            $event->setIsSync(true);
             AsyncEventUtil::dispatch($event);
         }
         return $entity;
