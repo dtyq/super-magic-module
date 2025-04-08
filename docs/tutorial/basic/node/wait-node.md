@@ -6,7 +6,7 @@ The Wait Node is a pause point in a workflow, used to wait for user reply messag
 **Image Description:**
 
 The Wait Node interface mainly consists of three parts: the top displays the "Wait" title, indicating the node is waiting for user reply; the middle section shows the output data the system will obtain, including session ID, topic ID, message content, etc.; the bottom area contains timeout settings, where you can enable and set the wait timeout duration.
-![Wait Node](/static/img/wait-node-1.png)
+![Wait Node](https://cdn.letsmagic.cn/static/img/wait-node-1.png)
 
 ## Why Do We Need a Wait Node?
 When building interactive workflows, the Wait Node solves the following key problems:

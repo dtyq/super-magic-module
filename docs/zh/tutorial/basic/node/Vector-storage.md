@@ -5,7 +5,7 @@
 **图片说明：**
 
 向量存储节点界面展示了节点的主要配置区域，包括知识库选择、存储内容输入、元数据设置以及业务ID配置等参数设置选项
-![开始节点](/static/img/Vector-storage.png)
+![开始节点](https://cdn.letsmagic.cn/static/img/Vector-storage.png)
 
 ## 为什么需要向量存储节点？
 **在构建智能应用时，向量存储节点解决了以下关键问题：**

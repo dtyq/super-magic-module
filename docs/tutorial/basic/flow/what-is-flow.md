@@ -52,7 +52,7 @@ Complex Flow: Cross-department collaboration (e.g., new product development invo
 - **Automate execution through information systems**
 #### Optimization and Iteration
 - **Analyze bottlenecks, improve inefficient steps**
-![what-is-flow](/static/img/markmap.png)
+![what-is-flow](https://cdn.letsmagic.cn/static/img/markmap.png)
 
 ## Summary
 Flow is the "skeleton" of organizational operations. Through standardized, collaborative, and controllable design, it transforms resources into value. Whether it's simple approval or complex production, efficient flow management can significantly improve quality, reduce costs, and build long-term competitiveness for enterprises. 

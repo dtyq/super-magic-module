@@ -6,7 +6,7 @@ The Vector Storage Node is a functional component in Magic Flow workflows used f
 **Image Description:**
 
 The vector storage node interface displays the main configuration areas of the node, including knowledge base selection, storage content input, metadata settings, and business ID configuration options.
-![Vector Storage Node](/static/img/Vector-storage.png)
+![Vector Storage Node](https://cdn.letsmagic.cn/static/img/Vector-storage.png)
 
 ## Why Do We Need a Vector Storage Node?
 **In building intelligent applications, the vector storage node solves the following key problems:**

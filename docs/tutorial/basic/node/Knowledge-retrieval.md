@@ -7,7 +7,7 @@ The Knowledge Retrieval Node is a powerful semantic search tool that can find re
 **Image Description:**
 
 The Knowledge Retrieval Node interface mainly includes knowledge base selection area, retrieval parameter setting area, and output configuration area. In the middle, you can select knowledge base sources and set parameters like similarity threshold and maximum count.
-![Knowledge Retrieval Node](/static/img/Knowledge-retrieval-node.png)
+![Knowledge Retrieval Node](https://cdn.letsmagic.cn/static/img/Knowledge-retrieval-node.png)
 
 ## Why Do We Need Knowledge Retrieval Node?
 In building intelligent applications, the Knowledge Retrieval Node solves the following key issues:

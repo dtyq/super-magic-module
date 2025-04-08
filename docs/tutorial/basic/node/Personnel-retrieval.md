@@ -6,7 +6,7 @@ The Personnel Retrieval Node is a functional node in Magic Flow workflow specifi
 **Image Description:**
 
 The Personnel Retrieval Node interface mainly consists of search condition setting area and output data structure preview area. The upper part shows various filter condition configuration options, including user name, employee ID, position, and other filtering conditions; the lower part displays the data structure of query results, including user basic information and department information fields.
-![Personnel Retrieval Node](/static/img/Personnel-retrieval.png)
+![Personnel Retrieval Node](https://cdn.letsmagic.cn/static/img/Personnel-retrieval.png)
 
 ## Why Do We Need Personnel Retrieval Node?
 In enterprise workflows, accurately obtaining personnel information is a fundamental requirement for many automated processes:

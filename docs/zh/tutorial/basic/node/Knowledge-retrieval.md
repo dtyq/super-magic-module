@@ -7,7 +7,7 @@
 **图片说明：**
 
 知识检索节点界面主要包含知识库选择区、检索参数设置区和输出配置区。中间可以选择知识库来源，并设置相似度阈值、最大条数等参数。
-![知识检索节点](/static/img/Knowledge-retrieval-node.png)
+![知识检索节点](https://cdn.letsmagic.cn/static/img/Knowledge-retrieval-node.png)
 
 
 ## 为什么需要知识检索节点？

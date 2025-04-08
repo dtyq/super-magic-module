@@ -47,7 +47,7 @@ A4打印机、佳能纸质打印机故障? 物料工程售后类
 3. 编排机器人工作流
 整体流程如下：
 
-![FigxmKkXEa2k3XAdDoUgHxf77g2Z.png](/static/img/FigxmKkXEa2k3XAdDoUgHxf77g2Z.png)
+![FigxmKkXEa2k3XAdDoUgHxf77g2Z.png](https://cdn.letsmagic.cn/static/img/FigxmKkXEa2k3XAdDoUgHxf77g2Z.png)
 
 
 
@@ -73,7 +73,7 @@ A4打印机、佳能纸质打印机故障? 物料工程售后类
 #### 上下文
 有上下文，能够让 AI 理解语境，回答准确。上下文包含了聊天记录，外挂知识库，当前提问者的信息。这里特指后者，有了提问者的信息，AI 助理，能够根据你的岗位和部门，去调整回答的内容。下面上下文，都来自上游节点的变量，因此都需要使用 ”@“符号进行选择。效果如下：
 
-![FkR94uM1Ld_YtiOX7TnFdKixsw5P.png](/static/img/FkR94uM1Ld_YtiOX7TnFdKixsw5P.png)
+![FkR94uM1Ld_YtiOX7TnFdKixsw5P.png](https://cdn.letsmagic.cn/static/img/FkR94uM1Ld_YtiOX7TnFdKixsw5P.png)
 
 
 
@@ -177,19 +177,19 @@ A4打印机、佳能纸质打印机故障? 物料工程售后类
 ### 步骤五：调试与发布
 点击页面右上角的「试运行」，评估一下 AI 助理效果
 
-![Fi37wHLpYs9I6JomVXW4ZT6_l1oH.png](/static/img/Fi37wHLpYs9I6JomVXW4ZT6_l1oH.png)
+![Fi37wHLpYs9I6JomVXW4ZT6_l1oH.png](https://cdn.letsmagic.cn/static/img/Fi37wHLpYs9I6JomVXW4ZT6_l1oH.png)
 
 
 
 观察回复节点的内容是否与预期一致，如截图
 
-![FhDUPfdOisZ3eUrWDhEus6Gjvyto.png](/static/img/FhDUPfdOisZ3eUrWDhEus6Gjvyto.png)
+![FhDUPfdOisZ3eUrWDhEus6Gjvyto.png](https://cdn.letsmagic.cn/static/img/FhDUPfdOisZ3eUrWDhEus6Gjvyto.png)
 
 
 
 测试没问题后，可以点击页面右上角「发布」，即可让其他也能体验新搭建的助理
 
-![FowHlZdD4BUfNUmgcjd-N60NU2hG.png](/static/img/FowHlZdD4BUfNUmgcjd-N60NU2hG.png)
+![FowHlZdD4BUfNUmgcjd-N60NU2hG.png](https://cdn.letsmagic.cn/static/img/FowHlZdD4BUfNUmgcjd-N60NU2hG.png)
 
 
 
@@ -208,13 +208,13 @@ A4打印机、佳能纸质打印机故障? 物料工程售后类
 ## 最终效果
 麦吉效果：
 
-![FhbtWpxoNRJbF936PjraCXt_Rj0K.png](/static/img/FhbtWpxoNRJbF936PjraCXt_Rj0K.png)
+![FhbtWpxoNRJbF936PjraCXt_Rj0K.png](https://cdn.letsmagic.cn/static/img/FhbtWpxoNRJbF936PjraCXt_Rj0K.png)
 
 
 
 钉钉效果：
 
-![Fve-M5bgWGVlCAP-lQ4YMhM3XuHT.png](/static/img/Fve-M5bgWGVlCAP-lQ4YMhM3XuHT.png)
+![Fve-M5bgWGVlCAP-lQ4YMhM3XuHT.png](https://cdn.letsmagic.cn/static/img/Fve-M5bgWGVlCAP-lQ4YMhM3XuHT.png)
 
 
 

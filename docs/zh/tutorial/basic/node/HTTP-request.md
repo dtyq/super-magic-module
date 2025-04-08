@@ -5,7 +5,7 @@ HTTP请求节点是Magic Flow工作流中用于与外部API和网络服务进行
 **图片说明：**
 
 HTTP请求节点界面包括请求URL、请求方法、请求头和请求体等配置区域，以及响应解析和输出设置部分。通过这些配置，用户可以定义如何与外部API交互。
-![HTTP 请求节点](/static/img/HTTP-request.png)
+![HTTP 请求节点](https://cdn.letsmagic.cn/static/img/HTTP-request.png)
 
 ## 为什么需要HTTP请求节点？
 在构建智能应用时，往往需要获取外部数据或与其他系统交互，HTTP请求节点正是为此设计：

@@ -6,7 +6,7 @@ The Historical Message Storage Node is a functional node in Magic Flow workflow 
 **Image Description:**
 
 The top area is for message type selection, currently supporting text, image, and file card type messages; the bottom area is for message content input, supporting the use of "@" to add variables for dynamic content storage.
-![Historical Message Storage Node](/static/img/Historical-message-storage.png)
+![Historical Message Storage Node](https://cdn.letsmagic.cn/static/img/Historical-message-storage.png)
 
 ## Why Do We Need Historical Message Storage Node?
 In intelligent dialogue systems, memory and context management are key to providing a coherent interaction experience. The Historical Message Storage Node helps you:

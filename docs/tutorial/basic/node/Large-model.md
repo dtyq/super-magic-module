@@ -6,7 +6,7 @@ The Large Model Call Node is a core node in Magic Flow workflow that allows you 
 **Image Description:**
 
 The Large Model Call Node interface includes core configuration areas such as model selection, system prompts, user prompts, as well as advanced configuration options like model parameter adjustment and knowledge base configuration.
-![Large Model Call Node](/static/img/Large-model.png)
+![Large Model Call Node](https://cdn.letsmagic.cn/static/img/Large-model.png)
 
 ## Why Do We Need Large Model Call Node?
 In the process of building intelligent applications, the Large Model Call Node acts as the "brain", providing intelligent decision-making and content generation capabilities for your workflow:

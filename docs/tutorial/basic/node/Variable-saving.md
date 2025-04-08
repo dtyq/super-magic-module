@@ -6,7 +6,7 @@ The Variable Saving Node is a basic data processing node in Magic Flow, used to 
 **Image Description:**
 
 The Variable Saving Node interface consists of a variable basic information setting area on the left and a variable value configuration area on the right. Here you can set the variable name, display name, select variable type, and assign specific values to variables.
-![Variable Saving Node](/static/img/Variable-saving.png)
+![Variable Saving Node](https://cdn.letsmagic.cn/static/img/Variable-saving.png)
 
 ## Why Do We Need a Variable Saving Node?
 When building workflows, we often need to temporarily store some data, such as user input, calculation results, or intermediate states, for use at different stages of the workflow. The Variable Saving Node is designed to meet this need. It can:

@@ -6,7 +6,7 @@
 **界面说明：**
 
 顶部区域用于消息类型选择，目前支持文本、图片和文件卡片类型消息；底部区域用于消息内容输入，支持使用"@"添加变量实现动态内容存储。
-![历史消息存储节点](/static/img/Historical-message-storage.png)
+![历史消息存储节点](https://cdn.letsmagic.cn/static/img/Historical-message-storage.png)
 
 ## 为什么需要历史消息存储节点？
 在智能对话系统中，记忆和上下文管理是提供连贯交互体验的关键。历史消息存储节点帮助您：
