@@ -154,15 +154,15 @@ export default {
           ]
         },
 
-        // {
-        //   text: '版本管理',
-        //   collapsed: false,
-        //   items: [
-        //     { text: '版本计划', link: '/zh/development/advanced/custom-node' },
-        //     { text: '版本说明', link: '/zh/development/advanced/plugin-development' },
-        //     { text: '版本更新记录', link: '/zh/development/advanced/performance' },
-        //   ]
-        // },
+        {
+          text: '版本管理',
+          collapsed: false,
+          items: [
+            { text: '版本计划', link: '/zh/development/version/release-planning' },
+            { text: '版本说明', link: '/zh/development/version/versions' },
+            { text: '版本更新记录', link: '/zh/development/version/changelog' },
+          ]
+        },
         {
           text: '配置说明',
           collapsed: false,
@@ -177,7 +177,7 @@ export default {
       ]
     },
     footer: {
-      message: '基于 MIT 许可发布',
+      message: '基于 Apache 2.0 许可发布',
       copyright: 'Copyright © 2024-present Magic Docs'
     }
   }

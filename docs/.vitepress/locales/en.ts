@@ -144,15 +144,15 @@ export default {
             { text: 'Docker Installation', link: '/en/development/deploy/docker' },
           ]
         },
-        // {
-        //   text: 'Version Management',
-        //   collapsed: false,
-        //   items: [
-        //     { text: 'Version Planning', link: '/en/development/advanced/custom-node' },
-        //     { text: 'Version Description', link: '/en/development/advanced/plugin-development' },
-        //     { text: 'Version Update History', link: '/en/development/advanced/performance' },
-        //   ]
-        // },
+        {
+          text: 'Version Management',
+          collapsed: false,
+          items: [
+            { text: 'Version Planning', link: '/en/development/version/release-planning' },
+            { text: 'Version Description', link: '/en/development/version/versions' },
+            { text: 'Version Update History', link: '/en/development/version/changelog' },
+          ]
+        },
         {
           text: 'Configuration Guide',
           collapsed: false,
