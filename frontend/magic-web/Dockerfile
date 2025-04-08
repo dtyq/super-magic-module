@@ -9,7 +9,6 @@ FROM ${NODE_IMAGE} as builder
 WORKDIR /app
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml* ./
-COPY ./packages ./packages
 
 RUN npm install pnpm --location=global && \
     # 安装 patch-package 是为了使 @feb/formily 能够正常装包

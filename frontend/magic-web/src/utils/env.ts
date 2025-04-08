@@ -52,4 +52,4 @@ export const env = (
 export const isProduction = (): boolean => env("MAGIC_APP_ENV") === AppEnv.Production
 
 /** 商业化版本 */
-export const isCommercial = () => env("MAGIC_VERSION") === "commercial"
+export const isCommercial = () => env("MAGIC_EDITION") === "ENTERPRISE"

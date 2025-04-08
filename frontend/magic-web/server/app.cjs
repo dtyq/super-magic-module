@@ -61,7 +61,7 @@ app.get("/config.js", (req, res) => {
 		"MAGIC_KEEWOOD_WEB_URL",
 		"MAGIC_APP_VERSION",
 		"MAGIC_APP_SHA",
-		"MAGIC_VERSION"
+		"MAGIC_EDITION"
 	]
 
 	const isSafeEnvironmentVariable = (key) => {

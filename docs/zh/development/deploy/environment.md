@@ -29,8 +29,8 @@ cp .env.example .env
 MAGIC_SERVICE_TAG=latest
 MAGIC_WEB_TAG=latest
 
-# 版本类型 (commercial | open-source)
-MAGIC_VERSION=open-source
+# 版本类型 (ENTERPRISE | COMMUNITY)
+MAGIC_EDITION=COMMUNITY
 ```
 
 #### Git仓库配置
