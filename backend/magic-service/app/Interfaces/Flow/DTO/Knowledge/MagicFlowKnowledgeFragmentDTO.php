@@ -7,7 +7,6 @@ declare(strict_types=1);
 
 namespace App\Interfaces\Flow\DTO\Knowledge;
 
-use App\Domain\KnowledgeBase\Entity\KnowledgeBaseFragmentEntity;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeSyncStatus;
 use App\Interfaces\Flow\DTO\AbstractFlowDTO;
 

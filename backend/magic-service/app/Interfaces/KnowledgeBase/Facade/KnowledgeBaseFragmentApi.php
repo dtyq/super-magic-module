@@ -10,7 +10,6 @@ namespace App\Interfaces\KnowledgeBase\Facade;
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseFragmentEntity;
 use App\Domain\KnowledgeBase\Entity\ValueObject\Query\KnowledgeBaseFragmentQuery;
 use App\Infrastructure\Core\ValueObject\Page;
-use App\Interfaces\Flow\DTO\Knowledge\MagicFlowKnowledgeFragmentDTO;
 use App\Interfaces\Kernel\DTO\PageDTO;
 use App\Interfaces\KnowledgeBase\Assembler\KnowledgeBaseFragmentAssembler;
 use App\Interfaces\KnowledgeBase\DTO\Request\CreateFragmentRequestDTO;

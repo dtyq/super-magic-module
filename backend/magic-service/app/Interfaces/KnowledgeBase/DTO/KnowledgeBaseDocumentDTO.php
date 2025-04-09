@@ -7,7 +7,6 @@ declare(strict_types=1);
 
 namespace App\Interfaces\KnowledgeBase\DTO;
 
-use App\Domain\KnowledgeBase\Entity\KnowledgeBaseDocumentEntity;
 use App\Infrastructure\Core\AbstractDTO;
 
 class KnowledgeBaseDocumentDTO extends AbstractDTO
@@ -65,7 +64,6 @@ class KnowledgeBaseDocumentDTO extends AbstractDTO
     public ?string $deletedAt = null;
 
     public string $organizationCode;
-
 
     public function getId(): ?int
     {

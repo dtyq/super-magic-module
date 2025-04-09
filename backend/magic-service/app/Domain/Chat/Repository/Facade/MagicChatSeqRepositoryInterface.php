@@ -108,4 +108,9 @@ interface MagicChatSeqRepositoryInterface
     public function batchUpdateSeqStatus(array $seqIds, MagicMessageStatus $status): int;
 
     public function updateSeqRelation(MagicSeqEntity $seqEntity): bool;
+
+    /**
+     * 更新消息接收人列表.
+     */
+    public function updateReceiveList(MagicSeqEntity $seqEntity): bool;
 }

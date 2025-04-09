@@ -15,6 +15,7 @@ use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Interfaces\Chat\Assembler\SeqAssembler;
 use Hyperf\Codec\Json;
 use Hyperf\DbConnection\Annotation\Transactional;
+use Hyperf\DbConnection\Db;
 use Throwable;
 
 /**
@@ -163,8 +164,22 @@ class MagicControlDomainService extends AbstractDomainService
                     // 由于存在批量写入的情况,这里只生成entity,不调用create方法
                     $seqData = SeqAssembler::getInsertDataByEntity($senderSeenSeqEntity);
                     $seqData['app_message_id'] = $receiveMagicSeqEntity->getAppMessageId();
-                    // 写数据库,更新消息发送方的已读列表
-                    $this->magicSeqRepository->createSequence($seqData);
+                    Db::transaction(function () use ($senderMessageId, $senderReceiveList, $seqData) {
+                        // 写数据库,更新消息发送方的已读列表。这是为了复用消息收发通道，通知客户端有新的已读回执。
+                        $this->magicSeqRepository->createSequence($seqData);
+                        // 更新原始 chat_seq 的消息接收人列表。 避免拉取历史消息时，对方已读的消息还是显示未读。
+                        $originalSeq = $this->magicSeqRepository->getSeqByMessageId($senderMessageId);
+                        if ($originalSeq !== null) {
+                            $originalSeq->setReceiveList($senderReceiveList);
+                            $this->magicSeqRepository->updateReceiveList($originalSeq);
+                        } else {
+                            $this->logger->error(sprintf(
+                                'messageDispatch 更新原始 chat_seq 失败，未找到原始消息 $senderMessageId:%s',
+                                $senderMessageId
+                            ));
+                        }
+                    });
+
                     // 3. 异步推送给消息的发送方,有人已读了他发出的消息
                     $this->pushControlSequence($senderSeenSeqEntity);
                     break;

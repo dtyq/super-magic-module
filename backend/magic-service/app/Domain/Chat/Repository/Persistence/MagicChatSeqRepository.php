@@ -379,6 +379,21 @@ sql;
     }
 
     /**
+     * 更新消息接收人列表.
+     */
+    public function updateReceiveList(MagicSeqEntity $seqEntity): bool
+    {
+        $receiveList = $seqEntity->getReceiveList();
+        $receiveListJson = $receiveList ? Json::encode($receiveList->toArray(), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) : null;
+
+        return (bool) $this->magicSeq::query()
+            ->where('id', $seqEntity->getId())
+            ->update([
+                'receive_list' => $receiveListJson,
+            ]);
+    }
+
+    /**
      * 获取消息的状态变更流.
      * @return MagicSeqEntity[]
      */

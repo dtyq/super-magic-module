@@ -8,11 +8,9 @@ declare(strict_types=1);
 namespace App\Interfaces\KnowledgeBase\Facade;
 
 use App\Domain\Flow\Entity\ValueObject\Query\KnowledgeBaseDocumentQuery;
-use App\Domain\KnowledgeBase\Entity\KnowledgeBaseDocumentEntity;
 use App\Infrastructure\Core\ValueObject\Page;
 use App\Interfaces\Kernel\DTO\PageDTO;
 use App\Interfaces\KnowledgeBase\Assembler\KnowledgeBaseDocumentAssembler;
-use App\Interfaces\KnowledgeBase\DTO\KnowledgeBaseDocumentDTO;
 use App\Interfaces\KnowledgeBase\DTO\Request\CreateDocumentRequestDTO;
 use App\Interfaces\KnowledgeBase\DTO\Request\DocumentQueryRequestDTO;
 use App\Interfaces\KnowledgeBase\DTO\Request\UpdateDocumentRequestDTO;
@@ -32,7 +30,6 @@ class KnowledgeBaseDocumentApi extends AbstractKnowledgeBaseApi
         $entity = KnowledgeBaseDocumentAssembler::createDTOToEntity($dto, $userAuthorization);
         $entity = $this->knowledgeBaseDocumentAppService->save($userAuthorization, $entity, $dto->getDocumentFile());
         return KnowledgeBaseDocumentAssembler::entityToDTO($entity)->toArray();
-        
     }
 
     /**

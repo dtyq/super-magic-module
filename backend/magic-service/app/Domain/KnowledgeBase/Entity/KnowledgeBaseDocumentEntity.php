@@ -13,9 +13,6 @@ use App\Infrastructure\Core\AbstractEntity;
 use App\Infrastructure\Core\Embeddings\VectorStores\VectorStoreDriver;
 use App\Infrastructure\Core\Embeddings\VectorStores\VectorStoreInterface;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
-use App\Interfaces\Authorization\Web\MagicUserAuthorization;
-use App\Interfaces\KnowledgeBase\DTO\Request\CreateDocumentRequestDTO;
-use App\Interfaces\KnowledgeBase\DTO\Request\UpdateDocumentRequestDTO;
 
 /**
  * 知识库文档实体.
