@@ -30,14 +30,14 @@ use Dtyq\AsyncEvent\AsyncEventUtil;
 readonly class KnowledgeBaseDocumentDomainService
 {
     public function __construct(
-        private KnowledgeBaseDocumentRepositoryInterface $magicFlowDocumentRepository
+        private KnowledgeBaseDocumentRepositoryInterface $knowledgeBaseDocumentRepository
     ) {
     }
 
     public function create(KnowledgeBaseDataIsolation $dataIsolation, KnowledgeBaseEntity $knowledgeBaseEntity, KnowledgeBaseDocumentEntity $documentEntity, ?DocumentFileVO $documentFile = null): KnowledgeBaseDocumentEntity
     {
         $this->prepareForCreation($documentEntity, $documentFile);
-        $entity = $this->magicFlowDocumentRepository->create($dataIsolation, $documentEntity);
+        $entity = $this->knowledgeBaseDocumentRepository->create($dataIsolation, $documentEntity);
         // 如果有文件，同步文件
         if ($documentFile) {
             $event = new KnowledgeBaseDocumentSavedEvent($knowledgeBaseEntity, $entity, true, $documentFile);
@@ -50,7 +50,7 @@ readonly class KnowledgeBaseDocumentDomainService
     {
         $oldDocument = $this->show($dataIsolation, $documentEntity->getCode());
         $this->prepareForUpdate($documentEntity, $oldDocument);
-        return $this->magicFlowDocumentRepository->update($dataIsolation, $documentEntity);
+        return $this->knowledgeBaseDocumentRepository->update($dataIsolation, $documentEntity);
     }
 
     /**
@@ -60,7 +60,7 @@ readonly class KnowledgeBaseDocumentDomainService
      */
     public function queries(KnowledgeBaseDataIsolation $dataIsolation, KnowledgeBaseDocumentQuery $query, Page $page): array
     {
-        return $this->magicFlowDocumentRepository->queries($dataIsolation, $query, $page);
+        return $this->knowledgeBaseDocumentRepository->queries($dataIsolation, $query, $page);
     }
 
     /**
@@ -68,7 +68,7 @@ readonly class KnowledgeBaseDocumentDomainService
      */
     public function show(KnowledgeBaseDataIsolation $dataIsolation, string $documentCode): KnowledgeBaseDocumentEntity
     {
-        $document = $this->magicFlowDocumentRepository->show($dataIsolation, $documentCode);
+        $document = $this->knowledgeBaseDocumentRepository->show($dataIsolation, $documentCode);
         if ($document === null) {
             ExceptionBuilder::throw(FlowErrorCode::KnowledgeValidateFailed, 'common.not_found', ['label' => 'document']);
         }
@@ -84,7 +84,7 @@ readonly class KnowledgeBaseDocumentDomainService
         $this->destroyFragments($dataIsolation, $documentCode);
         $documentEntity = $this->show($dataIsolation, $documentCode);
         // 然后删除文档本身
-        $this->magicFlowDocumentRepository->destroy($dataIsolation, $documentCode);
+        $this->knowledgeBaseDocumentRepository->destroy($dataIsolation, $documentCode);
         // 异步删除向量数据库片段
         AsyncEventUtil::dispatch(new KnowledgeBaseDocumentRemovedEvent($documentEntity));
     }
@@ -101,7 +101,7 @@ readonly class KnowledgeBaseDocumentDomainService
             $document->setSyncStatus(0); // 0 表示未同步
             $document->setSyncStatusMessage('');
             $document->setSyncTimes(0);
-            $this->magicFlowDocumentRepository->update($dataIsolation, $document);
+            $this->knowledgeBaseDocumentRepository->update($dataIsolation, $document);
 
             // 异步触发重建（这里可以发送事件或者加入队列）
             // TODO: 触发重建向量事件
@@ -113,7 +113,7 @@ readonly class KnowledgeBaseDocumentDomainService
         if ($deltaWordCount === 0) {
             return;
         }
-        $this->magicFlowDocumentRepository->updateWordCount($dataIsolation, $documentCode, $deltaWordCount);
+        $this->knowledgeBaseDocumentRepository->updateWordCount($dataIsolation, $documentCode, $deltaWordCount);
     }
 
     /**
@@ -121,18 +121,18 @@ readonly class KnowledgeBaseDocumentDomainService
      */
     public function getDocumentCountByKnowledgeBaseCodes(KnowledgeBaseDataIsolation $dataIsolation, array $knowledgeBaseCodes): array
     {
-        return $this->magicFlowDocumentRepository->getDocumentCountByKnowledgeBaseCode($dataIsolation, $knowledgeBaseCodes);
+        return $this->knowledgeBaseDocumentRepository->getDocumentCountByKnowledgeBaseCode($dataIsolation, $knowledgeBaseCodes);
     }
 
     public function changeSyncStatus(KnowledgeBaseDataIsolation $dataIsolation, KnowledgeBaseDocumentEntity $documentEntity): void
     {
-        $this->magicFlowDocumentRepository->changeSyncStatus($dataIsolation, $documentEntity);
+        $this->knowledgeBaseDocumentRepository->changeSyncStatus($dataIsolation, $documentEntity);
     }
 
-    public function getOrCreatorDefaultDocument(KnowledgeBaseDataIsolation $dataIsolation, KnowledgeBaseEntity $knowledgeBaseEntity): KnowledgeBaseDocumentEntity
+    public function getOrCreateDefaultDocument(KnowledgeBaseDataIsolation $dataIsolation, KnowledgeBaseEntity $knowledgeBaseEntity): KnowledgeBaseDocumentEntity
     {
         // 尝试获取默认文档
-        $documentEntity = $this->magicFlowDocumentRepository->show($dataIsolation, KnowledgeBaseDocumentEntity::getDefaultDocumentCode());
+        $documentEntity = $this->knowledgeBaseDocumentRepository->show($dataIsolation, KnowledgeBaseDocumentEntity::getDefaultDocumentCode());
         if ($documentEntity) {
             return $documentEntity;
         }
@@ -149,7 +149,7 @@ readonly class KnowledgeBaseDocumentDomainService
             ->setEmbeddingModel(EmbeddingGenerator::defaultModel())
             ->setFragmentConfig([])
             ->setVectorDb(VectorStoreDriver::default()->value);
-        return $this->create($dataIsolation, $knowledgeBaseEntity, $documentEntity);
+        return $this->knowledgeBaseDocumentRepository->restoreOrCreate($dataIsolation, $documentEntity);
     }
 
     /**
@@ -157,7 +157,7 @@ readonly class KnowledgeBaseDocumentDomainService
      */
     private function destroyFragments(KnowledgeBaseDataIsolation $dataIsolation, string $documentCode): void
     {
-        $this->magicFlowDocumentRepository->destroyFragmentsByDocumentCode($dataIsolation, $documentCode);
+        $this->knowledgeBaseDocumentRepository->destroyFragmentsByDocumentCode($dataIsolation, $documentCode);
     }
 
     /**

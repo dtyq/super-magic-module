@@ -65,7 +65,7 @@ class KnowledgeFragmentStoreNodeRunner extends AbstractKnowledgeNodeRunner
         $knowledgeBaseDataIsolation = KnowledgeBaseDataIsolation::create($dataIsolation->getCurrentOrganizationCode(), $dataIsolation->getCurrentUserId(), $dataIsolation->getMagicId());
         $knowledgeBaseEntity = $knowledgeBaseDomainService->show($knowledgeBaseDataIsolation, $knowledgeCode);
         // 这里要建立一个归纳的文档
-        $documentEntity = $documentDomainService->getOrCreatorDefaultDocument($knowledgeBaseDataIsolation, $knowledgeBaseEntity);
+        $documentEntity = $documentDomainService->getOrCreateDefaultDocument($knowledgeBaseDataIsolation, $knowledgeBaseEntity);
 
         $savingMagicFlowKnowledgeFragmentEntity = new KnowledgeBaseFragmentEntity();
         $savingMagicFlowKnowledgeFragmentEntity->setKnowledgeCode($knowledgeCode);
