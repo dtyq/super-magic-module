@@ -24,7 +24,6 @@ use Hyperf\Event\Annotation\Listener;
 use Hyperf\Event\Contract\ListenerInterface;
 use Psr\Container\ContainerInterface;
 
-#[AsyncListener]
 #[Listener]
 readonly class AccessOwnerSubscriber implements ListenerInterface
 {
