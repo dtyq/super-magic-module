@@ -46,7 +46,7 @@ class OrganizationDotsService {
 	reduceOrganizationDot(organizationCode: string, count: number = 1) {
 		OrganizationDotsStore.setOrganizationDots(
 			organizationCode,
-			OrganizationDotsStore.getOrganizationDots(organizationCode) - count,
+			Math.max(OrganizationDotsStore.getOrganizationDots(organizationCode) - count, 0),
 		)
 		setTimeout(() => {
 			OrganizationDotsDbService.setPersistenceData(OrganizationDotsStore.dots)

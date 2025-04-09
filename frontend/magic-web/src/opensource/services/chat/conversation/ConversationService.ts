@@ -28,6 +28,7 @@ import DotsService from "../dots/DotsService"
 import { ChatApi } from "@/apis"
 import { User } from "@/types/user"
 import { userStore } from "@/opensource/models/user"
+import LastConversationService from "./LastConversationService"
 
 /**
  * 会话服务
@@ -186,6 +187,13 @@ class ConversationService {
 			if (conversation.isGroupConversation) {
 				this.initGroupConversation(conversation)
 			}
+
+			// 设置最后会话
+			LastConversationService.setLastConversation(
+				this.magicId,
+				this.organizationCode,
+				conversation.id,
+			)
 		} catch (error) {
 			console.error(error)
 		} finally {
@@ -312,7 +320,13 @@ class ConversationService {
 					conversationStore.currentConversation.user_organization_code !==
 						this.organizationCode
 				) {
-					this.switchConversation(conversationList?.[0])
+					const lastConversation = conversationStore.getConversation(
+						LastConversationService.getLastConversation(
+							this.magicId,
+							this.organizationCode,
+						) ?? conversationList?.[0].id,
+					)
+					this.switchConversation(lastConversation)
 				}
 
 				if (calcSidebarConversations) {

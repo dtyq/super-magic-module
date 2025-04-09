@@ -1,5 +1,5 @@
 import { observer, useLocalObservable } from "mobx-react-lite"
-import { useRef, useCallback, useEffect, lazy, Suspense } from "react"
+import { useRef, useCallback, useEffect, lazy, Suspense, useLayoutEffect } from "react"
 import { useMemoizedFn, useMount } from "ahooks"
 import MessageStore from "@/opensource/stores/chatNew/message"
 import MessageService from "@/opensource/services/chat/message/MessageService"
@@ -52,6 +52,7 @@ const ChatMessageList = observer(() => {
 	const wrapperRef = useRef<HTMLDivElement | null>(null)
 	const chatListRef = useRef<HTMLDivElement | null>(null)
 	const resizeObserverRef = useRef<ResizeObserver | null>(null)
+	const initialRenderRef = useRef(true)
 	const state = useLocalObservable(() => ({
 		isLoadingMore: false,
 		isAtBottom: true,
@@ -201,8 +202,8 @@ const ChatMessageList = observer(() => {
 
 	// 检查滚动位置并处理
 	const checkScrollPosition = useMemoizedFn(() => {
-		if (!wrapperRef.current) return
-
+		if (!wrapperRef.current || !initialRenderRef.current || isScrolling) return
+		
 		const { scrollTop, clientHeight, scrollHeight } = wrapperRef.current
 		const distance = Math.abs(scrollTop + clientHeight - scrollHeight)
 
@@ -245,7 +246,7 @@ const ChatMessageList = observer(() => {
 		lastMessageId = lastMessage?.message_id
 
 		// 其他情况，滚回底部
-		if (canScroll && !isScrolling && wrapperRef.current) {
+		if (canScroll && wrapperRef.current) {
 			return wrapperRef.current.scrollTo({
 				top: chatListRef.current.clientHeight,
 				behavior: "smooth",
@@ -253,29 +254,28 @@ const ChatMessageList = observer(() => {
 		}
 	})
 
+	const handleContainerScroll = throttle(() => {
+		checkScrollPosition()
+	}, 30)
+
 	// 切换会话或者话题
 	useEffect(() => {
+		if (wrapperRef.current) {
+			wrapperRef.current.removeEventListener("scroll", handleContainerScroll)
+		}
+
+		initialRenderRef.current = false
 		scrollToBottom(true)
+
+		setTimeout(() => {
+			initialRenderRef.current = true
+			if (wrapperRef.current) {
+				wrapperRef.current.addEventListener("scroll", handleContainerScroll)
+			}
+		}, 300)
 	}, [MessageStore.conversationId, MessageStore.topicId])
 
-	useMount(() => {
-		const handleContainerScroll = throttle(() => {
-			checkScrollPosition()
-		}, 30)
-
-		if (wrapperRef.current) {
-			wrapperRef.current.addEventListener("scroll", handleContainerScroll)
-		}
-
-		return () => {
-			if (wrapperRef.current) {
-				wrapperRef.current.removeEventListener("scroll", handleContainerScroll)
-			}
-		}
-	})
-
-
-	useEffect(() => {
+	useLayoutEffect(() => {
 		// 创建 ResizeObserver 实例，监听消息列表高度变化
 		resizeObserverRef.current = new ResizeObserver(
 			debounce((entries) => {
@@ -303,6 +303,7 @@ const ChatMessageList = observer(() => {
 				state.reset()
 				lastMessageId = ""
 				canScroll = true
+				initialRenderRef.current = false
 			}
 		})
 
@@ -323,6 +324,9 @@ const ChatMessageList = observer(() => {
 			state.reset()
 			resizeObserverRef.current?.disconnect()
 			resizeObserverRef.current = null
+			if (wrapperRef.current) {
+				wrapperRef.current.removeEventListener("scroll", handleContainerScroll)
+			}
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [])
