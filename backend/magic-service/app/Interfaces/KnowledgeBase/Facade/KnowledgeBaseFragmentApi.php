@@ -21,13 +21,6 @@ use Dtyq\ApiResponse\Annotation\ApiResponse;
 #[ApiResponse(version: 'low_code')]
 class KnowledgeBaseFragmentApi extends AbstractKnowledgeBaseApi
 {
-    /**
-     * 查询片段.(本期不做).
-     */
-    public function similarity()
-    {
-    }
-
     public function createFragment()
     {
         $dto = CreateFragmentRequestDTO::fromRequest($this->request);

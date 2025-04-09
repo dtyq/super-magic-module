@@ -35,6 +35,11 @@ abstract class AbstractKernelAppService
         return di(FileDomainService::class)->getLinks($organizationCode, $icons);
     }
 
+    public function getIcon(string $organizationCode, string $icon): FileLink
+    {
+        return di(FileDomainService::class)->getLink($organizationCode, $icon);
+    }
+
     protected function createExecutionOperator(Authenticatable|BaseDataIsolation $authorization): Operator
     {
         $flowDataIsolation = $this->createFlowDataIsolation($authorization);
