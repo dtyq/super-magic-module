@@ -21,7 +21,7 @@ export const getDefaultKnowledge = (isCommercial: boolean) => {
 }
 
 export const getKnowledgeTypeOptions = (t: TFunction, isCommercial: boolean) => [
-	...(!isCommercial
+	...(isCommercial
 		? [
 				{
 					label: t("common.teamshareKnowledgeDatabase", { ns: "flow" }),
@@ -32,7 +32,12 @@ export const getKnowledgeTypeOptions = (t: TFunction, isCommercial: boolean) => 
 					value: KnowledgeType.UserKnowledgeDatabase,
 				},
 		  ]
-		: []),
+		: [
+				{
+					label: t("common.userKnowledgeDatabase", { ns: "flow" }),
+					value: KnowledgeType.UserKnowledgeDatabase,
+				},
+		  ]),
 ]
 
 export const getLLMRoleConstantOptions = () => {
