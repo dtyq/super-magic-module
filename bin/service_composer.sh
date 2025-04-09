@@ -41,6 +41,20 @@ if [ -z "${GIT_REPO_URL}" ]; then
 fi
 REMOTE_URL="${GIT_REPO_URL}/${COMPOSE_NAME}.git"
 
+# 添加确认环节，防止误发布
+echo "准备发布组件 ${COMPOSE_NAME} 到远程仓库: ${REMOTE_URL}"
+if [[ $REMOTE_URL == *"github"* ]]; then
+    echo "🔔 提示: 正在向GitHub仓库发布代码"
+elif [[ $REMOTE_URL == *"gitlab"* ]]; then
+    echo "🔔 提示: 正在向GitLab仓库发布代码"
+fi
+
+read -p "是否确认继续? (y/n): " confirm
+if [[ $confirm != "y" && $confirm != "Y" ]]; then
+    echo "发布已取消"
+    exit 0
+fi
+
 rm -rf $TMP_DIR;
 mkdir $TMP_DIR;
 
