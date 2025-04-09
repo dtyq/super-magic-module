@@ -14,7 +14,7 @@ class organizationstructureseeder extends Seeder
     public function run(): void
     {
         $organizationCodes = ['test001', 'test002'];
-        $organizationNames = ['测试企业1', '测试企业2'];
+        $organizationNames = ['测试组织', '演示组织'];
         $departmentStructure = [
             [
                 'name' => '总部',
@@ -85,6 +85,7 @@ class organizationstructureseeder extends Seeder
                 }
 
                 // 2. 创建部门结构
+                $departmentStructure[0]['name'] = $organizationNames[$index];
                 $this->createDepartments($departmentStructure, $orgCode);
 
                 // 3. 分配用户到部门
