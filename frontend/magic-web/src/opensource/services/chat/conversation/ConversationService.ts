@@ -66,6 +66,8 @@ class ConversationService {
 		)
 		if (cache) {
 			conversationSiderbarStore.setConversationSiderbarGroups(cache)
+		} else {
+			conversationSiderbarStore.resetConversationSiderbarGroups()
 		}
 
 		// 从数据库加载会话
@@ -75,6 +77,16 @@ class ConversationService {
 		setTimeout(() => {
 			MessageCacheService.initConversationsMessage(userInfo)
 		})
+	}
+
+	/**
+	 * 重置会话
+	 */
+	reset() {
+		conversationSiderbarStore.resetConversationSiderbarGroups()
+		this.switchConversation()
+		this.magicId = undefined
+		this.organizationCode = undefined
 	}
 
 	/**
@@ -324,7 +336,7 @@ class ConversationService {
 						LastConversationService.getLastConversation(
 							this.magicId,
 							this.organizationCode,
-						) ?? conversationList?.[0].id,
+						) ?? conversationList?.[0]?.id,
 					)
 					this.switchConversation(lastConversation)
 				}

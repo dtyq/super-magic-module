@@ -30,9 +30,9 @@ export type OrganizationPanelProps = FormHTMLAttributes<HTMLDivElement> & {
 	showMember?: boolean
 	/** 成员节点扩展区域 */
 	memberExtra?: (node: StructureUserItem) => ReactNode
+	/** 面包屑右侧节点 */
+	breadcrumbRightNode?: ReactNode
 	checkboxOptions?: CheckboxOptions
-	/** 是否显示部门说明书 */
-	showInstructions?: boolean
 	/** 成员节点包装器 */
 	memberNodeWrapper?: (node: ReactNode, member: StructureUserItem) => ReactNode
 }

@@ -79,6 +79,9 @@ class ConversationSiderbarStore {
 		return nextConversationId
 	}
 
+	/**
+	 * 重置会话组
+	 */
 	resetConversationSiderbarGroups() {
 		this.conversationSiderbarGroups = {
 			[ConversationGroupKey.Top]: [],

@@ -23,6 +23,7 @@ import MessageSeqIdService from "@/opensource/services/chat/message/MessageSeqId
 import MessageService from "@/opensource/services/chat/message/MessageService"
 import conversationService from "@/opensource/services/chat/conversation/ConversationService"
 import MessagePullService from "../chat/message/MessagePullService"
+import { useInterafceStore } from "@/opensource/stores/interface"
 
 export interface OrganizationResponse {
 	magicOrganizationMap: Record<string, User.MagicOrganization>
@@ -40,6 +41,11 @@ export class UserService {
 
 	magicId: string | undefined
 	userId: string | undefined
+
+	lastLogin: {
+		authorization: string
+		promise: Promise<void>
+	} | null = null
 
 	constructor(dependencies: typeof apis, service: Container) {
 		this.contactApi = dependencies.ContactApi
@@ -384,41 +390,56 @@ export class UserService {
 			throw new Error("authorization or organization_code is required")
 		}
 
-		return chatWebSocket
-			.sendAsync<LoginResponse>(
-				encodeSocketIoMessage(
-					EventType.Login,
-					{
-						message: {
-							type: "text",
-							text: {
-								content: "登录",
+		if (authorization === this.lastLogin?.authorization) {
+			return this.lastLogin.promise
+		}
+
+		this.lastLogin = {
+			authorization,
+			promise: chatWebSocket
+				.sendAsync<LoginResponse>(
+					encodeSocketIoMessage(
+						EventType.Login,
+						{
+							message: {
+								type: "text",
+								text: {
+									content: "登录",
+								},
+								app_message_id: genAppMessageId(),
 							},
-							app_message_id: genAppMessageId(),
+							conversation_id: "",
 						},
-						conversation_id: "",
-					},
-					0,
-					{
-						authorization,
-					},
-				),
-			)
-			.then(async (res) => {
-				userStore.user.setUserInfo(res.data.user)
-				// 切换 chat 数据
-				await this.switchUser(res.data.user)
-			})
-			.catch((err) => {
-				if (err.code === 3103) {
-					console.log(err)
-					// accountBusiness.accountLogout() -》 this.deleteAccount()
-					this.deleteAccount()
-				}
-			})
+						0,
+						{
+							authorization,
+						},
+					),
+				)
+				.then(async (res) => {
+					userStore.user.setUserInfo(res.data.user)
+					// 切换 chat 数据
+					await this.switchUser(res.data.user)
+				})
+				.catch((err) => {
+					if (err.code === 3103) {
+						console.log(err)
+						// accountBusiness.accountLogout() -》 this.deleteAccount()
+						this.deleteAccount()
+					}
+				})
+				.finally(() => {
+					if (this.lastLogin) {
+						this.lastLogin.promise = Promise.resolve()
+					}
+				}),
+		}
+
+		return this.lastLogin.promise
 	}
 
 	async switchUser(magicUser: User.UserInfo) {
+		useInterafceStore.setState({ isSwitchingOrganization: true })
 		const magicId = magicUser.magic_id
 		console.log("切换账户", magicId)
 		// 如果当前账户ID与传入的账户ID相同，则不进行切换
@@ -436,7 +457,7 @@ export class UserService {
 
 		if (this.userId !== magicUser.user_id || this.magicId !== magicUser.magic_id) {
 			// 重置消息数据视图
-			conversationService.switchConversation() // 切换到空会话
+			conversationService.reset() // 切换到空会话
 			MessageService.reset()
 		}
 
@@ -466,5 +487,6 @@ export class UserService {
 		/** 设置消息拉取 循环 */
 		MessageService.init()
 		// this.messagePullBusiness.registerMessagePullLoop()
+		useInterafceStore.setState({ isSwitchingOrganization: false })
 	}
 }

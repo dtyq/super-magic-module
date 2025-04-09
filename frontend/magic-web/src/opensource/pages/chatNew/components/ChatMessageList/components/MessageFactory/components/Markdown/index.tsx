@@ -33,7 +33,7 @@ const Markdown = memo(function Markdown({
 
 	if (isReasoningStreaming || isStreaming) {
 		if (!reasoningContent && !content) {
-			return <img src={streamLoadingIcon} width={16} height={16} alt="loading" />
+			return <img draggable={false} src={streamLoadingIcon} width={16} height={16} alt="loading" />
 		}
 	}
 

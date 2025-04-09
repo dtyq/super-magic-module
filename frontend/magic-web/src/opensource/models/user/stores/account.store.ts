@@ -5,7 +5,7 @@ export class AccountStore {
 	accounts: Array<User.UserAccount> = []
 
 	constructor() {
-		makeAutoObservable(this)
+		makeAutoObservable(this, {}, { autoBind: true })
 	}
 
 	/**

@@ -66,7 +66,7 @@ class ChatTopicService {
 			topicStore.setTopicList(cachedTopics)
 
 			if (conversation.isAiConversation && !conversation.current_topic_id) {
-				conversationService.switchTopic(conversation.id, cachedTopics[0].id)
+				conversationService.switchTopic(conversation.id, cachedTopics[0]?.id)
 			}
 		} else {
 			// 从数据库加载话题列表

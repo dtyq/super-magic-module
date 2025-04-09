@@ -37,7 +37,6 @@ import GroupSeenPanelStore, {
 	domClassName as GroupSeenPanelDomClassName,
 } from "@/opensource/stores/chatNew/groupSeenPanel"
 
-
 const GroupSeenPanel = lazy(() => import("../GroupSeenPanel"))
 
 let canScroll = true
@@ -116,21 +115,21 @@ const ChatMessageList = observer(() => {
 					/>
 				)
 			default:
-		return message.revoked ? (
-			<RevokeTip key={message.message_id} senderUid={message.sender_id} />
-		) : (
-			<MessageItem
-				key={message.message_id}
-				message_id={message.message_id}
-				sender_id={message.sender_id}
-				name={message.name}
-				avatar={message.avatar}
-				is_self={message.is_self ?? false}
-				message={message.message}
-				unread_count={message.unread_count}
-				refer_message_id={message.refer_message_id}
-			/>
-		)
+				return message.revoked ? (
+					<RevokeTip key={message.message_id} senderUid={message.sender_id} />
+				) : (
+					<MessageItem
+						key={message.message_id}
+						message_id={message.message_id}
+						sender_id={message.sender_id}
+						name={message.name}
+						avatar={message.avatar}
+						is_self={message.is_self ?? false}
+						message={message.message}
+						unread_count={message.unread_count}
+						refer_message_id={message.refer_message_id}
+					/>
+				)
 		}
 	})
 
@@ -177,9 +176,13 @@ const ChatMessageList = observer(() => {
 
 	// 加载更多历史消息
 	const loadMoreHistoryMessages = useMemoizedFn(async () => {
-		console.log('loadMoreHistoryMessages', state.isLoadingMore, MessageStore.hasMoreHistoryMessage)
+		console.log(
+			"loadMoreHistoryMessages",
+			state.isLoadingMore,
+			MessageStore.hasMoreHistoryMessage,
+		)
 		if (state.isLoadingMore || !MessageStore.hasMoreHistoryMessage) return
-		
+
 		try {
 			state.setIsLoadingMore(true)
 			canScroll = false
@@ -203,7 +206,7 @@ const ChatMessageList = observer(() => {
 	// 检查滚动位置并处理
 	const checkScrollPosition = useMemoizedFn(() => {
 		if (!wrapperRef.current || !initialRenderRef.current || isScrolling) return
-		
+
 		const { scrollTop, clientHeight, scrollHeight } = wrapperRef.current
 		const distance = Math.abs(scrollTop + clientHeight - scrollHeight)
 
@@ -223,7 +226,7 @@ const ChatMessageList = observer(() => {
 
 		// 如果最后一条消息为空，证明是初始化状态，滚动到底部
 		if (!lastMessageId) {
-			console.log('handleResize to bottom')
+			console.log("handleResize to bottom")
 			lastMessageId = messages[messages.length - 1]?.message_id
 			scrollToBottom(true)
 			return
@@ -236,7 +239,7 @@ const ChatMessageList = observer(() => {
 			(lastMessage.is_self && lastMessage?.message_id !== lastMessageId) ||
 			state.isAtBottom
 		) {
-			console.log('handleResize send bottom')
+			console.log("handleResize send bottom")
 			lastMessageId = lastMessage?.message_id
 			scrollToBottom(true)
 			return
@@ -445,10 +448,7 @@ const ChatMessageList = observer(() => {
 					<div style={{ display: "none" }} />
 				</MagicDropdown>
 			</div>
-			<BackBottom
-				visible={!state.isAtBottom}
-				onScrollToBottom={() => scrollToBottom(true)}
-			/>
+			<BackBottom visible={!state.isAtBottom} onScrollToBottom={() => scrollToBottom(true)} />
 			{conversationStore.currentConversation?.receive_type === MessageReceiveType.Group && (
 				<Suspense fallback={null}>
 					<GroupSeenPanel />

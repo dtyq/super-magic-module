@@ -19,7 +19,7 @@ export class UserStore {
 	magicOrganizationMap: Record<string, User.MagicOrganization> = {}
 
 	constructor() {
-		makeAutoObservable(this)
+		makeAutoObservable(this, {}, { autoBind: true })
 	}
 
 	setAuthorization = (authCode: string | null) => {

@@ -770,11 +770,6 @@ class MessageService {
 				),
 			)
 
-			if (conversationId === "752530204698857473") {
-				console.log("getMessagesByPage userInfo ======> ", userInfo)
-				console.log("getMessagesByPage messages ======> ", messages)
-			}
-
 			return { messages, page: res.page, pageSize: res.pageSize, totalPages: res.totalPages }
 		} catch (error) {
 			console.error("数据库访问错误，无法获取消息", error)
