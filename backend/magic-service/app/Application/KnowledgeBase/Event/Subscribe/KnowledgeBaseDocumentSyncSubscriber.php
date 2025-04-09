@@ -15,7 +15,7 @@ use App\Domain\KnowledgeBase\Service\KnowledgeBaseDocumentDomainService;
 use App\Domain\KnowledgeBase\Service\KnowledgeBaseDomainService;
 use App\Domain\KnowledgeBase\Service\KnowledgeBaseFragmentDomainService;
 use App\Infrastructure\Core\Exception\BusinessException;
-use App\Infrastructure\Core\File\FileParser;
+use App\Infrastructure\Core\File\Parser\FileParser;
 use App\Infrastructure\Util\Odin\TextSplitter\TokenTextSplitter;
 use Dtyq\AsyncEvent\Kernel\Annotation\AsyncListener;
 use Hyperf\Event\Annotation\Listener;
