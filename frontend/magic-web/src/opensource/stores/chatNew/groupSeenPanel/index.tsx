@@ -101,8 +101,8 @@ class GroupSeenPanelStore {
 	 * @param position 卡片位置
 	 */
 	setPosition(position: { x: number; y: number }) {
-		this.position.x = position.x - this.size.width * 2
-		this.position.y = position.y - 100
+		this.position.x = position.x - this.size.width - 20
+		this.position.y = position.y
 		this.adjustPosition()
 	}
 

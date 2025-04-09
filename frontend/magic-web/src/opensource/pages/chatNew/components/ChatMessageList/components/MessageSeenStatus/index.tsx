@@ -20,7 +20,7 @@ interface MessageStatusProps {
 
 function MessageSeenStatus({ unreadCount, messageId }: MessageStatusProps) {
 	const { t } = useTranslation("interface")
-	const { styles } = useStyles()
+	const { styles, cx } = useStyles()
 	const { currentConversation } = ConversationStore
 
 	// 发送失败，不显示
@@ -34,12 +34,9 @@ function MessageSeenStatus({ unreadCount, messageId }: MessageStatusProps) {
 			switch (true) {
 				// 优先判断消息状态
 				case unreadCount > 0:
-					return <StatusContent icon={IconEye} text={t("chat.unread")} styles={styles} />
-
+					return <StatusContent icon={IconEye} text={t("chat.unread")} />
 				case unreadCount === 0:
-					return (
-						<StatusContent icon={IconEyeCheck} text={t("chat.read")} styles={styles} />
-					)
+					return <StatusContent icon={IconEyeCheck} text={t("chat.read")} />
 
 				default:
 					return null
@@ -51,8 +48,7 @@ function MessageSeenStatus({ unreadCount, messageId }: MessageStatusProps) {
 						<StatusContent
 							icon={IconEyeCheck}
 							text={t("chat.allRead")}
-							styles={styles}
-							className={GroupSeenPanelDomClassName}
+							className={cx(styles.group, GroupSeenPanelDomClassName)}
 							messageId={messageId}
 						/>
 					)
@@ -63,9 +59,8 @@ function MessageSeenStatus({ unreadCount, messageId }: MessageStatusProps) {
 							text={resolveToString(t("chat.unseenCount"), {
 								count: unreadCount,
 							})}
-							styles={styles}
 							messageId={messageId}
-							className={GroupSeenPanelDomClassName}
+							className={cx(styles.group, GroupSeenPanelDomClassName)}
 						/>
 					)
 				default:

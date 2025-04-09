@@ -21,7 +21,7 @@ import type {
 	GroupUpdateMessage,
 	GroupDisbandMessage,
 } from "@/types/chat/conversation_message"
-import { ControlEventMessageType, MessageReceiveType } from "@/types/chat"
+import { ControlEventMessageType } from "@/types/chat"
 import { useFontSize } from "@/opensource/providers/AppearanceProvider/hooks"
 import AiConversationMessageLoading from "./components/AiConversationMessageLoading"
 import BackBottom from "./components/BackBottom"
@@ -36,8 +36,6 @@ import MessageItem from "./components/MessageItem"
 import GroupSeenPanelStore, {
 	domClassName as GroupSeenPanelDomClassName,
 } from "@/opensource/stores/chatNew/groupSeenPanel"
-
-const GroupSeenPanel = lazy(() => import("../GroupSeenPanel"))
 
 let canScroll = true
 let isScrolling = false
@@ -449,11 +447,6 @@ const ChatMessageList = observer(() => {
 				</MagicDropdown>
 			</div>
 			<BackBottom visible={!state.isAtBottom} onScrollToBottom={() => scrollToBottom(true)} />
-			{conversationStore.currentConversation?.receive_type === MessageReceiveType.Group && (
-				<Suspense fallback={null}>
-					<GroupSeenPanel />
-				</Suspense>
-			)}
 		</div>
 	)
 })

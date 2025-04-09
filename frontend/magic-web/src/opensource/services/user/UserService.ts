@@ -15,15 +15,12 @@ import chatWebSocket from "@/opensource/apis/clients/chatWebSocket"
 import groupInfoService from "@/opensource/services/groupInfo"
 import userInfoService from "@/opensource/services/userInfo"
 import chatDb from "@/opensource/database/chat"
-import { EventType } from "@/types/chat"
-import { LoginResponse } from "@/types/request"
-import { genAppMessageId } from "@/utils/random"
-import { encodeSocketIoMessage } from "@/utils/socketio"
 import MessageSeqIdService from "@/opensource/services/chat/message/MessageSeqIdService"
 import MessageService from "@/opensource/services/chat/message/MessageService"
 import conversationService from "@/opensource/services/chat/conversation/ConversationService"
 import MessagePullService from "../chat/message/MessagePullService"
 import { useInterafceStore } from "@/opensource/stores/interface"
+import { AuthApi, ChatApi } from "@/apis"
 
 export interface OrganizationResponse {
 	magicOrganizationMap: Record<string, User.MagicOrganization>
@@ -143,6 +140,13 @@ export class UserService {
 
 		// 内存状态同步
 		userStore.user.setUserInfo(info)
+
+		// 有值才获取
+		if (info) {
+			AuthApi.getAdminPermission().then((res) => {
+				userStore.user.isAdmin = res.is_admin
+			})
+		}
 		return info
 	}
 
@@ -396,26 +400,7 @@ export class UserService {
 
 		this.lastLogin = {
 			authorization,
-			promise: chatWebSocket
-				.sendAsync<LoginResponse>(
-					encodeSocketIoMessage(
-						EventType.Login,
-						{
-							message: {
-								type: "text",
-								text: {
-									content: "登录",
-								},
-								app_message_id: genAppMessageId(),
-							},
-							conversation_id: "",
-						},
-						0,
-						{
-							authorization,
-						},
-					),
-				)
+			promise: ChatApi.login(authorization)
 				.then(async (res) => {
 					userStore.user.setUserInfo(res.data.user)
 					// 切换 chat 数据

@@ -22,17 +22,6 @@ export const enum RequestUrl {
 	Login = "/v4/user/login",
 	/** 第三方登录 */
 	thirdPartyLogins = "/v4/user/fast_login",
-	/** 公众号登录相关 */
-	/** 获取公众号登录二维码 Ticket */
-	getWechatQrcodeTicket = "/v4/user/wechat/qrcode",
-	/** 获取公众号登录二维码图片 */
-	getWechatQrcodeImage = "/cgi-bin/showqrcode",
-	/** 获取公众号登录二维码扫码状态 */
-	getWechatLoginStatus = "/v4/user/wechat/login/status",
-	/** 发送手机验证码 */
-	sendSmsCode = "/v4/user/send_sms",
-	/** 公众号绑定手机号 */
-	wechatBindAccount = "/v4/user/bind_account",
 
 	/** 获取天书 用户信息 */
 	getTeamshareUserInfo = "/v4/users/info",
@@ -338,6 +327,8 @@ export const enum RequestUrl {
 	tempTokenToUserToken = "/api/v1/auth/teamshare-token?temp_token=${tempToken}",
 	/** 根据当前账号获取环境 code */
 	getDeploymentCode = "/api/v1/auth/environment",
+	/** 获取管理后台权限 */
+	getAdminPermission = "/api/v1/magic/operation-permissions/organization-admin",
 
 	/** bots */
 	/** 获取市场机器人 */

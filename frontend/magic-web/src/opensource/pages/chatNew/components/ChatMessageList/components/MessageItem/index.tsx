@@ -121,7 +121,7 @@ const MessageItem = memo(function MessageItem({
 			{!is_self && avatarComponent}
 
 			{/* 消息内容和状态 */}
-			<Flex vertical gap={4}>
+			<Flex vertical gap={4} align={is_self ? "flex-end" : "flex-start"}>
 				<MessageContent
 					message_id={message_id}
 					message={message}

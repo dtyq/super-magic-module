@@ -2,6 +2,7 @@ import { makeAutoObservable } from "mobx"
 import type { User } from "@/types/user"
 import { platformKey } from "@/utils/storage"
 import { keyBy } from "lodash-es"
+import { AuthApi } from "@/apis"
 
 export class UserStore {
 	authorization: string | null = localStorage.getItem(platformKey("store:authentication"))
@@ -17,6 +18,9 @@ export class UserStore {
 	teamshareOrganizationCode: string = ""
 
 	magicOrganizationMap: Record<string, User.MagicOrganization> = {}
+
+	/** 是否是管理员 */
+	isAdmin: boolean = false
 
 	constructor() {
 		makeAutoObservable(this, {}, { autoBind: true })

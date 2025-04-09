@@ -29,14 +29,8 @@ const InviteMemberTip = memo(({ content, className, onClick }: InviteMemberTipPr
 
 	return (
 		<div className={cx(styles.container, className)} onClick={onClick}>
-			<MagicMemberAvatar
-				uid={content.group_users_add.operate_user_id}
-				showAvatar={false}
-				showName="vertical"
-			>
-				{(user) => <span className={styles.highlight}>{getUserName(user)}</span>}
-			</MagicMemberAvatar>{" "}
-			{t("chat.inviteMemberTip.invite")}{" "}
+			<GroupTipMemberRender uid={content.group_users_add.operate_user_id} />
+			{t("chat.inviteMemberTip.invite")}
 			{content.group_users_add.user_ids.map?.((id, index, array) => {
 				return (
 					<Fragment key={id}>
@@ -44,7 +38,7 @@ const InviteMemberTip = memo(({ content, className, onClick }: InviteMemberTipPr
 						{index === array.length - 1 ? "" : "、"}
 					</Fragment>
 				)
-			})}{" "}
+			})}
 			{t("chat.inviteMemberTip.joinGroupConversation")}
 		</div>
 	)

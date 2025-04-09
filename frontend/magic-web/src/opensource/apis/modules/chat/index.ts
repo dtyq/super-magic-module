@@ -19,7 +19,7 @@ import {
 	EventType,
 	ControlEventMessageType,
 } from "@/types/chat"
-import type { PaginationResponse, SeqResponse } from "@/types/request"
+import type { LoginResponse, PaginationResponse, SeqResponse } from "@/types/request"
 import { encodeSocketIoMessage } from "@/utils/socketio"
 import { genAppMessageId, genRequestId } from "@/utils/random"
 import type { DeleteTopicMessage, ConversationTopic, CreateTopicMessage } from "@/types/chat/topic"
@@ -38,6 +38,32 @@ import type { HttpClient } from "../../core/HttpClient"
 import type { ChatWebSocket } from "../../clients/chatWebSocket"
 
 export const generateChatApi = (fetch: HttpClient, socket: ChatWebSocket) => ({
+	/**
+	 * 登录
+	 * @param authorization 授权
+	 * @returns
+	 */
+	login(authorization: string) {
+		return socket.apiSend<LoginResponse>(
+			encodeSocketIoMessage(
+				EventType.Login,
+				{
+					message: {
+						type: "text",
+						text: {
+							content: "登录",
+						},
+						app_message_id: genAppMessageId(),
+					},
+					conversation_id: "",
+				},
+				0,
+				{
+					authorization,
+				},
+			),
+		)
+	},
 	/**
 	 * 发送消息
 	 * @param chatMessage 消息内容

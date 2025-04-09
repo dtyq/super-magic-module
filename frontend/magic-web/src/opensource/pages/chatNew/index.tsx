@@ -19,6 +19,7 @@ import AiImageStartPage from "./components/AiImageStartPage"
 
 const TopicExtraSection = lazy(() => import("./components/topic/ExtraSection"))
 const SettingExtraSection = lazy(() => import("./components/setting"))
+const GroupSeenPanel = lazy(() => import("./components/GroupSeenPanel"))
 
 const ChatNew = observer(() => {
 	const { styles } = useStyles()
@@ -87,6 +88,11 @@ const ChatNew = observer(() => {
 				{conversationStore.settingOpen && <SettingExtraSection />}
 			</Suspense>
 			<ChatImagePreviewModal />
+			{conversationStore.currentConversation.isGroupConversation && (
+				<Suspense fallback={null}>
+					<GroupSeenPanel />
+				</Suspense>
+			)}
 		</Flex>
 	)
 })

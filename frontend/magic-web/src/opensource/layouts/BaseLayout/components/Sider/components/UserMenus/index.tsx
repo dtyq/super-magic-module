@@ -19,7 +19,11 @@ import { useStyles } from "./styles"
 import { UserMenuKey } from "./constants"
 import { ItemType } from "antd/es/menu/interface"
 import { useTheme } from "antd-style"
-import { setGlobalLanguage, useGlobalLanguage, useSupportLanguageOptions } from "@/opensource/models/config/hooks"
+import {
+	setGlobalLanguage,
+	useGlobalLanguage,
+	useSupportLanguageOptions,
+} from "@/opensource/models/config/hooks"
 import { SettingSection } from "@/opensource/pages/settings/types"
 import useNavigate from "@/opensource/hooks/useNavigate"
 import { userStore } from "@/opensource/models/user"
@@ -30,7 +34,7 @@ interface UserMenusProps extends PropsWithChildren {}
 const UserMenus = observer(function UserMenus({ children }: UserMenusProps) {
 	const { t } = useTranslation("interface")
 	const { styles, cx } = useStyles()
-	const { 	magicColorUsages  } = useTheme()
+	const { magicColorUsages } = useTheme()
 
 	const navigate = useNavigate()
 	const [modal, contextHolder] = Modal.useModal()
@@ -39,7 +43,6 @@ const UserMenus = observer(function UserMenus({ children }: UserMenusProps) {
 
 	/** 清除授权 */
 	const { accountLogout, accountSwitch } = useAccount()
-
 
 	/** 登出 */
 	const handleLogout = useMemoizedFn(async () => {
@@ -119,7 +122,15 @@ const UserMenus = observer(function UserMenus({ children }: UserMenusProps) {
 
 			return acc
 		}, [] as ItemType[])
-	}, [languageList, styles.menuItemTopName, styles.arrow, language, magicColorUsages.primary.default])
+	}, [
+		languageList,
+		styles.menuItemTopName,
+		styles.arrow,
+		language,
+		magicColorUsages.primary.default,
+	])
+
+	const isAdmin = userStore.user.isAdmin
 
 	const menu = useMemo<MenuProps["items"]>(() => {
 		return [
@@ -142,6 +153,14 @@ const UserMenus = observer(function UserMenus({ children }: UserMenusProps) {
 			// {
 			// 	label: t("sider.deviceManagement"),
 			// 	key: UserMenuKey.DeviceManagement,
+			// 	icon: <MagicIcon size={20} component={IconDeviceMobile} color="currentColor" />,
+			// },
+			// isAdmin && {
+			// 	type: "divider",
+			// },
+			// isAdmin && {
+			// 	label: t("sider.admin"),
+			// 	key: UserMenuKey.Admin,
 			// 	icon: <MagicIcon size={20} component={IconDeviceImacCog} color="currentColor" />,
 			// },
 			{
@@ -153,13 +172,17 @@ const UserMenus = observer(function UserMenus({ children }: UserMenusProps) {
 				danger: true,
 				key: UserMenuKey.Logout,
 			},
-		]
-	}, [t, styles.arrow, languageOptions])
+		].filter(Boolean) as ItemType[]
+	}, [t, styles.arrow, languageOptions, isAdmin])
 
 	const selectKeys = useMemo(
 		() => (language ? [UserMenuKey.SwitchLanguage, language] : []),
 		[language],
 	)
+
+	// const navigateToAdmin = useMemoizedFn(() => {
+	// 	navigate(AdminRoutePath.AdminHomePage)
+	// })
 
 	const handleMenuClick = useMemoizedFn<Exclude<MenuProps["onClick"], undefined>>(
 		({ key, keyPath }) => {
@@ -176,6 +199,9 @@ const UserMenus = observer(function UserMenus({ children }: UserMenusProps) {
 				case UserMenuKey.DeviceManagement:
 					deviceManagement()
 					break
+				// case UserMenuKey.Admin:
+				// 	navigateToAdmin()
+				// break
 				default:
 					break
 			}

@@ -12,6 +12,16 @@ const useStyles = createStyles(({ css, token }) => ({
 		font-weight: 400;
 		line-height: 16px;
 	`,
+	group: css`
+		cursor: pointer;
+		padding: 2px 4px;
+		border-radius: 6px;
+		width: fit-content;
+		&:hover {
+			background-color: ${token.magicColorUsages.fill[0]};
+			transition: background-color 0.3s ease;
+		}
+	`,
 	error: css`
 		color: ${token.magicColorUsages.danger.default};
 		text-align: justify;

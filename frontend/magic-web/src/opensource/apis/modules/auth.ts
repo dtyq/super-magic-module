@@ -85,4 +85,12 @@ export const generateAuthApi = (fetch: HttpClient) => ({
 			}),
 		)
 	},
+
+	/**
+	 * @description 获取管理后台用户信息
+	 * @returns {Promise<User.UserInfo>}
+	 */
+	getAdminPermission() {
+		return fetch.get<{ is_admin: boolean }>(genRequestUrl(RequestUrl.getAdminPermission))
+	},
 })
