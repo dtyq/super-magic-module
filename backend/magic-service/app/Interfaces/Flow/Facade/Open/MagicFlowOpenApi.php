@@ -52,6 +52,14 @@ class MagicFlowOpenApi extends AbstractOpenApi
         return $this->magicFlowExecuteAppServiceService->apiParamCall($apiChatDTO);
     }
 
+    public function paramCallAsync()
+    {
+        $apiChatDTO = $this->createApiChatDTO();
+        $apiChatDTO->setAsync(true);
+        $apiChatDTO->setStream(false);
+        return $this->magicFlowExecuteAppServiceService->apiParamCall($apiChatDTO);
+    }
+
     public function getExecuteResult(string $taskId)
     {
         $apiChatDTO = $this->createApiChatDTO();
