@@ -148,6 +148,7 @@ readonly class KnowledgeBaseDocumentDomainService
             ->setOrganizationCode($knowledgeBaseEntity->getOrganizationCode())
             ->setEmbeddingModel(EmbeddingGenerator::defaultModel())
             ->setFragmentConfig([])
+            ->setWordCount(0)
             ->setVectorDb(VectorStoreDriver::default()->value);
         return $this->knowledgeBaseDocumentRepository->restoreOrCreate($dataIsolation, $documentEntity);
     }

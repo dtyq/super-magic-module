@@ -10,7 +10,6 @@ namespace App\Application\KnowledgeBase\Service;
 use App\Domain\Flow\Entity\ValueObject\Query\KnowledgeBaseDocumentQuery;
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseDocumentEntity;
 use App\Domain\KnowledgeBase\Entity\ValueObject\DocumentFileVO;
-use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeSyncStatus;
 use App\Infrastructure\Core\Embeddings\EmbeddingGenerator\EmbeddingGenerator;
 use App\Infrastructure\Core\Embeddings\VectorStores\VectorStoreDriver;
 use App\Infrastructure\Core\ValueObject\Page;
@@ -76,7 +75,7 @@ class KnowledgeBaseDocumentAppService extends AbstractKnowledgeAppService
         // 获取文档同步状态
         foreach ($entities['list'] as $entity) {
             if (isset($documentCodeFinalSyncStatusMap[$entity->getCode()])) {
-                $entity->setSyncStatus($documentCodeFinalSyncStatusMap[$entity->getCode()]?->value);
+                $entity->setSyncStatus($documentCodeFinalSyncStatusMap[$entity->getCode()]->value);
             }
         }
         return $entities;
@@ -93,7 +92,7 @@ class KnowledgeBaseDocumentAppService extends AbstractKnowledgeAppService
         // 获取文档
         $entity = $this->knowledgeBaseDocumentDomainService->show($dataIsolation, $documentCode);
         $documentCodeFinalSyncStatusMap = $this->knowledgeBaseFragmentDomainService->getFinalSyncStatusByDocumentCodes($dataIsolation, [$documentCode]);
-        isset($documentCodeFinalSyncStatusMap[$documentCode]) && $entity->setSyncStatus($documentCodeFinalSyncStatusMap[$documentCode]?->value);
+        isset($documentCodeFinalSyncStatusMap[$documentCode]) && $entity->setSyncStatus($documentCodeFinalSyncStatusMap[$documentCode]->value);
         return $entity;
     }
 
