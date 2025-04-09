@@ -13,7 +13,7 @@ use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeSyncStatus;
 use App\Domain\KnowledgeBase\Entity\ValueObject\Query\KnowledgeBaseFragmentQuery;
 use App\Infrastructure\Core\ValueObject\Page;
 
-interface KnowledgeFragmentRepositoryInterface
+interface KnowledgeBaseFragmentRepositoryInterface
 {
     public function getById(KnowledgeBaseDataIsolation $dataIsolation, int $id, bool $selectForUpdate = false): ?KnowledgeBaseFragmentEntity;
 
@@ -37,6 +37,8 @@ interface KnowledgeFragmentRepositoryInterface
     public function destroyByKnowledgeCode(KnowledgeBaseDataIsolation $dataIsolation, string $knowledgeCode): void;
 
     public function changeSyncStatus(KnowledgeBaseFragmentEntity $entity): void;
+
+    public function batchChangeSyncStatus(array $ids, KnowledgeSyncStatus $syncStatus, string $syncMessage = ''): void;
 
     public function rebuildByKnowledgeCode(KnowledgeBaseDataIsolation $dataIsolation, string $knowledgeCode): void;
 

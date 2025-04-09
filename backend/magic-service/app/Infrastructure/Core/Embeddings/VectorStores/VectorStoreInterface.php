@@ -22,6 +22,8 @@ interface VectorStoreInterface
 
     public function removePoint(string $collectionName, string $pointId): void;
 
+    public function removePoints(string $collectionName, array $pointIds): void;
+
     public function removeByFilter(string $collectionName, array $payloadFilter): void;
 
     /**

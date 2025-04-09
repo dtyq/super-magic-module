@@ -8,6 +8,7 @@ declare(strict_types=1);
 namespace App\Application\Flow\ExecuteManager\NodeRunner\Knowledge;
 
 use App\Application\Flow\ExecuteManager\ExecutionData\ExecutionData;
+use App\Application\KnowledgeBase\VectorDatabase\Similarity\KnowledgeSimilarityManager;
 use App\Domain\Flow\Entity\ValueObject\NodeParamsConfig\Knowledge\KnowledgeFragmentRemoveNodeParamsConfig;
 use App\Domain\Flow\Entity\ValueObject\NodeType;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeBaseDataIsolation;
@@ -53,8 +54,8 @@ class KnowledgeFragmentRemoveNodeRunner extends AbstractKnowledgeNodeRunner
         $knowledgeDomainService = di(KnowledgeBaseDomainService::class);
         $fragmentDomainService = di(KnowledgeBaseFragmentDomainService::class);
         $dataIsolation = $executionData->getDataIsolation();
-        $knowledgeBaseDataIsolation = KnowledgeBaseDataIsolation::create($dataIsolation->getCurrentOrganizationCode(), $dataIsolation->getCurrentUserId(), $dataIsolation->getMagicId());
-        $magicFlowKnowledgeEntity = $knowledgeDomainService->show($knowledgeBaseDataIsolation, $knowledgeCode);
+        $knowledgeBaseDataIsolation = KnowledgeBaseDataIsolation::createByBaseDataIsolation($dataIsolation);
+        $KnowledgeEntity = $knowledgeDomainService->show($knowledgeBaseDataIsolation, $knowledgeCode);
 
         if (! empty($businessId)) {
             // 优先级高
@@ -63,14 +64,10 @@ class KnowledgeFragmentRemoveNodeRunner extends AbstractKnowledgeNodeRunner
                 $knowledgeCode,
                 $businessId
             );
-            $fragmentDomainService->destroy($knowledgeBaseDataIsolation, $magicFlowKnowledgeEntity, $fragment);
+            $fragmentDomainService->destroy($knowledgeBaseDataIsolation, $KnowledgeEntity, $fragment);
             return;
         }
 
-        $fragmentDomainService->destroyByMetadataFilter(
-            $knowledgeBaseDataIsolation,
-            $magicFlowKnowledgeEntity,
-            $metadataFilter
-        );
+        di(KnowledgeSimilarityManager::class)->destroyByMetadataFilter($knowledgeBaseDataIsolation, $KnowledgeEntity, $metadataFilter);
     }
 }

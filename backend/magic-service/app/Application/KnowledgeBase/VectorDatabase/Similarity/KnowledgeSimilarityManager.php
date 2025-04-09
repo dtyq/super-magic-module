@@ -12,15 +12,19 @@ use App\Application\KnowledgeBase\VectorDatabase\Similarity\Driver\GraphSimilari
 use App\Application\KnowledgeBase\VectorDatabase\Similarity\Driver\HybridSimilaritySearchInterface;
 use App\Application\KnowledgeBase\VectorDatabase\Similarity\Driver\SemanticSimilaritySearchInterface;
 use App\Application\KnowledgeBase\VectorDatabase\Similarity\Driver\SimilaritySearchDriverInterface;
+use App\Domain\KnowledgeBase\Entity\KnowledgeBaseEntity;
+use App\Domain\KnowledgeBase\Entity\KnowledgeBaseFragmentEntity;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeBaseDataIsolation;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeRetrievalResult;
 use App\Domain\KnowledgeBase\Entity\ValueObject\Query\KnowledgeBaseQuery;
 use App\Domain\KnowledgeBase\Entity\ValueObject\RetrievalMethod;
 use App\Domain\KnowledgeBase\Entity\ValueObject\RetrieveConfig;
 use App\Domain\KnowledgeBase\Service\KnowledgeBaseDomainService;
+use App\Domain\KnowledgeBase\Service\KnowledgeBaseFragmentDomainService;
 use App\ErrorCode\FlowErrorCode;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Infrastructure\Core\ValueObject\Page;
+use Hyperf\DbConnection\Db;
 
 class KnowledgeSimilarityManager
 {
@@ -73,5 +77,34 @@ class KnowledgeSimilarityManager
         }
 
         return $result;
+    }
+
+    public function destroyByMetadataFilter(KnowledgeBaseDataIsolation $dataIsolation, KnowledgeBaseEntity $knowledgeBaseEntity, KnowledgeSimilarityFilter $filter): void
+    {
+        // 从向量库中先获取数据
+        $points = $knowledgeBaseEntity->getVectorDBDriver()->queryPoints(
+            $knowledgeBaseEntity->getCollectionName(),
+            $filter->getLimit(),
+            $filter->getMetadataFilter(),
+        );
+        $pointIds = [];
+        foreach ($points as $point) {
+            $fragment = KnowledgeBaseFragmentEntity::createByPointInfo($point, $knowledgeBaseEntity->getCode());
+            $pointIds[] = $fragment->getPointId();
+        }
+
+        Db::transaction(function () use ($dataIsolation, $knowledgeBaseEntity, $filter, $pointIds) {
+            $fragmentDomainService = di(KnowledgeBaseFragmentDomainService::class);
+            $fragmentDomainService->batchDestroyByPointIds(
+                $dataIsolation,
+                $knowledgeBaseEntity,
+                $pointIds
+            );
+            // 还需要删除相同 point_id 的内容，因为目前允许重复
+            $knowledgeBaseEntity->getVectorDBDriver()->removeByFilter(
+                $knowledgeBaseEntity->getCollectionName(),
+                $filter->getMetadataFilter(),
+            );
+        });
     }
 }

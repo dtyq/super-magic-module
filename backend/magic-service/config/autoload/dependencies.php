@@ -76,11 +76,11 @@ use App\Domain\Flow\Repository\Persistence\MagicFlowWaitMessageRepository;
 use App\Domain\Group\Repository\Facade\MagicGroupRepositoryInterface;
 use App\Domain\Group\Repository\Persistence\MagicGroupRepository;
 use App\Domain\KnowledgeBase\Repository\Facade\KnowledgeBaseDocumentRepositoryInterface;
+use App\Domain\KnowledgeBase\Repository\Facade\KnowledgeBaseFragmentRepositoryInterface;
 use App\Domain\KnowledgeBase\Repository\Facade\KnowledgeBaseRepositoryInterface;
-use App\Domain\KnowledgeBase\Repository\Facade\KnowledgeFragmentRepositoryInterface;
+use App\Domain\KnowledgeBase\Repository\Persistence\KnowledgeBaseFragmentRepository;
 use App\Domain\KnowledgeBase\Repository\Persistence\KnowledgeBaseBaseRepository;
 use App\Domain\KnowledgeBase\Repository\Persistence\KnowledgeBaseDocumentRepository;
-use App\Domain\KnowledgeBase\Repository\Persistence\KnowledgeBaseFragmentRepository;
 use App\Domain\ModelGateway\Repository\Facade\AccessTokenRepositoryInterface;
 use App\Domain\ModelGateway\Repository\Facade\ApplicationRepositoryInterface;
 use App\Domain\ModelGateway\Repository\Facade\ModelConfigRepositoryInterface;
@@ -183,7 +183,7 @@ $dependencies = [
     // knowledge-base
     KnowledgeBaseRepositoryInterface::class => KnowledgeBaseBaseRepository::class,
     KnowledgeBaseDocumentRepositoryInterface::class => KnowledgeBaseDocumentRepository::class,
-    KnowledgeFragmentRepositoryInterface::class => KnowledgeBaseFragmentRepository::class,
+    KnowledgeBaseFragmentRepositoryInterface::class => KnowledgeBaseFragmentRepository::class,
 
     // vector
     SemanticSimilaritySearchInterface::class => BaseSemanticSimilaritySearch::class,

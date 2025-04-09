@@ -72,9 +72,4 @@ class KnowledgeBaseApi extends AbstractKnowledgeBaseApi
     {
         $this->knowledgeBaseAppService->destroy($this->getAuthorization(), $code);
     }
-
-    public function rebuildKnowledgeBase(string $code)
-    {
-        $this->knowledgeBaseAppService->rebuild($this->getAuthorization(), $code, (bool) $this->request->input('force', false));
-    }
 }

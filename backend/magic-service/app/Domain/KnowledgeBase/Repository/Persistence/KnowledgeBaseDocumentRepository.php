@@ -39,9 +39,6 @@ class KnowledgeBaseDocumentRepository extends KnowledgeBaseAbstractRepository im
         $attributes = $this->prepareAttributes($documentEntity);
         $attributes['organization_code'] = $dataIsolation->getCurrentOrganizationCode();
 
-        // 生成唯一文档码
-        $attributes['code'] = $this->generateDocumentCode();
-
         // 创建模型并保存
         $model = new KnowledgeBaseDocumentModel();
         $model->fill($attributes);
@@ -73,6 +70,9 @@ class KnowledgeBaseDocumentRepository extends KnowledgeBaseAbstractRepository im
 
     public function updateWordCount(KnowledgeBaseDataIsolation $dataIsolation, string $documentCode, int $deltaWordCount): void
     {
+        if ($deltaWordCount === 0) {
+            return;
+        }
         $this->createBuilder($dataIsolation, KnowledgeBaseDocumentModel::query())
             ->where('code', $documentCode)
             ->increment('word_count', $deltaWordCount);
@@ -277,8 +277,10 @@ class KnowledgeBaseDocumentRepository extends KnowledgeBaseAbstractRepository im
             'word_count' => $entity->getWordCount(),
         ];
 
-        if ($entity->issetCode()) {
+        if ($entity->getCode()) {
             $attributes['code'] = $entity->getCode();
+        } else {
+            $attributes['code'] = $this->generateDocumentCode();
         }
 
         return $attributes;

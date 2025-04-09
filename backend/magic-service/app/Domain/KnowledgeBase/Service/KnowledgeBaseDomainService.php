@@ -16,11 +16,10 @@ use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeSyncStatus;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeType;
 use App\Domain\KnowledgeBase\Entity\ValueObject\Query\KnowledgeBaseFragmentQuery;
 use App\Domain\KnowledgeBase\Entity\ValueObject\Query\KnowledgeBaseQuery;
-use App\Domain\KnowledgeBase\Event\KnowledgeBaseFragmentSavedEvent;
 use App\Domain\KnowledgeBase\Event\KnowledgeBaseRemovedEvent;
 use App\Domain\KnowledgeBase\Event\KnowledgeBaseSavedEvent;
+use App\Domain\KnowledgeBase\Repository\Facade\KnowledgeBaseFragmentRepositoryInterface;
 use App\Domain\KnowledgeBase\Repository\Facade\KnowledgeBaseRepositoryInterface;
-use App\Domain\KnowledgeBase\Repository\Facade\KnowledgeFragmentRepositoryInterface;
 use App\ErrorCode\FlowErrorCode;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Infrastructure\Core\ValueObject\Page;
@@ -28,14 +27,12 @@ use Dtyq\AsyncEvent\AsyncEventUtil;
 use Hyperf\DbConnection\Annotation\Transactional;
 use Psr\SimpleCache\CacheInterface;
 
-use function Hyperf\Coroutine\defer;
-
-class KnowledgeBaseDomainService
+readonly class KnowledgeBaseDomainService
 {
     public function __construct(
-        private readonly KnowledgeBaseRepositoryInterface $magicFlowKnowledgeRepository,
-        private readonly KnowledgeFragmentRepositoryInterface $magicFlowKnowledgeFragmentRepository,
-        private readonly CacheInterface $cache,
+        private KnowledgeBaseRepositoryInterface $magicFlowKnowledgeRepository,
+        private KnowledgeBaseFragmentRepositoryInterface $magicFlowKnowledgeFragmentRepository,
+        private CacheInterface $cache,
     ) {
     }
 
@@ -144,77 +141,6 @@ class KnowledgeBaseDomainService
     }
 
     /**
-     * 重建知识库 - 向量化.
-     */
-    public function rebuild(KnowledgeBaseDataIsolation $dataIsolation, string $code, bool $force = false): void
-    {
-        // 这里数据量大了之后，也需要改为队列进行
-
-        // 版本号 +1，新增向量数据库，历史版本保留 n 天（定时任务删除）
-        $magicFlowKnowledgeEntity = $this->magicFlowKnowledgeRepository->getByCode($dataIsolation, $code);
-        if (empty($magicFlowKnowledgeEntity)) {
-            ExceptionBuilder::throw(FlowErrorCode::KnowledgeValidateFailed, 'flow.common.not_found', ['label' => $code]);
-        }
-        $lastCollectionName = $magicFlowKnowledgeEntity->getCollectionName();
-
-        $magicFlowKnowledgeEntity->setVersion($magicFlowKnowledgeEntity->getVersion() + 1);
-        $magicFlowKnowledgeEntity->setSyncStatus(KnowledgeSyncStatus::Rebuilding);
-
-        // 检查是否还具有重建中的数据，如果有，代表上一次还没完成
-        $rebuildingQuery = new KnowledgeBaseFragmentQuery();
-        $rebuildingQuery->setKnowledgeCode($magicFlowKnowledgeEntity->getCode());
-        $rebuildingQuery->setSyncStatus(KnowledgeSyncStatus::Rebuilding->value);
-        $rebuildingCount = $this->magicFlowKnowledgeFragmentRepository->count($dataIsolation, $rebuildingQuery);
-        if (! $force && $rebuildingCount > 0) {
-            ExceptionBuilder::throw(FlowErrorCode::KnowledgeValidateFailed, '上一次重建还未完成');
-        }
-        $this->magicFlowKnowledgeRepository->save($dataIsolation, $magicFlowKnowledgeEntity);
-
-        defer(function () use ($dataIsolation, $magicFlowKnowledgeEntity, $lastCollectionName) {
-            // 创建新的 collection，同步
-            $event = new KnowledgeBaseSavedEvent($magicFlowKnowledgeEntity, false);
-            $event->setIsSync(true);
-            AsyncEventUtil::dispatch($event);
-
-            // 获取同步结果
-            $magicFlowKnowledgeEntity = $this->show($dataIsolation, $magicFlowKnowledgeEntity->getCode());
-            if ($magicFlowKnowledgeEntity->getSyncStatus() !== KnowledgeSyncStatus::Synced) {
-                return;
-            }
-
-            // 将旗下的所有片段状态置为重新同步
-            $this->magicFlowKnowledgeFragmentRepository->rebuildByKnowledgeCode($dataIsolation, $magicFlowKnowledgeEntity->getCode());
-            $query = new KnowledgeBaseFragmentQuery();
-            $query->setKnowledgeCode($magicFlowKnowledgeEntity->getCode());
-            $page = new Page(1, 1000);
-            $limitPage = 100; // 10 万的片段应该错错有余
-            while (true) {
-                $result = $this->magicFlowKnowledgeFragmentRepository->queries($dataIsolation, $query, $page);
-                $fragments = $result['list'];
-                foreach ($fragments as $fragment) {
-                    // 这里要按顺序，也进行同步
-                    $fragmentEvent = new KnowledgeBaseFragmentSavedEvent($magicFlowKnowledgeEntity, $fragment);
-                    $fragmentEvent->setIsSync(true);
-                    AsyncEventUtil::dispatch($fragmentEvent);
-                }
-                if (empty($fragments) || count($fragments) < $page->getPageNum()) {
-                    break;
-                }
-                $page->setNextPage();
-                if ($page->getPage() > $limitPage) {
-                    break;
-                }
-            }
-
-            $newKnowledge = $this->show($dataIsolation, $magicFlowKnowledgeEntity->getCode(), true);
-            // 预期数量达到即可
-            if ($newKnowledge->getExpectedCount() === $newKnowledge->getCompletedCount()) {
-                $magicFlowKnowledgeEntity->getVectorDBDriver()->removeCollection($lastCollectionName);
-            }
-        });
-    }
-
-    /**
      * 更新知识库状态
      */
     public function changeSyncStatus(KnowledgeBaseEntity|KnowledgeBaseFragmentEntity $entity): void
@@ -252,20 +178,5 @@ class KnowledgeBaseDomainService
         $value = $this->cache->get($key, '');
         $this->cache->delete($key);
         return $value;
-    }
-
-    /**
-     * 获取知识库列表 - 专用于命令处理.
-     * @return array<KnowledgeBaseEntity>
-     */
-    public function getKnowledgeBaseListForCommandProcess(KnowledgeBaseDataIsolation $dataIsolation, ?int $lastId = null, int $limit = 10): array
-    {
-        $query = new KnowledgeBaseQuery();
-        if ($lastId !== null) {
-            $query->setLastId($lastId);
-        }
-        $page = new Page(1, $limit);
-        $result = $this->magicFlowKnowledgeRepository->queries($dataIsolation, $query, $page);
-        return $result['list'] ?? [];
     }
 }

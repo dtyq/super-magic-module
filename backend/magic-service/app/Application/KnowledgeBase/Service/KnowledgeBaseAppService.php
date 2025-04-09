@@ -7,7 +7,6 @@ declare(strict_types=1);
 
 namespace App\Application\KnowledgeBase\Service;
 
-use App\Application\File\Service\FileAppService;
 use App\Domain\Contact\Entity\MagicUserEntity;
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseEntity;
 use App\Domain\KnowledgeBase\Entity\ValueObject\DocumentFileVO;
@@ -55,14 +54,14 @@ class KnowledgeBaseAppService extends AbstractKnowledgeAppService
         $model = $this->serviceProviderDomainService->findSelectedActiveProviderByType($dataIsolation->getCurrentOrganizationCode(), ModelType::EMBEDDING);
         $magicFlowKnowledgeEntity->setModel($model ?? EmbeddingGenerator::defaultModel());
         $magicFlowKnowledgeEntity->setVectorDB(VectorStoreDriver::default()->value);
-        $files = $this->getFileAppService()->publicFileDownloads(array_map(fn ($dto) => $dto->getKey(), $documentFiles));
+        $files = $this->getIcons($dataIsolation->getCurrentOrganizationCode(), array_map(fn ($dto) => $dto->getKey(), $documentFiles));
         foreach ($documentFiles as $documentFile) {
             $documentFile->setFileLink($files[$documentFile->getKey()]);
         }
 
         $knowledgeBaseEntity = $this->knowledgeBaseDomainService->save($dataIsolation, $magicFlowKnowledgeEntity, DocumentFileVO::fromDTOList($documentFiles));
         $knowledgeBaseEntity->setUserOperation($operation->value);
-        $iconFileLink = $this->getFileAppService()->publicFileDownload($knowledgeBaseEntity->getIcon());
+        $iconFileLink = $this->getFileLink($dataIsolation->getCurrentOrganizationCode(), $knowledgeBaseEntity->getIcon());
         $knowledgeBaseEntity->setIcon($iconFileLink?->getUrl() ?? '');
         return $knowledgeBaseEntity;
     }
@@ -117,7 +116,7 @@ class KnowledgeBaseAppService extends AbstractKnowledgeAppService
         $query->setCodes($resourceIds);
         $result = $this->knowledgeBaseDomainService->queries($dataIsolation, $query, $page);
         $userIds = [];
-        $iconFileLinks = $this->getFileAppService()->publicFileDownloads(array_map(fn ($item) => $item->getIcon(), $result['list']));
+        $iconFileLinks = $this->getIcons($dataIsolation->getCurrentOrganizationCode(), array_map(fn ($item) => $item->getIcon(), $result['list']));
         foreach ($result['list'] as $item) {
             $userIds[] = $item->getCreator();
             $userIds[] = $item->getModifier();
@@ -135,7 +134,7 @@ class KnowledgeBaseAppService extends AbstractKnowledgeAppService
         $operation = $this->checkKnowledgeBaseOperation($dataIsolation, 'r', $code);
         $knowledge = $this->knowledgeBaseDomainService->show($dataIsolation, $code, true);
         $knowledge->setUserOperation($operation->value);
-        $iconFileLink = $this->getFileAppService()->publicFileDownload($knowledge->getIcon());
+        $iconFileLink = $this->fileDomainService->getLink($dataIsolation->getCurrentOrganizationCode(), $knowledge->getIcon());
         $knowledge->setIcon($iconFileLink?->getUrl() ?? '');
         return $knowledge;
     }
@@ -146,17 +145,5 @@ class KnowledgeBaseAppService extends AbstractKnowledgeAppService
         $this->checkKnowledgeBaseOperation($dataIsolation, 'del', $code);
         $magicFlowKnowledgeEntity = $this->knowledgeBaseDomainService->show($dataIsolation, $code);
         $this->knowledgeBaseDomainService->destroy($dataIsolation, $magicFlowKnowledgeEntity);
-    }
-
-    public function rebuild(Authenticatable $authorization, string $code, bool $force = false): void
-    {
-        $dataIsolation = $this->createKnowledgeBaseDataIsolation($authorization);
-        $this->checkKnowledgeBaseOperation($dataIsolation, 'manage', $code);
-        $this->knowledgeBaseDomainService->rebuild($dataIsolation, $code, $force);
-    }
-
-    private function getFileAppService(): FileAppService
-    {
-        return di(FileAppService::class);
     }
 }
