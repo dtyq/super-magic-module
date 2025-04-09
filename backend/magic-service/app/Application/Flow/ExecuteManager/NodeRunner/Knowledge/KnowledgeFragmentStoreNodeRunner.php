@@ -16,6 +16,7 @@ use App\Domain\KnowledgeBase\Entity\KnowledgeBaseFragmentEntity;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeBaseDataIsolation;
 use App\Domain\KnowledgeBase\Service\KnowledgeBaseDocumentDomainService;
 use App\Domain\KnowledgeBase\Service\KnowledgeBaseDomainService;
+use App\Domain\KnowledgeBase\Service\KnowledgeBaseFragmentDomainService;
 use App\ErrorCode\FlowErrorCode;
 use App\Infrastructure\Core\Collector\ExecuteManager\Annotation\FlowNodeDefine;
 use App\Infrastructure\Core\Dag\VertexResult;
@@ -59,7 +60,7 @@ class KnowledgeFragmentStoreNodeRunner extends AbstractKnowledgeNodeRunner
 
         $knowledgeBaseDomainService = di(KnowledgeBaseDomainService::class);
         $documentDomainService = di(KnowledgeBaseDocumentDomainService::class);
-        $fragmentAppService = di(KnowledgeBaseFragmentAppService::class);
+        $fragmentDomainService = di(KnowledgeBaseFragmentDomainService::class);
         $dataIsolation = $executionData->getDataIsolation();
         $knowledgeBaseDataIsolation = KnowledgeBaseDataIsolation::create($dataIsolation->getCurrentOrganizationCode(), $dataIsolation->getCurrentUserId(), $dataIsolation->getMagicId());
         $knowledgeBaseEntity = $knowledgeBaseDomainService->show($knowledgeBaseDataIsolation, $knowledgeCode);
@@ -75,10 +76,6 @@ class KnowledgeFragmentStoreNodeRunner extends AbstractKnowledgeNodeRunner
         $savingMagicFlowKnowledgeFragmentEntity->setCreator($executionData->getOperator()->getUid());
         $savingMagicFlowKnowledgeFragmentEntity->setCreatedAt(new DateTime());
 
-        $userAuthorization = new MagicUserAuthorization();
-        $userAuthorization->setId($dataIsolation->getCurrentUserId());
-        $userAuthorization->setOrganizationCode($dataIsolation->getCurrentOrganizationCode());
-        $userAuthorization->setUserType(UserType::Human);
-        $fragmentAppService->save($userAuthorization, $savingMagicFlowKnowledgeFragmentEntity);
+        $fragmentDomainService->save($knowledgeBaseDataIsolation, $knowledgeBaseEntity, $documentEntity, $savingMagicFlowKnowledgeFragmentEntity);
     }
 }
