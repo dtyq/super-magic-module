@@ -106,8 +106,6 @@ function UpdateInfoModal({ details, open, onClose, updateList }: UpdateInfoModal
 	})
 
 	useEffect(() => {
-		console.log("🚀 ~ useEffect ~ details:", details)
-
 		if (details) {
 			form.setFieldsValue({
 				name: details.name,
