@@ -11,8 +11,6 @@ use App\Domain\KnowledgeBase\Entity\KnowledgeBaseEntity;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeType;
 use App\Domain\KnowledgeBase\Entity\ValueObject\Query\KnowledgeBaseQuery;
 use App\Infrastructure\Core\ValueObject\Page;
-use App\Interfaces\Flow\DTO\Knowledge\KnowledgeBaseDTO;
-use App\Interfaces\Flow\DTO\Knowledge\MagicFlowKnowledgeListDTO;
 use App\Interfaces\Kernel\DTO\PageDTO;
 use App\Interfaces\KnowledgeBase\Assembler\KnowledgeBaseAssembler;
 use App\Interfaces\KnowledgeBase\DTO\Request\CreateKnowledgeBaseRequestDTO;

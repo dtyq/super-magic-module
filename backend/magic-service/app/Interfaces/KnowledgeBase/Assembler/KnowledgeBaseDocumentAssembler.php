@@ -1,5 +1,10 @@
 <?php
 
+declare(strict_types=1);
+/**
+ * Copyright (c) The Magic , Distributed under the software license
+ */
+
 namespace App\Interfaces\KnowledgeBase\Assembler;
 
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseDocumentEntity;
@@ -10,7 +15,6 @@ use App\Interfaces\KnowledgeBase\DTO\Request\UpdateDocumentRequestDTO;
 
 class KnowledgeBaseDocumentAssembler
 {
-
     public static function entityToDTO(KnowledgeBaseDocumentEntity $entity): KnowledgeBaseDocumentDTO
     {
         return new KnowledgeBaseDocumentDTO($entity->toArray());
