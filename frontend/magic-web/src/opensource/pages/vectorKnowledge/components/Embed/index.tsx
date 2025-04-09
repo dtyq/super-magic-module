@@ -11,6 +11,7 @@ import { useVectorKnowledgeEmbedStyles } from "./styles"
 import type { CreatedKnowledge } from "../Create"
 import { KnowledgeApi } from "@/apis"
 import type { Knowledge } from "@/types/knowledge"
+import DEFAULT_KNOWLEDGE_ICON from "@/assets/logos/knowledge-avatar.png"
 
 interface Props {
 	createdKnowledge: CreatedKnowledge
@@ -109,7 +110,11 @@ export default function VectorKnowledgeEmbed({ createdKnowledge }: Props) {
 				<div className={styles.headerTitle}>{t("knowledgeDatabase.createdSuccess")}</div>
 				<Flex align="center" justify="space-between">
 					<div className={styles.knowledgeInfo}>
-						<img className={styles.knowledgeIcon} src={createdKnowledge.icon} alt="" />
+						<img
+							className={styles.knowledgeIcon}
+							src={createdKnowledge.icon || DEFAULT_KNOWLEDGE_ICON}
+							alt=""
+						/>
 						<div className={styles.knowledgeDetail}>
 							<div className={styles.knowledgeLabel}>
 								{t("knowledgeDatabase.knowledgeName")}

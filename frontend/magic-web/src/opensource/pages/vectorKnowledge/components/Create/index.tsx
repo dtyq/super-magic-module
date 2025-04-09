@@ -10,7 +10,7 @@ import {
 import { LoadingOutlined } from "@ant-design/icons"
 import { useMemoizedFn } from "ahooks"
 import { cx } from "antd-style"
-import defaultKnowledgeAvatar from "@/assets/logos/knowledge-avatar.png"
+import DEFAULT_KNOWLEDGE_ICON from "@/assets/logos/knowledge-avatar.png"
 import { useTranslation } from "react-i18next"
 import { useUpload } from "@/opensource/hooks/useUploadFiles"
 import { genFileData } from "@/opensource/pages/chatNew/components/MessageEditor/MagicInput/components/InputFiles/utils"
@@ -20,7 +20,7 @@ import { RoutePath } from "@/const/routes"
 import { FlowRouteType } from "@/types/flow"
 import MagicIcon from "@/opensource/components/base/MagicIcon"
 import { useVectorKnowledgeCreateStyles } from "./styles"
-import { fileTypeIconsMap, DEFAULT_ICON_OSS_KEY } from "../../constant"
+import { fileTypeIconsMap } from "../../constant"
 import VectorKnowledgeEmbed from "../Embed"
 import { KnowledgeApi } from "@/apis"
 import type { Knowledge } from "@/types/knowledge"
@@ -59,9 +59,9 @@ export default function VectorKnowledgeCreate() {
 	const [form] = Form.useForm<DataType>()
 
 	// 预览图标URL
-	const [previewIconUrl, setPreviewIconUrl] = useState(defaultKnowledgeAvatar)
+	const [previewIconUrl, setPreviewIconUrl] = useState(DEFAULT_KNOWLEDGE_ICON)
 	// 上传图标URL
-	const [uploadIconUrl, setUploadIconUrl] = useState(DEFAULT_ICON_OSS_KEY)
+	const [uploadIconUrl, setUploadIconUrl] = useState("")
 	// 上传文件列表
 	const [fileList, setFileList] = useState<UploadFileItem[]>([])
 
@@ -211,8 +211,8 @@ export default function VectorKnowledgeCreate() {
 
 	/** 必填项检验 */
 	useEffect(() => {
-		setAllowSubmit(!!form.getFieldValue("name") && !!uploadIconUrl && fileList.length > 0)
-	}, [form, uploadIconUrl, fileList])
+		setAllowSubmit(!!form.getFieldValue("name") && fileList.length > 0)
+	}, [form, fileList])
 
 	const PageContent = useMemo(() => {
 		if (createdKnowledge) {

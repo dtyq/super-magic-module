@@ -167,72 +167,54 @@ export default function VectorKnowledgeDetail() {
 		}
 	})
 
-	// 防抖控制相关
-	const debounceTimerRef = useRef<NodeJS.Timeout | null>(null)
-	const lastParamsRef = useRef<{
-		code: string
-		name: string
-		page: number
-		pageSize: number
-	} | null>(null)
-
 	/**
 	 * 获取知识库文档列表
 	 */
 	const getKnowledgeDocumentList = useMemoizedFn(
 		async (code: string, name: string, page: number, pageSize: number) => {
-			// 检查参数是否和上次一致
-			const currentParams = { code, name, page, pageSize }
-			const isSameParams =
-				lastParamsRef.current &&
-				lastParamsRef.current.code === code &&
-				lastParamsRef.current.name === name &&
-				lastParamsRef.current.page === page &&
-				lastParamsRef.current.pageSize === pageSize
+			const res = await KnowledgeApi.getKnowledgeDocumentList({
+				code,
+				name: name || undefined,
+				page,
+				pageSize,
+			})
+			if (res) {
+				// 只更新tableData中已有的文档
+				if (tableData.length > 0 && res.page !== pageInfo.page) {
+					// 创建文档编码映射，用于快速查找
+					const tableDataMap = new Map(tableData.map((item) => [item.code, item]))
 
-			// 如果参数一致且存在定时器，清除之前的定时器
-			if (isSameParams && debounceTimerRef.current) {
-				clearTimeout(debounceTimerRef.current)
-			}
+					// 使用映射更新文档
+					const updatedTableData = [...tableData]
+					let hasUpdates = false
 
-			// 更新最后的参数引用
-			lastParamsRef.current = currentParams
-
-			// 如果参数一致，设置2秒防抖
-			if (isSameParams) {
-				debounceTimerRef.current = setTimeout(async () => {
-					const res = await KnowledgeApi.getKnowledgeDocumentList({
-						code,
-						name: name || undefined,
-						page,
-						pageSize,
+					res.list.forEach((newItem) => {
+						if (tableDataMap.has(newItem.code)) {
+							// 找到当前文档在数组中的索引
+							const index = updatedTableData.findIndex(
+								(item) => item.code === newItem.code,
+							)
+							if (index !== -1) {
+								// 更新文档
+								updatedTableData[index] = newItem
+								hasUpdates = true
+							}
+						}
 					})
-					if (res) {
-						setTableData(res.list)
-						setPageInfo((prev) => ({
-							...prev,
-							page: res.page,
-							total: res.total,
-						}))
+
+					// 只有在有更新时才设置状态
+					if (hasUpdates) {
+						setTableData(updatedTableData)
 					}
-					debounceTimerRef.current = null
-				}, 2000)
-			} else {
-				// 参数不一致，直接执行
-				const res = await KnowledgeApi.getKnowledgeDocumentList({
-					code,
-					name: name || undefined,
-					page,
-					pageSize,
-				})
-				if (res) {
+				} else {
+					// 初始化时直接设置数据
 					setTableData(res.list)
-					setPageInfo((prev) => ({
-						...prev,
-						page: res.page,
-						total: res.total,
-					}))
 				}
+
+				setPageInfo((prev) => ({
+					...prev,
+					total: res.total,
+				}))
 			}
 		},
 	)
@@ -314,6 +296,8 @@ export default function VectorKnowledgeDetail() {
 		}
 	}, [knowledgeBaseCode, searchText, pageInfo.page, pageInfo.pageSize])
 
+	const timeoutRef = useRef<NodeJS.Timeout | null>(null)
+
 	useEffect(() => {
 		if (
 			tableData.length &&
@@ -323,16 +307,27 @@ export default function VectorKnowledgeDetail() {
 				),
 			)
 		) {
-			// 随机2-5秒
-			const randomTime = Math.floor(Math.random() * (5000 - 2000 + 1)) + 2000
-			setTimeout(() => {
+			// 清除之前的timeout
+			if (timeoutRef.current) {
+				clearTimeout(timeoutRef.current)
+			}
+
+			// 设置新的timeout并保存引用
+			timeoutRef.current = setTimeout(() => {
 				getKnowledgeDocumentList(
 					knowledgeBaseCode,
 					searchText,
 					pageInfo.page,
 					pageInfo.pageSize,
 				)
-			}, randomTime)
+			}, 5000)
+		}
+
+		// 组件卸载时清除timeout
+		return () => {
+			if (timeoutRef.current) {
+				clearTimeout(timeoutRef.current)
+			}
 		}
 	}, [tableData])
 

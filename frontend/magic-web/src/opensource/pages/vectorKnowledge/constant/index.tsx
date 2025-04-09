@@ -58,10 +58,6 @@ export enum documentSyncStatusMap {
 	Rebuilding = 6,
 }
 
-/** 知识库默认图标的OSS key */
-export const DEFAULT_ICON_OSS_KEY =
-	"MAGIC/open/2c17c6393771ee3048ae34d6b380c5ec/NnsZ43-d-ut3WrZqGTpOR.png"
-
 /** 知识库支持嵌入的文件类型 */
 export const SUPPORTED_EMBED_FILE_TYPES =
 	"text/plain,text/markdown,.md,.markdown,application/pdf,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/csv,text/xml"
