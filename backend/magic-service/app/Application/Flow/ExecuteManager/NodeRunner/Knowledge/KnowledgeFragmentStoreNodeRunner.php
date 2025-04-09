@@ -8,8 +8,6 @@ declare(strict_types=1);
 namespace App\Application\Flow\ExecuteManager\NodeRunner\Knowledge;
 
 use App\Application\Flow\ExecuteManager\ExecutionData\ExecutionData;
-use App\Application\KnowledgeBase\Service\KnowledgeBaseFragmentAppService;
-use App\Domain\Contact\Entity\ValueObject\UserType;
 use App\Domain\Flow\Entity\ValueObject\NodeParamsConfig\Knowledge\KnowledgeFragmentStoreNodeParamsConfig;
 use App\Domain\Flow\Entity\ValueObject\NodeType;
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseFragmentEntity;
@@ -21,7 +19,6 @@ use App\ErrorCode\FlowErrorCode;
 use App\Infrastructure\Core\Collector\ExecuteManager\Annotation\FlowNodeDefine;
 use App\Infrastructure\Core\Dag\VertexResult;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
-use App\Interfaces\Authorization\Web\MagicUserAuthorization;
 use DateTime;
 
 #[FlowNodeDefine(
@@ -65,7 +62,7 @@ class KnowledgeFragmentStoreNodeRunner extends AbstractKnowledgeNodeRunner
         $knowledgeBaseDataIsolation = KnowledgeBaseDataIsolation::create($dataIsolation->getCurrentOrganizationCode(), $dataIsolation->getCurrentUserId(), $dataIsolation->getMagicId());
         $knowledgeBaseEntity = $knowledgeBaseDomainService->show($knowledgeBaseDataIsolation, $knowledgeCode);
         // 这里要建立一个归纳的文档
-        $documentEntity = $documentDomainService->getOrCreatorDefaultDocument($knowledgeBaseDataIsolation, $knowledgeBaseEntity);
+        $documentEntity = $documentDomainService->getOrCreateDefaultDocument($knowledgeBaseDataIsolation, $knowledgeBaseEntity);
 
         $savingMagicFlowKnowledgeFragmentEntity = new KnowledgeBaseFragmentEntity();
         $savingMagicFlowKnowledgeFragmentEntity->setKnowledgeCode($knowledgeCode);

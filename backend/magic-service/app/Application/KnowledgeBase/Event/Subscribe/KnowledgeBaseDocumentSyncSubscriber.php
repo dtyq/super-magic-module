@@ -7,8 +7,6 @@ declare(strict_types=1);
 
 namespace App\Application\KnowledgeBase\Event\Subscribe;
 
-use App\Application\KnowledgeBase\Service\KnowledgeBaseFragmentAppService;
-use App\Domain\Contact\Entity\ValueObject\UserType;
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseFragmentEntity;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeBaseDataIsolation;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeSyncStatus;
@@ -17,9 +15,8 @@ use App\Domain\KnowledgeBase\Service\KnowledgeBaseDocumentDomainService;
 use App\Domain\KnowledgeBase\Service\KnowledgeBaseDomainService;
 use App\Domain\KnowledgeBase\Service\KnowledgeBaseFragmentDomainService;
 use App\Infrastructure\Core\Exception\BusinessException;
-use App\Infrastructure\Core\File\FileParser;
+use App\Infrastructure\Core\File\Parser\FileParser;
 use App\Infrastructure\Util\Odin\TextSplitter\TokenTextSplitter;
-use App\Interfaces\Authorization\Web\MagicUserAuthorization;
 use Dtyq\AsyncEvent\Kernel\Annotation\AsyncListener;
 use Hyperf\Event\Annotation\Listener;
 use Hyperf\Event\Contract\ListenerInterface;

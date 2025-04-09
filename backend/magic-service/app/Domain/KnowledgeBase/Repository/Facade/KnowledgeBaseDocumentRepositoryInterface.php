@@ -22,6 +22,8 @@ interface KnowledgeBaseDocumentRepositoryInterface
      */
     public function create(KnowledgeBaseDataIsolation $dataIsolation, KnowledgeBaseDocumentEntity $documentEntity): KnowledgeBaseDocumentEntity;
 
+    public function restoreOrCreate(KnowledgeBaseDataIsolation $dataIsolation, KnowledgeBaseDocumentEntity $documentEntity): KnowledgeBaseDocumentEntity;
+
     /**
      * 更新知识库文档.
      */

@@ -19,7 +19,6 @@ use App\Domain\KnowledgeBase\Event\KnowledgeBaseSavedEvent;
 use App\Domain\Permission\Entity\ValueObject\OperationPermission\ResourceType;
 use App\Domain\Permission\Entity\ValueObject\PermissionDataIsolation;
 use App\Domain\Permission\Service\OperationPermissionDomainService;
-use Dtyq\AsyncEvent\Kernel\Annotation\AsyncListener;
 use Hyperf\Event\Annotation\Listener;
 use Hyperf\Event\Contract\ListenerInterface;
 use Psr\Container\ContainerInterface;
