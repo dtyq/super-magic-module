@@ -592,6 +592,9 @@ class AiSearchApplyService {
 				case AggregateAISearchCardDataType.Search:
 					const parentId = message.message.aggregate_ai_search_card!.parent_id
 
+					combinedMessage.message.aggregate_ai_search_card!.search[parentId] =
+						message.message.aggregate_ai_search_card!.search ?? []
+
 					if (parentId !== "0") {
 						if (
 							!combinedMessage.message.aggregate_ai_search_card!
@@ -625,9 +628,6 @@ class AiSearchApplyService {
 						combinedMessage.message.aggregate_ai_search_card!.associate_questions[
 							parentId
 						].page_count = message.message.aggregate_ai_search_card!.page_count ?? 0
-
-						combinedMessage.message.aggregate_ai_search_card!.search[parentId] =
-							message.message.aggregate_ai_search_card!.search ?? []
 					}
 					break
 				case AggregateAISearchCardDataType.LLMResponse:

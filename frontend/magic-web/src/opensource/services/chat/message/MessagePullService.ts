@@ -437,8 +437,13 @@ class MessagePullService {
 				const isSelf = organization?.magic_user_id === m.message.sender_id
 
 				if (
+					// 是历史消息（FIXME: AI 搜索消息目前没有处理）
 					ChatMessageApplyServices.isChatHistoryMessage(message) &&
+					// 消息未读
 					m.message.status === ConversationMessageStatus.Unread &&
+					// 消息的seq_id大于当前组织的渲染序列号
+					bigNumCompare(message.seq_id, MessageSeqIdService.getOrganizationRenderSeqId(message.organization_code)) > 0 &&
+					// 不是自己发送的消息
 					!isSelf
 				) {
 					console.log("添加组织未读点", message)

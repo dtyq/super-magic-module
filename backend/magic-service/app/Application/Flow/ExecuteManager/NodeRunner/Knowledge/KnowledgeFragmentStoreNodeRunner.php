@@ -8,17 +8,19 @@ declare(strict_types=1);
 namespace App\Application\Flow\ExecuteManager\NodeRunner\Knowledge;
 
 use App\Application\Flow\ExecuteManager\ExecutionData\ExecutionData;
+use App\Application\KnowledgeBase\Service\KnowledgeBaseFragmentAppService;
+use App\Domain\Contact\Entity\ValueObject\UserType;
 use App\Domain\Flow\Entity\ValueObject\NodeParamsConfig\Knowledge\KnowledgeFragmentStoreNodeParamsConfig;
 use App\Domain\Flow\Entity\ValueObject\NodeType;
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseFragmentEntity;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeBaseDataIsolation;
 use App\Domain\KnowledgeBase\Service\KnowledgeBaseDocumentDomainService;
 use App\Domain\KnowledgeBase\Service\KnowledgeBaseDomainService;
-use App\Domain\KnowledgeBase\Service\KnowledgeBaseFragmentDomainService;
 use App\ErrorCode\FlowErrorCode;
 use App\Infrastructure\Core\Collector\ExecuteManager\Annotation\FlowNodeDefine;
 use App\Infrastructure\Core\Dag\VertexResult;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
+use App\Interfaces\Authorization\Web\MagicUserAuthorization;
 use DateTime;
 
 #[FlowNodeDefine(
@@ -57,7 +59,7 @@ class KnowledgeFragmentStoreNodeRunner extends AbstractKnowledgeNodeRunner
 
         $knowledgeBaseDomainService = di(KnowledgeBaseDomainService::class);
         $documentDomainService = di(KnowledgeBaseDocumentDomainService::class);
-        $fragmentDomainService = di(KnowledgeBaseFragmentDomainService::class);
+        $fragmentAppService = di(KnowledgeBaseFragmentAppService::class);
         $dataIsolation = $executionData->getDataIsolation();
         $knowledgeBaseDataIsolation = KnowledgeBaseDataIsolation::create($dataIsolation->getCurrentOrganizationCode(), $dataIsolation->getCurrentUserId(), $dataIsolation->getMagicId());
         $knowledgeBaseEntity = $knowledgeBaseDomainService->show($knowledgeBaseDataIsolation, $knowledgeCode);
@@ -66,17 +68,17 @@ class KnowledgeFragmentStoreNodeRunner extends AbstractKnowledgeNodeRunner
 
         $savingMagicFlowKnowledgeFragmentEntity = new KnowledgeBaseFragmentEntity();
         $savingMagicFlowKnowledgeFragmentEntity->setKnowledgeCode($knowledgeCode);
+        $savingMagicFlowKnowledgeFragmentEntity->setDocumentCode($documentEntity->getCode());
         $savingMagicFlowKnowledgeFragmentEntity->setContent($content);
         $savingMagicFlowKnowledgeFragmentEntity->setMetadata($metadata);
         $savingMagicFlowKnowledgeFragmentEntity->setBusinessId($businessId);
         $savingMagicFlowKnowledgeFragmentEntity->setCreator($executionData->getOperator()->getUid());
         $savingMagicFlowKnowledgeFragmentEntity->setCreatedAt(new DateTime());
 
-        $fragmentDomainService->save(
-            $knowledgeBaseDataIsolation,
-            $knowledgeBaseEntity,
-            $documentEntity,
-            $savingMagicFlowKnowledgeFragmentEntity,
-        );
+        $userAuthorization = new MagicUserAuthorization();
+        $userAuthorization->setId($dataIsolation->getCurrentUserId());
+        $userAuthorization->setOrganizationCode($dataIsolation->getCurrentOrganizationCode());
+        $userAuthorization->setUserType(UserType::Human);
+        $fragmentAppService->save($userAuthorization, $savingMagicFlowKnowledgeFragmentEntity);
     }
 }

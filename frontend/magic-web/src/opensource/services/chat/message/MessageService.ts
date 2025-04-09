@@ -145,7 +145,7 @@ class MessageService {
 				const serverMessages = await this.messagePullService.pullMessagesFromServer({
 					conversationId,
 					topicId,
-					// AI 搜索消息，需要多拉取一些才能保证数据完整性, 统一设置为30
+					// 需要多拉取一些才能保证数据完整性(如AI搜索消息), 统一设置为30
 					pageSize: 30,
 					withoutSeqId: true,
 				})
@@ -319,7 +319,8 @@ class MessageService {
 		const messages = await this.messagePullService.pullMessagesFromServer({
 			conversationId,
 			topicId,
-			pageSize: MessageStore.pageSize,
+			// 需要多拉取一些才能保证数据完整性(如AI搜索消息), 统一设置为30
+			pageSize: 30,
 			loadHistory,
 		})
 

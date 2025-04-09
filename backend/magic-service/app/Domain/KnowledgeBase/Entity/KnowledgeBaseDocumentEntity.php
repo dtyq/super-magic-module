@@ -102,11 +102,6 @@ class KnowledgeBaseDocumentEntity extends AbstractEntity
         return $this;
     }
 
-    public function issetCode(): bool
-    {
-        return isset($this->code);
-    }
-
     public function getCode(): string
     {
         return $this->code;

@@ -8,11 +8,8 @@ declare(strict_types=1);
 namespace App\Application\KnowledgeBase\Service;
 
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseFragmentEntity;
-use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeBaseDataIsolation;
 use App\Domain\KnowledgeBase\Entity\ValueObject\Query\KnowledgeBaseFragmentQuery;
 use App\Infrastructure\Core\ValueObject\Page;
-use Hyperf\DbConnection\Annotation\Transactional;
-use Hyperf\DbConnection\Db;
 use Qbhy\HyperfAuth\Authenticatable;
 
 class KnowledgeBaseFragmentAppService extends AbstractKnowledgeAppService
@@ -24,15 +21,7 @@ class KnowledgeBaseFragmentAppService extends AbstractKnowledgeAppService
         $savingMagicFlowKnowledgeFragmentEntity->setCreator($dataIsolation->getCurrentUserId());
         $knowledgeBaseDocumentEntity = $this->knowledgeBaseDocumentDomainService->show($dataIsolation, $savingMagicFlowKnowledgeFragmentEntity->getDocumentCode());
         $knowledgeBaseEntity = $this->knowledgeBaseDomainService->show($dataIsolation, $savingMagicFlowKnowledgeFragmentEntity->getKnowledgeCode());
-
-        return Db::transaction(function () use ($knowledgeBaseDocumentEntity, $knowledgeBaseEntity, $savingMagicFlowKnowledgeFragmentEntity, $dataIsolation) {
-            $oldEntity = $this->knowledgeBaseFragmentDomainService->show($dataIsolation, $savingMagicFlowKnowledgeFragmentEntity->getId() ?? 0, true, false);
-            $newEntity = $this->knowledgeBaseFragmentDomainService->save($dataIsolation, $knowledgeBaseEntity, $knowledgeBaseDocumentEntity, $savingMagicFlowKnowledgeFragmentEntity);
-            // 需要更新字符数
-            $deltaWordCount = $newEntity->getWordCount() - $oldEntity?->getWordCount() ?? 0;
-            $this->updateWordCount($dataIsolation, $newEntity, $deltaWordCount);
-            return $newEntity;
-        });
+        return $this->knowledgeBaseFragmentDomainService->save($dataIsolation, $knowledgeBaseEntity, $knowledgeBaseDocumentEntity, $savingMagicFlowKnowledgeFragmentEntity);
     }
 
     /**
@@ -58,22 +47,7 @@ class KnowledgeBaseFragmentAppService extends AbstractKnowledgeAppService
         $dataIsolation = $this->createKnowledgeBaseDataIsolation($authorization);
         $this->checkKnowledgeBaseOperation($dataIsolation, 'del', $knowledgeBaseCode, $documentCode, $id);
         $knowledgeBaseEntity = $this->knowledgeBaseDomainService->show($dataIsolation, $knowledgeBaseCode);
-
-        Db::transaction(function () use ($knowledgeBaseEntity, $id, $dataIsolation) {
-            $oldEntity = $this->knowledgeBaseFragmentDomainService->show($dataIsolation, $id, true, false);
-            $this->knowledgeBaseFragmentDomainService->destroy($dataIsolation, $knowledgeBaseEntity, $oldEntity);
-            // 需要更新字符数
-            $deltaWordCount = -$oldEntity->getWordCount();
-            $this->updateWordCount($dataIsolation, $oldEntity, $deltaWordCount);
-        });
-    }
-
-    #[Transactional]
-    private function updateWordCount(KnowledgeBaseDataIsolation $dataIsolation, KnowledgeBaseFragmentEntity $entity, int $deltaWordCount): void
-    {
-        // 更新数据库字数统计
-        $this->knowledgeBaseDomainService->updateKnowledgeBaseWordCount($dataIsolation, $entity->getKnowledgeCode(), $deltaWordCount);
-        // 更新文档字数统计
-        $this->knowledgeBaseDocumentDomainService->updateWordCount($dataIsolation, $entity->getDocumentCode(), $deltaWordCount);
+        $oldEntity = $this->knowledgeBaseFragmentDomainService->show($dataIsolation, $id);
+        $this->knowledgeBaseFragmentDomainService->destroy($dataIsolation, $knowledgeBaseEntity, $oldEntity);
     }
 }

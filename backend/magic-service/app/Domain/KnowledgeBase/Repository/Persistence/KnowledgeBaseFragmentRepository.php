@@ -12,13 +12,13 @@ use App\Domain\KnowledgeBase\Entity\KnowledgeBaseFragmentEntity;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeBaseDataIsolation;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeSyncStatus;
 use App\Domain\KnowledgeBase\Entity\ValueObject\Query\KnowledgeBaseFragmentQuery;
-use App\Domain\KnowledgeBase\Repository\Facade\KnowledgeFragmentRepositoryInterface;
+use App\Domain\KnowledgeBase\Repository\Facade\KnowledgeBaseFragmentRepositoryInterface;
 use App\Domain\KnowledgeBase\Repository\Persistence\Model\KnowledgeBaseFragmentsModel;
 use App\Infrastructure\Core\ValueObject\Page;
 
 use function mb_substr;
 
-class KnowledgeBaseFragmentRepository extends KnowledgeBaseAbstractRepository implements KnowledgeFragmentRepositoryInterface
+class KnowledgeBaseFragmentRepository extends KnowledgeBaseAbstractRepository implements KnowledgeBaseFragmentRepositoryInterface
 {
     public function getById(KnowledgeBaseDataIsolation $dataIsolation, int $id, bool $selectForUpdate = false): ?KnowledgeBaseFragmentEntity
     {
@@ -189,22 +189,22 @@ class KnowledgeBaseFragmentRepository extends KnowledgeBaseAbstractRepository im
             if (! isset($groupedResults[$result->document_code])) {
                 $groupedResults[$result->document_code] = [];
             }
-            $groupedResults[$result->document_code][] = KnowledgeSyncStatus::from($result->sync_status);
+            $groupedResults[$result->document_code][] = $result->sync_status;
         }
 
         // 确保所有请求的文档代码都有对应的状态组
         foreach ($documentCodes as $documentCode) {
             if (! isset($groupedResults[$documentCode])) {
-                $groupedResults[$documentCode] = [KnowledgeSyncStatus::NotSynced];
+                $groupedResults[$documentCode] = [KnowledgeSyncStatus::NotSynced->value];
             }
         }
 
         // 判断每个文档的整体状态
         $statusMap = [];
         foreach ($groupedResults as $documentCode => $statuses) {
-            if (in_array(KnowledgeSyncStatus::Syncing, $statuses)) {
+            if (in_array(KnowledgeSyncStatus::Syncing->value, $statuses)) {
                 $statusMap[$documentCode] = KnowledgeSyncStatus::Syncing;
-            } elseif (count(array_unique($statuses)) === 1 && $statuses[0] === KnowledgeSyncStatus::NotSynced) {
+            } elseif (count(array_unique($statuses)) === 1 && $statuses[0] === KnowledgeSyncStatus::NotSynced->value) {
                 $statusMap[$documentCode] = KnowledgeSyncStatus::NotSynced;
             } else {
                 $statusMap[$documentCode] = KnowledgeSyncStatus::Synced;

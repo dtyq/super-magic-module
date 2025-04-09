@@ -15,16 +15,22 @@ use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeSyncStatus;
 use App\Domain\KnowledgeBase\Entity\ValueObject\Query\KnowledgeBaseFragmentQuery;
 use App\Domain\KnowledgeBase\Event\KnowledgeBaseFragmentRemovedEvent;
 use App\Domain\KnowledgeBase\Event\KnowledgeBaseFragmentSavedEvent;
-use App\Domain\KnowledgeBase\Repository\Facade\KnowledgeFragmentRepositoryInterface;
+use App\Domain\KnowledgeBase\Repository\Facade\KnowledgeBaseDocumentRepositoryInterface;
+use App\Domain\KnowledgeBase\Repository\Facade\KnowledgeBaseFragmentRepositoryInterface;
+use App\Domain\KnowledgeBase\Repository\Facade\KnowledgeBaseRepositoryInterface;
 use App\ErrorCode\FlowErrorCode;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Infrastructure\Core\ValueObject\Page;
 use Dtyq\AsyncEvent\AsyncEventUtil;
+use Hyperf\DbConnection\Annotation\Transactional;
+use Hyperf\DbConnection\Db;
 
 readonly class KnowledgeBaseFragmentDomainService
 {
     public function __construct(
-        private KnowledgeFragmentRepositoryInterface $magicFlowKnowledgeFragmentRepository,
+        private KnowledgeBaseFragmentRepositoryInterface $knowledgeBaseFragmentRepository,
+        private KnowledgeBaseRepositoryInterface $knowledgeBaseRepository,
+        private KnowledgeBaseDocumentRepositoryInterface $knowledgeBaseDocumentRepository,
     ) {
     }
 
@@ -33,12 +39,12 @@ readonly class KnowledgeBaseFragmentDomainService
      */
     public function queries(KnowledgeBaseDataIsolation $dataIsolation, KnowledgeBaseFragmentQuery $query, Page $page): array
     {
-        return $this->magicFlowKnowledgeFragmentRepository->queries($dataIsolation, $query, $page);
+        return $this->knowledgeBaseFragmentRepository->queries($dataIsolation, $query, $page);
     }
 
     public function show(KnowledgeBaseDataIsolation $dataIsolation, int $id, bool $selectForUpdate = false, bool $throw = true): ?KnowledgeBaseFragmentEntity
     {
-        $magicFlowKnowledgeFragmentEntity = $this->magicFlowKnowledgeFragmentRepository->getById($dataIsolation, $id, $selectForUpdate);
+        $magicFlowKnowledgeFragmentEntity = $this->knowledgeBaseFragmentRepository->getById($dataIsolation, $id, $selectForUpdate);
         if (empty($magicFlowKnowledgeFragmentEntity) && $throw) {
             ExceptionBuilder::throw(FlowErrorCode::KnowledgeValidateFailed, "[{$id}] 不存在");
         }
@@ -55,42 +61,46 @@ readonly class KnowledgeBaseFragmentDomainService
         $savingMagicFlowKnowledgeFragmentEntity->setDocumentCode($knowledgeBaseDocumentEntity->getCode());
 
         // 如果有业务id，并且业务 ID 存在，也可以相当于更新
-        $magicFlowKnowledgeFragmentEntity = null;
+        $knowledgeBaseFragmentEntity = null;
         if (! empty($savingMagicFlowKnowledgeFragmentEntity->getBusinessId()) && empty($savingMagicFlowKnowledgeFragmentEntity->getId())) {
-            $magicFlowKnowledgeFragmentEntity = $this->magicFlowKnowledgeFragmentRepository->getByBusinessId($dataIsolation, $savingMagicFlowKnowledgeFragmentEntity->getKnowledgeCode(), $savingMagicFlowKnowledgeFragmentEntity->getBusinessId());
-            if (! is_null($magicFlowKnowledgeFragmentEntity)) {
-                $savingMagicFlowKnowledgeFragmentEntity->setId($magicFlowKnowledgeFragmentEntity->getId());
+            $knowledgeBaseFragmentEntity = $this->knowledgeBaseFragmentRepository->getByBusinessId($dataIsolation, $savingMagicFlowKnowledgeFragmentEntity->getKnowledgeCode(), $savingMagicFlowKnowledgeFragmentEntity->getBusinessId());
+            if (! is_null($knowledgeBaseFragmentEntity)) {
+                $savingMagicFlowKnowledgeFragmentEntity->setId($knowledgeBaseFragmentEntity->getId());
             }
         }
 
         if ($savingMagicFlowKnowledgeFragmentEntity->shouldCreate()) {
             $savingMagicFlowKnowledgeFragmentEntity->prepareForCreation();
-            $magicFlowKnowledgeFragmentEntity = $savingMagicFlowKnowledgeFragmentEntity;
+            $knowledgeBaseFragmentEntity = $savingMagicFlowKnowledgeFragmentEntity;
         } else {
-            $magicFlowKnowledgeFragmentEntity = $magicFlowKnowledgeFragmentEntity ?? $this->magicFlowKnowledgeFragmentRepository->getById($dataIsolation, $savingMagicFlowKnowledgeFragmentEntity->getId());
-            if (empty($magicFlowKnowledgeFragmentEntity)) {
+            $knowledgeBaseFragmentEntity = $knowledgeBaseFragmentEntity ?? $this->knowledgeBaseFragmentRepository->getById($dataIsolation, $savingMagicFlowKnowledgeFragmentEntity->getId());
+            if (empty($knowledgeBaseFragmentEntity)) {
                 ExceptionBuilder::throw(FlowErrorCode::KnowledgeValidateFailed, "[{$savingMagicFlowKnowledgeFragmentEntity->getId()}] 没有找到");
             }
             // 如果没有变化，就不需要更新了
-            if (! $magicFlowKnowledgeFragmentEntity->hasModify($savingMagicFlowKnowledgeFragmentEntity)) {
-                return $magicFlowKnowledgeFragmentEntity;
+            if (! $knowledgeBaseFragmentEntity->hasModify($savingMagicFlowKnowledgeFragmentEntity)) {
+                return $knowledgeBaseFragmentEntity;
             }
 
-            $savingMagicFlowKnowledgeFragmentEntity->prepareForModification($magicFlowKnowledgeFragmentEntity);
+            $savingMagicFlowKnowledgeFragmentEntity->prepareForModification($knowledgeBaseFragmentEntity);
         }
 
-        $magicFlowKnowledgeFragmentEntity = $this->magicFlowKnowledgeFragmentRepository->save($dataIsolation, $magicFlowKnowledgeFragmentEntity);
+        Db::transaction(function () use ($dataIsolation, $knowledgeBaseFragmentEntity) {
+            $oldKnowledgeBaseFragmentEntity = $this->knowledgeBaseFragmentRepository->getById($dataIsolation, $knowledgeBaseFragmentEntity->getId()??0, true);
+            $knowledgeBaseFragmentEntity = $this->knowledgeBaseFragmentRepository->save($dataIsolation, $knowledgeBaseFragmentEntity);
+            $deltaWordCount = $knowledgeBaseFragmentEntity->getWordCount() - $oldKnowledgeBaseFragmentEntity?->getWordCount() ?? 0;
+            $this->updateWordCount($dataIsolation, $knowledgeBaseFragmentEntity, $deltaWordCount);
+        });
 
-        $event = new KnowledgeBaseFragmentSavedEvent($knowledgeBaseEntity, $magicFlowKnowledgeFragmentEntity);
-        $event->setIsSync(true);
+        $event = new KnowledgeBaseFragmentSavedEvent($knowledgeBaseEntity, $knowledgeBaseFragmentEntity);
         AsyncEventUtil::dispatch($event);
 
-        return $magicFlowKnowledgeFragmentEntity;
+        return $knowledgeBaseFragmentEntity;
     }
 
     public function showByBusinessId(KnowledgeBaseDataIsolation $dataIsolation, string $knowledgeCode, string $businessId): KnowledgeBaseFragmentEntity
     {
-        $magicFlowKnowledgeFragmentEntity = $this->magicFlowKnowledgeFragmentRepository->getByBusinessId($dataIsolation, $knowledgeCode, $businessId);
+        $magicFlowKnowledgeFragmentEntity = $this->knowledgeBaseFragmentRepository->getByBusinessId($dataIsolation, $knowledgeCode, $businessId);
         if (empty($magicFlowKnowledgeFragmentEntity)) {
             ExceptionBuilder::throw(FlowErrorCode::KnowledgeValidateFailed, "[{$businessId}] 不存在");
         }
@@ -99,13 +109,20 @@ readonly class KnowledgeBaseFragmentDomainService
 
     public function destroy(KnowledgeBaseDataIsolation $dataIsolation, KnowledgeBaseEntity $knowledgeBaseEntity, KnowledgeBaseFragmentEntity $knowledgeBaseFragmentEntity): void
     {
-        $this->magicFlowKnowledgeFragmentRepository->destroy($dataIsolation, $knowledgeBaseFragmentEntity);
+        Db::transaction(function () use ($dataIsolation, $knowledgeBaseFragmentEntity) {
+            $oldKnowledgeBaseFragmentEntity = $this->knowledgeBaseFragmentRepository->getById($dataIsolation, $knowledgeBaseFragmentEntity->getId(), true);
+            $this->knowledgeBaseFragmentRepository->destroy($dataIsolation, $knowledgeBaseFragmentEntity);
+            // 需要更新字符数
+            $deltaWordCount = -$oldKnowledgeBaseFragmentEntity->getWordCount();
+            $this->updateWordCount($dataIsolation, $oldKnowledgeBaseFragmentEntity, $deltaWordCount);
+        });
+
         AsyncEventUtil::dispatch(new KnowledgeBaseFragmentRemovedEvent($knowledgeBaseEntity, $knowledgeBaseFragmentEntity));
     }
 
     public function batchDestroyByPointIds(KnowledgeBaseDataIsolation $dataIsolation, KnowledgeBaseEntity $knowledgeEntity, array $pointIds): void
     {
-        $this->magicFlowKnowledgeFragmentRepository->fragmentBatchDestroyByPointIds($dataIsolation, $knowledgeEntity->getCode(), $pointIds);
+        $this->knowledgeBaseFragmentRepository->fragmentBatchDestroyByPointIds($dataIsolation, $knowledgeEntity->getCode(), $pointIds);
     }
 
     /**
@@ -113,6 +130,15 @@ readonly class KnowledgeBaseFragmentDomainService
      */
     public function getFinalSyncStatusByDocumentCodes(KnowledgeBaseDataIsolation $dataIsolation, array $documentCodes): array
     {
-        return $this->magicFlowKnowledgeFragmentRepository->getFinalSyncStatusByDocumentCodes($dataIsolation, $documentCodes);
+        return $this->knowledgeBaseFragmentRepository->getFinalSyncStatusByDocumentCodes($dataIsolation, $documentCodes);
+    }
+
+    #[Transactional]
+    private function updateWordCount(KnowledgeBaseDataIsolation $dataIsolation, KnowledgeBaseFragmentEntity $entity, int $deltaWordCount): void
+    {
+        // 更新数据库字数统计
+        $this->knowledgeBaseRepository->updateWordCount($dataIsolation, $entity->getKnowledgeCode(), $deltaWordCount);
+        // 更新文档字数统计
+        $this->knowledgeBaseDocumentRepository->updateWordCount($dataIsolation, $entity->getDocumentCode(), $deltaWordCount);
     }
 }

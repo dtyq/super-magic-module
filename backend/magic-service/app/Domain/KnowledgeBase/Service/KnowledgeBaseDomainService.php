@@ -18,8 +18,8 @@ use App\Domain\KnowledgeBase\Entity\ValueObject\Query\KnowledgeBaseFragmentQuery
 use App\Domain\KnowledgeBase\Entity\ValueObject\Query\KnowledgeBaseQuery;
 use App\Domain\KnowledgeBase\Event\KnowledgeBaseRemovedEvent;
 use App\Domain\KnowledgeBase\Event\KnowledgeBaseSavedEvent;
+use App\Domain\KnowledgeBase\Repository\Facade\KnowledgeBaseFragmentRepositoryInterface;
 use App\Domain\KnowledgeBase\Repository\Facade\KnowledgeBaseRepositoryInterface;
-use App\Domain\KnowledgeBase\Repository\Facade\KnowledgeFragmentRepositoryInterface;
 use App\ErrorCode\FlowErrorCode;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Infrastructure\Core\ValueObject\Page;
@@ -31,7 +31,7 @@ readonly class KnowledgeBaseDomainService
 {
     public function __construct(
         private KnowledgeBaseRepositoryInterface $magicFlowKnowledgeRepository,
-        private KnowledgeFragmentRepositoryInterface $magicFlowKnowledgeFragmentRepository,
+        private KnowledgeBaseFragmentRepositoryInterface $magicFlowKnowledgeFragmentRepository,
         private CacheInterface $cache,
     ) {
     }
