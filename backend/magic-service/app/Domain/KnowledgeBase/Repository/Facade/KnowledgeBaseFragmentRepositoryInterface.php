@@ -13,7 +13,7 @@ use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeSyncStatus;
 use App\Domain\KnowledgeBase\Entity\ValueObject\Query\KnowledgeBaseFragmentQuery;
 use App\Infrastructure\Core\ValueObject\Page;
 
-interface KnowledgeFragmentRepositoryInterface
+interface KnowledgeBaseFragmentRepositoryInterface
 {
     public function getById(KnowledgeBaseDataIsolation $dataIsolation, int $id, bool $selectForUpdate = false): ?KnowledgeBaseFragmentEntity;
 

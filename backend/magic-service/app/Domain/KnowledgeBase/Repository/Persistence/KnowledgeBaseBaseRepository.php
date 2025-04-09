@@ -150,6 +150,9 @@ class KnowledgeBaseBaseRepository extends KnowledgeBaseAbstractRepository implem
      */
     public function updateWordCount(KnowledgeBaseDataIsolation $dataIsolation, string $knowledgeCode, int $deltaWordCount): void
     {
+        if ($deltaWordCount === 0) {
+            return;
+        }
         $this->createBuilder($dataIsolation, KnowledgeBaseModel::query())
             ->where('code', $knowledgeCode)
             ->increment('word_count', $deltaWordCount);

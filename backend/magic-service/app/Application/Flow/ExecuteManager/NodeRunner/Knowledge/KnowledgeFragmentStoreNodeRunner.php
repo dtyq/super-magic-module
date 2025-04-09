@@ -23,8 +23,6 @@ use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Interfaces\Authorization\Web\MagicUserAuthorization;
 use DateTime;
 
-use function Hyperf\Translation\__;
-
 #[FlowNodeDefine(
     type: NodeType::KnowledgeFragmentStore->value,
     code: NodeType::KnowledgeFragmentStore->name,
@@ -48,7 +46,7 @@ class KnowledgeFragmentStoreNodeRunner extends AbstractKnowledgeNodeRunner
 
         $content = $paramsConfig->getContent()?->getValue()?->getResult($executionData->getExpressionFieldData()) ?? null;
         if (! is_string($content) || $content === '') {
-            ExceptionBuilder::throw(FlowErrorCode::ExecuteValidateFailed, __('flow.node.knowledge_fragment_store.content_empty'));
+            ExceptionBuilder::throw(FlowErrorCode::ExecuteValidateFailed, 'flow.node.knowledge_fragment_store.content_empty');
         }
 
         $metadata = $paramsConfig->getMetadata()?->getForm()?->getKeyValue($executionData->getExpressionFieldData()) ?? [];
@@ -56,7 +54,7 @@ class KnowledgeFragmentStoreNodeRunner extends AbstractKnowledgeNodeRunner
         $paramsConfig->getBusinessId()?->getValue()?->getExpressionValue()?->setIsStringTemplate(true);
         $businessId = $paramsConfig->getBusinessId()?->getValue()?->getResult($executionData->getExpressionFieldData()) ?? '';
         if (! is_string($businessId)) {
-            ExceptionBuilder::throw(FlowErrorCode::ExecuteValidateFailed, __('flow.node.knowledge_fragment_store.business_id_empty'));
+            ExceptionBuilder::throw(FlowErrorCode::ExecuteValidateFailed, 'flow.node.knowledge_fragment_store.business_id_empty');
         }
 
         $knowledgeBaseDomainService = di(KnowledgeBaseDomainService::class);

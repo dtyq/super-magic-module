@@ -12,13 +12,13 @@ use App\Domain\KnowledgeBase\Entity\KnowledgeBaseFragmentEntity;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeBaseDataIsolation;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeSyncStatus;
 use App\Domain\KnowledgeBase\Entity\ValueObject\Query\KnowledgeBaseFragmentQuery;
-use App\Domain\KnowledgeBase\Repository\Facade\KnowledgeFragmentRepositoryInterface;
+use App\Domain\KnowledgeBase\Repository\Facade\KnowledgeBaseFragmentRepositoryInterface;
 use App\Domain\KnowledgeBase\Repository\Persistence\Model\KnowledgeBaseFragmentsModel;
 use App\Infrastructure\Core\ValueObject\Page;
 
 use function mb_substr;
 
-class KnowledgeBaseFragmentRepository extends KnowledgeBaseAbstractRepository implements KnowledgeFragmentRepositoryInterface
+class KnowledgeBaseFragmentRepository extends KnowledgeBaseAbstractRepository implements KnowledgeBaseFragmentRepositoryInterface
 {
     public function getById(KnowledgeBaseDataIsolation $dataIsolation, int $id, bool $selectForUpdate = false): ?KnowledgeBaseFragmentEntity
     {

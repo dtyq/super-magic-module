@@ -19,8 +19,8 @@ use App\Domain\KnowledgeBase\Entity\KnowledgeBaseEntity;
 use App\Domain\KnowledgeBase\Entity\ValueObject\RerankMode;
 use App\Domain\KnowledgeBase\Entity\ValueObject\RetrievalMethod;
 use App\Domain\KnowledgeBase\Entity\ValueObject\RetrieveConfig;
+use App\Domain\KnowledgeBase\Repository\Facade\KnowledgeBaseFragmentRepositoryInterface;
 use App\Domain\KnowledgeBase\Repository\Facade\KnowledgeBaseRepositoryInterface;
-use App\Domain\KnowledgeBase\Repository\Facade\KnowledgeFragmentRepositoryInterface;
 use App\Domain\KnowledgeBase\Service\KnowledgeBaseDomainService;
 use App\Infrastructure\Core\Embeddings\EmbeddingGenerator\EmbeddingGeneratorInterface;
 use App\Infrastructure\Core\Embeddings\VectorStores\VectorStoreInterface;
@@ -124,9 +124,9 @@ class MagicFlowKnowledgeDomainServiceTest extends BaseTest
         return $repository;
     }
 
-    private function createMockFragmentRepository(): KnowledgeFragmentRepositoryInterface
+    private function createMockFragmentRepository(): KnowledgeBaseFragmentRepositoryInterface
     {
-        return Mockery::mock(KnowledgeFragmentRepositoryInterface::class);
+        return Mockery::mock(KnowledgeBaseFragmentRepositoryInterface::class);
     }
 
     private function createMockAIModelRepository(): MagicFlowAIModelRepositoryInterface
