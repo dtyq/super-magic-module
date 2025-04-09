@@ -12,7 +12,6 @@ use App\Interfaces\Flow\Facade\Admin\MagicFlowFlowAdminApi;
 use App\Interfaces\Flow\Facade\Admin\MagicFlowToolSetApiFlow;
 use App\Interfaces\Flow\Facade\Admin\MagicFlowTriggerTestcaseFlowAdminApi;
 use App\Interfaces\Flow\Facade\Admin\MagicFlowVersionFlowAdminApi;
-use App\Interfaces\Flow\Facade\Open\MagicFlowOpenApi;
 use Hyperf\HttpServer\Router\Router;
 
 Router::addGroup('/api/v1', static function () {
@@ -65,23 +64,3 @@ Router::addGroup('/api/v1', static function () {
         Router::post('/{flowId}/api-key/{code}/rebuild', [MagicFlowApiKeyFlowAdminApi::class, 'changeSecretKey']);
     });
 }, ['middleware' => [RequestContextMiddleware::class]]);
-
-// 对外开放平台 API external-api 路由
-Router::addGroup('/open/external-api', function () {
-    // 麦吉
-    Router::addGroup('/magic', function () {
-        Router::addGroup('/flows', function () {
-            Router::post('/{flowCode}/chat', [MagicFlowOpenApi::class, 'chat']);
-            Router::post('/{flowCode}/param-call', [MagicFlowOpenApi::class, 'paramCall']);
-        });
-    });
-});
-
-Router::addGroup('/api', function () {
-    Router::addRoute(['GET', 'POST'], '/chat', [MagicFlowOpenApi::class, 'chat']);
-    Router::addRoute(['POST'], '/v3/chat/completions', [MagicFlowOpenApi::class, 'chatCompletions']);
-    Router::addRoute(['POST'], '/param-call', [MagicFlowOpenApi::class, 'paramCall']);
-
-    Router::addRoute(['POST'], '/async-chat', [MagicFlowOpenApi::class, 'chatAsync']);
-    Router::addRoute(['GET'], '/async-chat/{taskId}', [MagicFlowOpenApi::class, 'getExecuteResult']);
-});

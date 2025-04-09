@@ -31,6 +31,7 @@ $routeConfigs = [
             'permission.php',
             'knowledge-base.php',
             'task.php',
+            'open-apis.php',
         ],
     ],
     // 旧版路由文件（兼容模式，后续可以逐步迁移到 v1 版本）
