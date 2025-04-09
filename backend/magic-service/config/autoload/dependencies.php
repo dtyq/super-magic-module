@@ -120,14 +120,14 @@ use App\Infrastructure\Core\Embeddings\DocumentSplitter\DocumentSplitterInterfac
 use App\Infrastructure\Core\Embeddings\DocumentSplitter\OdinRecursiveCharacterTextSplitter;
 use App\Infrastructure\Core\Embeddings\EmbeddingGenerator\EmbeddingGeneratorInterface;
 use App\Infrastructure\Core\Embeddings\EmbeddingGenerator\OdinEmbeddingGenerator;
-use App\Infrastructure\Core\File\Parser\Driver\DocFileParserDriver;
 use App\Infrastructure\Core\File\Parser\Driver\ExcelFileParserDriver;
-use App\Infrastructure\Core\File\Parser\Driver\Interfaces\DocFileParserDriverInterface;
 use App\Infrastructure\Core\File\Parser\Driver\Interfaces\ExcelFileParserDriverInterface;
 use App\Infrastructure\Core\File\Parser\Driver\Interfaces\OcrFileParserDriverInterface;
 use App\Infrastructure\Core\File\Parser\Driver\Interfaces\TextFileParserDriverInterface;
+use App\Infrastructure\Core\File\Parser\Driver\Interfaces\WordFileParserDriverInterface;
 use App\Infrastructure\Core\File\Parser\Driver\OcrFileParserDriver;
 use App\Infrastructure\Core\File\Parser\Driver\TextFileParserDriver;
+use App\Infrastructure\Core\File\Parser\Driver\WordFileParserDriver;
 use App\Infrastructure\ExternalAPI\Sms\SmsInterface;
 use App\Infrastructure\ExternalAPI\Sms\TemplateInterface;
 use App\Infrastructure\ExternalAPI\Sms\Volcengine\Template;
@@ -262,7 +262,7 @@ $dependencies = [
     OcrFileParserDriverInterface::class => OcrFileParserDriver::class,
     TextFileParserDriverInterface::class => TextFileParserDriver::class,
     ExcelFileParserDriverInterface::class => ExcelFileParserDriver::class,
-    DocFileParserDriverInterface::class => DocFileParserDriver::class,
+    WordFileParserDriverInterface::class => WordFileParserDriver::class,
 ];
 
 // 如果存在重复,优先取dependencies_priority的配置,不存在重复，就合并

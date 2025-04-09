@@ -9,12 +9,12 @@ namespace App\Infrastructure\Core\File\Parser\Driver;
 
 use App\ErrorCode\FlowErrorCode;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
-use App\Infrastructure\Core\File\Parser\Driver\Interfaces\DocFileParserDriverInterface;
+use App\Infrastructure\Core\File\Parser\Driver\Interfaces\WordFileParserDriverInterface;
 use Exception;
 use PhpOffice\PhpWord\Element\TextRun;
 use PhpOffice\PhpWord\IOFactory;
 
-class DocFileParserDriver implements DocFileParserDriverInterface
+class WordFileParserDriver implements WordFileParserDriverInterface
 {
     public function parse(string $filePath, string $fileExtension): string
     {

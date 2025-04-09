@@ -9,11 +9,11 @@ namespace App\Infrastructure\Core\File\Parser;
 
 use App\ErrorCode\FlowErrorCode;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
-use App\Infrastructure\Core\File\Parser\Driver\Interfaces\DocFileParserDriverInterface;
 use App\Infrastructure\Core\File\Parser\Driver\Interfaces\ExcelFileParserDriverInterface;
 use App\Infrastructure\Core\File\Parser\Driver\Interfaces\FileParserDriverInterface;
 use App\Infrastructure\Core\File\Parser\Driver\Interfaces\OcrFileParserDriverInterface;
 use App\Infrastructure\Core\File\Parser\Driver\Interfaces\TextFileParserDriverInterface;
+use App\Infrastructure\Core\File\Parser\Driver\Interfaces\WordFileParserDriverInterface;
 use App\Infrastructure\Util\SSRF\Exception\SSRFException;
 use App\Infrastructure\Util\SSRF\SSRFUtil;
 use Symfony\Component\Mime\MimeTypes;
@@ -51,7 +51,7 @@ class FileParser
                 'xlsx','xls' => di(ExcelFileParserDriverInterface::class),
                 'txt', 'json', 'csv', 'md', 'mdx',
                 'py', 'java', 'php', 'js', 'html', 'htm', 'css', 'xml', 'yaml', 'yml', 'sql' => di(TextFileParserDriverInterface::class),
-                'docx', 'doc' => di(DocFileParserDriverInterface::class),
+                'docx', 'doc' => di(WordFileParserDriverInterface::class),
                 default => ExceptionBuilder::throw(FlowErrorCode::ExecuteFailed, 'flow.node.loader.unsupported_file_type', ['file_extension' => $extension]),
             };
             $res = $interface->parse($tempFile, $extension);
