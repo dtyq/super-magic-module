@@ -14,6 +14,7 @@ import { getKnowledgeTypeOptions } from "../../helpers"
 import KnowledgeDatabaseSelectV1 from "../KnowledgeDatabaseSelect/KnowledgeDatabaseSelect"
 import useKnowledgeDatabases from "./hooks/useKnowledgeDatabase"
 import useProgress from "./hooks/useProgress"
+import { knowledgeType } from "@/opensource/pages/vectorKnowledge/constant"
 
 type KnowledgeDataListProps = {
 	handleAdd: () => void
@@ -22,6 +23,7 @@ type KnowledgeDataListProps = {
 	scoreName?: string[]
 }
 
+// 知识数据列表组件
 export default function KnowledgeDataListV1({
 	handleAdd,
 	limitName = ["limit"],
@@ -35,7 +37,12 @@ export default function KnowledgeDataListV1({
 
 	const { limit, score } = usePanelConfig()
 
-	const { teamshareDatabaseOptions } = useKnowledgeDatabases()
+	const {
+		teamshareDatabaseOptions,
+		userDatabaseOptions,
+		userDatabasePopupScroll,
+		userDatabasePopupChange,
+	} = useKnowledgeDatabases(form)
 
 	const { progressList, initInterval, setProgressList } = useProgress({
 		knowledgeListName,
@@ -44,12 +51,57 @@ export default function KnowledgeDataListV1({
 	const isCommercial = useMemo(() => !!extraData, [extraData])
 
 	// 获取Form.List字段的值来判断是否有数据
-	const knowledgeList = Form.useWatch(knowledgeListName) || []
+	const knowledgeList = Form.useWatch(knowledgeListName, form) || []
 	const hasKnowledgeData = Array.isArray(knowledgeList) && knowledgeList.length > 0
 
 	const knowledgeDataOptions = useMemo(() => {
 		return getKnowledgeTypeOptions(t, isCommercial)
 	}, [t, isCommercial])
+
+	// 根据knowledge_type渲染右侧组件
+	const renderRightComponent = (knowledgeTypeValue: number, subField: any) => {
+		switch (knowledgeTypeValue) {
+			case knowledgeType.UserKnowledgeDatabase:
+				// 用户自建知识库
+				return (
+					<Form.Item noStyle>
+						<MagicSelect
+							key={knowledgeTypeValue}
+							placeholder={t("common.userKnowledgeDatabasePlaceholder", {
+								ns: "flow",
+							})}
+							options={userDatabaseOptions}
+							onPopupScroll={userDatabasePopupScroll}
+							fieldNames={{
+								label: "name",
+								value: "knowledge_code",
+							}}
+							onChange={(value: string) => {
+								userDatabasePopupChange(value, subField.name)
+							}}
+						/>
+					</Form.Item>
+				)
+			case knowledgeType.TeamshareKnowledgeDatabase:
+				// 天书知识库
+				return (
+					<Form.Item noStyle name={[subField.name]}>
+						{isCommercial ? (
+							<KnowledgeDatabaseSelectV1
+								options={teamshareDatabaseOptions}
+								progressList={progressList}
+								setProgressList={setProgressList}
+								initInterval={initInterval}
+							/>
+						) : (
+							<MagicSelect key={knowledgeTypeValue} options={[]} />
+						)}
+					</Form.Item>
+				)
+			default:
+				return <MagicSelect key={knowledgeTypeValue} options={[]} />
+		}
+	}
 
 	return (
 		<div className={styles.knowledgeDataWrap}>
@@ -66,6 +118,10 @@ export default function KnowledgeDataListV1({
 								return (
 									<div className={styles.knowledgeList}>
 										{subFields.map((subField, i) => {
+											// 从已经获取的knowledgeList中安全地读取当前项的knowledge_type
+											const currentKnowledgeType =
+												knowledgeList[i]?.knowledge_type
+
 											return (
 												<Flex
 													key={subField.key}
@@ -79,26 +135,18 @@ export default function KnowledgeDataListV1({
 														>
 															<MagicSelect
 																options={knowledgeDataOptions}
+																fieldNames={{
+																	label: "label",
+																	value: "value",
+																}}
 															/>
 														</Form.Item>
 													</div>
 													<div className={styles.right}>
-														<Form.Item noStyle name={[subField.name]}>
-															{isCommercial ? (
-																<KnowledgeDatabaseSelectV1
-																	options={
-																		teamshareDatabaseOptions
-																	}
-																	progressList={progressList}
-																	setProgressList={
-																		setProgressList
-																	}
-																	initInterval={initInterval}
-																/>
-															) : (
-																<MagicSelect options={[]} />
-															)}
-														</Form.Item>
+														{renderRightComponent(
+															currentKnowledgeType,
+															subField,
+														)}
 													</div>
 													<span
 														className={styles.deleteIcon}

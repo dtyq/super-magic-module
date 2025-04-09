@@ -18,7 +18,7 @@ import { FlowApi, KnowledgeApi } from "@/apis"
 import { hasAdminRight } from "../../components/AuthControlButton/types"
 import { useDebounceSearch } from "../../hooks/useDebounceSearch"
 import type { Knowledge } from "@/types/knowledge"
-
+import { knowledgeType } from "@/opensource/pages/vectorKnowledge/constant"
 interface FlowListHooksProps {
 	flowType: FlowRouteType
 }
@@ -90,6 +90,7 @@ export default function useFlowList({ flowType }: FlowListHooksProps) {
 			if (type === FlowRouteType.Knowledge) {
 				const response = await KnowledgeApi.getKnowledgeList({
 					...params,
+					type: knowledgeType.UserKnowledgeDatabase,
 					searchType,
 				})
 				const { list, page, total } = response

@@ -295,7 +295,7 @@ export default function VectorKnowledgeCreate() {
 									<div className={styles.uploadDescription}>
 										{`${t(
 											"common.supported",
-										)} TXT、MARKDOWN、PDF、HTML、XLSX、XLS、DOCX、CSV、XML、HTM`}
+										)} TXT、MARKDOWN、PDF、XLSX、XLS、DOCX、CSV、XML`}
 										<br />
 										{t("common.fileSizeLimit", { size: "15MB" })}
 									</div>
