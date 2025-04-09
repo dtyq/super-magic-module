@@ -68,15 +68,6 @@ class KnowledgeBaseFragmentAppService extends AbstractKnowledgeAppService
         });
     }
 
-    public function destroyByMetadataFilter(Authenticatable $authorization, string $knowledgeCode, array $metadataFilter): void
-    {
-        $dataIsolation = $this->createKnowledgeBaseDataIsolation($authorization);
-        $this->checkKnowledgeBaseOperation($dataIsolation, 'del', $knowledgeCode);
-
-        $magicFlowKnowledgeEntity = $this->knowledgeBaseDomainService->show($dataIsolation, $knowledgeCode);
-        $this->knowledgeBaseFragmentDomainService->destroyByMetadataFilter($dataIsolation, $magicFlowKnowledgeEntity, $metadataFilter);
-    }
-
     #[Transactional]
     private function updateWordCount(KnowledgeBaseDataIsolation $dataIsolation, KnowledgeBaseFragmentEntity $entity, int $deltaWordCount): void
     {

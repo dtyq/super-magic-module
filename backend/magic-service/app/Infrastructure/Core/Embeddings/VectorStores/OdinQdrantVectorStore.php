@@ -89,6 +89,14 @@ class OdinQdrantVectorStore implements VectorStoreInterface
         $this->points->deletePoints($collectionName, new ExtendedPointIds([$pointId]));
     }
 
+    public function removePoints(string $collectionName, array $pointIds): void
+    {
+        if (empty($pointIds)) {
+            return;
+        }
+        $this->points->deletePoints($collectionName, new ExtendedPointIds($pointIds));
+    }
+
     public function removeByFilter(string $collectionName, array $payloadFilter): void
     {
         if (empty($payloadFilter)) {

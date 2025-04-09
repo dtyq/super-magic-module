@@ -7,7 +7,6 @@ declare(strict_types=1);
 
 namespace App\Application\KnowledgeBase\Service;
 
-use App\Application\File\Service\FileAppService;
 use App\Domain\Flow\Entity\ValueObject\Query\KnowledgeBaseDocumentQuery;
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseDocumentEntity;
 use App\Domain\KnowledgeBase\Entity\ValueObject\DocumentFileVO;
@@ -44,7 +43,7 @@ class KnowledgeBaseDocumentAppService extends AbstractKnowledgeAppService
 
         // 调用领域服务保存文档
         if (! empty($documentFile)) {
-            $fileLink = $this->getFileAppService()->publicFileDownload($documentFile->getKey());
+            $fileLink = $this->getIcon($dataIsolation->getCurrentOrganizationCode(), $documentFile->getKey());
             $documentFile->setFileLink($fileLink);
         }
 
@@ -106,10 +105,5 @@ class KnowledgeBaseDocumentAppService extends AbstractKnowledgeAppService
 
         // 调用领域服务删除文档
         $this->knowledgeBaseDocumentDomainService->destroy($dataIsolation, $documentCode);
-    }
-
-    private function getFileAppService(): FileAppService
-    {
-        return di(FileAppService::class);
     }
 }
