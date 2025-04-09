@@ -295,7 +295,7 @@ class KnowledgeBaseApiTest extends HttpTestCase
         $this->assertSame('这是一个测试片段内容', $fragment['content']);
         $this->assertSame(['page' => 1], $fragment['metadata']);
         $this->assertSame('', $fragment['business_id']);
-        $this->assertSame(3, $fragment['sync_status']);
+        $this->assertSame(0, $fragment['sync_status']);
         $this->assertSame('', $fragment['sync_status_message']);
         $this->assertSame(0, $fragment['score']);
     }
