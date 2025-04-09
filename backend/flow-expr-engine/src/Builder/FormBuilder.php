@@ -95,7 +95,7 @@ JSON
             if (empty($items)) {
                 $items = $data['properties'][0] ?? [];
             }
-            if ($items['type'] === 'object' && empty($items['properties'])) {
+            if (isset($items['type']) && $items['type'] === 'object' && empty($items['properties'])) {
                 $items = $data['properties'][0] ?? [];
             }
         }
