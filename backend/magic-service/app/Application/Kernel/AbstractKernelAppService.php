@@ -35,7 +35,7 @@ abstract class AbstractKernelAppService
         return di(FileDomainService::class)->getLinks($organizationCode, $icons);
     }
 
-    public function getIcon(string $organizationCode, string $icon): FileLink
+    public function getFileLink(string $organizationCode, string $icon): ?FileLink
     {
         return di(FileDomainService::class)->getLink($organizationCode, $icon);
     }

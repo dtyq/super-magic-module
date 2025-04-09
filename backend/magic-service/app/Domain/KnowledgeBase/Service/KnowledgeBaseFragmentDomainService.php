@@ -86,7 +86,7 @@ readonly class KnowledgeBaseFragmentDomainService
         }
 
         Db::transaction(function () use ($dataIsolation, $knowledgeBaseFragmentEntity) {
-            $oldKnowledgeBaseFragmentEntity = $this->knowledgeBaseFragmentRepository->getById($dataIsolation, $knowledgeBaseFragmentEntity->getId(), true);
+            $oldKnowledgeBaseFragmentEntity = $this->knowledgeBaseFragmentRepository->getById($dataIsolation, $knowledgeBaseFragmentEntity->getId()??0, true);
             $knowledgeBaseFragmentEntity = $this->knowledgeBaseFragmentRepository->save($dataIsolation, $knowledgeBaseFragmentEntity);
             $deltaWordCount = $knowledgeBaseFragmentEntity->getWordCount() - $oldKnowledgeBaseFragmentEntity?->getWordCount() ?? 0;
             $this->updateWordCount($dataIsolation, $knowledgeBaseFragmentEntity, $deltaWordCount);

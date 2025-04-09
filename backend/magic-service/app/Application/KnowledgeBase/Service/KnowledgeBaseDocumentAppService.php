@@ -43,7 +43,7 @@ class KnowledgeBaseDocumentAppService extends AbstractKnowledgeAppService
 
         // 调用领域服务保存文档
         if (! empty($documentFile)) {
-            $fileLink = $this->getIcon($dataIsolation->getCurrentOrganizationCode(), $documentFile->getKey());
+            $fileLink = $this->getFileLink($dataIsolation->getCurrentOrganizationCode(), $documentFile->getKey());
             $documentFile->setFileLink($fileLink);
         }
 
