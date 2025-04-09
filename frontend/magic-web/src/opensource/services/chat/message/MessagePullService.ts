@@ -109,9 +109,9 @@ class MessagePullService {
 
 		console.log("pullMessagesFromServer res =======> ", res)
 
-		if (!res.has_more) {
-			MessageStore.setHasMoreHistoryMessage(false)
-		}
+		// if (!res.has_more) {
+		// 	MessageStore.setHasMoreHistoryMessage(false)
+		// }
 
 		if (res.items && res.items.length > 0) {
 			let conversationMessages = res.items

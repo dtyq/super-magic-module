@@ -32,6 +32,8 @@ export interface MemberDepartmentSelectPanelProps
 	disabledValues?: OrganizationSelectItem[]
 	selectValue?: OrganizationSelectItem[]
 	initialSelectValue?: OrganizationSelectItem[]
+	withoutGroup?: boolean
+	filterResult?: (result: any) => any
 	onSelectChange?: (value: OrganizationSelectItem[]) => void
 	onOk?: (selected: SelectedResult) => void
 	onCancel?: () => void

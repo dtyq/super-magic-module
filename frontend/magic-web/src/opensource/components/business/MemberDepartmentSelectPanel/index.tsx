@@ -35,7 +35,7 @@ type CheckboxOptions = {
  * 支持选择成员、部门、群组、合作伙伴
  */
 const MemberDepartmentSelectPanel = memo((props: MemberDepartmentSelectPanelProps) => {
-	const { title, onOk, onCancel, disabledValues, ...modalProps } = props
+	const { title, onOk, onCancel, disabledValues, filterResult, withoutGroup, ...modalProps } = props
 
 	const { styles } = useStyles()
 	const { t } = useTranslation("interface")
@@ -74,27 +74,32 @@ const MemberDepartmentSelectPanel = memo((props: MemberDepartmentSelectPanelProp
 	}, [selected])
 
 	const segmentOptions = useMemo(
-		() => [
-			// {
-			// 	label: t("memberDepartmentSelectPanel.recentContacts"),
-			// 	value: PanelKey.Recent,
-			// },
-			{
-				label: t("memberDepartmentSelectPanel.byOrganization"),
-				value: PanelKey.ByOrganization,
-			},
-			{
+		() => {
+			const options = [
+				// {
+				// 	label: t("memberDepartmentSelectPanel.recentContacts"),
+				// 	value: PanelKey.Recent,
+				// },
+				{
+					label: t("memberDepartmentSelectPanel.byOrganization"),
+					value: PanelKey.ByOrganization,
+				},
+				
+				// {
+				// 	label: t("memberDepartmentSelectPanel.byPartner"),
+				// 	value: PanelKey.ByPartner,
+				// },
+		]
+		if (!withoutGroup) {
+			options.push({
 				label: t("memberDepartmentSelectPanel.byGroup"),
 				value: PanelKey.ByGroup,
-			},
-			// {
-			// 	label: t("memberDepartmentSelectPanel.byPartner"),
-			// 	value: PanelKey.ByPartner,
-			// },
-		],
-		[t],
-	)
+			})
+		}
 
+		return options
+	}, [t, withoutGroup])
+	
 	const handleOk = useMemoizedFn(() => {
 		onOk?.({
 			department: departmentSelected,
@@ -202,6 +207,7 @@ const MemberDepartmentSelectPanel = memo((props: MemberDepartmentSelectPanelProp
 						showSearchResults={!shouldShowDefaultEmptyFallback}
 						style={{ display: "flex", flexDirection: "column", height: "100%" }}
 						containerHeight={470}
+						filterResult={filterResult}
 					/>
 					<div
 						className={styles.fadeWrapper}

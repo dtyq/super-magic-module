@@ -32,7 +32,6 @@ const DragFileSendTipComponent = ({ children }: PropsWithChildren) => {
 
 		const target = e.target as HTMLElement
 		if (parentRef.current?.contains(target) || parentRef.current === target) {
-			console.log("setDragTrue")
 			setDragTrue()
 		}
 	})

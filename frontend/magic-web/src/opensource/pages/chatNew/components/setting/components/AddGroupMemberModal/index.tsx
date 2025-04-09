@@ -93,6 +93,12 @@ const AddGroupMemberModal = observer((props: AddGroupMemberModalProps) => {
 			onSelectChange={setOrganizationChecked}
 			onOk={onOk}
 			onCancel={onCancel}
+			withoutGroup={true}
+			filterResult={(result) => {
+				return result.filter((item: any) => {
+					return !item.ai_code
+				})
+			}}
 		/>
 	)
 })

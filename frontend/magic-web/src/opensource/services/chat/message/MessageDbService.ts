@@ -156,15 +156,7 @@ class MessageDbService {
 			}
 
 			await Promise.all(
-				messageList.map((message) =>
-					// 如果消息已存在，则不添加
-					table.add(message).catch((err) => {
-						if (err.message.includes("already exists")) {
-							return
-						}
-						throw err
-					}),
-				),
+				messageList.map((message) => table.put(message)),
 			)
 			return { success: true, count: messageList.length }
 		} catch (error) {

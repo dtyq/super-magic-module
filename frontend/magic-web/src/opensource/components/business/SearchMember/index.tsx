@@ -27,6 +27,7 @@ export interface MemberSearchProps {
 	showSearchResults?: boolean
 	style?: CSSProperties
 	containerHeight?: number
+	filterResult?: (result: any) => any
 }
 
 type Data = UserSelectItem & MagicListItemData
@@ -203,6 +204,9 @@ const MemberSearch = (props: MemberSearchProps) => {
 				page_token: "",
 			})
 				.then((result) => {
+					if (props.filterResult) {
+						result.items = props.filterResult(result.items)
+					}
 					setSearchResults(result)
 					setIsSearching(false)
 				})

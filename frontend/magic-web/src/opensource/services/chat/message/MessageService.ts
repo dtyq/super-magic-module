@@ -385,7 +385,7 @@ class MessageService {
 			})
 			return
 		}
-
+		console.log('getHistoryMessages data ====> ', data?.messages?.length)
 		if (data?.messages?.length) {
 			// 获取未读的消息，发送已读回执
 			const unreadMessages = data.messages.filter((message) => message.unread_count > 0)

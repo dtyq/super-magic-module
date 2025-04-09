@@ -25,6 +25,11 @@ const MessageRenderer = observer(
 		referFileId?: string
 	}) => {
 		const MessageComponent = MessageFactory.getComponent(type)
+
+		if(!MessageComponent) {
+			return null
+		}
+
 		const parsedContent = MessageFactory.parseContent(type, message)
 		const parsedReasoningContent = MessageFactory.parseReasoningContent(
 			type,
