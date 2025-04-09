@@ -6,6 +6,7 @@ import { memo, type HTMLAttributes, useEffect } from "react"
 import { getUserName } from "@/utils/modules/chat"
 import { useTipStyles } from "../../../../hooks/useTipStyles"
 import userInfoService from "@/opensource/services/userInfo"
+import GroupTipMemberRender from "../GroupTipMemberRender"
 
 interface InviteMemberTipProps extends Omit<HTMLAttributes<HTMLDivElement>, "content"> {
 	content?: GroupAddMemberMessage
@@ -28,26 +29,16 @@ const InviteMemberTip = memo(({ content, className, onClick }: InviteMemberTipPr
 
 	return (
 		<div className={cx(styles.container, className)} onClick={onClick}>
-			<MagicMemberAvatar
-				uid={content.group_users_add.operate_user_id}
-				showAvatar={false}
-				showName="vertical"
-			>
-				{(user) => <span className={styles.highlight}>{getUserName(user)}</span>}
-			</MagicMemberAvatar>{" "}
-			{t("chat.inviteMemberTip.invite")}{" "}
+			<GroupTipMemberRender uid={content.group_users_add.operate_user_id} />
+			{t("chat.inviteMemberTip.invite")}
 			{content.group_users_add.user_ids.map?.((id, index, array) => {
 				return (
 					<Fragment key={id}>
-						<MagicMemberAvatar uid={id} showAvatar={false} showName="vertical">
-							{(user) => (
-								<span className={styles.highlight}>{getUserName(user)}</span>
-							)}
-						</MagicMemberAvatar>
+						<GroupTipMemberRender uid={id} />
 						{index === array.length - 1 ? "" : "、"}
 					</Fragment>
 				)
-			})}{" "}
+			})}
 			{t("chat.inviteMemberTip.joinGroupConversation")}
 		</div>
 	)

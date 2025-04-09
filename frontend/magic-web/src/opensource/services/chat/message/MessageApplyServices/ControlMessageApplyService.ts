@@ -1,6 +1,6 @@
 /* eslint-disable class-methods-use-this */
 import type { CMessage } from "@/types/chat"
-import { ControlEventMessageType } from "@/types/chat"
+import { ControlEventMessageType, MessageReceiveType } from "@/types/chat"
 import type { SeqResponse } from "@/types/request"
 
 // 导入新的服务
@@ -24,7 +24,6 @@ import type {
 import type { SeenMessage } from "@/types/chat/seen_message"
 import type { CreateTopicMessage, UpdateTopicMessage, DeleteTopicMessage } from "@/types/chat/topic"
 import { ConversationStatus } from "@/types/chat/conversation"
-import { MessageReceiveType } from "@/types/chat"
 import groupInfoService from "@/opensource/services/groupInfo"
 import MessageService from "../MessageService"
 import { userStore } from "@/opensource/models/user"

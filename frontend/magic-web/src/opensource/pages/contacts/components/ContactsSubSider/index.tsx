@@ -20,20 +20,19 @@ import { colorScales, colorUsages } from "@/opensource/providers/ThemeProvider/c
 import { useStyles } from "./styles"
 import { Line } from "./Line"
 import { useContactPageDataContext } from "../ContactDataProvider/hooks"
+import { observer } from "mobx-react-lite"
+import { userStore } from "@/opensource/models/user"
 
 interface CurrentOrganizationProps {
 	onItemClick: (data: MagicListItemData) => void
 }
 
-function CurrentOrganization({ onItemClick }: CurrentOrganizationProps) {
+const CurrentOrganization = observer(({ onItemClick }: CurrentOrganizationProps) => {
 	const { t } = useTranslation("interface")
 	const { styles } = useStyles()
 	const organization = useCurrentMagicOrganization()
 
-	const { userInfo: info } = useUserInfo()
-	const userId = info?.user_id
-
-	const { userInfo, isMutating } = useUserInfo(userId, true)
+	const { userInfo, isMutating } = useUserInfo(userStore.user.userInfo?.user_id, true)
 
 	const departmentIds = useMemo(
 		() =>
@@ -127,7 +126,7 @@ function CurrentOrganization({ onItemClick }: CurrentOrganizationProps) {
 			/>
 		</Flex>
 	)
-}
+})
 
 function ContactsSubSider() {
 	const { t } = useTranslation("interface")

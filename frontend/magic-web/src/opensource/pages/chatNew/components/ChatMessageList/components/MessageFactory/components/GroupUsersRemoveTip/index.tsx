@@ -5,6 +5,7 @@ import MagicMemberAvatar from "@/opensource/components/business/MagicMemberAvata
 import { getUserName } from "@/utils/modules/chat"
 import { useTranslation } from "react-i18next"
 import { useTipStyles } from "../../../../hooks/useTipStyles"
+import GroupTipMemberRender from "../GroupTipMemberRender"
 
 interface GroupUsersRemoveTipProps extends Omit<HTMLAttributes<HTMLDivElement>, "content"> {
 	content?: GroupUsersRemoveMessage
@@ -25,37 +26,19 @@ const GroupUsersRemoveTip = memo(({ content, className, onClick }: GroupUsersRem
 	if (leaveSelf) {
 		return (
 			<div className={cx(styles.container, className)} onClick={onClick}>
-				<MagicMemberAvatar
-					uid={content?.group_users_remove.operate_user_id}
-					classNames={{ name: styles.highlight }}
-				>
-					{(user) => <span className={styles.highlight}>{getUserName(user)}</span>}
-				</MagicMemberAvatar>{" "}
+				<GroupTipMemberRender uid={content?.group_users_remove.operate_user_id} />
 				{t("chat.groupUsersRemoveTip.leaveGroup")}
 			</div>
 		)
 	}
 	return (
 		<div className={cx(styles.container, className)} onClick={onClick}>
-			<MagicMemberAvatar
-				uid={content?.group_users_remove.operate_user_id}
-				classNames={{ name: styles.highlight }}
-			>
-				{(user) => <span className={styles.highlight}>{getUserName(user)}</span>}
-			</MagicMemberAvatar>{" "}
-			{t("chat.groupUsersRemoveTip.make")}{" "}
+			<GroupTipMemberRender uid={content?.group_users_remove.operate_user_id} />
+			{t("chat.groupUsersRemoveTip.make")}
 			{content?.group_users_remove.user_ids.map((id, index, array) => {
 				return (
 					<Fragment key={id}>
-						<MagicMemberAvatar
-							key={id}
-							uid={id}
-							classNames={{ name: styles.highlight }}
-						>
-							{(user) => (
-								<span className={styles.highlight}>{getUserName(user)}</span>
-							)}
-						</MagicMemberAvatar>
+						<GroupTipMemberRender uid={id} />
 						{index === array.length - 1 ? "" : "、"}
 					</Fragment>
 				)

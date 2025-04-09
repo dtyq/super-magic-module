@@ -6,7 +6,6 @@ import { IconMessage2Cancel } from "@tabler/icons-react"
 import { useTranslation } from "react-i18next"
 import { observer } from "mobx-react-lite"
 import { useMemoizedFn } from "ahooks"
-import { ChatApi } from "@/apis"
 
 const MuteConversationButton = observer(({ conversationId }: { conversationId: string }) => {
 	const { t } = useTranslation("interface")
@@ -16,8 +15,7 @@ const MuteConversationButton = observer(({ conversationId }: { conversationId: s
 	const handleClick = useMemoizedFn(() => {
 		if (!conversation) return
 		const isNotDisturb = conversation.is_not_disturb ? 0 : 1
-		conversationService.notDisturbConversation(conversation.id, isNotDisturb)
-		ChatApi.muteConversation(conversation.id, isNotDisturb)
+		conversationService.setNotDisturbStatus(conversation.id, isNotDisturb)
 	})
 
 	if (!conversation) return null

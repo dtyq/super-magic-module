@@ -13,7 +13,7 @@ export interface FlowState {
 	useableToolSets: UseableToolSet.Item[]
 	models: LLMModalOption[]
 	useableDatabases: Knowledge.KnowledgeItem[]
-	useableTeamshareDatabase: Knowledge.TeamshareKnowledgeItem[]
+	useableTeamshareDatabase: Knowledge.KnowledgeDatabaseItem[]
 	methodsDataSource: DataSourceOption[]
 	visionModels: Flow.VLMProvider[]
 }

@@ -50,7 +50,6 @@ function OrganizationPage() {
 			defaultSelectedPath={currentDepartmentPath}
 			onItemClick={handleItemClick}
 			memberNodeWrapper={memberNodeWrapper}
-			showInstructions
 		/>
 	)
 }

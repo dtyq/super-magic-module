@@ -1,35 +1,44 @@
-import { TFunction } from "i18next";
+import { TFunction } from "i18next"
 
 /** 知识数据类型 */
 export enum KnowledgeType {
-	/** 知识库 */
-	KnowledgeDatabase = 2,
+	/** 用户自建知识库 */
+	UserKnowledgeDatabase = 1,
+	/** 天书知识库 */
+	TeamshareKnowledgeDatabase = 2,
 	/** 云文档 */
 	Document = 3,
 }
 
-
 export const getDefaultKnowledge = (isCommercial: boolean) => {
-
 	return {
 		knowledge_code: "",
-		knowledge_type: isCommercial ? KnowledgeType.KnowledgeDatabase : "",
+		knowledge_type: isCommercial ? KnowledgeType.TeamshareKnowledgeDatabase : "",
 		business_id: "",
 		name: "",
 		description: "",
 	}
 }
 
-
-
 export const getKnowledgeTypeOptions = (t: TFunction, isCommercial: boolean) => [
-	...(isCommercial ? [{
-		label: t("common.teamshareKnowledgeDatabase", { ns: "flow" }),
-		value: KnowledgeType.KnowledgeDatabase,
-	}] : [])
+	...(isCommercial
+		? [
+				{
+					label: t("common.teamshareKnowledgeDatabase", { ns: "flow" }),
+					value: KnowledgeType.TeamshareKnowledgeDatabase,
+				},
+				{
+					label: t("common.userKnowledgeDatabase", { ns: "flow" }),
+					value: KnowledgeType.UserKnowledgeDatabase,
+				},
+		  ]
+		: [
+				{
+					label: t("common.userKnowledgeDatabase", { ns: "flow" }),
+					value: KnowledgeType.UserKnowledgeDatabase,
+				},
+		  ]),
 ]
-
-
 
 export const getLLMRoleConstantOptions = () => {
 	return [

@@ -434,19 +434,16 @@ export class ChatWebSocket extends EventBus {
 	}
 
 	async apiSend<D>(message: WebSocketMessage, ackId?: number) {
-		// eslint-disable-next-line no-async-promise-executor
-		return new Promise<SendResponse<D>>(async (resolve, reject) => {
-			if (!this.isConnected) {
-				await Promise.race([
-					this.connect(),
-					new Promise(() => setTimeout(() => reject("websocket 连接超时"), 3000)),
-				])
-			}
+		if (!this.isConnected) {
+			await Promise.race([
+				this.connect(),
+				new Promise((reject) => setTimeout(() => reject("websocket 连接超时"), 3000)),
+			])
+		}
 
+		return new Promise<SendResponse<D>>((resolve, reject) => {
 			const socket = this.getWebSocket()
-			let isPromiseSettled = false
-			// eslint-disable-next-line prefer-const
-			let timeoutId: NodeJS.Timeout
+			let timeoutId: NodeJS.Timeout | null = null
 
 			async function handler(e: Event) {
 				const event = e as MessageEvent
@@ -463,28 +460,21 @@ export class ChatWebSocket extends EventBus {
 								Array.isArray(reponse) &&
 								(reponse[0] as CommonResponse<D>).code === 1000
 							) {
-								if (!isPromiseSettled) {
-									isPromiseSettled = true
-									socket?.removeEventListener("message", handler)
-									clearTimeout(timeoutId)
-									resolve({
-										id: ackIdResponse,
-										data: reponse[0].data,
-									})
-								}
-							} else if (!isPromiseSettled) {
-								isPromiseSettled = true
 								socket?.removeEventListener("message", handler)
-								clearTimeout(timeoutId)
-								reject(new Error(reponse?.[0]?.message || "未知错误"))
+								if (timeoutId) {
+									clearTimeout(timeoutId)
+								}
+								resolve({
+									id: ackIdResponse,
+									data: reponse[0].data,
+								})
 							}
 						} catch (error) {
-							if (!isPromiseSettled) {
-								isPromiseSettled = true
-								socket?.removeEventListener("message", handler)
+							socket?.removeEventListener("message", handler)
+							if (timeoutId) {
 								clearTimeout(timeoutId)
-								reject(error)
 							}
+							reject(error)
 						}
 					}
 				}
@@ -492,15 +482,12 @@ export class ChatWebSocket extends EventBus {
 
 			socket?.addEventListener("message", handler)
 
-			this.sendAsync(message)
+			this.send(message)
 
 			// 设置超时计时器
 			timeoutId = setTimeout(() => {
-				if (!isPromiseSettled) {
-					isPromiseSettled = true
-					socket?.removeEventListener("message", handler)
-					reject(new Error("发送超时，请求未得到响应"))
-				}
+				socket?.removeEventListener("message", handler)
+				reject(new Error("发送超时，请求未得到响应"))
 			}, 3000)
 		})
 	}

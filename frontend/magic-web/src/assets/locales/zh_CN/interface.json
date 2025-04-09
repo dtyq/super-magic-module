@@ -1306,7 +1306,8 @@
 		"workflow": "工作流",
 		"workspace": "工作台",
 		"accountManagement": "账号管理",
-		"deviceManagement": "设备管理"
+		"deviceManagement": "设备管理",
+		"admin": "管理后台"
 	},
 	"spin": {
 		"loadingUserInfo": "正在加载用户信息...",

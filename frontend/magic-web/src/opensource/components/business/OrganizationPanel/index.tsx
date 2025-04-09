@@ -38,6 +38,7 @@ const OrganizationPanel = memo(function OrganizationPanel(props: OrganizationPan
 		className,
 		showMember = true,
 		memberExtra,
+		breadcrumbRightNode,
 		checkboxOptions,
 		memberNodeWrapper = (node) => node,
 		style,
@@ -259,6 +260,7 @@ const OrganizationPanel = memo(function OrganizationPanel(props: OrganizationPan
 						)
 					})}
 				</Flex>
+				{breadcrumbRightNode}
 			</Flex>
 		)
 	}, [
@@ -268,6 +270,7 @@ const OrganizationPanel = memo(function OrganizationPanel(props: OrganizationPan
 		organization?.magic_organization_code,
 		t,
 		selectedPath,
+		breadcrumbRightNode,
 		enchancedSetSelectPath,
 		handleClickNavigateItem,
 	])

@@ -16,13 +16,12 @@ export default function useProgress({ knowledgeListName }: UseProgressProps) {
 		[] as Knowledge.KnowledgeDatabaseProgress[],
 	)
 
-    const extraData = useCommercial()
-    const isCommercial = useMemo(() => {
-        return !!extraData
-    }, [extraData])
+	const extraData = useCommercial()
+	const isCommercial = useMemo(() => {
+		return !!extraData
+	}, [extraData])
 
 	const { currentNode } = useCurrentNode()
-
 
 	const intervalId = useRef<NodeJS.Timeout>()
 
@@ -65,7 +64,7 @@ export default function useProgress({ knowledgeListName }: UseProgressProps) {
 	})
 
 	useEffect(() => {
-        if(!isCommercial) return
+		if (!isCommercial) return
 		const id = initInterval()
 		return () => {
 			clearInterval(id)

@@ -41,7 +41,7 @@ export interface FlowStoreState {
 	useableToolSets: UseableToolSet.Item[]
 	models: LLMModalOption[]
 	useableDatabases: Knowledge.KnowledgeItem[]
-	useableTeamshareDatabase: Knowledge.TeamshareKnowledgeItem[]
+	useableTeamshareDatabase: Knowledge.KnowledgeDatabaseItem[]
 	methodsDataSource: DataSourceOption[]
 	toolInputOutputMap: Record<string, MagicFlow.Flow>
 	visionModels: Flow.VLMProvider[] // 使用Flow命名空间下的类型
@@ -49,7 +49,7 @@ export interface FlowStoreState {
 	updateToolInputOutputMap: (toolInputOutputMap: Record<string, MagicFlow.Flow>) => void
 	updateMethodDataSource: (dataSource: DataSourceOption[]) => void
 	updateSubFlowList: (flows: MagicFlow.Flow[]) => void
-	updateUseableTeamshareDatabase: (databases: Knowledge.TeamshareKnowledgeItem[]) => void
+	updateUseableTeamshareDatabase: (databases: Knowledge.KnowledgeDatabaseItem[]) => void
 	updateUseableDatabases: (databases: Knowledge.KnowledgeItem[]) => void
 	updateModels: (models: LLMModalOption[]) => void
 	updateUseableToolSets: (toolSets: UseableToolSet.Item[]) => void
@@ -136,7 +136,7 @@ export const useFlowStore = create<FlowStoreState>((set) => ({
 		})
 	},
 
-	updateUseableTeamshareDatabase: (databases: Knowledge.TeamshareKnowledgeItem[]) => {
+	updateUseableTeamshareDatabase: (databases: Knowledge.KnowledgeDatabaseItem[]) => {
 		set({
 			useableTeamshareDatabase: databases,
 		})

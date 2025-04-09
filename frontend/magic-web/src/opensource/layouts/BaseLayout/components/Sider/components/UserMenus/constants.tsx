@@ -7,4 +7,6 @@ export const enum UserMenuKey {
 	DeviceManagement = "deviceManagement",
 	/** 退出登录 */
 	Logout = "logout",
+	/** 管理后台 */
+	Admin = "admin",
 }

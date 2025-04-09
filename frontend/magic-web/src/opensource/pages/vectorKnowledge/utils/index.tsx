@@ -1,19 +1,5 @@
 import { nanoid } from "nanoid"
-
-interface FileData {
-	id: string
-	name: string
-	file: File
-	status: "init" | "uploading" | "done" | "error"
-	progress: number
-	result?: {
-		key: string
-		name: string
-		size: number
-	}
-	error?: Error
-	cancel?: () => void
-}
+import type { FileData } from "../types"
 
 export function genFileData(file: File): FileData {
 	return {

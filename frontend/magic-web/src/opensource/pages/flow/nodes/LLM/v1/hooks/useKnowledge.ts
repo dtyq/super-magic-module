@@ -22,7 +22,7 @@ export default function useKnowledge({ form, onValuesChange }: UseKnowledgeProps
 		const latestValue = form.getFieldsValue()
 		if (latestValue?.knowledge_config?.knowledge_list) {
 			latestValue.knowledge_config.knowledge_list = (
-				latestValue.knowledge_config.knowledge_list as Knowledge.TeamshareKnowledgeItem[]
+				latestValue.knowledge_config.knowledge_list as Knowledge.KnowledgeDatabaseItem[]
 			).filter((v) => !!v)
 		}
 		const oldKnowledgeConfig = currentNode?.params?.knowledge_config

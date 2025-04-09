@@ -74,7 +74,6 @@ class GroupInfoSerivce {
 
 	set(key: string, value: GroupInfo) {
 		groupInfoStore.set(key, value)
-		console.log("set ====> ", key, value)
 		this.database?.table(GroupInfoSerivce.STORE_NAME).put(value)
 	}
 

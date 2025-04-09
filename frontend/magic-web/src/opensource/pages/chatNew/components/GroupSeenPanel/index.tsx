@@ -30,7 +30,6 @@ const GroupSeenPanel = observer(() => {
 	}, [isHover])
 
 	const { styles } = useGroupMessageSeenPopoverStyles()
-	console.log("open", open)
 
 	if (!open) {
 		return null
@@ -47,7 +46,12 @@ const GroupSeenPanel = observer(() => {
 		>
 			<Flex gap={8} align="center" justify="space-between" className={styles.title}>
 				{t("chat.message.groupSeenPopover.title")}
-				<MagicIcon component={IconX} onClick={() => GroupSeenPanelStore.closePanel(true)} />
+				<div className={styles.close}>
+					<MagicIcon
+						component={IconX}
+						onClick={() => GroupSeenPanelStore.closePanel(true)}
+					/>
+				</div>
 			</Flex>
 			<MagicSpin section spinning={loading}>
 				<Flex>

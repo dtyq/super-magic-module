@@ -44,7 +44,6 @@ const StatusText = memo(function StatusText({
 interface StatusContentProps extends HTMLAttributes<HTMLDivElement> {
 	icon: typeof IconEye | typeof IconEyeCheck
 	text: string
-	styles: ReturnType<typeof useStyles>["styles"]
 	messageId?: string
 }
 
@@ -52,10 +51,10 @@ interface StatusContentProps extends HTMLAttributes<HTMLDivElement> {
 const StatusContent = memo(function StatusContent({
 	icon: Icon,
 	text,
-	styles,
 	messageId,
 	className,
 }: StatusContentProps) {
+	const { styles } = useStyles()
 	return (
 		<Flex
 			align="center"
