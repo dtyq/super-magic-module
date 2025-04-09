@@ -141,4 +141,12 @@ readonly class KnowledgeBaseFragmentDomainService
         // 更新文档字数统计
         $this->knowledgeBaseDocumentRepository->updateWordCount($dataIsolation, $entity->getDocumentCode(), $deltaWordCount);
     }
+
+    /**
+     * 更新知识库片段状态.
+     */
+    public function batchChangeSyncStatus(array $ids, KnowledgeSyncStatus $syncStatus, string $syncMessage = ''): void
+    {
+        $this->knowledgeBaseFragmentRepository->batchChangeSyncStatus($ids, $syncStatus, $syncMessage);
+    }
 }

@@ -55,7 +55,7 @@ readonly class KnowledgeBaseDocumentDestroySubscriber implements ListenerInterfa
 
         // 这里需要删除所有片段，在删除文档
         $query = (new KnowledgeBaseFragmentQuery())->setDocumentCode($document->getCode());
-        /** @var KnowledgeBaseFragmentEntity[] $fragments */
+        /** @var KnowledgeBaseFragmentEntity[][] $fragments */
         $fragments = [];
         $page = 1;
         while (true) {
@@ -66,22 +66,26 @@ readonly class KnowledgeBaseDocumentDestroySubscriber implements ListenerInterfa
             $fragments[] = $queryResult['list'];
             ++$page;
         }
+        /** @var KnowledgeBaseFragmentEntity[] $fragments */
         $fragments = array_merge(...$fragments);
         $documentSyncStatus = KnowledgeSyncStatus::Deleted;
         // 先删除片段
-        foreach ($fragments as $fragment) {
-            try {
-                $knowledgeBaseEntity->getVectorDBDriver()->removePoint($knowledgeBaseEntity->getCollectionName(), $fragment->getPointId());
-                $knowledgeBaseFragmentDomainService->batchDestroyByPointIds($dataIsolation, $knowledgeBaseEntity, [$fragment->getPointId()]);
-
-                $fragment->setSyncStatus(KnowledgeSyncStatus::Deleted);
-            } catch (Throwable $throwable) {
-                $fragment->setSyncStatus(KnowledgeSyncStatus::DeleteFailed);
-                $fragment->setSyncStatusMessage($throwable->getMessage());
-                $documentSyncStatus = KnowledgeSyncStatus::DeleteFailed;
+        $pointIds = array_column($fragments, 'point_id');
+        $fragmentSyncStatus = KnowledgeSyncStatus::Deleted;
+        $fragmentSyncMessage = '';
+        try {
+            $knowledgeBaseEntity->getVectorDBDriver()->removePoints($knowledgeBaseEntity->getCollectionName(), $pointIds);
+            $knowledgeBaseFragmentDomainService->batchDestroyByPointIds($dataIsolation, $knowledgeBaseEntity, $pointIds);
+        } catch (Throwable $throwable) {
+            foreach ($fragments as $fragment) {
+                $fragmentSyncStatus = KnowledgeSyncStatus::DeleteFailed;
+                $fragmentSyncMessage = $throwable->getMessage();
             }
-            $knowledgeBaseDomainService->changeSyncStatus($fragment);
+            $documentSyncStatus = KnowledgeSyncStatus::DeleteFailed;
         }
+        $knowledgeBaseFragmentDomainService->batchChangeSyncStatus(array_column($fragments, 'id'), $fragmentSyncStatus, $fragmentSyncMessage);
+
+
         // 删除片段完成后，将文档同步标记为已删除
         $knowledgeBaseDataIsolation = KnowledgeBaseDataIsolation::createByBaseDataIsolation($dataIsolation);
         $documentDomainService->changeSyncStatus($knowledgeBaseDataIsolation, $document->setSyncStatus($documentSyncStatus->value));

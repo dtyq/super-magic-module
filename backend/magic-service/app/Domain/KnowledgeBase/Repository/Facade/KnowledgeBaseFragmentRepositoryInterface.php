@@ -38,6 +38,8 @@ interface KnowledgeBaseFragmentRepositoryInterface
 
     public function changeSyncStatus(KnowledgeBaseFragmentEntity $entity): void;
 
+    public function batchChangeSyncStatus(array $ids, KnowledgeSyncStatus $syncStatus, string $syncMessage = ''): void;
+
     public function rebuildByKnowledgeCode(KnowledgeBaseDataIsolation $dataIsolation, string $knowledgeCode): void;
 
     public function fragmentBatchDestroyByPointIds(KnowledgeBaseDataIsolation $dataIsolation, string $knowledgeCode, array $pointIds): void;

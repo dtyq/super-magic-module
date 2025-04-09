@@ -152,6 +152,23 @@ class KnowledgeBaseFragmentRepository extends KnowledgeBaseAbstractRepository im
         }
     }
 
+    public function batchChangeSyncStatus(array $ids, KnowledgeSyncStatus $syncStatus, string $syncMessage = ''): void
+    {
+        $update = [
+            'sync_status' => $syncStatus->value,
+        ];
+
+        if (! empty($syncMessage)) {
+            $update['sync_status_message'] = mb_substr($syncMessage, 0, 900);
+        }
+
+        if (in_array($syncStatus, [KnowledgeSyncStatus::Synced, KnowledgeSyncStatus::SyncFailed])) {
+            KnowledgeBaseFragmentsModel::withTrashed()->whereIn('id', $ids)->increment('sync_times', 1, $update);
+        } else {
+            KnowledgeBaseFragmentsModel::withTrashed()->whereIn('id', $ids)->update($update);
+        }
+    }
+
     public function rebuildByKnowledgeCode(KnowledgeBaseDataIsolation $dataIsolation, string $knowledgeCode): void
     {
         $builder = $this->createBuilder($dataIsolation, KnowledgeBaseFragmentsModel::query());
