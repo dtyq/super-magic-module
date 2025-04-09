@@ -90,7 +90,10 @@ class KnowledgeConfig
 
         $knowledgeList = [];
         foreach ($data as $knowledgeItem) {
-            $type = KnowledgeType::tryFrom($knowledgeItem['knowledge_type'] ?? 0);
+            if (empty($knowledgeItem['knowledge_type'])) {
+                continue;
+            }
+            $type = KnowledgeType::tryFrom($knowledgeItem['knowledge_type']);
             if (! $type) {
                 ExceptionBuilder::throw(FlowErrorCode::FlowNodeValidateFailed, 'flow.node.knowledge_similarity.type_valid');
             }
