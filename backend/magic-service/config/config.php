@@ -16,7 +16,6 @@ return [
     'app_name' => env('APP_NAME', 'skeleton'),
     'app_env' => env('APP_ENV', 'dev'),
     'app_host' => env('APP_HOST', ''),
-    // 在keewood中使用的app_code
     'app_code' => env('APP_CODE', 'magic'),
     'scan_cacheable' => env('SCAN_CACHEABLE', false),
     StdoutLoggerInterface::class => [
