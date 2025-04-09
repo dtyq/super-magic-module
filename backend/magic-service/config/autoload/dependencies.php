@@ -120,14 +120,14 @@ use App\Infrastructure\Core\Embeddings\DocumentSplitter\DocumentSplitterInterfac
 use App\Infrastructure\Core\Embeddings\DocumentSplitter\OdinRecursiveCharacterTextSplitter;
 use App\Infrastructure\Core\Embeddings\EmbeddingGenerator\EmbeddingGeneratorInterface;
 use App\Infrastructure\Core\Embeddings\EmbeddingGenerator\OdinEmbeddingGenerator;
-use App\Infrastructure\Core\File\Parser\Driver\DocFileParserDriverDriver;
-use App\Infrastructure\Core\File\Parser\Driver\ExcelFileParserDriverDriver;
-use App\Infrastructure\Core\File\Parser\Driver\Interfaces\DocFileParserDriverDriverInterface;
-use App\Infrastructure\Core\File\Parser\Driver\Interfaces\ExcelFileParserDriverDriverInterface;
-use App\Infrastructure\Core\File\Parser\Driver\Interfaces\OcrFileParserDriverDriverInterface;
-use App\Infrastructure\Core\File\Parser\Driver\Interfaces\TextFileParserDriverDriverInterface;
-use App\Infrastructure\Core\File\Parser\Driver\OcrFileParserDriverDriver;
-use App\Infrastructure\Core\File\Parser\Driver\TextFileParserDriverDriver;
+use App\Infrastructure\Core\File\Parser\Driver\DocFileParserDriver;
+use App\Infrastructure\Core\File\Parser\Driver\ExcelFileParserDriver;
+use App\Infrastructure\Core\File\Parser\Driver\Interfaces\DocFileParserDriverInterface;
+use App\Infrastructure\Core\File\Parser\Driver\Interfaces\ExcelFileParserDriverInterface;
+use App\Infrastructure\Core\File\Parser\Driver\Interfaces\OcrFileParserDriverInterface;
+use App\Infrastructure\Core\File\Parser\Driver\Interfaces\TextFileParserDriverInterface;
+use App\Infrastructure\Core\File\Parser\Driver\OcrFileParserDriver;
+use App\Infrastructure\Core\File\Parser\Driver\TextFileParserDriver;
 use App\Infrastructure\ExternalAPI\Sms\SmsInterface;
 use App\Infrastructure\ExternalAPI\Sms\TemplateInterface;
 use App\Infrastructure\ExternalAPI\Sms\Volcengine\Template;
@@ -259,10 +259,10 @@ $dependencies = [
     'mock-http-service' => Server::class,
 
     // 文件解析
-    OcrFileParserDriverDriverInterface::class => OcrFileParserDriverDriver::class,
-    TextFileParserDriverDriverInterface::class => TextFileParserDriverDriver::class,
-    ExcelFileParserDriverDriverInterface::class => ExcelFileParserDriverDriver::class,
-    DocFileParserDriverDriverInterface::class => DocFileParserDriverDriver::class,
+    OcrFileParserDriverInterface::class => OcrFileParserDriver::class,
+    TextFileParserDriverInterface::class => TextFileParserDriver::class,
+    ExcelFileParserDriverInterface::class => ExcelFileParserDriver::class,
+    DocFileParserDriverInterface::class => DocFileParserDriver::class,
 ];
 
 // 如果存在重复,优先取dependencies_priority的配置,不存在重复，就合并

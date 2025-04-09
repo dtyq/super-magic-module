@@ -9,14 +9,13 @@ namespace App\Infrastructure\Core\File\Parser;
 
 use App\ErrorCode\FlowErrorCode;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
-use App\Infrastructure\Core\File\Parser\Driver\Interfaces\DocFileParserDriverDriverInterface;
-use App\Infrastructure\Core\File\Parser\Driver\Interfaces\ExcelFileParserDriverDriverInterface;
+use App\Infrastructure\Core\File\Parser\Driver\Interfaces\DocFileParserDriverInterface;
+use App\Infrastructure\Core\File\Parser\Driver\Interfaces\ExcelFileParserDriverInterface;
 use App\Infrastructure\Core\File\Parser\Driver\Interfaces\FileParserDriverInterface;
-use App\Infrastructure\Core\File\Parser\Driver\Interfaces\OcrFileParserDriverDriverInterface;
-use App\Infrastructure\Core\File\Parser\Driver\Interfaces\TextFileParserDriverDriverInterface;
+use App\Infrastructure\Core\File\Parser\Driver\Interfaces\OcrFileParserDriverInterface;
+use App\Infrastructure\Core\File\Parser\Driver\Interfaces\TextFileParserDriverInterface;
 use App\Infrastructure\Util\SSRF\Exception\SSRFException;
 use App\Infrastructure\Util\SSRF\SSRFUtil;
-use Exception;
 use Symfony\Component\Mime\MimeTypes;
 
 class FileParser
@@ -27,7 +26,6 @@ class FileParser
     public function parse(string $fileUrl): string
     {
         $res = '';
-        $tempFile = '';
         try {
             // / 检测文件安全性
             $safeUrl = SSRFUtil::getSafeUrl($fileUrl, replaceIp: false);
@@ -49,16 +47,16 @@ class FileParser
             /** @var FileParserDriverInterface $interface */
             $interface = match ($extension) {
                 // 更多的文件类型支持
-                'pdf', 'png', 'jpeg', 'jpg' => di(OcrFileParserDriverDriverInterface::class),
-                'xlsx','xls' => di(ExcelFileParserDriverDriverInterface::class),
+                'pdf', 'png', 'jpeg', 'jpg' => di(OcrFileParserDriverInterface::class),
+                'xlsx','xls' => di(ExcelFileParserDriverInterface::class),
                 'txt', 'json', 'csv', 'md', 'mdx',
-                'py', 'java', 'php', 'js', 'html', 'htm', 'css', 'xml', 'yaml', 'yml', 'sql' => di(TextFileParserDriverDriverInterface::class),
-                'docx' => di(DocFileParserDriverDriverInterface::class),
+                'py', 'java', 'php', 'js', 'html', 'htm', 'css', 'xml', 'yaml', 'yml', 'sql' => di(TextFileParserDriverInterface::class),
+                'docx', 'doc' => di(DocFileParserDriverInterface::class),
                 default => ExceptionBuilder::throw(FlowErrorCode::ExecuteFailed, 'flow.node.loader.unsupported_file_type', ['file_extension' => $extension]),
             };
             $res = $interface->parse($tempFile, $extension);
         } finally {
-            if (file_exists($tempFile)) {
+            if (isset($tempFile) && file_exists($tempFile)) {
                 unlink($tempFile); // 确保临时文件被删除
             }
         }
@@ -67,9 +65,23 @@ class FileParser
 
     /**
      * 下载文件到临时位置.
+     * @return string 返回文件路径
      */
-    private static function downloadFile(string $url, string $tempFile): void
+    private static function downloadFile(string $url, string $tempFile): string
     {
+        // 如果是本地文件路径，直接返回
+        if (file_exists($url)) {
+            return $url;
+        }
+
+        // 如果url是本地文件协议，转换为实际路径
+        if (str_starts_with($url, 'file://')) {
+            $localPath = substr($url, 7);
+            if (file_exists($localPath)) {
+                return $localPath;
+            }
+        }
+
         $context = stream_context_create([
             'ssl' => [
                 'verify_peer' => false,
@@ -80,13 +92,15 @@ class FileParser
         $localFile = fopen($tempFile, 'w');
 
         if (! $fileStream || ! $localFile) {
-            throw new Exception('无法打开文件流');
+            ExceptionBuilder::throw(FlowErrorCode::Error, message: '无法打开文件流');
         }
 
         stream_copy_to_stream($fileStream, $localFile);
 
         fclose($fileStream);
         fclose($localFile);
+
+        return $tempFile;
     }
 
     /**
@@ -95,7 +109,7 @@ class FileParser
     private static function checkFileSize(string $filePath, int $maxSize = 52428800): void // 50MB
     {
         if (filesize($filePath) > $maxSize) {
-            throw new Exception('文件太大，无法下载');
+            ExceptionBuilder::throw(FlowErrorCode::Error, message: '文件太大，无法下载');
         }
     }
 

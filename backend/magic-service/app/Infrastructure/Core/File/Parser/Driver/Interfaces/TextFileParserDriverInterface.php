@@ -7,6 +7,6 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Core\File\Parser\Driver\Interfaces;
 
-interface DocFileParserDriverDriverInterface extends FileParserDriverInterface
+interface TextFileParserDriverInterface extends FileParserDriverInterface
 {
 }
