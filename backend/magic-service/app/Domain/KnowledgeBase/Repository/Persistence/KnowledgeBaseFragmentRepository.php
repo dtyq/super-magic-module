@@ -209,13 +209,6 @@ class KnowledgeBaseFragmentRepository extends KnowledgeBaseAbstractRepository im
             $groupedResults[$result->document_code][] = $result->sync_status;
         }
 
-        // 确保所有请求的文档代码都有对应的状态组
-        foreach ($documentCodes as $documentCode) {
-            if (! isset($groupedResults[$documentCode])) {
-                $groupedResults[$documentCode] = [KnowledgeSyncStatus::NotSynced->value];
-            }
-        }
-
         // 判断每个文档的整体状态
         $statusMap = [];
         foreach ($groupedResults as $documentCode => $statuses) {

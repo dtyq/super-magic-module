@@ -75,7 +75,9 @@ class KnowledgeBaseDocumentAppService extends AbstractKnowledgeAppService
         );
         // 获取文档同步状态
         foreach ($entities['list'] as $entity) {
-            $entity->setSyncStatus($documentCodeFinalSyncStatusMap[$entity->getCode()]?->value ?? KnowledgeSyncStatus::NotSynced->value);
+            if (isset($documentCodeFinalSyncStatusMap[$entity->getCode()])) {
+                $entity->setSyncStatus($documentCodeFinalSyncStatusMap[$entity->getCode()]?->value);
+            }
         }
         return $entities;
     }
@@ -91,7 +93,7 @@ class KnowledgeBaseDocumentAppService extends AbstractKnowledgeAppService
         // 获取文档
         $entity = $this->knowledgeBaseDocumentDomainService->show($dataIsolation, $documentCode);
         $documentCodeFinalSyncStatusMap = $this->knowledgeBaseFragmentDomainService->getFinalSyncStatusByDocumentCodes($dataIsolation, [$documentCode]);
-        $entity->setSyncStatus($documentCodeFinalSyncStatusMap[$documentCode]?->value ?? KnowledgeSyncStatus::NotSynced->value);
+        isset($documentCodeFinalSyncStatusMap[$documentCode]) && $entity->setSyncStatus($documentCodeFinalSyncStatusMap[$documentCode]?->value);
         return $entity;
     }
 
