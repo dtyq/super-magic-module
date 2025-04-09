@@ -93,6 +93,64 @@ else
     fi
 fi
 
+# 检测公网IP并更新环境变量
+detect_public_ip() {
+    echo "正在检测公网IP..."
+    
+    # 尝试多种方法获取公网IP
+    PUBLIC_IP=""
+    
+    # 方法1: 使用ipinfo.io
+    if [ -z "$PUBLIC_IP" ]; then
+        PUBLIC_IP=$(curl -s https://ipinfo.io/ip 2>/dev/null)
+        if [ -z "$PUBLIC_IP" ] || [[ $PUBLIC_IP == *"html"* ]]; then
+            PUBLIC_IP=""
+        fi
+    fi
+    
+    # 方法2: 使用ip.sb
+    if [ -z "$PUBLIC_IP" ]; then
+        PUBLIC_IP=$(curl -s https://api.ip.sb/ip 2>/dev/null)
+        if [ -z "$PUBLIC_IP" ] || [[ $PUBLIC_IP == *"html"* ]]; then
+            PUBLIC_IP=""
+        fi
+    fi
+    
+    # 方法3: 使用ipify
+    if [ -z "$PUBLIC_IP" ]; then
+        PUBLIC_IP=$(curl -s https://api.ipify.org 2>/dev/null)
+        if [ -z "$PUBLIC_IP" ] || [[ $PUBLIC_IP == *"html"* ]]; then
+            PUBLIC_IP=""
+        fi
+    fi
+    
+    # 如果成功获取公网IP，更新环境变量
+    if [ -n "$PUBLIC_IP" ]; then
+        echo "检测到公网IP: $PUBLIC_IP"
+        echo "更新环境变量中..."
+        
+        # 更新MAGIC_SOCKET_BASE_URL和MAGIC_SERVICE_BASE_URL
+        if [ "$(uname -s)" == "Darwin" ]; then
+            # macOS版本
+            sed -i '' "s|^MAGIC_SOCKET_BASE_URL=ws://localhost:9502|MAGIC_SOCKET_BASE_URL=ws://$PUBLIC_IP:9502|" .env
+            sed -i '' "s|^MAGIC_SERVICE_BASE_URL=http://localhost:9501|MAGIC_SERVICE_BASE_URL=http://$PUBLIC_IP:9501|" .env
+        else
+            # Linux版本
+            sed -i "s|^MAGIC_SOCKET_BASE_URL=ws://localhost:9502|MAGIC_SOCKET_BASE_URL=ws://$PUBLIC_IP:9502|" .env
+            sed -i "s|^MAGIC_SERVICE_BASE_URL=http://localhost:9501|MAGIC_SERVICE_BASE_URL=http://$PUBLIC_IP:9501|" .env
+        fi
+        
+        echo "环境变量已更新:"
+        echo "MAGIC_SOCKET_BASE_URL=ws://$PUBLIC_IP:9502"
+        echo "MAGIC_SERVICE_BASE_URL=http://$PUBLIC_IP:9501"
+    else
+        echo "未能检测到公网IP，保持默认设置。"
+    fi
+}
+
+# 运行IP检测和更新
+detect_public_ip
+
 # 显示帮助信息
 show_help() {
     echo "Usage: $0 [command]"
