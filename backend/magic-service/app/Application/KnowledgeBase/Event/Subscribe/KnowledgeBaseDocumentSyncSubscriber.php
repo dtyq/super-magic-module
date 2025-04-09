@@ -14,6 +14,8 @@ use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeBaseDataIsolation;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeSyncStatus;
 use App\Domain\KnowledgeBase\Event\KnowledgeBaseDocumentSavedEvent;
 use App\Domain\KnowledgeBase\Service\KnowledgeBaseDocumentDomainService;
+use App\Domain\KnowledgeBase\Service\KnowledgeBaseDomainService;
+use App\Domain\KnowledgeBase\Service\KnowledgeBaseFragmentDomainService;
 use App\Infrastructure\Core\Exception\BusinessException;
 use App\Infrastructure\Core\File\FileParser;
 use App\Infrastructure\Util\Odin\TextSplitter\TokenTextSplitter;
@@ -51,8 +53,10 @@ readonly class KnowledgeBaseDocumentSyncSubscriber implements ListenerInterface
         $dataIsolation = KnowledgeBaseDataIsolation::create($knowledge->getOrganizationCode(), $knowledge->getCreator());
         /** @var KnowledgeBaseDocumentDomainService $knowledgeBaseDocumentDomainService */
         $knowledgeBaseDocumentDomainService = di(KnowledgeBaseDocumentDomainService::class);
-        /** @var KnowledgeBaseFragmentAppService $knowledgeBaseFragmentAppService */
-        $knowledgeBaseFragmentAppService = di(KnowledgeBaseFragmentAppService::class);
+        /** @var KnowledgeBaseDomainService $knowledgeBaseDomainService */
+        $knowledgeBaseDomainService = di(KnowledgeBaseDomainService::class);
+        /** @var KnowledgeBaseFragmentDomainService $knowledgeBaseFragmentDomainService */
+        $knowledgeBaseFragmentDomainService = di(KnowledgeBaseFragmentDomainService::class);
         /** @var FileParser $fileParser */
         $fileParser = di(FileParser::class);
         /** @var LoggerInterface $logger */
@@ -66,11 +70,6 @@ readonly class KnowledgeBaseDocumentSyncSubscriber implements ListenerInterface
             }
 
             $file = $event->documentFile;
-            $authorization = new MagicUserAuthorization();
-            $authorization->setId($knowledge->getCreator());
-            $authorization->setMagicId($knowledge->getCreator());
-            $authorization->setOrganizationCode($knowledge->getOrganizationCode());
-            $authorization->setUserType(UserType::Human);
             if ($file) {
                 $tokenSplitter = new TokenTextSplitter(chunkSize: 500, chunkOverlap: 50);
                 $documentEntity->setSyncStatus(KnowledgeSyncStatus::Syncing->value);
@@ -92,7 +91,9 @@ readonly class KnowledgeBaseDocumentSyncSubscriber implements ListenerInterface
                         ->setContent($text)
                         ->setCreator($documentEntity->getCreatedUid())
                         ->setModifier($documentEntity->getUpdatedUid());
-                    $knowledgeBaseFragmentAppService->save($authorization, $fragmentEntity);
+                    $knowledgeBaseDocumentEntity = $knowledgeBaseDocumentDomainService->show($dataIsolation, $fragmentEntity->getDocumentCode());
+                    $knowledgeBaseEntity = $knowledgeBaseDomainService->show($dataIsolation, $fragmentEntity->getKnowledgeCode());
+                    $knowledgeBaseFragmentDomainService->save($dataIsolation, $knowledgeBaseEntity, $knowledgeBaseDocumentEntity, $fragmentEntity);
                 }
             }
 
