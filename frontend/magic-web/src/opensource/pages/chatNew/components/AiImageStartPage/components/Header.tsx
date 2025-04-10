@@ -38,7 +38,7 @@ const Header = memo(({ tags, currentType, selectType }: HeaderProps) => {
 						type="text"
 						className={styles.magicButton}
 						style={{ borderRadius: "50px" }}
-						onClick={() => interfaceStore.updateIsShowStartPage(false)}
+						onClick={() => interfaceStore.closeStartPage()}
 					>
 						<IconMessage size={18} />
 						{t("chat.aiImage.checkHistoryConversation")}
