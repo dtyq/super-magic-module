@@ -14,7 +14,8 @@ import DEFAULT_KNOWLEDGE_ICON from "@/assets/logos/knowledge-avatar.png"
 import { useTranslation } from "react-i18next"
 import { useUpload } from "@/opensource/hooks/useUploadFiles"
 import { genFileData } from "@/opensource/pages/chatNew/components/MessageEditor/MagicInput/components/InputFiles/utils"
-import { useNavigate } from "react-router-dom"
+import { useNavigate } from "@/opensource/hooks/useNavigate"
+
 import { replaceRouteParams } from "@/utils/route"
 import { RoutePath } from "@/const/routes"
 import { FlowRouteType } from "@/types/flow"
@@ -210,9 +211,11 @@ export default function VectorKnowledgeCreate() {
 	}
 
 	/** 必填项检验 */
+	const nameValue = Form.useWatch("name", form)
+
 	useEffect(() => {
-		setAllowSubmit(!!form.getFieldValue("name") && fileList.length > 0)
-	}, [form, fileList])
+		setAllowSubmit(!!nameValue && fileList.length > 0)
+	}, [nameValue, fileList])
 
 	const PageContent = useMemo(() => {
 		if (createdKnowledge) {
@@ -232,9 +235,7 @@ export default function VectorKnowledgeCreate() {
 					>
 						<Form.Item
 							label={
-								<div className={cx(styles.label, styles.required)}>
-									{t("knowledgeDatabase.icon")}
-								</div>
+								<div className={styles.label}>{t("knowledgeDatabase.icon")}</div>
 							}
 							rules={[
 								{
@@ -282,7 +283,11 @@ export default function VectorKnowledgeCreate() {
 						</Form.Item>
 
 						<Form.Item
-							label={<div className={styles.label}>{t("common.uploadFile")}</div>}
+							label={
+								<div className={cx(styles.label, styles.required)}>
+									{t("common.uploadFile")}
+								</div>
+							}
 						>
 							<div>
 								<DocumentUpload handleFileUpload={handleFileUpload}>

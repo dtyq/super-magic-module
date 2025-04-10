@@ -223,10 +223,7 @@ class MagicDepartmentRepository implements MagicDepartmentRepositoryInterface
     {
         $department = $this->model->newQuery()
             ->where('organization_code', $organizationCode)
-            ->where(function (Builder $query) {
-                $query->where('parent_department_id', '=', '')
-                    ->orWhereNull('parent_department_id');
-            })
+            ->where('department_id', '=', PlatformRootDepartmentId::Magic)
             ->first();
 
         return $department?->department_id;
@@ -245,10 +242,7 @@ class MagicDepartmentRepository implements MagicDepartmentRepositoryInterface
 
         $departments = $this->model->newQuery()
             ->whereIn('organization_code', $organizationCodes)
-            ->where(function (Builder $query) {
-                $query->where('parent_department_id', '=', '')
-                    ->orWhereNull('parent_department_id');
-            });
+            ->where('department_id', '=', PlatformRootDepartmentId::Magic);
 
         $departments = Db::select($departments->toSql(), $departments->getBindings());
         return $this->getDepartmentsEntity($departments);

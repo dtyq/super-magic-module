@@ -58,7 +58,7 @@ export const generateBotApi = (fetch: HttpClient) => ({
 
 	/** 删除机器人 */
 	deleteBot(agentId: string) {
-		return fetch.post<null>(genRequestUrl(RequestUrl.deleteBot, { agentId }))
+		return fetch.delete<null>(genRequestUrl(RequestUrl.deleteBot, { agentId }))
 	},
 
 	/** 修改机器人状态 */
@@ -97,9 +97,11 @@ export const generateBotApi = (fetch: HttpClient) => ({
 
 	/** 获取机器人版本详情 */
 	getBotVersionDetail(agentVersionId: string) {
-		return fetch.post<Bot.Detail>(genRequestUrl(RequestUrl.getBotVersionDetail, {
-			agentVersionId,
-		}))
+		return fetch.post<Bot.Detail>(
+			genRequestUrl(RequestUrl.getBotVersionDetail, {
+				agentVersionId,
+			}),
+		)
 	},
 
 	/** 判断机器人是否修改过 */

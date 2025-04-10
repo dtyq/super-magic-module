@@ -9,6 +9,7 @@ namespace App\Interfaces\Chat\Assembler;
 
 use App\Domain\Contact\Entity\AccountEntity;
 use App\Domain\Contact\Entity\MagicDepartmentEntity;
+use App\Domain\Contact\Entity\MagicDepartmentUserEntity;
 use App\Domain\Contact\Entity\MagicUserEntity;
 use App\Domain\Contact\Entity\ValueObject\DepartmentOption;
 use App\Domain\Contact\Entity\ValueObject\EmployeeType;
@@ -120,7 +121,14 @@ class UserAssembler
                 'account_type' => $account->getType()->value,
                 'ai_code' => $account->getAiCode(),
             ];
-            $userDetailAdd = array_merge($user->toArray(), $userDetailAdd);
+
+            foreach ($user->toArray() as $key => $value) {
+                if (isset($userDetailAdd[$key])) {
+                    // 如果已经存在，跳过
+                    continue;
+                }
+                $userDetailAdd[$key] = $value;
+            }
             $userDetailDTOList[] = new UserDetailDTO($userDetailAdd);
         }
         return $userDetailDTOList;
@@ -128,73 +136,98 @@ class UserAssembler
 
     /**
      * 一个用户可能存在于多个部门.
+     * @param MagicDepartmentUserEntity[] $departmentUsers
      * @param UserDetailDTO[] $usersDetail
-     * @param MagicDepartmentEntity[][] $departmentsInfo
+     * @param array<string, MagicDepartmentEntity[]> $departmentsInfo
+     * @param bool $withDepartmentFullPath 是否返回部门的完整路径
      * @return array<UserDepartmentDetailDTO>
      */
-    public static function getUserDepartmentDetailDTOList(array $departmentUsers, array $usersDetail, array $departmentsInfo, bool $withDepartmentFullPath = false, ?array $matchedQueryDepartmentIds = null): array
-    {
-        $matchedQueryDepartmentIds = array_flip($matchedQueryDepartmentIds ?? []);
+    public static function getUserDepartmentDetailDTOList(
+        array $departmentUsers,
+        array $usersDetail,
+        array $departmentsInfo,
+        bool $withDepartmentFullPath = false
+    ): array {
         /** @var array<UserDepartmentDetailDTO> $usersDepartmentDetailDTOList */
         $usersDepartmentDetailDTOList = [];
-        $tempDepartmentUsers = $departmentUsers;
-        $departmentUsers = [];
 
-        // 处理用户部门关系,优先保留匹配查询部门的数据
-        foreach ($tempDepartmentUsers as $tempDepartmentUser) {
-            $userId = $tempDepartmentUser['user_id'];
-
-            // 如果该用户还未被处理过,直接添加
-            if (! isset($departmentUsers[$userId])) {
-                $departmentUsers[$userId] = $tempDepartmentUser;
-                continue;
-            }
-
-            // 检查用户是否在匹配的查询部门中
-            $userDepartmentId = $tempDepartmentUser['department_id'] ?? '';
-            $userDepartments = $departmentsInfo[$userDepartmentId] ?? [];
-            foreach ($userDepartments as $userDepartment) {
-                if (isset($matchedQueryDepartmentIds[$userDepartment->getDepartmentId()])) {
-                    $departmentUsers[$userId] = $tempDepartmentUser;
-                    break;
-                }
-            }
+        // 步骤1: 构建用户ID到部门关系的映射
+        $userDepartmentMap = [];
+        foreach ($departmentUsers as $departmentUser) {
+            $userDepartmentMap[$departmentUser->getUserId()][] = $departmentUser;
         }
 
+        // 步骤2: 为每个用户构建详细信息
         foreach ($usersDetail as $userInfo) {
-            // ai 或者 私人版用户,没有部门信息
             $userId = $userInfo->getUserId();
-            $departmentUser = $departmentUsers[$userId] ?? [];
-            $userDepartmentId = $departmentUser['department_id'] ?? '';
-            /** @var MagicDepartmentEntity[] $departments */
-            $departments = $departmentsInfo[$userDepartmentId] ?? [];
-            $pathNodes = [];
-            if ($withDepartmentFullPath) {
-                $pathNodes = array_map(fn (MagicDepartmentEntity $department) => self::assemblePathNodeByDepartmentInfo($department), $departments);
-            } else {
-                ! empty($departments) && $pathNodes[] = self::assemblePathNodeByDepartmentInfo(end($departments));
+            $userDepartmentRelations = $userDepartmentMap[$userId] ?? [];
+
+            // 步骤2.1: 收集部门路径信息
+            $allPathNodes = [];
+            $fullPathNodes = [];
+
+            foreach ($userDepartmentRelations as $departmentUser) {
+                $userDepartmentId = $departmentUser['department_id'] ?? '';
+                /** @var MagicDepartmentEntity[] $departments */
+                $departments = $departmentsInfo[$userDepartmentId] ?? [];
+
+                if (! empty($departments)) {
+                    if ($withDepartmentFullPath) {
+                        // 完整路径模式: 为每个部门保存完整层级结构
+                        $pathNodes = array_map(
+                            fn (MagicDepartmentEntity $department) => self::assemblePathNodeByDepartmentInfo($department),
+                            $departments
+                        );
+                        $fullPathNodes[$userDepartmentId] = $pathNodes;
+                    } else {
+                        // 简略模式: 只取每个部门的最后一个节点
+                        $departmentInfo = end($departments);
+                        $pathNode = self::assemblePathNodeByDepartmentInfo($departmentInfo);
+                        $allPathNodes[] = $pathNode;
+                    }
+                }
             }
 
+            // 步骤2.2: 使用默认部门关系作为基础信息
+            $defaultDepartmentUser = $userDepartmentRelations[0] ?? [];
+
+            // 步骤2.3: 更新或创建用户部门详情对象
             if (! empty($usersDepartmentDetailDTOList[$userId])) {
-                // 用户存在于多个部门
+                // 更新已存在的用户部门详情
                 $userDepartmentDetailDTO = $usersDepartmentDetailDTOList[$userId];
-                if (! empty($departments) && ! empty($pathNodes)) {
-                    $userDepartmentDetailDTO->setPathNodes($pathNodes);
+
+                if ($withDepartmentFullPath && ! empty($fullPathNodes)) {
+                    $userDepartmentDetailDTO->setFullPathNodes($fullPathNodes);
+                } elseif (! empty($allPathNodes)) {
+                    $userDepartmentDetailDTO->setPathNodes($allPathNodes);
                 }
             } else {
+                // 创建新的用户部门详情
                 $userDepartmentDetail = [
-                    // 可能是个人版用户,或者是ai
-                    'employee_type' => $departmentUser['employee_type'] ?? EmployeeType::Unknown->value,
-                    'employee_no' => $departmentUser['employee_no'] ?? '',
-                    'job_title' => $departmentUser['job_title'] ?? '',
-                    'is_leader' => (bool) ($departmentUser['is_leader'] ?? false),
-                    'path_nodes' => $pathNodes,
+                    'employee_type' => $defaultDepartmentUser['employee_type'] ?? EmployeeType::Unknown->value,
+                    'employee_no' => $defaultDepartmentUser['employee_no'] ?? '',
+                    'job_title' => $defaultDepartmentUser['job_title'] ?? '',
+                    'is_leader' => (bool) ($defaultDepartmentUser['is_leader'] ?? false),
                 ];
-                $userDepartmentDetail = array_merge($userDepartmentDetail, $userInfo->toArray());
+
+                // 添加路径节点信息
+                if ($withDepartmentFullPath) {
+                    $userDepartmentDetail['full_path_nodes'] = $fullPathNodes;
+                } else {
+                    $userDepartmentDetail['path_nodes'] = $allPathNodes;
+                }
+
+                // 合并用户基本信息
+                $userInfoArray = $userInfo->toArray();
+                foreach ($userInfoArray as $key => $value) {
+                    $userDepartmentDetail[$key] = $value;
+                }
+
                 $userDepartmentDetailDTO = new UserDepartmentDetailDTO($userDepartmentDetail);
+                $usersDepartmentDetailDTOList[$userId] = $userDepartmentDetailDTO;
             }
-            $usersDepartmentDetailDTOList[$userId] = $userDepartmentDetailDTO;
         }
+
         return array_values($usersDepartmentDetailDTOList);
     }
 

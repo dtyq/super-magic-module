@@ -42,6 +42,12 @@ export const useStyles = createStyles(({ isDarkMode, css, prefixCls, token }) =>
 			color: white;
 			background: ${token.magicColorScales.brand[5]};
 			--${prefixCls}-border-radius: 8px;
+			width: 32px;
+			height: 32px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			border-radius: 8px;
 		`,
 	}
 })
@@ -65,13 +71,9 @@ const Department = memo(
 		return (
 			<Flex align="center" className={styles.container} justify="space-between" {...props}>
 				<Flex gap={8} align="center">
-					<MagicAvatar
-						src={<MagicIcon color="currentColor" size={20} component={IconSitemap} />}
-						size={32}
-						className={styles.departmentIcon}
-					>
-						{item.name?.[0]}
-					</MagicAvatar>
+					<div className={styles.departmentIcon}>
+						<MagicIcon color="currentColor" size={20} component={IconSitemap} />
+					</div>
 					{item.name}
 					{showMemberCount ? (
 						<span className={styles.count}>({item.employee_sum})</span>

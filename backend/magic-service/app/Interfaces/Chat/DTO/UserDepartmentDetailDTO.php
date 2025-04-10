@@ -54,9 +54,17 @@ class UserDepartmentDetailDTO extends AbstractDTO
     protected string $userManual;
 
     /**
+     * 用户在多个部门时的部门信息，不包含完整路径。
      * @var array<DepartmentPathNodeDTO>
      */
     protected array $pathNodes;
+
+    /**
+     * @var array
+     *            用户在多个部门时的部门信息，包含完整路径
+     * @var null|array<string,DepartmentPathNodeDTO[]>
+     */
+    protected ?array $fullPathNodes;
 
     public function __construct(?array $data = null)
     {
@@ -269,7 +277,7 @@ class UserDepartmentDetailDTO extends AbstractDTO
 
     public function getPathNodes(): array
     {
-        return $this->pathNodes;
+        return $this->pathNodes ?? [];
     }
 
     public function setPathNodes(array $pathNodes): UserDepartmentDetailDTO
@@ -279,6 +287,7 @@ class UserDepartmentDetailDTO extends AbstractDTO
                 $pathNode = new DepartmentPathNodeDTO($pathNode);
             }
         }
+        unset($pathNode);
         $this->pathNodes = $pathNodes;
         return $this;
     }
@@ -308,6 +317,26 @@ class UserDepartmentDetailDTO extends AbstractDTO
     public function setUserManual(string $userManual): UserDepartmentDetailDTO
     {
         $this->userManual = $userManual;
+        return $this;
+    }
+
+    public function getFullPathNodes(): ?array
+    {
+        return $this->fullPathNodes ?? null;
+    }
+
+    /**
+     * 用户在多个部门时的部门信息，包含完整路径。
+     * @phpstan-ignore-next-line
+     * @var array<string,DepartmentPathNodeDTO[]>
+     */
+    public function setFullPathNodes(array $fullPathNodes): UserDepartmentDetailDTO
+    {
+        foreach ($fullPathNodes as $key => $value) {
+            $this->fullPathNodes[$key] = array_map(function ($pathNode) {
+                return new DepartmentPathNodeDTO($pathNode);
+            }, $value);
+        }
         return $this;
     }
 }

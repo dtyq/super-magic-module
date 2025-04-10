@@ -21,8 +21,9 @@ class LocaleMiddleware implements MiddlewareInterface
 
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
-        if (! empty($request->getHeader('language')[0])) {
-            $this->translator->setLocale($request->getHeader('language')[0]);
+        $language = $request->getHeader('language')[0] ?? null;
+        if (! empty($language)) {
+            $this->translator->setLocale(str_replace('-', '_', $language));
         }
 
         return $handler->handle($request);

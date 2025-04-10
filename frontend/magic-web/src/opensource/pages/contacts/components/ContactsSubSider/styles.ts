@@ -40,5 +40,15 @@ export const useStyles = createStyles(({ css, token }) => {
 			text-overflow: ellipsis;
 			white-space: nowrap;
 		`,
+		listAvatar: css`
+			padding: 8px;
+			color: white;
+			border-radius: 8px;
+			width: 40px;
+			height: 40px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		`,
 	}
 })

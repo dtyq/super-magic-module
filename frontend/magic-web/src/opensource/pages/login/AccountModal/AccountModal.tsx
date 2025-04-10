@@ -13,6 +13,7 @@ import { userStore } from "@/opensource/models/user"
 import MobilePhonePasswordForm from "../components/MobilePhonePasswordForm"
 import Footer from "../components/Footer"
 import { useUserAgreedPolicy } from "../hooks/useUserAgreedPolicy"
+import MagicSpin from "@/opensource/components/base/MagicSpin"
 
 interface AccountModalProps {
 	onClose: () => void
@@ -34,11 +35,15 @@ function AccountModal(props: AccountModalProps) {
 		onClose?.()
 	})
 
+	const [loading, setLoading] = useState(false)
+
 	// 提交数据，统一处理不同登录方式的逻辑
 	const onSubmit = useMemoizedFn<OnSubmitFn<Login.LoginType>>(async (type, values, overrides) => {
 		if (!agree) {
 			await triggerUserAgreedPolicy()
 		}
+
+		setLoading(true)
 
 		values.device = await getDeviceInfo(i18n)
 		const magicOrgSyncStep = loginService.magicOrganizationSyncStep(clusterCode as string)
@@ -72,6 +77,9 @@ function AccountModal(props: AccountModalProps) {
 					message.error(t("magicOrganizationSyncStep.pleaseBindExistingAccount"))
 				}
 			})
+			.finally(() => {
+				setLoading(false)
+			})
 	})
 
 	const dom = <div className={styles.header}>{t("account.create")}</div>
@@ -93,10 +101,12 @@ function AccountModal(props: AccountModalProps) {
 			wrapClassName={styles.modal}
 			afterClose={onClose}
 		>
-			<div className={cx(styles.layout, loginFormOverrideStyles.container)}>
-				<MobilePhonePasswordForm form={form} onSubmit={onSubmit} />
-				<Footer agree={agree} onAgreeChange={setAgree} tipVisible />
-			</div>
+			<MagicSpin spinning={loading}>
+				<div className={cx(styles.layout, loginFormOverrideStyles.container)}>
+					<MobilePhonePasswordForm form={form} onSubmit={onSubmit} />
+					<Footer agree={agree} onAgreeChange={setAgree} tipVisible />
+				</div>
+			</MagicSpin>
 		</Modal>
 	)
 }

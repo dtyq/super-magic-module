@@ -130,7 +130,7 @@ const UserMenus = observer(function UserMenus({ children }: UserMenusProps) {
 		magicColorUsages.primary.default,
 	])
 
-	const isAdmin = userStore.user.isAdmin
+	// const isAdmin = userStore.user.isAdmin
 
 	const menu = useMemo<MenuProps["items"]>(() => {
 		return [
@@ -173,7 +173,7 @@ const UserMenus = observer(function UserMenus({ children }: UserMenusProps) {
 				key: UserMenuKey.Logout,
 			},
 		].filter(Boolean) as ItemType[]
-	}, [t, styles.arrow, languageOptions, isAdmin])
+	}, [t, styles.arrow, languageOptions])
 
 	const selectKeys = useMemo(
 		() => (language ? [UserMenuKey.SwitchLanguage, language] : []),
@@ -181,7 +181,7 @@ const UserMenus = observer(function UserMenus({ children }: UserMenusProps) {
 	)
 
 	// const navigateToAdmin = useMemoizedFn(() => {
-	// 	navigate(AdminRoutePath.AdminHomePage)
+	// 	navigate(AdminRoutePath.AdminHome.replace("*", AdminRoutePath.Ai))
 	// })
 
 	const handleMenuClick = useMemoizedFn<Exclude<MenuProps["onClick"], undefined>>(
