@@ -17,7 +17,7 @@ import { useCurrentMagicOrganization } from "@/opensource/models/user/hooks"
 import { useContactStore } from "@/opensource/stores/contact/hooks"
 import MagicSpin from "@/opensource/components/base/MagicSpin"
 import useUserInfo from "@/opensource/hooks/chat/useUserInfo"
-import { colorScales, colorUsages } from "@/opensource/providers/ThemeProvider/colors"
+import { colorScales } from "@/opensource/providers/ThemeProvider/colors"
 import { useStyles } from "./styles"
 import { Line } from "./Line"
 import { useContactPageDataContext } from "../ContactDataProvider/hooks"
@@ -164,13 +164,12 @@ function ContactsSubSider() {
 							id: "aiAssistant",
 							route: RoutePath.ContactsAiAssistant,
 							title: t("contacts.subSider.aiAssistant"),
-							avatar: {
-								src: <MagicIcon color="currentColor" component={IconMagicBots} />,
-								style: {
-									background: colorUsages.primary.default,
-									padding: 8,
-									color: "white",
-								},
+							avatar: () => {
+								return (
+									<div className={styles.listAvatar} style={{ background: colorScales.brand[5] }}>
+										<MagicIcon color="currentColor" component={IconMagicBots} />
+									</div>
+								)
 							},
 							extra: (
 								<MagicIcon
@@ -204,13 +203,12 @@ function ContactsSubSider() {
 							id: "myGroups",
 							route: RoutePath.ContactsMyGroups,
 							title: t("contacts.subSider.myGroups"),
-							avatar: {
-								icon: <MagicIcon color="currentColor" component={IconUsers} />,
-								style: {
-									background: colorScales.lightGreen[5],
-									padding: 8,
-									color: "white",
-								},
+							avatar: () => {
+								return (
+									<div className={styles.listAvatar} style={{ background: colorScales.lightGreen[5] }}>
+										<MagicIcon color="currentColor" component={IconUsers} />
+									</div>
+								)
 							},
 							extra: (
 								<MagicIcon

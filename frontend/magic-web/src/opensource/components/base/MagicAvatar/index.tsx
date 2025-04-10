@@ -55,7 +55,9 @@ const MagicAvatar = memo(
 					src={innerSrc}
 					onError={handleError}
 					{...props}
-				/>
+				>
+					{children}
+				</Avatar>
 			)
 
 			if (!badgeProps) {

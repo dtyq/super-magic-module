@@ -18,7 +18,7 @@ class AvatarService {
 	 * @param text 文本
 	 * @returns 头像图片
 	 */
-	drawTextAvatar(text: string, bgColor: string, textColor: string): string | null {
+	drawTextAvatar(text: string, bgColor: string | undefined, textColor: string | undefined): string | null {
 		// 检查缓存中是否已存在
 		const cached = AvatarStore.getTextAvatar(text)
 		if (cached) {

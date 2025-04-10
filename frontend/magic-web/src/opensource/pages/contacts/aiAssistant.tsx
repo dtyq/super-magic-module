@@ -9,6 +9,8 @@ import { useCallback, useEffect } from "react"
 import MagicScrollBar from "@/opensource/components/base/MagicScrollBar"
 import { useChatWithMember } from "@/opensource/hooks/chat/useChatWithMember"
 import userInfoStore from "@/opensource/stores/userInfo"
+import userInfoService from "@/opensource/services/userInfo"
+import AvatarStore from "@/opensource/stores/chatNew/avatar"
 
 const useStyles = createStyles(({ css, token }) => {
 	return {
@@ -26,16 +28,16 @@ function AiAssistant() {
 
 	const { trigger, data } = useContactStore((s) => s.useFriends)()
 
-	const { trigger: getUserInfos, isMutating } = useContactStore((s) => s.useUserInfos)()
+	const { fetchUserInfos } = userInfoService
 	const chatWith = useChatWithMember()
 
 	useEffect(() => {
 		if (data && data?.items?.length > 0) {
 			const unUserInfos = data?.items?.filter((item) => !userInfoStore.get(item.friend_id))
 			if (unUserInfos.length > 0)
-				getUserInfos({ user_ids: unUserInfos.map((item) => item.friend_id) })
+				fetchUserInfos(unUserInfos.map((item) => item.friend_id), 2)
 		}
-	}, [data, getUserInfos])
+	}, [data])
 
 	const itemsTransform = useCallback(
 		(item: Friend) => {
@@ -44,10 +46,7 @@ function AiAssistant() {
 				return {
 					id: item.friend_id,
 					title: item.friend_id,
-					avatar: {
-						src: item.friend_id,
-						children: item.friend_id,
-					},
+					avatar: AvatarStore.getTextAvatar(item.friend_id),
 				}
 			return {
 				id: user.user_id,
@@ -60,7 +59,7 @@ function AiAssistant() {
 			}
 		},
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-		[isMutating],
+		[],
 	)
 
 	const handleItemClick = useMemoizedFn((item: MagicListItemData) => {
