@@ -2,6 +2,12 @@
 # https://vitepress.dev/reference/default-theme-home-page
 layout: home
 
+# 添加重定向脚本
+head:
+  - - meta
+    - http-equiv: refresh
+      content: 0;url=/en/
+
 hero:
   name: "Magic"
   text: "The New Generation Enterprise-level AI Application Innovation Engine"
