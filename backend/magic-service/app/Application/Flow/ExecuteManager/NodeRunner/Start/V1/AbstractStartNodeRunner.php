@@ -125,7 +125,21 @@ abstract class AbstractStartNodeRunner extends NodeRunner
         $result = [];
         $outputForm = $triggerBranch->getOutput()?->getFormComponent()?->getForm();
         if ($outputForm) {
-            $outputForm->appendConstValue($executionData->getTriggerData()->getParams());
+            $appendConstValue = $executionData->getTriggerData()->getParams();
+            foreach ($outputForm->getProperties() ?? [] as $key => $property) {
+                if ($property->getType()->isComplex()) {
+                    $value = $appendConstValue[$key] ?? [];
+                    if (is_string($value)) {
+                        // 尝试一次 json_decode
+                        $value = json_decode($value, true);
+                    }
+                    if (! is_array($value)) {
+                        ExceptionBuilder::throw(FlowErrorCode::ExecuteValidateFailed, "[{$key}] is not {$property->getType()->value}");
+                    }
+                    $appendConstValue[$key] = $value;
+                }
+            }
+            $outputForm->appendConstValue($appendConstValue);
             $result = $outputForm->getKeyValue(check: true);
         }
 
