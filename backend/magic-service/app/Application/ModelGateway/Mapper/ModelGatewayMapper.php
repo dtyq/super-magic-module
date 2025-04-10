@@ -32,6 +32,7 @@ use Hyperf\Odin\Model\AbstractModel;
 use Hyperf\Odin\Model\ModelOptions;
 use Hyperf\Odin\ModelMapper;
 use Psr\Log\LoggerInterface;
+use Throwable;
 
 /**
  * 集合项目本身多套的 ModelGatewayMapper - 最终全部转换为 odin model 参数格式.
@@ -196,32 +197,42 @@ class ModelGatewayMapper extends ModelMapper
         foreach ($modelConfigs as $modelConfig) {
             $embedding = str_contains($modelConfig->getModel(), 'embedding');
             $key = $modelConfig->getModel();
-            $this->addModel($key, [
-                'model' => $modelConfig->getModel(),
-                'implementation' => $modelConfig->getImplementation(),
-                'config' => $modelConfig->getActualImplementationConfig(),
-                // 以前的配置表没有 embedding 相关的配置，所以这里默认都开启
-                'model_options' => [
-                    'chat' => ! $embedding,
-                    'function_call' => true,
-                    'embedding' => $embedding,
-                    'multi_modal' => ! $embedding,
-                    'vector_size' => 0,
-                ],
-            ]);
-            $this->addAttributes($key, [
-                'label' => $modelConfig->getName(),
-                'icon' => '',
-                'tags' => [['type' => 1, 'value' => 'MagicAI']],
-                'created_at' => $modelConfig->getCreatedAt(),
-                'owner_by' => 'MagicAI',
-            ]);
-            $this->logger->info('ApiModelRegister', [
-                'key' => $key,
-                'model' => $modelConfig->getModel(),
-                'label' => $modelConfig->getName(),
-                'implementation' => $modelConfig->getImplementation(),
-            ]);
+            try {
+                $this->addModel($key, [
+                    'model' => $modelConfig->getModel(),
+                    'implementation' => $modelConfig->getImplementation(),
+                    'config' => $modelConfig->getActualImplementationConfig(),
+                    // 以前的配置表没有 embedding 相关的配置，所以这里默认都开启
+                    'model_options' => [
+                        'chat' => ! $embedding,
+                        'function_call' => true,
+                        'embedding' => $embedding,
+                        'multi_modal' => ! $embedding,
+                        'vector_size' => 0,
+                    ],
+                ]);
+                $this->addAttributes($key, [
+                    'label' => $modelConfig->getName(),
+                    'icon' => '',
+                    'tags' => [['type' => 1, 'value' => 'MagicAI']],
+                    'created_at' => $modelConfig->getCreatedAt(),
+                    'owner_by' => 'MagicAI',
+                ]);
+                $this->logger->info('ApiModelRegister', [
+                    'key' => $key,
+                    'model' => $modelConfig->getModel(),
+                    'label' => $modelConfig->getName(),
+                    'implementation' => $modelConfig->getImplementation(),
+                ]);
+            } catch (Throwable $exception) {
+                $this->logger->warning('ApiModelRegisterWarning', [
+                    'key' => $key,
+                    'model' => $modelConfig->getModel(),
+                    'label' => $modelConfig->getName(),
+                    'implementation' => $modelConfig->getImplementation(),
+                    'error' => $exception->getMessage(),
+                ]);
+            }
         }
     }
 
@@ -234,32 +245,43 @@ class ModelGatewayMapper extends ModelMapper
         $list = di(MagicFlowAIModelDomainService::class)->queries($dataIsolation, $query, $page)['list'];
         foreach ($list as $modelEntity) {
             $key = $modelEntity->getModelName() ?: $modelEntity->getName();
-            $this->addModel($modelEntity->getName(), [
-                'model' => $key,
-                'implementation' => $modelEntity->getImplementation(),
-                'config' => $modelEntity->getActualImplementationConfig(),
-                'model_options' => [
-                    'chat' => ! $modelEntity->isSupportEmbedding(),
-                    'function_call' => true,
-                    'embedding' => $modelEntity->isSupportEmbedding(),
-                    'multi_modal' => $modelEntity->isSupportMultiModal(),
-                    'vector_size' => $modelEntity->getVectorSize(),
-                ],
-            ]);
-            $this->addAttributes($modelEntity->getName(), [
-                'label' => $modelEntity->getLabel(),
-                'icon' => $modelEntity->getIcon(),
-                'tags' => $modelEntity->getTags(),
-                'created_at' => $modelEntity->getCreatedAt(),
-                'owner_by' => 'MagicAI',
-            ]);
-            $this->logger->info('FlowModelRegister', [
-                'key' => $key,
-                'model' => $key,
-                'label' => $modelEntity->getLabel(),
-                'implementation' => $modelEntity->getImplementation(),
-                'display' => $modelEntity->isDisplay(),
-            ]);
+            try {
+                $this->addModel($modelEntity->getName(), [
+                    'model' => $key,
+                    'implementation' => $modelEntity->getImplementation(),
+                    'config' => $modelEntity->getActualImplementationConfig(),
+                    'model_options' => [
+                        'chat' => ! $modelEntity->isSupportEmbedding(),
+                        'function_call' => true,
+                        'embedding' => $modelEntity->isSupportEmbedding(),
+                        'multi_modal' => $modelEntity->isSupportMultiModal(),
+                        'vector_size' => $modelEntity->getVectorSize(),
+                    ],
+                ]);
+                $this->addAttributes($modelEntity->getName(), [
+                    'label' => $modelEntity->getLabel(),
+                    'icon' => $modelEntity->getIcon(),
+                    'tags' => $modelEntity->getTags(),
+                    'created_at' => $modelEntity->getCreatedAt(),
+                    'owner_by' => 'MagicAI',
+                ]);
+                $this->logger->info('FlowModelRegister', [
+                    'key' => $key,
+                    'model' => $key,
+                    'label' => $modelEntity->getLabel(),
+                    'implementation' => $modelEntity->getImplementation(),
+                    'display' => $modelEntity->isDisplay(),
+                ]);
+            } catch (Throwable $exception) {
+                $this->logger->warning('FlowModelRegisterWarning', [
+                    'key' => $key,
+                    'model' => $key,
+                    'label' => $modelEntity->getLabel(),
+                    'implementation' => $modelEntity->getImplementation(),
+                    'display' => $modelEntity->isDisplay(),
+                    'error' => $exception->getMessage(),
+                ]);
+            }
         }
     }
 
