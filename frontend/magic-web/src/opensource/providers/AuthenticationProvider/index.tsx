@@ -1,4 +1,4 @@
-import { useEffect, type PropsWithChildren } from "react"
+import { type PropsWithChildren } from "react"
 import { useLocation, useSearchParams } from "react-router-dom"
 import { useNavigate } from "@/opensource/hooks/useNavigate"
 import { useTranslation } from "react-i18next"
@@ -14,7 +14,7 @@ import { loginService, userService } from "@/services"
 import { useAuthorization } from "@/opensource/models/user/hooks"
 import { useClusterCode } from "@/opensource/providers/ClusterProvider"
 import { useStyles } from "./styles"
-import { LoginValueKey } from "@/pages/login/constants"
+import { LoginValueKey } from "@/opensource/pages/login/constants"
 
 const AuthenticationKey = "authorization"
 
