@@ -85,9 +85,7 @@ We welcome contributions in various forms, including but not limited to:
 - Submitting code fixes
 - Contributing new features
 
-## 📄 License
 
-Magic uses the [Apache License 2.0](LICENSE).
 
 ## 📞 Contact Us
 

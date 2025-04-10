@@ -2,11 +2,20 @@
 # https://vitepress.dev/reference/default-theme-home-page
 layout: home
 
-# 添加重定向脚本
+# 添加语言自动检测脚本
 head:
-  - - meta
-    - http-equiv: refresh
-      content: 0;url=/en/
+  - - script
+    - {}
+    - |
+      // 检测浏览器语言并重定向
+      (function() {
+        var userLang = navigator.language || navigator.userLanguage;
+        var path = userLang.startsWith('zh') ? '/zh/' : '/en/';
+        // 仅在根路径时进行重定向，避免重复重定向
+        if (window.location.pathname === '/' || window.location.pathname === '/index.html') {
+          window.location.href = path;
+        }
+      })();
 
 hero:
   name: "Magic"
@@ -22,7 +31,7 @@ hero:
 
 # features:
 #   - icon: 🚀
-#     title: Fast & Efficient
+#     title: Fast & Efficient 
 #     details: Built with performance in mind, Magic Docs provides lightning-fast documentation sites.
 #   - icon: 🎨
 #     title: Beautiful Design
