@@ -62,6 +62,11 @@ export default function KnowledgeDataListV1({
 	const renderRightComponent = (knowledgeTypeValue: number, subField: any) => {
 		switch (knowledgeTypeValue) {
 			case knowledgeType.UserKnowledgeDatabase:
+				const value = form.getFieldValue([
+					...knowledgeListName,
+					subField.name,
+					"knowledge_code",
+				])
 				// 用户自建知识库
 				return (
 					<Form.Item noStyle>
@@ -70,6 +75,7 @@ export default function KnowledgeDataListV1({
 							placeholder={t("common.userKnowledgeDatabasePlaceholder", {
 								ns: "flow",
 							})}
+							value={value}
 							options={userDatabaseOptions}
 							onPopupScroll={userDatabasePopupScroll}
 							fieldNames={{
