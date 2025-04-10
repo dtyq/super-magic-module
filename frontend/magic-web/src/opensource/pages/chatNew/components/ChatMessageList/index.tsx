@@ -36,6 +36,7 @@ import MessageItem from "./components/MessageItem"
 import GroupSeenPanelStore, {
 	domClassName as GroupSeenPanelDomClassName,
 } from "@/opensource/stores/chatNew/groupSeenPanel"
+import { isMessageInView } from "./utils"
 
 let canScroll = true
 let isScrolling = false
@@ -209,8 +210,9 @@ const ChatMessageList = observer(() => {
 		const distance = Math.abs(scrollTop + clientHeight - scrollHeight)
 
 		state.setIsAtBottom(distance < 50)
-		// 提前加载
-		if (scrollTop < 150 && !state.isLoadingMore) {
+		// 加载更多
+		const messageId = MessageStore.messages[2]?.message_id
+		if (isMessageInView(messageId, wrapperRef.current)) {
 			loadMoreHistoryMessages()
 		}
 	})
@@ -394,11 +396,7 @@ const ChatMessageList = observer(() => {
 					{MessageStore.messages.map((message) => {
 						const item = renderMessage(message)
 						return (
-							<div
-								id={message.message_id}
-								key={message.message_id}
-								style={{ willChange: "transform" }}
-							>
+							<div key={message.message_id} style={{ willChange: "transform" }}>
 								{item}
 							</div>
 						)
