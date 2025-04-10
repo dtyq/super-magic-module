@@ -31,11 +31,9 @@ SYSTEM_LANG=$(detect_language)
 # Usage: bilingual "Chinese message" "English message"
 bilingual() {
   if [[ "$SYSTEM_LANG" == "zh" ]]; then
-    echo "$1"
-    echo "$2"
+    echo "$1 | $2"
   else
-    echo "$2"
-    echo "$1"
+    echo "$2 | $1"
   fi
 }
 
