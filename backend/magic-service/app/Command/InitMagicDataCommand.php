@@ -37,7 +37,7 @@ class InitMagicDataCommand extends HyperfCommand
         protected ModelConfigRepositoryInterface $modelConfigRepository,
     ) {
         // 正常模式（不初始化模型网关数据）
-        // php bin/hyperf.php init-magic:data --type=all
+        // php bin/hyperf.php init-magic:data
         // 单元测试模式（会初始化模型网关数据）
         // php bin/hyperf.php init-magic:data --type=all --unit-test
         parent::__construct('init-magic:data');
@@ -48,8 +48,6 @@ class InitMagicDataCommand extends HyperfCommand
         parent::configure();
         $this->setDescription('初始化系统必要数据');
 
-        // 添加选项，如果需要根据选项初始化不同类型的数据
-        $this->addOption('type', 't', InputOption::VALUE_REQUIRED, '指定初始化数据类型，支持：all, user, model-gateway 等', 'all');
         // 添加选项，控制遇到错误时是否继续执行
         $this->addOption('continue-on-error', 'c', InputOption::VALUE_NONE, '遇到错误时是否继续执行，默认遇到错误终止执行');
         // 添加选项，控制在type=all时是否执行model-gateway初始化
@@ -58,18 +56,8 @@ class InitMagicDataCommand extends HyperfCommand
 
     public function handle()
     {
-        $type = $this->input->getOption('type');
-
-        $this->logger->info(sprintf('开始初始化数据，类型：%s', $type));
-
         try {
-            if ($type === 'all') {
-                $this->initAllData();
-            } elseif ($type === 'user') {
-                $this->initUserData();
-            } elseif ($type === 'model-gateway') {
-                $this->initModelGatewayData();
-            }
+            $this->initAllData();
         } catch (Throwable $e) {
             $this->logger->error(sprintf('初始化数据失败: %s', $e->getMessage()));
             return 1; // 返回非零状态码表示执行失败
@@ -86,6 +74,18 @@ class InitMagicDataCommand extends HyperfCommand
         $this->logger->info('初始化所有数据');
         $continueOnError = $this->input->getOption('continue-on-error');
         $isUnitTest = $this->input->getOption('unit-test');
+
+        // 检查magic_contact_users表是否有用户数据
+        try {
+            $userCount = Db::table('magic_contact_users')->count();
+            if ($userCount > 0) {
+                $this->logger->info("magic_contact_users表已有{$userCount}条用户数据，初始化成功");
+                return;
+            }
+        } catch (Throwable $e) {
+            $this->logger->error('检查magic_contact_users表用户数据失败: ' . $e->getMessage());
+            // 如果检查失败，继续执行初始化过程
+        }
 
         try {
             // 调用各个初始化方法
