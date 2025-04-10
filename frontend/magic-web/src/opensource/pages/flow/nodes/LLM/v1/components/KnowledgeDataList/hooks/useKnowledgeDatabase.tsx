@@ -58,24 +58,6 @@ export default function useKnowledgeDatabases(form: FormInstance) {
 	// 用户自建知识库（向量知识库）
 	const [userDatabaseOptions, setUserDatabaseOptions] = useState<any[]>([])
 
-	// 用户自建知识库（向量知识库）选择变化
-	const userDatabasePopupChange = useMemoizedFn(
-		(knowledge_code: string, subFieldName: string) => {
-			const targetOption = userDatabaseOptions.find(
-				(item) => item.knowledge_code === knowledge_code,
-			)
-			if (targetOption) {
-				form.setFieldValue(["knowledge_config", "knowledge_list", subFieldName], {
-					business_id: "",
-					name: targetOption.name,
-					description: targetOption.description,
-					knowledge_type: targetOption.knowledge_type,
-					knowledge_code: targetOption.knowledge_code,
-				})
-			}
-		},
-	)
-
 	// 监听滚动加载更多
 	const userDatabasePopupScroll = useMemoizedFn((e: any) => {
 		// 获取滚动容器
@@ -192,6 +174,5 @@ export default function useKnowledgeDatabases(form: FormInstance) {
 		teamshareDatabaseOptions,
 		userDatabaseOptions,
 		userDatabasePopupScroll,
-		userDatabasePopupChange,
 	}
 }
