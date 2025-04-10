@@ -174,11 +174,6 @@ class MessageService {
 			}
 		}
 
-		console.log(
-			"messages init page ====> ",
-			calculatePageNumber(data.messages.length, MessageStore.pageSize),
-		)
-
 		// 设置当前页码
 		MessageStore.setPageConfig(
 			MessageStore.page + calculatePageNumber(data.messages.length, MessageStore.pageSize),

@@ -1,6 +1,6 @@
 import { observer, useLocalObservable } from "mobx-react-lite"
 import { useRef, useCallback, useEffect, lazy, Suspense, useLayoutEffect } from "react"
-import { useMemoizedFn, useMount } from "ahooks"
+import { useMemoizedFn } from "ahooks"
 import MessageStore from "@/opensource/stores/chatNew/message"
 import MessageService from "@/opensource/services/chat/message/MessageService"
 import conversationStore from "@/opensource/stores/chatNew/conversation"
