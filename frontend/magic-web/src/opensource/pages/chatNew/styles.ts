@@ -27,6 +27,7 @@ export const useStyles = createStyles(({ css, isDarkMode, token }) =>
 			main: css`
 				height: calc(100vh - ${token.titleBarHeight}px);
 				flex: 1;
+				min-width: 375px;
 			`,
 			header: css``,
 			chatList: css`

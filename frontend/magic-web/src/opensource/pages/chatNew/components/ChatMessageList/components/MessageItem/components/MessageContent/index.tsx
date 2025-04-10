@@ -93,14 +93,18 @@ const MessageContent = observer(
 		}, [message, referMsgId])
 
 		return (
-			<Flex vertical gap={4} align={is_self ? "flex-end" : "flex-start"}>
+			<Flex
+				vertical
+				gap={4}
+				align={is_self ? "flex-end" : "flex-start"}
+				className={styles.contentWrapper}
+			>
 				{/* 发送时间和用户名 */}
 				<MessageHeader isSelf={is_self} name={name} sendTime={message.send_time} />
 				{/* 消息气泡 */}
 				<div
 					className={cx(
 						styles.content,
-						styles.contentInnerWrapper,
 						is_self ? styles.magicTheme : styles.defaultTheme,
 						DomClassName.MESSAGE_ITEM,
 					)}
