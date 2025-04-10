@@ -10,6 +10,7 @@ namespace App\Application\Flow\ExecuteManager;
 use App\Application\Flow\ExecuteManager\Archive\FlowExecutorArchiveCloud;
 use App\Application\Flow\ExecuteManager\ExecutionData\ExecutionData;
 use App\Application\Flow\ExecuteManager\ExecutionData\ExecutionDataCollector;
+use App\Application\Flow\ExecuteManager\ExecutionData\ExecutionFlowCollector;
 use App\Application\Flow\ExecuteManager\ExecutionData\FlowStreamStatus;
 use App\Application\Flow\ExecuteManager\NodeRunner\NodeRunnerFactory;
 use App\Application\Flow\ExecuteManager\NodeRunner\ReplyMessage\Struct\Message;
@@ -154,6 +155,9 @@ class MagicFlowExecutor
         if (empty($this->executionData->getMagicFlowEntity())) {
             $this->executionData->setMagicFlowEntity($this->magicFlowEntity);
         }
+        if (! ExecutionFlowCollector::get($this->executionData->getUniqueId())) {
+            ExecutionFlowCollector::add($this->executionData->getUniqueId(), $this->magicFlowEntity);
+        }
     }
 
     protected function begin(array $args): void
@@ -297,6 +301,7 @@ class MagicFlowExecutor
 
         $this->finishStream();
         ExecutionDataCollector::remove($this->executionData->getUniqueId());
+        ExecutionFlowCollector::remove($this->executionData->getUniqueId());
     }
 
     protected function finishStream(): void
