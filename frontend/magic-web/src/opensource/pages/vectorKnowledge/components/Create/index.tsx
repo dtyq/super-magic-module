@@ -211,9 +211,11 @@ export default function VectorKnowledgeCreate() {
 	}
 
 	/** 必填项检验 */
+	const nameValue = Form.useWatch("name", form)
+
 	useEffect(() => {
-		setAllowSubmit(!!form.getFieldValue("name") && fileList.length > 0)
-	}, [form, fileList])
+		setAllowSubmit(!!nameValue && fileList.length > 0)
+	}, [nameValue, fileList])
 
 	const PageContent = useMemo(() => {
 		if (createdKnowledge) {
