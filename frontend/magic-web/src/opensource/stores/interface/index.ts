@@ -1,4 +1,5 @@
 import { WebSocketReadyState } from "@/types/websocket"
+import { platformKey } from "@/utils/storage"
 import { makeAutoObservable } from "mobx"
 
 class InterfaceStore {
@@ -6,14 +7,20 @@ class InterfaceStore {
 	isSwitchingOrganization: boolean = false
 	isConnecting: boolean = false
 	showReloadButton: boolean = false
-	isShowStartPage: boolean = true
+	isShowStartPageKey = platformKey("isShowStartPage")
+
+	/**
+	 * 是否显示启动页
+	 */
+	isShowStartPage: boolean = JSON.parse(localStorage.getItem(this.isShowStartPageKey) ?? "true")
 
 	constructor() {
 		makeAutoObservable(this)
 	}
 
-	updateIsShowStartPage(isShowStartPage: boolean) {
-		this.isShowStartPage = isShowStartPage
+	closeStartPage() {
+		this.isShowStartPage = false
+		localStorage.setItem(this.isShowStartPageKey, "false")
 	}
 
 	setReadyState(readyState: WebSocket["readyState"]) {

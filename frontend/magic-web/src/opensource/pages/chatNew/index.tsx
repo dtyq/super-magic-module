@@ -27,7 +27,6 @@ const ChatNew = observer(() => {
 	useNavigateConversationByAgentIdInSearchQuery()
 
 	const showExtra = conversationStore.topicOpen
-	const isStartPage = interfaceStore.isShowStartPage
 
 	if (!conversationStore.currentConversation) {
 		return (
@@ -44,56 +43,45 @@ const ChatNew = observer(() => {
 
 	const Main = () => {
 		// 如果开启了startPage，则显示startPage
-		if (ConversationBotDataService.startPage && isStartPage) {
+		if (ConversationBotDataService.startPage && interfaceStore.isShowStartPage) {
 			return <AiImageStartPage disabled={false} />
 		}
 
 		return (
 			<>
-				<MagicSplitter layout="vertical" className={styles.main}>
-					<MagicSplitter.Panel size={60} max={60} min={60}>
-						<Header />
-					</MagicSplitter.Panel>
-					<MagicSplitter.Panel>
+				<Flex vertical className={styles.main} flex={1}>
+					<Header />
+					<div className={styles.chatList}>
 						<DragFileSendTip>
 							<ChatMessageList />
 						</DragFileSendTip>
-					</MagicSplitter.Panel>
-					<MagicSplitter.Panel defaultSize={300} max="50%" min={150}>
+					</div>
+					<div className={styles.editor}>
 						<MessageEditor
 							disabled={false}
 							visible
 							// scrollControl={null}
 						/>
-					</MagicSplitter.Panel>
-				</MagicSplitter>
-				<MagicSplitter.Panel
-					min={240}
-					defaultSize={240}
-					size={showExtra ? 240 : 0}
-					max="50%"
-				>
+					</div>
+				</Flex>
+				{showExtra && (
 					<div className={styles.extra}>
 						<Suspense fallback={null}>
 							{conversationStore.topicOpen && <TopicExtraSection />}
 						</Suspense>
 					</div>
-				</MagicSplitter.Panel>
+				)}
+				<Suspense fallback={null}>
+					{conversationStore.settingOpen && <SettingExtraSection />}
+				</Suspense>
 			</>
 		)
 	}
 
 	return (
 		<Flex flex={1} className={styles.chat} id={ChatDomId.ChatContainer}>
-			<MagicSplitter className={styles.splitter}>
-				<MagicSplitter.Panel min={200} defaultSize={240} max={300}>
-					<ChatSubSider />
-				</MagicSplitter.Panel>
-				<MagicSplitter.Panel>{Main()}</MagicSplitter.Panel>
-			</MagicSplitter>
-			<Suspense fallback={null}>
-				{conversationStore.settingOpen && <SettingExtraSection />}
-			</Suspense>
+			<ChatSubSider />
+			{Main()}
 			<ChatImagePreviewModal />
 			{conversationStore.currentConversation.isGroupConversation && (
 				<Suspense fallback={null}>

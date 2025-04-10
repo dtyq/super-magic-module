@@ -5,6 +5,7 @@ export const useStyles = createStyles(({ token, css, isDarkMode }) => ({
 	container: css`
 		padding: 20px;
 		height: calc(100vh - 44px);
+		width: calc(100vw - 240px - 100px);
 		background-image: url(${bg});
 		background-size: contain;
 		background-repeat: no-repeat;
@@ -143,8 +144,6 @@ export const useStyles = createStyles(({ token, css, isDarkMode }) => ({
 		max-height: 420px;
 		border-radius: 20px;
 		border: none;
-		box-shadow:
-			0px 4px 14px 0px rgba(0, 0, 0, 0.1),
-			0px 0px 1px 0px rgba(0, 0, 0, 0.3);
+		box-shadow: 0px 4px 14px 0px rgba(0, 0, 0, 0.1), 0px 0px 1px 0px rgba(0, 0, 0, 0.3);
 	`,
 }))

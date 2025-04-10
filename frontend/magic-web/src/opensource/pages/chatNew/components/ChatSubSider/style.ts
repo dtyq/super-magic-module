@@ -5,6 +5,7 @@ const useStyles = createStyles(({ css, isDarkMode, prefixCls, token }) => {
 		container: css`
 			width: 100%;
 			user-select: none;
+			width: 240px;
 		`,
 		segmented: css`
 			z-index: 2;
