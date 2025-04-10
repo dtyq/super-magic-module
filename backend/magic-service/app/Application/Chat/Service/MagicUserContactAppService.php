@@ -51,8 +51,6 @@ use Psr\Log\LoggerInterface;
 use Qbhy\HyperfAuth\Authenticatable;
 use Throwable;
 
-use function Hyperf\Collection\collect;
-
 class MagicUserContactAppService extends AbstractAppService
 {
     public function __construct(
@@ -180,13 +178,7 @@ class MagicUserContactAppService extends AbstractAppService
             $departmentsInfo = $this->departmentChartDomainService->getDepartmentFullPathByIds($dataIsolation, $departmentIds);
 
             // 组装用户和部门信息
-            $users = UserAssembler::getUserDepartmentDetailDTOList(
-                $departmentUsers,
-                $usersDetail,
-                $departmentsInfo,
-                $withDepartmentFullPath,
-                $queryDTO->getMatchedQueryDepartmentIds()
-            );
+            $users = UserAssembler::getUserDepartmentDetailDTOList($departmentUsers, $usersDetail, $departmentsInfo, $withDepartmentFullPath);
         }
 
         // 通讯录和搜索相关接口，过滤隐藏部门和隐藏用户。
@@ -241,26 +233,6 @@ class MagicUserContactAppService extends AbstractAppService
 
         $usersForQueryDepartmentPath = [];
         $usersForQueryJobTitle = [];
-        if ($queryDTO->isQueryByDepartmentPath()) {
-            // 搜索路径包含关键字的部门及其所有子部门
-            $departments = $this->departmentChartDomainService->searchDepartment($dataIsolation, $queryDTO->getQuery());
-            $departmentIds = array_column($departments, 'department_id');
-            $allDepartmentIds = $this->departmentChartDomainService->getAllChildrenByDepartmentIds($departmentIds, $dataIsolation);
-            $queryDTO->setMatchedQueryDepartmentIds($allDepartmentIds);
-
-            // 分批获取部门下的用户
-            $limit = 100;
-            $departmentUsers = collect(array_chunk($allDepartmentIds, $limit))
-                ->map(fn ($chunk) => $this->departmentUserDomainService->getDepartmentUsersByDepartmentIds($chunk, $dataIsolation, $limit))
-                ->flatten(1)
-                ->all();
-
-            // 获取用户详细信息
-            $userIds = array_column($departmentUsers, 'user_id');
-            $userEntities = $this->userDomainService->getUserDetailByUserIds($userIds, $dataIsolation);
-            $usersForQueryDepartmentPath = array_map(static fn ($entity) => $entity->toArray(), $userEntities);
-        }
-
         // 搜索职位包含搜索词的人
         if ($queryDTO->isQueryByJobTitle()) {
             $departmentUsers = $this->departmentUserDomainService->searchDepartmentUsersByJobTitle($queryDTO->getQuery(), $dataIsolation);
