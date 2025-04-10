@@ -235,9 +235,7 @@ export default function VectorKnowledgeCreate() {
 					>
 						<Form.Item
 							label={
-								<div className={cx(styles.label, styles.required)}>
-									{t("knowledgeDatabase.icon")}
-								</div>
+								<div className={styles.label}>{t("knowledgeDatabase.icon")}</div>
 							}
 							rules={[
 								{
@@ -285,7 +283,11 @@ export default function VectorKnowledgeCreate() {
 						</Form.Item>
 
 						<Form.Item
-							label={<div className={styles.label}>{t("common.uploadFile")}</div>}
+							label={
+								<div className={cx(styles.label, styles.required)}>
+									{t("common.uploadFile")}
+								</div>
+							}
 						>
 							<div>
 								<DocumentUpload handleFileUpload={handleFileUpload}>
