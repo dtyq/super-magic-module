@@ -107,7 +107,7 @@ const MessageItem = memo(function MessageItem({
 
 	return (
 		<div
-			id={message_id}
+			// id={message_id}
 			className={cx(
 				styles.flexContainer,
 				styles.container,
