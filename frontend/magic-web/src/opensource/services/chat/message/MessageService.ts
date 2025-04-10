@@ -111,6 +111,7 @@ class MessageService {
 	 * @param topicId 话题ID
 	 */
 	public async initMessages(conversationId: string, topicId: string = "") {
+		console.log("initMessages ====> ", conversationId, topicId)
 		if (MessageStore.conversationId === conversationId && MessageStore.topicId === topicId) {
 			return
 		}

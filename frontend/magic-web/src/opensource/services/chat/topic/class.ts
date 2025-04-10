@@ -89,7 +89,13 @@ class ChatTopicService {
 				})
 		}
 
-		this.fetchTopicList()
+		await this.fetchTopicList()
+
+		// 如果没有话题，创建一个话题
+		console.log("topicStore.topicList ====> ", topicStore.topicList)
+		if (!topicStore.topicList.length) {
+			await this.createTopic()
+		}
 	}
 
 	/**
