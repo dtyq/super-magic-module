@@ -94,12 +94,21 @@ class MessageCache {
 	/**
 	 * 增加多条消息
 	 */
-	public addMessages(conversationId: string, topicId: string, data: MessagePage) {
+	public addMessages(
+		conversationId: string,
+		topicId: string,
+		data: MessagePage,
+		appendPage: boolean = false,
+	) {
 		const conversation = this.cache.get(this.cacheKey(conversationId, topicId))
 		if (conversation) {
 			conversation.cacheData.messages.push(...data.messages)
 			conversation.cacheData.totalPages = data.totalPages
-			conversation.cacheData.page = data.page
+			if (appendPage) {
+				conversation.cacheData.page = conversation.cacheData.page ?? 0 + (data.page ?? 0)
+			} else {
+				conversation.cacheData.page = data.page
+			}
 		}
 	}
 

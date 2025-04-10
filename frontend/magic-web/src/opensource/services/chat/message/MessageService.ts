@@ -42,6 +42,7 @@ import DotsService from "../dots/DotsService"
 import { userStore } from "@/opensource/models/user"
 
 const console = new Logger("MessageService", "blue")
+const BigPageSize = 30
 
 type SendData =
 	| Pick<TextConversationMessage, "type" | "text">
@@ -56,6 +57,11 @@ interface MessageData {
 	normalValue: string
 	onlyTextContent: boolean
 	files: any[]
+}
+
+// 计算新增的页码
+function calculatePageNumber(itemIndex: number, pageSize: number): number {
+	return Math.ceil(itemIndex / pageSize)
 }
 
 class MessageService {
@@ -146,7 +152,7 @@ class MessageService {
 					conversationId,
 					topicId,
 					// 需要多拉取一些才能保证数据完整性(如AI搜索消息), 统一设置为30
-					pageSize: 30,
+					pageSize: BigPageSize,
 					withoutSeqId: true,
 				})
 
@@ -157,8 +163,8 @@ class MessageService {
 					)
 
 					data = {
-						pageSize: MessageStore.pageSize,
-						totalPages: Math.ceil(serverMessages.length / MessageStore.pageSize),
+						pageSize: BigPageSize,
+						totalPages: Math.ceil(serverMessages.length / BigPageSize),
 						messages,
 					}
 
@@ -167,10 +173,16 @@ class MessageService {
 			}
 		}
 
-		console.log("messages init ====> ", data)
+		console.log(
+			"messages init page ====> ",
+			calculatePageNumber(data.messages.length, MessageStore.pageSize),
+		)
 
-		// 当前一定是第一页
-		MessageStore.setPageConfig(1, data.totalPages ?? 1)
+		// 设置当前页码
+		MessageStore.setPageConfig(
+			MessageStore.page + calculatePageNumber(data.messages.length, MessageStore.pageSize),
+			data.totalPages ?? 1,
+		)
 		MessageStore.setMessages(conversationId, topicId, data.messages ?? [])
 
 		// 获取未读的消息，发送已读回执
@@ -320,14 +332,14 @@ class MessageService {
 			conversationId,
 			topicId,
 			// 需要多拉取一些才能保证数据完整性(如AI搜索消息), 统一设置为30
-			pageSize: 30,
+			pageSize: BigPageSize,
 			loadHistory,
 		})
 
 		if (messages && messages.length > 0) {
 			return {
-				pageSize: MessageStore.pageSize,
-				totalPages: Math.ceil(messages.length / MessageStore.pageSize),
+				pageSize: BigPageSize,
+				totalPages: Math.ceil(messages.length / BigPageSize),
 				messages: messages.map((item) => this.formatMessage(item, userStore.user.userInfo)),
 			}
 		}
@@ -369,6 +381,7 @@ class MessageService {
 				MessageStore.page + 1, // 下一页
 				MessageStore.pageSize,
 			)
+			console.log("getHistoryMessages by db  ====> ", data)
 
 			if (!data?.messages?.length) {
 				data = await this.pullMoreMessages(conversationId, topicId)
@@ -378,15 +391,21 @@ class MessageService {
 
 		// 会话变化，则不添加消息，增加到缓存区
 		if (conversationId !== MessageStore.conversationId || topicId !== MessageStore.topicId) {
-			MessageCacheStore.addMessages(conversationId, topicId, {
-				page: MessageStore.page + 1,
-				pageSize: MessageStore.pageSize,
-				totalPages: data?.totalPages ?? 1,
-				messages: data?.messages ?? [],
-			})
+			if (data?.messages?.length) {
+				MessageCacheStore.addMessages(
+					conversationId,
+					topicId,
+					{
+						page: calculatePageNumber(data?.messages?.length, MessageStore.pageSize),
+						pageSize: data?.pageSize,
+						totalPages: data?.totalPages ?? 1,
+						messages: data?.messages ?? [],
+					},
+					true,
+				)
+			}
 			return
 		}
-		console.log('getHistoryMessages data ====> ', data?.messages?.length)
 		if (data?.messages?.length) {
 			// 获取未读的消息，发送已读回执
 			const unreadMessages = data.messages.filter((message) => message.unread_count > 0)
@@ -395,7 +414,27 @@ class MessageService {
 			}
 
 			MessageStore.addMessages(data.messages)
-			MessageStore.setPageConfig(MessageStore.page + 1, data.totalPages ?? 1)
+			console.log(
+				"getHistoryMessages add messages page ====> ",
+				MessageStore.page,
+				data.messages.length,
+				calculatePageNumber(data.messages.length, MessageStore.pageSize),
+				data.totalPages,
+			)
+			MessageStore.setPageConfig(
+				MessageStore.page +
+					calculatePageNumber(data.messages.length, MessageStore.pageSize),
+				data.totalPages ?? 1,
+			)
+
+			// // 如果当前页码大于总页码，则没有更多消息
+			// if (
+			// 	MessageStore.page +
+			// 		calculatePageNumber(data.messages.length, MessageStore.pageSize) >=
+			// 	(data.totalPages ?? 1)
+			// ) {
+			// 	MessageStore.setHasMoreHistoryMessage(false)
+			// }
 		} else {
 			MessageStore.setHasMoreHistoryMessage(false)
 		}
