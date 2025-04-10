@@ -2,7 +2,8 @@ import { IconChevronRight, IconUsers } from "@tabler/icons-react"
 import { useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { MagicList } from "@/opensource/components/MagicList"
-import { useLocation, useNavigate } from "react-router"
+import { useLocation } from "react-router"
+import { useNavigate } from "@/opensource/hooks/useNavigate"
 import { RoutePath } from "@/const/routes"
 import MagicIcon from "@/opensource/components/base/MagicIcon"
 import SubSiderContainer from "@/opensource/layouts/BaseLayout/components/SubSider"
@@ -16,24 +17,23 @@ import { useCurrentMagicOrganization } from "@/opensource/models/user/hooks"
 import { useContactStore } from "@/opensource/stores/contact/hooks"
 import MagicSpin from "@/opensource/components/base/MagicSpin"
 import useUserInfo from "@/opensource/hooks/chat/useUserInfo"
-import { colorScales, colorUsages } from "@/opensource/providers/ThemeProvider/colors"
+import { colorScales } from "@/opensource/providers/ThemeProvider/colors"
 import { useStyles } from "./styles"
 import { Line } from "./Line"
 import { useContactPageDataContext } from "../ContactDataProvider/hooks"
+import { observer } from "mobx-react-lite"
+import { userStore } from "@/opensource/models/user"
 
 interface CurrentOrganizationProps {
 	onItemClick: (data: MagicListItemData) => void
 }
 
-function CurrentOrganization({ onItemClick }: CurrentOrganizationProps) {
+const CurrentOrganization = observer(({ onItemClick }: CurrentOrganizationProps) => {
 	const { t } = useTranslation("interface")
 	const { styles } = useStyles()
 	const organization = useCurrentMagicOrganization()
 
-	const { userInfo: info } = useUserInfo()
-	const userId = info?.user_id
-
-	const { userInfo, isMutating } = useUserInfo(userId, true)
+	const { userInfo, isMutating } = useUserInfo(userStore.user.userInfo?.user_id, true)
 
 	const departmentIds = useMemo(
 		() =>
@@ -127,7 +127,7 @@ function CurrentOrganization({ onItemClick }: CurrentOrganizationProps) {
 			/>
 		</Flex>
 	)
-}
+})
 
 function ContactsSubSider() {
 	const { t } = useTranslation("interface")
@@ -164,13 +164,12 @@ function ContactsSubSider() {
 							id: "aiAssistant",
 							route: RoutePath.ContactsAiAssistant,
 							title: t("contacts.subSider.aiAssistant"),
-							avatar: {
-								src: <MagicIcon color="currentColor" component={IconMagicBots} />,
-								style: {
-									background: colorUsages.primary.default,
-									padding: 8,
-									color: "white",
-								},
+							avatar: () => {
+								return (
+									<div className={styles.listAvatar} style={{ background: colorScales.brand[5] }}>
+										<MagicIcon color="currentColor" component={IconMagicBots} />
+									</div>
+								)
 							},
 							extra: (
 								<MagicIcon
@@ -204,13 +203,12 @@ function ContactsSubSider() {
 							id: "myGroups",
 							route: RoutePath.ContactsMyGroups,
 							title: t("contacts.subSider.myGroups"),
-							avatar: {
-								icon: <MagicIcon color="currentColor" component={IconUsers} />,
-								style: {
-									background: colorScales.lightGreen[5],
-									padding: 8,
-									color: "white",
-								},
+							avatar: () => {
+								return (
+									<div className={styles.listAvatar} style={{ background: colorScales.lightGreen[5] }}>
+										<MagicIcon color="currentColor" component={IconUsers} />
+									</div>
+								)
 							},
 							extra: (
 								<MagicIcon

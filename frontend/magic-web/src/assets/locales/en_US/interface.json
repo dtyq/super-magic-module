@@ -1305,7 +1305,8 @@
 		"workflow": "Workflow",
 		"workspace": "Workplace",
 		"accountManagement": "Account",
-		"deviceManagement": "Device"
+		"deviceManagement": "Device",
+		"admin": "Magic Admin"
 	},
 	"spin": {
 		"loadingUserInfo": "Loading user information...",

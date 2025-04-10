@@ -104,6 +104,14 @@ function CreateGroupConversationModal({ open, close, ...props }: CreateGroupConv
 
 	const [searchValue, setSearchValue] = useState("")
 
+	useEffect(() => {
+		if (open) {
+			setSearchValue("")
+			setOrganizationChecked([])
+			form.resetFields()
+		}
+	}, [open])
+
 	const shouldShowDefaultEmptyFallback = !searchValue
 
 	return (
@@ -135,6 +143,11 @@ function CreateGroupConversationModal({ open, close, ...props }: CreateGroupConv
 						showSearchResults={!shouldShowDefaultEmptyFallback}
 						style={{ display: "flex", flexDirection: "column", height: "100%" }}
 						containerHeight={380}
+						filterResult={(result) => {
+							return result.filter((item:any) => {
+								return !item.ai_code
+							})
+						}}
 					/>
 					<div
 						className={styles.fadeWrapper}

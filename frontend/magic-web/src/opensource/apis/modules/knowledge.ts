@@ -3,6 +3,7 @@ import type { VectorKnowledge, WithPage } from "@/types/flow"
 import type { Knowledge } from "@/types/knowledge"
 import type { HttpClient } from "../core/HttpClient"
 import { RequestUrl } from "../constant"
+import { knowledgeType } from "@/opensource/pages/vectorKnowledge/constant"
 
 export const generateKnowledgeApi = (fetch: HttpClient) => ({
 	/**
@@ -33,11 +34,13 @@ export const generateKnowledgeApi = (fetch: HttpClient) => ({
 		page,
 		pageSize,
 		searchType,
+		type,
 	}: {
 		name: string
 		page: number
 		pageSize: number
 		searchType: VectorKnowledge.SearchType
+		type: knowledgeType
 	}) {
 		return fetch.post<WithPage<Knowledge.KnowledgeItem[]>>(
 			genRequestUrl(RequestUrl.getKnowledgeList),
@@ -46,6 +49,7 @@ export const generateKnowledgeApi = (fetch: HttpClient) => ({
 				page,
 				page_size: pageSize,
 				search_type: searchType,
+				type,
 			},
 		)
 	},
@@ -200,7 +204,7 @@ export const generateKnowledgeApi = (fetch: HttpClient) => ({
 	 * 获取可用的天书知识库列表
 	 */
 	getUseableTeamshareDatabaseList() {
-		return fetch.get<WithPage<Knowledge.TeamshareKnowledgeItem[]>>(
+		return fetch.get<WithPage<Knowledge.KnowledgeDatabaseItem[]>>(
 			RequestUrl.getUseableTeamshareDatabaseList,
 		)
 	},
@@ -209,7 +213,7 @@ export const generateKnowledgeApi = (fetch: HttpClient) => ({
 	 * 获取有权限的知识库的进度
 	 */
 	getTeamshareKnowledgeProgress(params: Knowledge.GetTeamshareKnowledgeProgressParams) {
-		return fetch.post<WithPage<Knowledge.TeamshareKnowledgeProgress[]>>(
+		return fetch.post<WithPage<Knowledge.KnowledgeDatabaseProgress[]>>(
 			RequestUrl.getTeamshareKnowledgeProgress,
 			params,
 		)

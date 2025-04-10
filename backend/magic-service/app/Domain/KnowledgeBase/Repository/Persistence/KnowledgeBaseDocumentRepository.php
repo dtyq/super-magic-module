@@ -47,6 +47,30 @@ class KnowledgeBaseDocumentRepository extends KnowledgeBaseAbstractRepository im
         return new KnowledgeBaseDocumentEntity($model->toArray());
     }
 
+    public function restoreOrCreate(KnowledgeBaseDataIsolation $dataIsolation, KnowledgeBaseDocumentEntity $documentEntity): KnowledgeBaseDocumentEntity
+    {
+        // 准备数据
+        $attributes = $this->prepareAttributes($documentEntity);
+        $attributes['organization_code'] = $dataIsolation->getCurrentOrganizationCode();
+
+        // 创建模型并保存
+        $model = KnowledgeBaseDocumentModel::withTrashed()
+            ->firstOrNew(
+                [
+                    'knowledge_base_code' => $attributes['knowledge_base_code'] ?? null,
+                    'code' => $attributes['code'] ?? null,
+                ],
+                $attributes
+            );
+        // 如果是软删除的，则恢复
+        if ($model->trashed()) {
+            $model->restore();
+            $model->fill($attributes)->save();
+        }
+
+        return new KnowledgeBaseDocumentEntity($model->toArray());
+    }
+
     /**
      * 更新知识库文档.
      */
@@ -275,6 +299,7 @@ class KnowledgeBaseDocumentRepository extends KnowledgeBaseAbstractRepository im
             'created_uid' => $entity->getCreatedUid(),
             'updated_uid' => $entity->getUpdatedUid(),
             'word_count' => $entity->getWordCount(),
+            'deleted_at' => $entity->getDeletedAt(),
         ];
 
         if ($entity->getCode()) {

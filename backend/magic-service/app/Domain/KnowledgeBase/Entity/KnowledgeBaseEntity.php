@@ -172,6 +172,7 @@ class KnowledgeBaseEntity extends AbstractEntity
         $magicFlowKnowledgeEntity->setModel($this->model);
         $magicFlowKnowledgeEntity->setModifier($this->creator);
         $magicFlowKnowledgeEntity->setUpdatedAt($this->createdAt);
+        $magicFlowKnowledgeEntity->setIcon($this->icon);
         if (! empty($this->version)) {
             $magicFlowKnowledgeEntity->setVersion($this->version);
         }

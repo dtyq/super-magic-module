@@ -7,6 +7,7 @@ import { useVectorKnowledgeSettingStyles } from "./styles"
 import { KnowledgeApi } from "@/apis"
 import type { Knowledge } from "@/types/knowledge"
 import ImageUpload from "../Upload/ImageUpload"
+
 interface Props {
 	knowledgeBaseCode: string
 	updateKnowledgeDetail: (code: string) => void

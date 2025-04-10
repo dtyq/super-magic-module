@@ -86,7 +86,7 @@ readonly class KnowledgeBaseFragmentDomainService
         }
 
         Db::transaction(function () use ($dataIsolation, $knowledgeBaseFragmentEntity) {
-            $oldKnowledgeBaseFragmentEntity = $this->knowledgeBaseFragmentRepository->getById($dataIsolation, $knowledgeBaseFragmentEntity->getId()??0, true);
+            $oldKnowledgeBaseFragmentEntity = $this->knowledgeBaseFragmentRepository->getById($dataIsolation, $knowledgeBaseFragmentEntity->getId() ?? 0, true);
             $knowledgeBaseFragmentEntity = $this->knowledgeBaseFragmentRepository->save($dataIsolation, $knowledgeBaseFragmentEntity);
             $deltaWordCount = $knowledgeBaseFragmentEntity->getWordCount() - $oldKnowledgeBaseFragmentEntity?->getWordCount() ?? 0;
             $this->updateWordCount($dataIsolation, $knowledgeBaseFragmentEntity, $deltaWordCount);
@@ -133,6 +133,14 @@ readonly class KnowledgeBaseFragmentDomainService
         return $this->knowledgeBaseFragmentRepository->getFinalSyncStatusByDocumentCodes($dataIsolation, $documentCodes);
     }
 
+    /**
+     * 更新知识库片段状态.
+     */
+    public function batchChangeSyncStatus(array $ids, KnowledgeSyncStatus $syncStatus, string $syncMessage = ''): void
+    {
+        $this->knowledgeBaseFragmentRepository->batchChangeSyncStatus($ids, $syncStatus, $syncMessage);
+    }
+
     #[Transactional]
     private function updateWordCount(KnowledgeBaseDataIsolation $dataIsolation, KnowledgeBaseFragmentEntity $entity, int $deltaWordCount): void
     {
@@ -140,13 +148,5 @@ readonly class KnowledgeBaseFragmentDomainService
         $this->knowledgeBaseRepository->updateWordCount($dataIsolation, $entity->getKnowledgeCode(), $deltaWordCount);
         // 更新文档字数统计
         $this->knowledgeBaseDocumentRepository->updateWordCount($dataIsolation, $entity->getDocumentCode(), $deltaWordCount);
-    }
-
-    /**
-     * 更新知识库片段状态.
-     */
-    public function batchChangeSyncStatus(array $ids, KnowledgeSyncStatus $syncStatus, string $syncMessage = ''): void
-    {
-        $this->knowledgeBaseFragmentRepository->batchChangeSyncStatus($ids, $syncStatus, $syncMessage);
     }
 }

@@ -25,6 +25,7 @@ import LLMParameters from "./components/LLMParameters"
 import useParameterHandler from "./hooks/useParameterHandler"
 import KnowledgeDataListV1 from "./components/KnowledgeDataList/KnowledgeDataList"
 import { getLLMRoleConstantOptions } from "./helpers"
+import { isOnlyKnowledgeTypeChange } from "./utils/knowledgeTypeHelper"
 
 export default function LLMV1() {
 	const { t } = useTranslation()
@@ -42,15 +43,28 @@ export default function LLMV1() {
 	const { handleModelConfigChange } = useParameterHandler()
 
 	const onValuesChange = useMemoizedFn((changeValues) => {
+		console.log("🚀 ~ onValuesChange ~ changeValues:", changeValues)
+
 		if (!currentNode || !nodeConfig || !nodeConfig[currentNode?.node_id]) return
 		const currentNodeConfig = nodeConfig[currentNode?.node_id]
+		console.log("form", form.getFieldsValue(true))
 
 		if (changeValues.model_config) {
 			handleModelConfigChange(changeValues)
 		} else if (changeValues.option_tools) {
 			handleToolsChanged(changeValues)
 		} else if (changeValues.knowledge_config) {
-			// eslint-disable-next-line @typescript-eslint/no-use-before-define
+			// 检查是否仅变更了knowledge_type
+			const [isOnlyTypeChange, typeChangeIndex] = isOnlyKnowledgeTypeChange(changeValues)
+			if (isOnlyTypeChange && typeChangeIndex !== undefined) {
+				// 只有knowledge_type变化，重置对应的knowledge_code
+				// 延迟执行以避免与当前更新冲突
+				form.setFieldValue(
+					["knowledge_config", "knowledge_list", typeChangeIndex, "knowledge_code"],
+					"",
+				)
+			}
+			// 继续执行原有的知识库变更处理
 			knowledgeValueChangeHandler()
 		} else {
 			Object.entries(changeValues).forEach(([changeKey, changeValue]) => {

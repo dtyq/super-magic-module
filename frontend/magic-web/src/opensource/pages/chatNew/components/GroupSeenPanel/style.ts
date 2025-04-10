@@ -9,6 +9,7 @@ export const useGroupMessageSeenPopoverStyles = createStyles(({ css, token }) =>
 		width: 360px;
 		height: fit-content;
 		max-height: 400px;
+		min-height: 200px;
 		border-radius: 12px;
 	`,
 	title: css`
@@ -39,5 +40,15 @@ export const useGroupMessageSeenPopoverStyles = createStyles(({ css, token }) =>
 		width: 1px;
 		max-height: 360px;
 		border-left: 1px solid ${token.magicColorUsages.border};
+	`,
+	close: css`
+		cursor: pointer;
+		padding: 2px;
+		border-radius: 4px;
+		height: 28px;
+		&:hover {
+			background-color: ${token.magicColorUsages.fill[0]};
+			transition: background-color 0.3s ease;
+		}
 	`,
 }))

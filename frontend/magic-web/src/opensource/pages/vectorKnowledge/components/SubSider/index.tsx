@@ -1,13 +1,11 @@
 import { Flex, Menu } from "antd"
-import { useNavigate, useLocation } from "react-router-dom"
+import { useLocation } from "react-router-dom"
 import { useMemoizedFn } from "ahooks"
-import { createStyles } from "antd-style"
-import { IconChevronRight, IconFileDescription, IconSettings } from "@tabler/icons-react"
-import { RoutePath } from "@/const/routes"
-import defaultFlowAvatar from "@/assets/logos/flow-avatar.png"
+import { IconChevronRight } from "@tabler/icons-react"
 import { useTranslation } from "react-i18next"
 import { useVectorKnowledgeSubSiderStyles } from "./styles"
 import type { Knowledge } from "@/types/knowledge"
+import DEFAULT_KNOWLEDGE_ICON from "@/assets/logos/knowledge-avatar.png"
 
 interface SubSiderProps {
 	setCurrentDetailPage: (page: "document" | "setting") => void
@@ -40,7 +38,11 @@ export default function SubSider({ setCurrentDetailPage, knowledgeDetail }: SubS
 		<Flex vertical className={styles.container}>
 			<div className={styles.info}>
 				<Flex align="center" gap={8}>
-					<img className={styles.logoImg} src={knowledgeDetail.icon} alt="" />
+					<img
+						className={styles.logoImg}
+						src={knowledgeDetail.icon || DEFAULT_KNOWLEDGE_ICON}
+						alt=""
+					/>
 					<div className={styles.name}>{knowledgeDetail.name}</div>
 				</Flex>
 				<div>

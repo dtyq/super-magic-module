@@ -8,6 +8,7 @@ import { FlowRouteType } from "@/types/flow"
 import { useTranslation } from "react-i18next"
 import useStyles from "./style"
 import type { AvatarCard } from "./types"
+import DEFAULT_KNOWLEDGE_ICON from "@/assets/logos/knowledge-avatar.png"
 
 interface PromptCardProps {
 	data: AvatarCard
@@ -42,6 +43,10 @@ const PromptCard = memo(
 					return <img src={defaultFlowAvatar} className={styles.defaultAvatar} alt="" />
 				case FlowRouteType.Tools:
 					return <img src={defaultToolAvatar} className={styles.defaultAvatar} alt="" />
+				case FlowRouteType.Knowledge:
+					return (
+						<img src={DEFAULT_KNOWLEDGE_ICON} className={styles.defaultAvatar} alt="" />
+					)
 				default:
 					return <img src={defaultAgentAvatar} className={styles.defaultAvatar} alt="" />
 			}

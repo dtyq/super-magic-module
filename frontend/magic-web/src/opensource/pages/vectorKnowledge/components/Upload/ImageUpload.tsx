@@ -6,6 +6,7 @@ import { createStyles } from "antd-style"
 import { IconPhotoPlus } from "@tabler/icons-react"
 import { genFileData } from "@/opensource/pages/vectorKnowledge/utils"
 import { useUpload } from "@/opensource/hooks/useUploadFiles"
+import DEFAULT_KNOWLEDGE_ICON from "@/assets/logos/knowledge-avatar.png"
 
 interface ImageUploadProps {
 	previewIconUrl: string
@@ -88,7 +89,7 @@ export default function ImageUpload({
 
 	return (
 		<Flex align="center" gap={8} className={className}>
-			<img className={styles.icon} src={previewIconUrl} alt="" />
+			<img className={styles.icon} src={previewIconUrl || DEFAULT_KNOWLEDGE_ICON} alt="" />
 			<Upload
 				accept="image/jpg,image/png,image/jpeg"
 				showUploadList={false}

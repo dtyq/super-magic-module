@@ -78,9 +78,9 @@ use App\Domain\Group\Repository\Persistence\MagicGroupRepository;
 use App\Domain\KnowledgeBase\Repository\Facade\KnowledgeBaseDocumentRepositoryInterface;
 use App\Domain\KnowledgeBase\Repository\Facade\KnowledgeBaseFragmentRepositoryInterface;
 use App\Domain\KnowledgeBase\Repository\Facade\KnowledgeBaseRepositoryInterface;
-use App\Domain\KnowledgeBase\Repository\Persistence\KnowledgeBaseFragmentRepository;
 use App\Domain\KnowledgeBase\Repository\Persistence\KnowledgeBaseBaseRepository;
 use App\Domain\KnowledgeBase\Repository\Persistence\KnowledgeBaseDocumentRepository;
+use App\Domain\KnowledgeBase\Repository\Persistence\KnowledgeBaseFragmentRepository;
 use App\Domain\ModelGateway\Repository\Facade\AccessTokenRepositoryInterface;
 use App\Domain\ModelGateway\Repository\Facade\ApplicationRepositoryInterface;
 use App\Domain\ModelGateway\Repository\Facade\ModelConfigRepositoryInterface;
@@ -120,6 +120,14 @@ use App\Infrastructure\Core\Embeddings\DocumentSplitter\DocumentSplitterInterfac
 use App\Infrastructure\Core\Embeddings\DocumentSplitter\OdinRecursiveCharacterTextSplitter;
 use App\Infrastructure\Core\Embeddings\EmbeddingGenerator\EmbeddingGeneratorInterface;
 use App\Infrastructure\Core\Embeddings\EmbeddingGenerator\OdinEmbeddingGenerator;
+use App\Infrastructure\Core\File\Parser\Driver\ExcelFileParserDriver;
+use App\Infrastructure\Core\File\Parser\Driver\Interfaces\ExcelFileParserDriverInterface;
+use App\Infrastructure\Core\File\Parser\Driver\Interfaces\OcrFileParserDriverInterface;
+use App\Infrastructure\Core\File\Parser\Driver\Interfaces\TextFileParserDriverInterface;
+use App\Infrastructure\Core\File\Parser\Driver\Interfaces\WordFileParserDriverInterface;
+use App\Infrastructure\Core\File\Parser\Driver\OcrFileParserDriver;
+use App\Infrastructure\Core\File\Parser\Driver\TextFileParserDriver;
+use App\Infrastructure\Core\File\Parser\Driver\WordFileParserDriver;
 use App\Infrastructure\ExternalAPI\Sms\SmsInterface;
 use App\Infrastructure\ExternalAPI\Sms\TemplateInterface;
 use App\Infrastructure\ExternalAPI\Sms\Volcengine\Template;
@@ -249,6 +257,12 @@ $dependencies = [
 
     // mock-http-service
     'mock-http-service' => Server::class,
+
+    // 文件解析
+    OcrFileParserDriverInterface::class => OcrFileParserDriver::class,
+    TextFileParserDriverInterface::class => TextFileParserDriver::class,
+    ExcelFileParserDriverInterface::class => ExcelFileParserDriver::class,
+    WordFileParserDriverInterface::class => WordFileParserDriver::class,
 ];
 
 // 如果存在重复,优先取dependencies_priority的配置,不存在重复，就合并

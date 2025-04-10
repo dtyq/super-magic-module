@@ -85,7 +85,6 @@ readonly class KnowledgeBaseDocumentDestroySubscriber implements ListenerInterfa
         }
         $knowledgeBaseFragmentDomainService->batchChangeSyncStatus(array_column($fragments, 'id'), $fragmentSyncStatus, $fragmentSyncMessage);
 
-
         // 删除片段完成后，将文档同步标记为已删除
         $knowledgeBaseDataIsolation = KnowledgeBaseDataIsolation::createByBaseDataIsolation($dataIsolation);
         $documentDomainService->changeSyncStatus($knowledgeBaseDataIsolation, $document->setSyncStatus($documentSyncStatus->value));

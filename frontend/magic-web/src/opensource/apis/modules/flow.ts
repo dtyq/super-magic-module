@@ -335,7 +335,7 @@ export const generateFlowApi = (fetch: HttpClient) => ({
 	 */
 	getAvailableTools(toolIds: string[]) {
 		return fetch.post<WithPage<MagicFlow.Flow[]>>(genRequestUrl(RequestUrl.getAvailableTools), {
-			tool_ids: toolIds,
+			codes: toolIds,
 		})
 	},
 

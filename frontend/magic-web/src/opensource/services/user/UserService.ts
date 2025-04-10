@@ -15,14 +15,11 @@ import chatWebSocket from "@/opensource/apis/clients/chatWebSocket"
 import groupInfoService from "@/opensource/services/groupInfo"
 import userInfoService from "@/opensource/services/userInfo"
 import chatDb from "@/opensource/database/chat"
-import { EventType } from "@/types/chat"
-import { LoginResponse } from "@/types/request"
-import { genAppMessageId } from "@/utils/random"
-import { encodeSocketIoMessage } from "@/utils/socketio"
 import MessageSeqIdService from "@/opensource/services/chat/message/MessageSeqIdService"
 import MessageService from "@/opensource/services/chat/message/MessageService"
 import conversationService from "@/opensource/services/chat/conversation/ConversationService"
-import MessagePullService from "../chat/message/MessagePullService"
+import { useInterafceStore } from "@/opensource/stores/interface"
+import { ChatApi } from "@/apis"
 
 export interface OrganizationResponse {
 	magicOrganizationMap: Record<string, User.MagicOrganization>
@@ -34,12 +31,18 @@ export interface OrganizationResponse {
 }
 
 export class UserService {
+
 	private readonly contactApi: typeof apis.ContactApi
 
 	private readonly service: Container
 
 	magicId: string | undefined
 	userId: string | undefined
+
+	lastLogin: {
+		authorization: string
+		promise: Promise<void>
+	} | null = null
 
 	constructor(dependencies: typeof apis, service: Container) {
 		this.contactApi = dependencies.ContactApi
@@ -137,6 +140,13 @@ export class UserService {
 
 		// 内存状态同步
 		userStore.user.setUserInfo(info)
+
+		// 有值才获取
+		// if (info) {
+		// 	AuthApi.getAdminPermission().then((res) => {
+		// 		userStore.user.isAdmin = res.is_admin
+		// 	})
+		// }
 		return info
 	}
 
@@ -384,41 +394,45 @@ export class UserService {
 			throw new Error("authorization or organization_code is required")
 		}
 
-		return chatWebSocket
-			.sendAsync<LoginResponse>(
-				encodeSocketIoMessage(
-					EventType.Login,
-					{
-						message: {
-							type: "text",
-							text: {
-								content: "登录",
-							},
-							app_message_id: genAppMessageId(),
-						},
-						conversation_id: "",
-					},
-					0,
-					{
-						authorization,
-					},
-				),
-			)
-			.then(async (res) => {
-				userStore.user.setUserInfo(res.data.user)
-				// 切换 chat 数据
-				await this.switchUser(res.data.user)
-			})
-			.catch((err) => {
-				if (err.code === 3103) {
-					console.log(err)
-					// accountBusiness.accountLogout() -》 this.deleteAccount()
-					this.deleteAccount()
-				}
-			})
+		// 如果当前登录的 authorization 与 lastLogin 的 authorization 相同，则返回 lastLogin 的 promise
+		if (authorization === this.lastLogin?.authorization) {
+			return this.lastLogin.promise
+		}
+
+		this.lastLogin = {
+			authorization,
+			promise: ChatApi.login(authorization)
+				.then(async (res) => {
+					userStore.user.setUserInfo(res.data.user)
+					// 切换 chat 数据
+					await this.switchUser(res.data.user)
+				})
+				.catch((err) => {
+					if (err.code === 3103) {
+						console.log(err)
+						// accountBusiness.accountLogout() -》 this.deleteAccount()
+						this.deleteAccount()
+					}
+				})
+				.finally(() => {
+					if (this.lastLogin) {
+						this.lastLogin.promise = Promise.resolve()
+					}
+				}),
+		}
+
+		return this.lastLogin.promise
+	}
+
+	/**
+	 * @description 清除 lastLogin
+	 */
+	clearLastLogin() {
+		this.lastLogin = null
 	}
 
 	async switchUser(magicUser: User.UserInfo) {
+		useInterafceStore.setState({ isSwitchingOrganization: true })
 		const magicId = magicUser.magic_id
 		console.log("切换账户", magicId)
 		// 如果当前账户ID与传入的账户ID相同，则不进行切换
@@ -436,7 +450,7 @@ export class UserService {
 
 		if (this.userId !== magicUser.user_id || this.magicId !== magicUser.magic_id) {
 			// 重置消息数据视图
-			conversationService.switchConversation() // 切换到空会话
+			conversationService.reset() // 切换到空会话
 			MessageService.reset()
 		}
 
@@ -466,5 +480,6 @@ export class UserService {
 		/** 设置消息拉取 循环 */
 		MessageService.init()
 		// this.messagePullBusiness.registerMessagePullLoop()
+		useInterafceStore.setState({ isSwitchingOrganization: false })
 	}
 }
