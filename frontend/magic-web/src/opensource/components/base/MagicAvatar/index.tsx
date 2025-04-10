@@ -1,8 +1,8 @@
 import type { AvatarProps, BadgeProps } from "antd"
 import { Avatar, Badge } from "antd"
-import { forwardRef, memo, useEffect, useMemo, useState } from "react"
-import { isValidUrl } from "./utils"
+import { forwardRef, memo, useMemo, useState } from "react"
 import AvatarService from "@/opensource/services/chat/avatar"
+import { useMemoizedFn } from "ahooks"
 
 export interface MagicAvatarProps extends AvatarProps {
 	badgeProps?: BadgeProps
@@ -11,22 +11,9 @@ export interface MagicAvatarProps extends AvatarProps {
 const MagicAvatar = memo(
 	forwardRef<HTMLSpanElement, MagicAvatarProps>(
 		({ children, src, size = 40, style, badgeProps, className, ...props }, ref) => {
-			const [innerSrc, setInnerSrc] = useState<string | null>(
-				isValidUrl(src as string) ? (src as string) : null,
+			const [innerSrc, setInnerSrc] = useState<string>(
+				typeof src === "string" && src ? src : "",
 			)
-
-			useEffect(() => {
-				if (typeof children === "string") {
-					const res = AvatarService.drawTextAvatar(
-						children,
-						style?.backgroundColor,
-						style?.color,
-					)
-					if (res && !isValidUrl(res)) {
-						setInnerSrc(res)
-					}
-				}
-			}, [children])
 
 			const mergedStyle = useMemo(
 				() => ({
@@ -36,21 +23,24 @@ const MagicAvatar = memo(
 				[style],
 			)
 
-			// 处理图片加载失败
-			const handleError = () => {
-				if (typeof children === "string") {
-					const res = AvatarService.drawTextAvatar(
-						children,
-						style?.backgroundColor,
-						style?.color,
-					)
-					if (res) {
-						setInnerSrc(res)
-					}
-					return true
+			const handleError = useMemoizedFn(() => {
+				if (typeof children !== "string") {
+					return
 				}
-				return false
-			}
+
+				const res = AvatarService.drawTextAvatar(
+					typeof children === "string" ? children : "未知",
+					style?.backgroundColor,
+					style?.color,
+				)
+				if (res) {
+					setInnerSrc(res)
+				}
+			})
+
+			const srcNode = useMemo(() => {
+				return <img src={innerSrc} alt="" onError={handleError} />
+			}, [handleError, innerSrc])
 
 			const avatarContent = (
 				<Avatar
@@ -60,12 +50,9 @@ const MagicAvatar = memo(
 					shape="square"
 					draggable={false}
 					className={className}
-					src={innerSrc}
-					onError={handleError}
+					src={typeof src === "string" ? srcNode : src}
 					{...props}
-				>
-					{children}
-				</Avatar>
+				/>
 			)
 
 			if (!badgeProps) {

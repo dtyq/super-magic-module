@@ -1,6 +1,6 @@
 import chatDb from "@/opensource/database/chat"
 import AvatarStore from "@/opensource/stores/chatNew/avatar"
-import { textToBackgroundColor, textToTextColor } from "./utils"
+import { textToBackgroundColor, textToDisplayName } from "./utils"
 
 class AvatarService {
 	constructor() {
@@ -46,7 +46,7 @@ class AvatarService {
 		ctx.fillRect(0, 0, size, size)
 
 		// 确定显示文本
-		const displayText = textToTextColor(text)
+		const displayText = textToDisplayName(text)
 
 		// 设置文本样式
 		ctx.fillStyle = textColor ?? "#FFFFFF" // 文本颜色为白色
