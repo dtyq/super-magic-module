@@ -210,8 +210,8 @@ const ChatMessageList = observer(() => {
 		const distance = Math.abs(scrollTop + clientHeight - scrollHeight)
 
 		state.setIsAtBottom(distance < 50)
-		// 加载更多
-		const messageId = MessageStore.messages[2]?.message_id
+		// 加载更多，判断第四条消息是否进入视图
+		const messageId = MessageStore.messages[3]?.message_id
 		if (isMessageInView(messageId, wrapperRef.current)) {
 			loadMoreHistoryMessages()
 		}
