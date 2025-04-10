@@ -1,5 +1,5 @@
 import { Flex, Menu } from "antd"
-import { useNavigate, useLocation } from "react-router-dom"
+import { useLocation } from "react-router-dom"
 import { useMemoizedFn } from "ahooks"
 import { createStyles } from "antd-style"
 import { IconChevronRight, IconFileDescription, IconSettings } from "@tabler/icons-react"

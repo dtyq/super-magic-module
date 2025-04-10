@@ -29,6 +29,7 @@ import { ChatApi } from "@/apis"
 import { User } from "@/types/user"
 import { userStore } from "@/opensource/models/user"
 import LastConversationService from "./LastConversationService"
+import { Bot } from "@/types/bot"
 
 /**
  * 会话服务
@@ -276,22 +277,35 @@ class ConversationService {
 			MessageCacheService.initTopicsMessage(userInfo)
 		})
 
-		// 获取机器人信息
-		ChatApi.getAiAssistantBotInfo({ user_id: conversation.receive_id }).then((botInfo) => {
-			// 获取定时任务列表
-			ConversationTaskService.switchAgent(botInfo.root_id)
-			// 初始化快捷指令
-			ChatApi.getConversationList([conversation.id]).then(({ items }) => {
-				ConversationBotDataService.switchConversation(
-					conversation.id,
-					conversation.receive_id,
-					botInfo,
-					items[0].instructs,
-				)
-			})
-		})
+		// 初始化会话 agent 信息
+		this.initConversationBotInfo(conversation)
 	}
 
+	/**
+	 * 初始化会话 agent 信息
+	 * @param conversation 会话
+	 * @returns 会话
+	 */
+	initConversationBotInfo(conversation: Conversation) {
+		// 获取机器人信息
+		return ChatApi.getAiAssistantBotInfo({ user_id: conversation.receive_id }).then(
+			async (botInfo) => {
+				// 获取定时任务列表
+				ConversationTaskService.switchAgent(botInfo.root_id)
+				// 初始化快捷指令
+				return ChatApi.getConversationList([conversation.id]).then(({ items }) => {
+					if (items.length) {
+						ConversationBotDataService.switchConversation(
+							conversation.id,
+							items[0].receive_id,
+							botInfo,
+							items[0].instructs,
+						)
+					}
+				})
+			},
+		)
+	}
 	/**
 	 * 创建会话
 	 * @param receiveType 接收者类型

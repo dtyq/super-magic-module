@@ -3,7 +3,8 @@ import { RoutePath } from "@/const/routes"
 import type { PropsWithChildren } from "react"
 import { Suspense, useEffect } from "react"
 import MagicSpin from "@/opensource/components/base/MagicSpin"
-import { useNavigate, useLocation } from "react-router"
+import { useLocation } from "react-router"
+import { useNavigate } from "@/opensource/hooks/useNavigate"
 
 interface VectorKnowledgeLayoutProps extends PropsWithChildren {}
 
