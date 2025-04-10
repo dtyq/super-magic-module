@@ -178,7 +178,7 @@ export default {
     },
     footer: {
       message: '基于 Apache 2.0 许可发布',
-      copyright: 'Copyright © 2024-present Magic Docs'
+      copyright: 'Copyright © 2025-present Magic Docs'
     }
   }
 } 

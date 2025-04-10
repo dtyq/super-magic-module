@@ -54,6 +54,3 @@ Decision result types:
 
 ![FgDB0f8MfADgydzEWEqJL6dpBvJL.png](https://cdn.letsmagic.cn/static/img/FgDB0f8MfADgydzEWEqJL6dpBvJL.png)
 
----
-🌈 Try it now! Let Magic AI help you say goodbye to complicated processes!
-If you have any questions, please contact the administrator or provide feedback to: 
