@@ -29,7 +29,7 @@ class MagicDepartmentDomainService extends AbstractContactDomainService
     }
 
     /**
-     * @return array<string, array<MagicDepartmentEntity>>
+     * @return array<string, MagicDepartmentEntity[]>
      */
     public function getDepartmentFullPathByIds(DataIsolation $dataIsolation, array $departmentIds): array
     {

@@ -54,7 +54,7 @@ readonly class KnowledgeBaseDocumentDestroySubscriber implements ListenerInterfa
         $knowledgeBaseEntity = $knowledgeBaseDomainService->show($dataIsolation, $document->getKnowledgeBaseCode());
 
         // 这里需要删除所有片段，在删除文档
-        $query = (new KnowledgeBaseFragmentQuery())->setDocumentCode($document->getCode());
+        $query = (new KnowledgeBaseFragmentQuery())->setDocumentCode($document->getCode())->setWithTrashed(true);
         /** @var KnowledgeBaseFragmentEntity[][] $fragments */
         $fragments = [];
         $page = 1;

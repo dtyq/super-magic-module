@@ -17,37 +17,39 @@ class organizationstructureseeder extends Seeder
         $organizationNames = ['测试组织', '演示组织'];
         $departmentStructure = [
             [
-                'name' => '总部',
-                'level' => 1,
+                'name' => '', // 会被 $organizationNames 替换
+                'level' => 0,
+                'department_id' => PlatformRootDepartmentId::Magic,
+                'parent_department_id' => PlatformRootDepartmentId::Magic, // 表明自己就是根部门
                 'children' => [
                     [
                         'name' => '技术部',
-                        'level' => 2,
+                        'level' => 1,
                         'children' => [
-                            ['name' => '前端组', 'level' => 3],
-                            ['name' => '后端组', 'level' => 3],
-                            ['name' => '测试组', 'level' => 3],
+                            ['name' => '前端组', 'level' => 2],
+                            ['name' => '后端组', 'level' => 2],
+                            ['name' => '测试组', 'level' => 2],
                         ],
                     ],
                     [
                         'name' => '产品部',
-                        'level' => 2,
+                        'level' => 1,
                         'children' => [
-                            ['name' => '设计组', 'level' => 3],
-                            ['name' => '产品组', 'level' => 3],
+                            ['name' => '设计组', 'level' => 2],
+                            ['name' => '产品组', 'level' => 2],
                         ],
                     ],
                     [
                         'name' => '市场部',
-                        'level' => 2,
+                        'level' => 1,
                         'children' => [
-                            ['name' => '营销组', 'level' => 3],
-                            ['name' => '销售组', 'level' => 3],
+                            ['name' => '营销组', 'level' => 2],
+                            ['name' => '销售组', 'level' => 2],
                         ],
                     ],
                     [
                         'name' => '人事部',
-                        'level' => 2,
+                        'level' => 1,
                     ],
                 ],
             ],
@@ -114,16 +116,25 @@ class organizationstructureseeder extends Seeder
     private function createDepartments(array $departments, string $orgCode, ?string $parentDepartmentId = null, ?string $path = null): void
     {
         foreach ($departments as $dept) {
-            // 生成部门ID
-            $departmentId = IdGenerator::getSnowId();
+            // 使用预设部门ID或生成新的部门ID
+            $departmentId = isset($dept['department_id']) ? $dept['department_id'] : IdGenerator::getSnowId();
+
+            // 使用预设父部门ID或使用传入的父部门ID
+            $currentParentDepartmentId = isset($dept['parent_department_id']) ? $dept['parent_department_id'] : $parentDepartmentId;
 
             // 构建部门路径
-            $currentPath = $path ? $path . '/' . $departmentId : PlatformRootDepartmentId::Magic . '/' . $departmentId;
+            if (isset($dept['department_id']) && $dept['department_id'] === PlatformRootDepartmentId::Magic) {
+                // 如果是组织层级（根部门），使用特殊路径
+                $currentPath = PlatformRootDepartmentId::Magic;
+            } else {
+                // 否则使用常规路径构建逻辑
+                $currentPath = $path ? $path . '/' . $departmentId : PlatformRootDepartmentId::Magic . '/' . $departmentId;
+            }
 
             // 构建部门数据
             $departmentData = [
                 'department_id' => $departmentId,
-                'parent_department_id' => $parentDepartmentId,
+                'parent_department_id' => $currentParentDepartmentId,
                 'name' => $dept['name'],
                 'i18n_name' => json_encode(['zh-CN' => $dept['name'], 'en-US' => $this->translateDepartmentName($dept['name'])]),
                 'order' => '0',
@@ -142,7 +153,7 @@ class organizationstructureseeder extends Seeder
             $existingDept = Db::table('magic_contact_departments')
                 ->where('organization_code', $orgCode)
                 ->where('name', $dept['name'])
-                ->where('parent_department_id', $parentDepartmentId)
+                ->where('parent_department_id', $currentParentDepartmentId)
                 ->first();
 
             if ($existingDept) {
@@ -225,10 +236,13 @@ class organizationstructureseeder extends Seeder
         }
 
         if ($adminUser) {
-            // 获取总部部门
+            // 获取总部部门（根部门）
             $hqDept = null;
             foreach ($departments as $dept) {
-                if ($dept['name'] === '总部') {
+                if ($dept['parent_department_id'] === PlatformRootDepartmentId::Magic
+                    || $dept['department_id'] === PlatformRootDepartmentId::Magic
+                    || $dept['parent_department_id'] === ''
+                    || $dept['parent_department_id'] === null) {
                     $hqDept = $dept;
                     break;
                 }
@@ -246,16 +260,27 @@ class organizationstructureseeder extends Seeder
                 $this->assignUserToDepartment($adminUser, $hqDept, true, null, $orgCode);
                 echo "已将用户 {$adminUser['nickname']}(ID: {$adminUser['user_id']}) 设为总部主管" . PHP_EOL;
 
+                // 确保管理员至少在2个部门中
+                $adminAssignedDepartments = 1; // 已分配到总部
+
+                // 为每个一级部门分配领导
+                $level1Depts = array_filter($departments, function ($dept) {
+                    return $dept['level'] === 1;
+                });
+
+                // 首先将管理员分配到第一个一级部门
+                if (! empty($level1Depts)) {
+                    $firstL1Dept = reset($level1Depts);
+                    $this->assignUserToDepartment($adminUser, $firstL1Dept, true, null, $orgCode);
+                    echo "已将管理员 {$adminUser['nickname']}(ID: {$adminUser['user_id']}) 分配到{$firstL1Dept['name']}" . PHP_EOL;
+                    ++$adminAssignedDepartments;
+                }
+
                 // 分配其他用户到不同部门
                 $assignedUsers = 1; // 已分配管理员
                 $totalUsers = count($users);
 
-                // 为每个二级部门分配领导
-                $level2Depts = array_filter($departments, function ($dept) {
-                    return $dept['level'] === 2;
-                });
-
-                foreach ($level2Depts as $dept) {
+                foreach ($level1Depts as $dept) {
                     // 如果还有未分配的普通用户，则分配一个作为部门主管
                     if ($assignedUsers < $totalUsers) {
                         // 找一个非管理员用户
@@ -276,8 +301,8 @@ class organizationstructureseeder extends Seeder
                             $leaderInfo[$dept['department_id']] = $deptLeader['user_id'];
 
                             // 将该用户分配到该部门，并设为主管
-                            $this->assignUserToDepartment($deptLeader, $dept, true, $adminUser['user_id'], $orgCode);
-                            echo "已将用户 {$deptLeader['nickname']}(ID: {$deptLeader['user_id']}) 设为{$dept['name']}主管" . PHP_EOL;
+                            $this->assignUserToDepartment($deptLeader, $dept, false, $adminUser['user_id'], $orgCode);
+                            echo "已将用户 {$deptLeader['nickname']}(ID: {$deptLeader['user_id']}) 分配到{$dept['name']}" . PHP_EOL;
 
                             // 不再考虑这个用户
                             $users = array_filter($users, function ($user) use ($deptLeader) {
@@ -289,12 +314,12 @@ class organizationstructureseeder extends Seeder
                     }
                 }
 
-                // 分配剩余用户到三级部门
-                $level3Depts = array_filter($departments, function ($dept) {
-                    return $dept['level'] === 3;
+                // 分配剩余用户到二级部门
+                $level2Depts = array_filter($departments, function ($dept) {
+                    return $dept['level'] === 2;
                 });
 
-                foreach ($level3Depts as $dept) {
+                foreach ($level2Depts as $dept) {
                     // 找出该部门的父部门
                     $parentDept = null;
                     foreach ($departments as $d) {
@@ -346,8 +371,6 @@ class organizationstructureseeder extends Seeder
             'user_id' => $user['user_id'],
             'department_id' => $department['department_id'],
             'is_leader' => $isLeader ? 1 : 0,
-            'job_title' => $isLeader ? '部门经理' : '成员',
-            'leader_user_id' => $leaderUserId,
             'organization_code' => $orgCode,
             'city' => '北京',
             'country' => 'CN',
@@ -360,6 +383,16 @@ class organizationstructureseeder extends Seeder
             'created_at' => date('Y-m-d H:i:s'),
             'updated_at' => date('Y-m-d H:i:s'),
         ];
+
+        // 只给主管设置职位
+        if ($isLeader) {
+            $deptUserData['job_title'] = '部门经理';
+        }
+
+        // 设置直属领导
+        if ($leaderUserId) {
+            $deptUserData['leader_user_id'] = $leaderUserId;
+        }
 
         Db::table('magic_contact_department_users')->insert($deptUserData);
 
