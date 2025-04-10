@@ -31,6 +31,7 @@ export interface OrganizationResponse {
 }
 
 export class UserService {
+
 	private readonly contactApi: typeof apis.ContactApi
 
 	private readonly service: Container
@@ -393,6 +394,7 @@ export class UserService {
 			throw new Error("authorization or organization_code is required")
 		}
 
+		// 如果当前登录的 authorization 与 lastLogin 的 authorization 相同，则返回 lastLogin 的 promise
 		if (authorization === this.lastLogin?.authorization) {
 			return this.lastLogin.promise
 		}
@@ -420,6 +422,13 @@ export class UserService {
 		}
 
 		return this.lastLogin.promise
+	}
+
+	/**
+	 * @description 清除 lastLogin
+	 */
+	clearLastLogin() {
+		this.lastLogin = null
 	}
 
 	async switchUser(magicUser: User.UserInfo) {
