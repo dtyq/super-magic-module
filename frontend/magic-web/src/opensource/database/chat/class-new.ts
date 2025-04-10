@@ -118,6 +118,8 @@ class ChatDatabase {
 			file_urls: "&file_id",
 			current_conversation_id: "&organization_code",
 			record_summary_message_queue: "&send_time",
+			text_avatar_cache: "&text",
+			topic_list: "&conversation_id",
 		}
 	}
 
@@ -154,15 +156,39 @@ class ChatDatabase {
 	 * @returns 会话表
 	 */
 	getConversationTable() {
+		if (!this.db?.conversation) {
+			this.changeSchema({
+				conversation: this.defaultSchema.conversation,
+			})
+		}
 		return this.db?.conversation
 	}
 
 	getTopicListTable() {
+		if (!this.db?.topic_list) {
+			this.changeSchema({
+				topic_list: this.defaultSchema.topic_list,
+			})
+		}
 		return this.db?.topic_list
 	}
 
 	getFileUrlsTable() {
+		if (!this.db?.file_urls) {
+			this.changeSchema({
+				file_urls: this.defaultSchema.file_urls,
+			})
+		}
 		return this.db?.file_urls
+	}
+
+	getTextAvatarTable() {
+		if (!this.db?.text_avatar_cache) {
+			this.changeSchema({
+				text_avatar_cache: "&text",
+			})
+		}
+		return this.db?.text_avatar_cache
 	}
 }
 

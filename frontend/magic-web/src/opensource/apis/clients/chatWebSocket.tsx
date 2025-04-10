@@ -11,6 +11,7 @@ import Logger from "@/utils/log/Logger"
 import EventBus from "@/utils/eventBus"
 import { useInterafceStore } from "@/opensource/stores/interface"
 import { UrlUtils } from "../utils"
+import { userService } from "@/services"
 
 const console = new Logger("chat websocket")
 
@@ -313,7 +314,10 @@ export class ChatWebSocket extends EventBus {
 	 * 重连次数达到上限后将停止尝试
 	 */
 	private reconnect() {
+
 		return new Promise<WebSocket | null>((resolve, reject) => {
+			userService.clearLastLogin()
+
 			if (this.reconnectAttempts >= this.maxReconnectAttempts) {
 				console.log("达到最大重连次数")
 				useInterafceStore.setState({

@@ -1,8 +1,8 @@
-import { createStyles } from "antd-style";
-import { textToBackgroundColor, textToTextColor } from "./utils";
+import { createStyles } from "antd-style"
+import { textToBackgroundColor, textToTextColor } from "./utils"
 
 export const useStyles = createStyles(
-	({ css, token }, { url, content }: { url: string; content: string; }) => {
+	({ css, token }, { url, content }: { url: string; content: string }) => {
 		return {
 			avatar: css`
 				user-select: none;
@@ -16,6 +16,6 @@ export const useStyles = createStyles(
       `
 					: ""}
 			`,
-		};
-	}
-);
+		}
+	},
+)

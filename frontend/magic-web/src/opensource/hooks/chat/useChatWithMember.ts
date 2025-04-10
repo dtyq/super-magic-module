@@ -1,7 +1,7 @@
 import { RoutePath } from "@/const/routes"
 import { MessageReceiveType } from "@/types/chat"
 import { useMemoizedFn } from "ahooks"
-import { useNavigate } from "react-router"
+import { useNavigate } from "@/opensource/hooks/useNavigate"
 import conversationService from "@/opensource/services/chat/conversation/ConversationService"
 
 /**

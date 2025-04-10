@@ -1,6 +1,7 @@
 import { Flex } from "antd"
 import { memo, useMemo, useRef } from "react"
-import { Outlet, useNavigate } from "react-router"
+import { Outlet } from "react-router"
+import { useNavigate } from "@/opensource/hooks/useNavigate"
 import { useMemoizedFn, useMount, useSize } from "ahooks"
 import { RoutePath } from "@/const/routes"
 import NetworkTip from "@/opensource/components/other/NetworkTip"
