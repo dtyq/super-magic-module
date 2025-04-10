@@ -54,7 +54,7 @@ class FileParser
                 'docx', 'doc' => di(WordFileParserDriverInterface::class),
                 default => ExceptionBuilder::throw(FlowErrorCode::ExecuteFailed, 'flow.node.loader.unsupported_file_type', ['file_extension' => $extension]),
             };
-            $res = $interface->parse($tempFile, $extension);
+            $res = $interface->parse($tempFile, $fileUrl, $extension);
         } finally {
             if (isset($tempFile) && file_exists($tempFile)) {
                 unlink($tempFile); // 确保临时文件被删除

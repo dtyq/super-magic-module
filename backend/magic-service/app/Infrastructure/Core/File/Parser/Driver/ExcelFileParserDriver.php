@@ -17,7 +17,7 @@ use Vtiful\Kernel\Excel;
 
 class ExcelFileParserDriver implements ExcelFileParserDriverInterface
 {
-    public function parse(string $filePath, string $fileExtension): string
+    public function parse(string $filePath, string $url, string $fileExtension): string
     {
         if ($fileExtension === '.xls') {
             return $this->parseByXlsWriter($filePath, $fileExtension);
