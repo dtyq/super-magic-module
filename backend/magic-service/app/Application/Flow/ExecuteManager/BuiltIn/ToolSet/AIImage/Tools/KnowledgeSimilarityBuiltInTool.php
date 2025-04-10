@@ -24,6 +24,10 @@ use Dtyq\FlowExprEngine\Structure\StructureType;
 #[BuiltInToolDefine]
 class KnowledgeSimilarityBuiltInTool extends AbstractBuiltInTool
 {
+    private ?NodeInput $input = null;
+
+    private ?NodeInput $customSystemInput = null;
+
     public function getToolSetCode(): string
     {
         return BuiltInToolSet::AtomicNode->getCode();
@@ -110,8 +114,10 @@ MARKDOWN;
             $knowledgeSimilarity = new KnowledgeSimilarityFilter();
             $knowledgeSimilarity->setKnowledgeCodes($similarityCodes);
             $knowledgeSimilarity->setQuery($query);
+            $knowledgeSimilarity->setQuestion($question);
             $knowledgeSimilarity->setLimit($limit);
             $knowledgeSimilarity->setScore($score);
+            var_dump($knowledgeSimilarity);
 
             $dataIsolation = $executionData->getDataIsolation();
             $knowledgeBaseDataIsolation = KnowledgeBaseDataIsolation::createByBaseDataIsolation($dataIsolation);
@@ -142,6 +148,9 @@ MARKDOWN;
 
     public function getInput(): ?NodeInput
     {
+        if ($this->input) {
+            return $this->input;
+        }
         $input = new NodeInput();
         $input->setForm(ComponentFactory::generateTemplate(StructureType::Form, json_decode(
             <<<'JSON'
@@ -175,8 +184,8 @@ MARKDOWN;
             "type": "string",
             "key": "question",
             "sort": 0,
-            "title": "用户的问题",
-            "description": "用户的问题",
+            "title": "用户的原始问题",
+            "description": "用户的原始问题",
             "required": null,
             "value": null,
             "encryption": false,
@@ -214,6 +223,7 @@ MARKDOWN;
 JSON,
             true
         )));
+        $this->input = $input;
         return $input;
     }
 
@@ -257,6 +267,9 @@ JSON,
 
     public function getCustomSystemInput(): ?NodeInput
     {
+        if ($this->customSystemInput) {
+            return $this->customSystemInput;
+        }
         $input = new NodeInput();
         $input->setForm(ComponentFactory::generateTemplate(StructureType::Form, json_decode(
             <<<'JSON'
@@ -350,6 +363,7 @@ JSON,
 JSON,
             true
         )));
+        $this->customSystemInput = $input;
         return $input;
     }
 }
