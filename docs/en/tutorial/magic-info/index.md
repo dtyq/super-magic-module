@@ -66,7 +66,8 @@ Achieve complex project management tasks with a single user instruction through 
 ## Enterprise-grade Features and Business Value
 
 - **Team Collaboration**: Support team collaboration in developing intelligent agents through team spaces
-- **Differentiated Advantages**: Average time from idea to launch is only 3.2 days, certified with ISO27001/Level 3 Security Protection, saving 78% in labor costs compared to traditional development
+- **AI FLOW**: Accelerate FLOW implementation with AI, requiring only 3.2 days on average from concept to deployment, saving 78% of labor costs compared to traditional FLOW development
 - **Professional Version Services**: Provide paid SaaS solutions supporting more advanced features and services
+- **Super Magic**: Leveraging advanced AI algorithms to deeply understand search intent, quickly retrieve enterprise knowledge bases, documents, and web information, generating in-depth research reports
 
 The Magic platform makes AI application development simple and efficient, allowing you to quickly build intelligent applications needed by enterprises, regardless of your programming background, enhancing the digital and intelligent levels of your business. 
