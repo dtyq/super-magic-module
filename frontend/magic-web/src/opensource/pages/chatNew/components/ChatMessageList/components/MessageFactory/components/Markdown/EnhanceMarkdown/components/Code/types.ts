@@ -25,12 +25,11 @@ export interface CodeRenderProps {
 /**
  * 代码渲染组件
  */
-export interface CodeRenderComponent {
+export interface RenderComponent<Props> {
 	componentType: string
-	propsParser?: (props: CodeRenderProps) => unknown
+	propsParser?: (props: Props) => unknown
+	matchFn?: (props: Props) => boolean
 	loader: () => Promise<{
-		default:
-			| React.ComponentType<CodeRenderProps>
-			| React.MemoExoticComponent<React.ComponentType<CodeRenderProps>>
+		default: React.ComponentType<Props> | React.MemoExoticComponent<React.ComponentType<Props>>
 	}>
 }
