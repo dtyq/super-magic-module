@@ -60,7 +60,6 @@ const commonComponentsToken: Partial<ComponentsToken> = {
 	},
 	Menu: {
 		itemHeight: 34,
-		borderRadiusLG: 12,
 	},
 }
 

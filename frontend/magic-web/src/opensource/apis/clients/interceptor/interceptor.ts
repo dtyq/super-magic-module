@@ -4,6 +4,7 @@ import type { Container } from "@/opensource/services/ServiceContainer"
 import { RoutePath } from "@/const/routes"
 import { message } from "antd"
 import type { ResponseData } from "../../core/HttpClient"
+import { LoginValueKey } from "@/opensource/pages/login/constants"
 
 /** HTTP 状态码枚举（RFC 7231、RFC 7233、RFC 7540） */
 const enum HttpStatusCode {
@@ -30,6 +31,19 @@ const enum BusinessResponseCode {
 	InvalidOrganization = 40101,
 }
 
+/**
+ * 生成登录重定向 URL
+ * @returns 登录重定向 URL
+ */
+export const genLoginRedirectUrl = () => {
+	const redirectUrl = new URL(RoutePath.Login, window.location.origin)
+	if (window.location.pathname !== RoutePath.Login) {
+		// 获取当前页面地址
+		redirectUrl.searchParams.set(LoginValueKey.REDIRECT_URL, window.location.href)
+	}
+	return redirectUrl.toString()
+}
+
 /** 登录无效 */
 export function generateUnauthorizedResInterceptor(service: Container) {
 	return async (response: ResponseData) => {
@@ -37,7 +51,8 @@ export function generateUnauthorizedResInterceptor(service: Container) {
 			service
 				.get<UserService>("userService")
 				.deleteAccount(userStore.user.organizations?.[0]?.organization_code)
-			window.history.pushState({}, "", RoutePath.Login)
+
+			window.history.pushState({}, "", genLoginRedirectUrl())
 			throw new Error("Unauthorized")
 		}
 		return response
