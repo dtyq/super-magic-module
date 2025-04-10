@@ -1,76 +1,72 @@
-# Magic Enterprise AI Application Development Platform
+# Magic - AI Application Development Platform
 
-![Flow Interface](https://cdn.letsmagic.cn/static/img/showmagic.jpg)
+Magic is an enterprise-grade AI application development platform, providing businesses with a complete solution from AI assistant creation to multi-platform deployment. Below are the platform's core functions and features:
 
-## 1. Platform Overview  
-**"Build AI Agents with Zero Code, Empower Enterprise Digital Transformation"**  
+## Core Functions Overview
 
-![Magic Enterprise AI Application Development Platform](https://cdn.letsmagic.cn/static/img/magic-platform.png)
+### 1. Real-time Chat and Collaboration
 
-Magic is a next-generation enterprise AI application development platform, built on large language model technology, enabling rapid implementation of complex business scenarios through modular AI agents. Whether users have programming experience or not, they can build agents for scenarios like intelligent approval, data analysis, and policy interpretation through visual interaction within hours, and deploy them to internal enterprise systems with one click, achieving a 300% improvement in human-machine collaboration efficiency.
+The platform offers a clean and intuitive interface similar to WeChat, supporting multiple users communicating simultaneously, including private chats and group discussions. Powerful group management features allow administrators to flexibly assign different permissions to members, improving internal communication efficiency.
 
-## 2. Technical Evolution Background  
-**"Innovation on the Shoulders of AI Revolution"**  
-Magic's technical foundation stems from milestone breakthroughs in the large model field:  
-- **2017 Foundation Year**: Google released the Transformer architecture (June), OpenAI proposed the PPO reinforcement learning algorithm, laying the foundation for generative AI technology  
-- **2018 Ecosystem Layout**: Microsoft acquired GitHub for $7.5 billion (June), OpenAI launched GPT-1 (June), Google released the BERT model (November), ushering in a new era of pre-trained models  
-- **2019 Paradigm Innovation**: OpenAI released GPT-2 with long-text generation capabilities (February), validating the commercial potential of generative AI  
+![Real-time Chat Interface](https://cdn.letsmagic.cn/static/img/chat-interface.png)
 
-These breakthrough technologies provide core support for Magic's agent architecture, multimodal processing, and RAG enhancement capabilities.
+### 2. AI Assistant Creation and Management
 
-## 3. Core Function Matrix
+- **Zero-code Building**: Create intelligent AI assistants through a visual interface without programming experience
+- **Version Management**: Support for assistant version releases, enable/disable status control
+- **Enterprise Internal Publishing**: Easily share AI assistant lists within the enterprise
 
-### 3.1 Visual Intelligent Workflow Engine  
-**"Build Enterprise AI Like Building Blocks"**  
-▎Features:  
-- Support for 20+ draggable nodes including LLM calls/custom code/logic judgment  
-- Bidirectional conditional branching and loop control structures  
-- Real-time process debugging and effect preview  
+![AI Assistant Management Interface](https://cdn.letsmagic.cn/static/img/ai-assistant-1.png)
 
-**Typical Scenarios**:  
-✅ Intelligent Approval System: Automatically identify key contract terms, complete multi-level approval through ERP system integration  
-✅ Data Analysis Assistant: Direct connection to Snowflake data warehouse, generate dynamic visual reports  
+### 3. Workflow Orchestration System
 
-### 3.2 Enterprise Capability Extension Center  
-**"Connect All Enterprise Services"**  
-- **API Ecosystem Integration**: Quick access to existing APIs through configuration interface (average integration time <15 minutes)  
-- **Plugin Marketplace**: 200+ pre-built plugins (including deep adaptation for Salesforce/DingTalk/WeChat Work)  
-- **Private Deployment**: Support for Docker/K8s cluster deployment, ensuring data sovereignty  
+- **Drag-and-drop Design**: Quickly build workflows through drag-and-drop to handle complex logical tasks
+- **Rich Node Components**: Provide large language models, custom code, logical judgments, and other node types
+- **Process Control**: Support for start nodes, reply nodes, wait nodes, end nodes, and other basic flow controls
+- **Template Support**: Built-in workflow templates to lower the usage threshold
 
-### 3.3 Multimodal Knowledge Hub  
-**"Make Enterprise Data Come Alive"**  
-| Data Dimension | Supported Types | Special Features |
-| ------------ | ---------------------- | -------------- |
-| Structured Data | Database/BI System/API JSON | Automatic Schema Parsing |
-| Unstructured Data | PDF/PPT/Audio-Video | Multimodal Content Understanding |
-| Collaboration Platform Data | Notion/Confluence/Wiki | Real-time Incremental Sync |
+![Workflow Orchestration Interface](https://cdn.letsmagic.cn/static/img/workflow-1.png)
 
-### 3.4 Contextual Memory Network  
-**"AI Butler That Understands Business"**  
-- Customer Conversation History: Retain 18 months of interaction records, support cross-session state inheritance  
-- Business Memory Library: Build dedicated entity libraries (e.g., product parameters/customer profiles), accuracy improved by 65%  
-- Intelligent Forgetting Mechanism: Automatic cleanup of expired data, compliant with GDPR requirements  
+### 4. Knowledge Base and Memory Functions
 
-### 3.5 Precision Retrieval Enhancement System  
-**"More Knowledgeable Than Experts in Policy Documents"**  
-Using Hybrid-RAG architecture, in government scenario testing:  
-- Policy Clause Recall Rate: 98.7%  
-- Legal Provision Association Accuracy: 92.4%  
-- Response Latency: <800ms  
+- **Long-term Memory Capability**: Implement AI assistant long-term memory through variables, databases, files, and other methods
+- **Knowledge Base Integration**: Support importing enterprise documents and knowledge bases to enhance AI response accuracy
+- **Database Memory**: Convenient database memory capabilities to persistently remember important content from user conversations
 
-## 4. Differentiated Advantages  
-**"Trinity Enterprise AI Solution"**  
-1. **Agile Development**: Average time from idea to launch is only 3.2 days  
-2. **Security Compliance**: Certified with ISO27001/Level 3 Security Protection  
-3. **Cost Optimization**: Saves 78% labor costs compared to traditional development models  
+![Memory Function Interface](https://cdn.letsmagic.cn/static/img/memory-1.png)
 
-> *Manufacturing Customer Case: Deployed 12 agents through Magic platform in 2 weeks, reducing annual operating costs by 4.3 million yuan*  
+### 5. Multimodal Interaction Experience
 
-[End CTA]  
-Apply for a free trial now, experience building your first enterprise agent in 15 minutes → [Contact Us]  
+- **Multiple Interaction Methods**: Support text, voice, images, and other interaction methods
+- **Creative Content**: Users can create content using AI image generation, AI portraits, and other creative tools
 
-This version:  
-1. Strengthens data evidence, highlights technical professionalism  
-2. Uses modular design for easy chapter-by-chapter reading  
-3. Adds comparative numbers and scenario descriptions to enhance persuasiveness  
-4. Uses symbol system for visual optimization of key features 
+![Multimodal Interaction Interface](https://cdn.letsmagic.cn/static/img/multimodal.png)
+
+### 6. Multi-platform Application Publishing
+
+- **Cross-platform Deployment**: Support publishing developed AI applications to WeChat Work, DingTalk, and other platforms
+- **API/SDK Publishing**: Publish intelligent agents as APIs or SDKs for secondary use
+
+![Application Publishing Interface](https://cdn.letsmagic.cn/static/img/app-publishing.png)
+
+## Best Practice Cases
+
+### Store Knowledge Assistant
+
+Create an AI assistant that can answer employees' daily questions by integrating store-related knowledge, covering equipment management, cashier system operation, after-sales service, and other aspects, improving the efficiency of middle-platform departments.
+
+### Magic Approval Assistant
+
+Implement "one-sentence approval initiation" functionality, completing intelligent review and automatic decision-making through AI technology, greatly improving approval efficiency and reducing manual intervention.
+
+### Complex Tasks in One Sentence
+
+Achieve complex project management tasks with a single user instruction through multiple Agent collaboration (Thinking Agent, Task Decomposition Agent, Task Execution Agent).
+
+## Enterprise-grade Features and Business Value
+
+- **Team Collaboration**: Support team collaboration in developing intelligent agents through team spaces
+- **Differentiated Advantages**: Average time from idea to launch is only 3.2 days, certified with ISO27001/Level 3 Security Protection, saving 78% in labor costs compared to traditional development
+- **Professional Version Services**: Provide paid SaaS solutions supporting more advanced features and services
+
+The Magic platform makes AI application development simple and efficient, allowing you to quickly build intelligent applications needed by enterprises, regardless of your programming background, enhancing the digital and intelligent levels of your business. 
