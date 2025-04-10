@@ -8,6 +8,7 @@ declare(strict_types=1);
 namespace App\Application\Flow\ExecuteManager\NodeRunner\Loop;
 
 use App\Application\Flow\ExecuteManager\ExecutionData\ExecutionData;
+use App\Application\Flow\ExecuteManager\ExecutionData\ExecutionFlowCollector;
 use App\Application\Flow\ExecuteManager\MagicFlowExecutor;
 use App\Application\Flow\ExecuteManager\NodeRunner\NodeRunner;
 use App\Domain\Flow\Entity\MagicFlowEntity;
@@ -41,10 +42,8 @@ class LoopMainNodeRunner extends NodeRunner
         if (empty($bodyId)) {
             ExceptionBuilder::throw(FlowErrorCode::ExecuteFailed, 'flow.node.loop.relation_id_empty');
         }
-        $magicFlow = $executionData->getMagicFlowEntity();
-        if (! $magicFlow) {
-            return;
-        }
+        $magicFlow = ExecutionFlowCollector::getOrCreate($executionData->getUniqueId(), $executionData->getMagicFlowEntity());
+
         $loopFlow = $this->createLoopFlow($bodyId, $magicFlow);
         if (! $loopFlow) {
             return;
