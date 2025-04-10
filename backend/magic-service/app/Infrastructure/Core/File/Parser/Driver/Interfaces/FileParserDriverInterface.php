@@ -9,5 +9,5 @@ namespace App\Infrastructure\Core\File\Parser\Driver\Interfaces;
 
 interface FileParserDriverInterface
 {
-    public function parse(string $filePath, string $fileExtension): string;
+    public function parse(string $filePath, string $url, string $fileExtension): string;
 }

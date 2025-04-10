@@ -16,7 +16,7 @@ use PhpOffice\PhpWord\IOFactory;
 
 class WordFileParserDriver implements WordFileParserDriverInterface
 {
-    public function parse(string $filePath, string $fileExtension): string
+    public function parse(string $filePath, string $url, string $fileExtension): string
     {
         try {
             /*
