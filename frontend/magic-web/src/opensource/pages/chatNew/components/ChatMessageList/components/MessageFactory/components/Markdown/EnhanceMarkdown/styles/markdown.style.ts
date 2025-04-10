@@ -403,7 +403,8 @@ export const useStyles = createStyles(
 			table: css`
 				.table-container {
 					overflow-x: auto;
-					width: 100%;
+					width: fit-content;
+					max-width: 100%;
 					margin-block: calc(var(--${prefixCls}-markdown-margin-multiple) * 0.6em);
 					border-radius: calc(var(--${prefixCls}-markdown-border-radius) * 1px);
 					box-shadow: 0 0 0 1px var(--${prefixCls}-markdown-border-color);
