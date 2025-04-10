@@ -18,7 +18,11 @@ class AvatarService {
 	 * @param text 文本
 	 * @returns 头像图片
 	 */
-	drawTextAvatar(text: string, bgColor: string | undefined, textColor: string | undefined): string | null {
+	drawTextAvatar(
+		text: string,
+		bgColor: string | undefined,
+		textColor: string | undefined,
+	): string | null {
 		// 检查缓存中是否已存在
 		const cached = AvatarStore.getTextAvatar(text)
 		if (cached) {
@@ -42,7 +46,7 @@ class AvatarService {
 		ctx.fillRect(0, 0, size, size)
 
 		// 确定显示文本
-		const displayText =  textToTextColor(text)
+		const displayText = textToTextColor(text)
 
 		// 设置文本样式
 		ctx.fillStyle = textColor ?? "#FFFFFF" // 文本颜色为白色

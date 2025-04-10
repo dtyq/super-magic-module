@@ -17,7 +17,11 @@ const MagicAvatar = memo(
 
 			useEffect(() => {
 				if (typeof children === "string") {
-					const res = AvatarService.drawTextAvatar(children, style?.backgroundColor, style?.color)
+					const res = AvatarService.drawTextAvatar(
+						children,
+						style?.backgroundColor,
+						style?.color,
+					)
 					if (res && !isValidUrl(res)) {
 						setInnerSrc(res)
 					}
@@ -35,7 +39,11 @@ const MagicAvatar = memo(
 			// 处理图片加载失败
 			const handleError = () => {
 				if (typeof children === "string") {
-					const res = AvatarService.drawTextAvatar(children, style?.backgroundColor, style?.color)
+					const res = AvatarService.drawTextAvatar(
+						children,
+						style?.backgroundColor,
+						style?.color,
+					)
 					if (res) {
 						setInnerSrc(res)
 					}
