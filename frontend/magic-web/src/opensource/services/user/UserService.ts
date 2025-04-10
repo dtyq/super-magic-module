@@ -18,9 +18,8 @@ import chatDb from "@/opensource/database/chat"
 import MessageSeqIdService from "@/opensource/services/chat/message/MessageSeqIdService"
 import MessageService from "@/opensource/services/chat/message/MessageService"
 import conversationService from "@/opensource/services/chat/conversation/ConversationService"
-import MessagePullService from "../chat/message/MessagePullService"
 import { useInterafceStore } from "@/opensource/stores/interface"
-import { AuthApi, ChatApi } from "@/apis"
+import { ChatApi } from "@/apis"
 
 export interface OrganizationResponse {
 	magicOrganizationMap: Record<string, User.MagicOrganization>
@@ -142,11 +141,11 @@ export class UserService {
 		userStore.user.setUserInfo(info)
 
 		// 有值才获取
-		if (info) {
-			AuthApi.getAdminPermission().then((res) => {
-				userStore.user.isAdmin = res.is_admin
-			})
-		}
+		// if (info) {
+		// 	AuthApi.getAdminPermission().then((res) => {
+		// 		userStore.user.isAdmin = res.is_admin
+		// 	})
+		// }
 		return info
 	}
 
