@@ -216,7 +216,7 @@ const ChatMessageList = observer(() => {
 
 		const isScrollUp = lastScrollTop - scrollTop > 0
 		lastScrollTop = scrollTop
-		if (isScrollUp) {
+		if (isScrollUp && !state.isLoadingMore) {
 			// 加载更多，判断第四条消息是否进入视图
 			const messageId = MessageStore.messages[3]?.message_id
 			console.log(
