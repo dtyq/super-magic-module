@@ -16,12 +16,12 @@ use Exception;
 
 class OcrFileParserDriver implements OcrFileParserDriverInterface
 {
-    public function parse(string $filePath, string $fileExtension): string
+    public function parse(string $filePath, string $url, string $fileExtension): string
     {
         try {
             /** @var OCRService $ocrService */
             $ocrService = di()->get(OCRService::class);
-            return $ocrService->ocr(OCRClientType::VOLCE, $filePath);
+            return $ocrService->ocr(OCRClientType::VOLCE, $url);
         } catch (Exception $e) {
             ExceptionBuilder::throw(FlowErrorCode::ExecuteFailed, sprintf('Failed to read OCR file: %s', $e->getMessage()));
         }

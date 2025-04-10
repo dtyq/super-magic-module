@@ -14,7 +14,7 @@ use Exception;
 
 class TextFileParserDriver implements TextFileParserDriverInterface
 {
-    public function parse(string $filePath, string $fileExtension): string
+    public function parse(string $filePath, string $url, string $fileExtension): string
     {
         try {
             $content = file_get_contents($filePath);
