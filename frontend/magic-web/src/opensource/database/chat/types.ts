@@ -26,10 +26,6 @@ export type ChatDb = Dexie & {
 		"conversation_id"
 	>
 	file_urls: EntityTable<ChatFileUrlData & { file_id: string; message_id: string }, "file_id">
-	current_conversation_id: EntityTable<
-		{ conversation_id: string; organization_code: string },
-		"conversation_id"
-	>
 	record_summary_message_queue: EntityTable<
 		{
 			send_time: number
@@ -42,4 +38,5 @@ export type ChatDb = Dexie & {
 		{ conversation_id: string; topic_list: ConversationTopic[] },
 		"conversation_id"
 	>
+	text_avatar_cache: EntityTable<{ text: string; base64: string }, "text">
 } & Record<string, EntityTable<SeqResponse<CMessage>, "seq_id">>

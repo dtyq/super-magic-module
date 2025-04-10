@@ -13,6 +13,7 @@ import { genFileData } from "@/opensource/pages/chatNew/components/MessageEditor
 import { KnowledgeApi } from "@/apis"
 import type { Knowledge } from "@/types/knowledge"
 import type { FlowWithTools } from "@/opensource/pages/flow/list/hooks/useFlowList"
+import DEFAULT_KNOWLEDGE_ICON from "@/assets/logos/knowledge-avatar.png"
 
 type UpdateInfoModalForm = {
 	name: string
@@ -136,7 +137,7 @@ function UpdateInfoModal({ details, open, onClose, updateList }: UpdateInfoModal
 				<Form.Item name="icon" className={styles.formItem}>
 					<Flex vertical align="center" gap={10} className={styles.avatar}>
 						<MagicAvatar
-							src={imagePreviewUrl}
+							src={imagePreviewUrl || DEFAULT_KNOWLEDGE_ICON}
 							size={100}
 							style={{ borderRadius: 20 }}
 						/>

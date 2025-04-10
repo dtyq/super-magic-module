@@ -18,9 +18,8 @@ import chatDb from "@/opensource/database/chat"
 import MessageSeqIdService from "@/opensource/services/chat/message/MessageSeqIdService"
 import MessageService from "@/opensource/services/chat/message/MessageService"
 import conversationService from "@/opensource/services/chat/conversation/ConversationService"
-import MessagePullService from "../chat/message/MessagePullService"
 import { useInterafceStore } from "@/opensource/stores/interface"
-import { AuthApi, ChatApi } from "@/apis"
+import { ChatApi } from "@/apis"
 
 export interface OrganizationResponse {
 	magicOrganizationMap: Record<string, User.MagicOrganization>
@@ -32,6 +31,7 @@ export interface OrganizationResponse {
 }
 
 export class UserService {
+
 	private readonly contactApi: typeof apis.ContactApi
 
 	private readonly service: Container
@@ -142,11 +142,11 @@ export class UserService {
 		userStore.user.setUserInfo(info)
 
 		// 有值才获取
-		if (info) {
-			AuthApi.getAdminPermission().then((res) => {
-				userStore.user.isAdmin = res.is_admin
-			})
-		}
+		// if (info) {
+		// 	AuthApi.getAdminPermission().then((res) => {
+		// 		userStore.user.isAdmin = res.is_admin
+		// 	})
+		// }
 		return info
 	}
 
@@ -394,6 +394,7 @@ export class UserService {
 			throw new Error("authorization or organization_code is required")
 		}
 
+		// 如果当前登录的 authorization 与 lastLogin 的 authorization 相同，则返回 lastLogin 的 promise
 		if (authorization === this.lastLogin?.authorization) {
 			return this.lastLogin.promise
 		}
@@ -421,6 +422,13 @@ export class UserService {
 		}
 
 		return this.lastLogin.promise
+	}
+
+	/**
+	 * @description 清除 lastLogin
+	 */
+	clearLastLogin() {
+		this.lastLogin = null
 	}
 
 	async switchUser(magicUser: User.UserInfo) {

@@ -17,57 +17,57 @@
 	"license": "Apache License 2.0",
 	"exports": {
 		".": {
-			"import": "./dist/es/base/index.js",
-			"require": "./dist/lib/base/index.js"
+			"import": "./dist/es/base/index.mjs",
+			"require": "./dist/lib/base/index.cjs"
 		},
 		"./base": {
-			"import": "./dist/es/base/index.js",
-			"require": "./dist/lib/base/index.js"
+			"import": "./dist/es/base/index.mjs",
+			"require": "./dist/lib/base/index.cjs"
 		},
 		"./jsconfig": {
-			"import": "./dist/es/base/jsconfig.js",
-			"require": "./dist/lib/base/jsconfig.js"
+			"import": "./dist/es/base/jsconfig.mjs",
+			"require": "./dist/lib/base/jsconfig.cjs"
 		},
 		"./react": {
-			"import": "./dist/es/react/index.js",
-			"require": "./dist/lib/react/index.js"
+			"import": "./dist/es/react/index.mjs",
+			"require": "./dist/lib/react/index.cjs"
 		},
 		"./vue": {
-			"import": "./dist/es/vue/index.js",
-			"require": "./dist/lib/vue/index.js"
+			"import": "./dist/es/vue/index.mjs",
+			"require": "./dist/lib/vue/index.cjs"
 		},
 		"./vue2": {
-			"import": "./dist/es/vue/vue2.js",
-			"require": "./dist/lib/vue/vue2.js"
+			"import": "./dist/es/vue/vue2.mjs",
+			"require": "./dist/lib/vue/vue2.cjs"
 		},
 		"./typescript": {
-			"import": "./dist/es/typescript/index.js",
-			"require": "./dist/lib/typescript/index.js"
+			"import": "./dist/es/typescript/index.mjs",
+			"require": "./dist/lib/typescript/index.cjs"
 		},
 		"./prettier": {
-			"import": "./dist/es/prettier/index.js",
-			"require": "./dist/lib/prettier/index.js"
+			"import": "./dist/es/prettier/index.mjs",
+			"require": "./dist/lib/prettier/index.cjs"
 		},
 		"./prettier/config": {
-			"import": "./dist/es/prettier/config.js",
-			"require": "./dist/lib/prettier/config.js"
+			"import": "./dist/es/prettier/config.mjs",
+			"require": "./dist/lib/prettier/config.cjs"
 		},
 		"./commitlint": {
-			"import": "./dist/es/commitlint/index.js",
-			"require": "./dist/lib/commitlint/index.js"
+			"import": "./dist/es/commitlint/index.mjs",
+			"require": "./dist/lib/commitlint/index.cjs"
 		},
 		"./commitlint/emoji": {
-			"import": "./dist/es/commitlint/emoji.js",
-			"require": "./dist/lib/commitlint/emoji.js"
+			"import": "./dist/es/commitlint/emoji.mjs",
+			"require": "./dist/lib/commitlint/emoji.cjs"
 		},
 		"./stylelint": {
-			"import": "./dist/es/stylelint/index.js",
-			"require": "./dist/lib/stylelint/index.js"
+			"import": "./dist/es/stylelint/index.mjs",
+			"require": "./dist/lib/stylelint/index.cjs"
 		},
 		"./package.json": "./package.json"
 	},
 	"bin": {
-		"eslint-config-base": "./dist/lib/bin/index.js"
+		"eslint-config-base": "./dist/lib/bin/index.cjs"
 	},
 	"files": [
 		"dist",
@@ -79,8 +79,8 @@
 	"scripts": {
 		"build": "tsup",
 		"clean": "rm -rf dist",
-		"lint": "eslint ./packages --ext js --config .eslintrc.cjs",
-		"lint:fix": "eslint ./packages --ext js --config .eslintrc.cjs --fix && prettier --write ./packages/**/*.js"
+		"lint": "eslint ./src --config .eslintrc.cjs",
+		"lint:fix": "eslint ./src --config .eslintrc.cjs --fix"
 	},
 	"dependencies": {
 		"@commitlint/cli": "^19.2.2",

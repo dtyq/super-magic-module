@@ -1,6 +1,6 @@
 import type React from "react"
 import { Button, Flex } from "antd"
-import { useNavigate } from "react-router-dom"
+import { useNavigate } from "@/opensource/hooks/useNavigate"
 import { RoutePath } from "@/const/routes"
 import { useTranslation } from "react-i18next"
 import { createStyles } from "antd-style"

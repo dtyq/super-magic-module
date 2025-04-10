@@ -49,7 +49,7 @@ import {
 	IconMessage2Plus,
 	IconMicrophone,
 } from "@tabler/icons-react"
-import i18next from "i18next"
+import i18next, { TFunction } from "i18next"
 
 export const StatusIcons = {
 	IconWand,
@@ -122,8 +122,8 @@ export enum InsertLocationMap {
 }
 
 // 指令插入位置选项
-export const INSERT_OPTIONS = [
-	{ value: InsertLocationMap.Before, label: i18next.t("explore.form.insertBefore") },
-	{ value: InsertLocationMap.Cursor, label: i18next.t("explore.form.insertCursor") },
-	{ value: InsertLocationMap.Behind, label: i18next.t("explore.form.insertBehind") },
+export const INSERT_OPTIONS = (t: TFunction) => [
+	{ value: InsertLocationMap.Before, label: t("explore.form.insertBefore") },
+	{ value: InsertLocationMap.Cursor, label: t("explore.form.insertCursor") },
+	{ value: InsertLocationMap.Behind, label: t("explore.form.insertBehind") },
 ]

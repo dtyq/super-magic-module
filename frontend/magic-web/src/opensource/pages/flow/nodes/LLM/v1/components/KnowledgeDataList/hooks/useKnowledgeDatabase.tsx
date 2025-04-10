@@ -108,17 +108,12 @@ export default function useKnowledgeDatabases(form: FormInstance) {
 
 			// 格式化选项并追加到现有列表
 			const formattedOptions = list.map((item: Knowledge.KnowledgeItem) => {
-				const hasSelected = currentNode?.params?.knowledge_config?.knowledge_list?.find?.(
-					(knowledge: Knowledge.KnowledgeDatabaseItem) =>
-						knowledge?.knowledge_code === item.code,
-				)
 				return {
 					business_id: "",
 					name: item.name,
 					description: item.description,
 					knowledge_type: item.type,
 					knowledge_code: item.code,
-					disabled: !!hasSelected,
 				}
 			})
 
@@ -161,18 +156,12 @@ export default function useKnowledgeDatabases(form: FormInstance) {
 				// 加载第一页数据
 				const { list, total } = await getUserDatabaseOptions(1, 10)
 				const formattedOptions = list.map((item: Knowledge.KnowledgeItem) => {
-					const hasSelected =
-						currentNode?.params?.knowledge_config?.knowledge_list?.find?.(
-							(knowledge: Knowledge.KnowledgeDatabaseItem) =>
-								knowledge?.knowledge_code === item.code,
-						)
 					return {
 						business_id: "",
 						name: item.name,
 						description: item.description,
 						knowledge_type: item.type,
 						knowledge_code: item.code,
-						disabled: !!hasSelected,
 					}
 				})
 

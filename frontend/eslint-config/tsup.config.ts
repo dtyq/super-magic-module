@@ -19,9 +19,14 @@ const commonOptions: Partial<Options> = {
 // 模块构建公共配置
 const moduleOptions: Partial<Options> = {
 	...commonOptions,
-		entry,
+	entry,
 	splitting: false,
-	outExtension: () => ({ js: ".js", dts: ".d.ts" }),
+	outExtension: ({ format }) => {
+		if (format === "esm") {
+			return { js: ".mjs", dts: ".d.ts" }
+		}
+		return { js: ".cjs", dts: ".d.ts" }
+	},
 	treeshake: false,
 	bundle: false,
 }
