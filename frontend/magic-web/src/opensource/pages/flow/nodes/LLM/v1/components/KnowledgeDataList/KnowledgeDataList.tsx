@@ -11,10 +11,11 @@ import usePanelConfig from "./hooks/usePanelConfig"
 import { useMemo } from "react"
 import { useCommercial } from "@/opensource/pages/flow/context/CommercialContext"
 import { getKnowledgeTypeOptions } from "../../helpers"
-import KnowledgeDatabaseSelectV1 from "../KnowledgeDatabaseSelect/KnowledgeDatabaseSelect"
+import KnowledgeDatabaseSelectV1 from "../KnowledgeDatabaseSelect/TeamshareKnowledgeSelect"
 import useKnowledgeDatabases from "./hooks/useKnowledgeDatabase"
 import useProgress from "./hooks/useProgress"
 import { knowledgeType } from "@/opensource/pages/vectorKnowledge/constant"
+import UserKnowledgeSelect from "../KnowledgeDatabaseSelect/UserKnowledgeSelect"
 
 type KnowledgeDataListProps = {
 	handleAdd: () => void
@@ -37,12 +38,8 @@ export default function KnowledgeDataListV1({
 
 	const { limit, score } = usePanelConfig()
 
-	const {
-		teamshareDatabaseOptions,
-		userDatabaseOptions,
-		userDatabasePopupScroll,
-		userDatabasePopupChange,
-	} = useKnowledgeDatabases(form)
+	const { teamshareDatabaseOptions, userDatabaseOptions, userDatabasePopupScroll } =
+		useKnowledgeDatabases(form)
 
 	const { progressList, initInterval, setProgressList } = useProgress({
 		knowledgeListName,
@@ -62,29 +59,12 @@ export default function KnowledgeDataListV1({
 	const renderRightComponent = (knowledgeTypeValue: number, subField: any) => {
 		switch (knowledgeTypeValue) {
 			case knowledgeType.UserKnowledgeDatabase:
-				const value = form.getFieldValue([
-					...knowledgeListName,
-					subField.name,
-					"knowledge_code",
-				])
 				// 用户自建知识库
 				return (
-					<Form.Item noStyle>
-						<MagicSelect
-							key={knowledgeTypeValue}
-							placeholder={t("common.userKnowledgeDatabasePlaceholder", {
-								ns: "flow",
-							})}
-							value={value}
+					<Form.Item noStyle name={[subField.name]}>
+						<UserKnowledgeSelect
 							options={userDatabaseOptions}
 							onPopupScroll={userDatabasePopupScroll}
-							fieldNames={{
-								label: "name",
-								value: "knowledge_code",
-							}}
-							onChange={(value: string) => {
-								userDatabasePopupChange(value, subField.name)
-							}}
 						/>
 					</Form.Item>
 				)
