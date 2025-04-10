@@ -67,7 +67,13 @@ class KnowledgeBaseFragmentRepository extends KnowledgeBaseAbstractRepository im
 
     public function queries(KnowledgeBaseDataIsolation $dataIsolation, KnowledgeBaseFragmentQuery $query, Page $page): array
     {
-        $builder = $this->createBuilder($dataIsolation, KnowledgeBaseFragmentsModel::query());
+        if ($query->isWithTrashed()) {
+            $builder = KnowledgeBaseFragmentsModel::withTrashed();
+        } else {
+            $builder = KnowledgeBaseFragmentsModel::query();
+        }
+
+        $builder = $this->createBuilder($dataIsolation, $builder);
 
         if ($query->getKnowledgeCode()) {
             $builder->where('knowledge_code', $query->getKnowledgeCode());
