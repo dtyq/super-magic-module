@@ -4,7 +4,7 @@ import { observer } from "mobx-react-lite"
 import { lazy, Suspense } from "react"
 import conversationStore from "@/opensource/stores/chatNew/conversation"
 import ConversationBotDataService from "@/opensource/services/chat/conversation/ConversationBotDataService"
-import { useInterafceStore } from "@/opensource/stores/interface"
+import { interfaceStore } from "@/opensource/stores/interface"
 import ChatSubSider from "./components/ChatSubSider"
 import { ChatDomId } from "./constants"
 import useNavigateConversationByAgentIdInSearchQuery from "./hooks/navigateConversationByAgentId"
@@ -27,7 +27,7 @@ const ChatNew = observer(() => {
 	useNavigateConversationByAgentIdInSearchQuery()
 
 	const showExtra = conversationStore.topicOpen
-	const isStartPage = useInterafceStore((s) => s.isShowStartPage)
+	const isStartPage = interfaceStore.isShowStartPage
 
 	if (!conversationStore.currentConversation) {
 		return (
@@ -42,35 +42,31 @@ const ChatNew = observer(() => {
 		)
 	}
 
-	if (ConversationBotDataService.startPage && isStartPage) {
-		return <AiImageStartPage disabled={false} />
-	}
+	const Main = () => {
+		// 如果开启了startPage，则显示startPage
+		if (ConversationBotDataService.startPage && isStartPage) {
+			return <AiImageStartPage disabled={false} />
+		}
 
-	return (
-		<Flex flex={1} className={styles.chat} id={ChatDomId.ChatContainer}>
-			<MagicSplitter className={styles.splitter}>
-				<MagicSplitter.Panel min={200} defaultSize={240} max={300}>
-					<ChatSubSider />
-				</MagicSplitter.Panel>
-				<MagicSplitter.Panel>
-					<MagicSplitter layout="vertical" className={styles.main}>
-						<MagicSplitter.Panel size={60} max={60} min={60}>
-							<Header />
-						</MagicSplitter.Panel>
-						<MagicSplitter.Panel>
-							<DragFileSendTip>
-								<ChatMessageList />
-							</DragFileSendTip>
-						</MagicSplitter.Panel>
-						<MagicSplitter.Panel defaultSize={300} max="50%" min={150}>
-							<MessageEditor
-								disabled={false}
-								visible
-								// scrollControl={null}
-							/>
-						</MagicSplitter.Panel>
-					</MagicSplitter>
-				</MagicSplitter.Panel>
+		return (
+			<>
+				<MagicSplitter layout="vertical" className={styles.main}>
+					<MagicSplitter.Panel size={60} max={60} min={60}>
+						<Header />
+					</MagicSplitter.Panel>
+					<MagicSplitter.Panel>
+						<DragFileSendTip>
+							<ChatMessageList />
+						</DragFileSendTip>
+					</MagicSplitter.Panel>
+					<MagicSplitter.Panel defaultSize={300} max="50%" min={150}>
+						<MessageEditor
+							disabled={false}
+							visible
+							// scrollControl={null}
+						/>
+					</MagicSplitter.Panel>
+				</MagicSplitter>
 				<MagicSplitter.Panel
 					min={240}
 					defaultSize={240}
@@ -83,6 +79,17 @@ const ChatNew = observer(() => {
 						</Suspense>
 					</div>
 				</MagicSplitter.Panel>
+			</>
+		)
+	}
+
+	return (
+		<Flex flex={1} className={styles.chat} id={ChatDomId.ChatContainer}>
+			<MagicSplitter className={styles.splitter}>
+				<MagicSplitter.Panel min={200} defaultSize={240} max={300}>
+					<ChatSubSider />
+				</MagicSplitter.Panel>
+				<MagicSplitter.Panel>{Main()}</MagicSplitter.Panel>
 			</MagicSplitter>
 			<Suspense fallback={null}>
 				{conversationStore.settingOpen && <SettingExtraSection />}

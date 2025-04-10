@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next"
 import MagicButton from "@/opensource/components/base/MagicButton"
 import { IconMessage } from "@tabler/icons-react"
 import CNLogo from "@/assets/text/ai-image-chinese.svg"
-import { useInterafceStore } from "@/opensource/stores/interface"
+import { interfaceStore } from "@/opensource/stores/interface"
 import { useStyles } from "../style"
 
 interface Tags {
@@ -38,7 +38,7 @@ const Header = memo(({ tags, currentType, selectType }: HeaderProps) => {
 						type="text"
 						className={styles.magicButton}
 						style={{ borderRadius: "50px" }}
-						onClick={() => useInterafceStore.getState().updateIsShowStartPage(false)}
+						onClick={() => interfaceStore.updateIsShowStartPage(false)}
 					>
 						<IconMessage size={18} />
 						{t("chat.aiImage.checkHistoryConversation")}

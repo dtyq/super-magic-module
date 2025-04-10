@@ -1,24 +1,37 @@
 import { WebSocketReadyState } from "@/types/websocket"
-import { create } from "zustand"
+import { makeAutoObservable } from "mobx"
 
-interface InterfaceStoreState {
-	readyState: WebSocket["readyState"]
-	isSwitchingOrganization: boolean
-	isConnecting: boolean
-	showReloadButton: boolean
-	isShowStartPage: boolean
-	updateIsShowStartPage: (isShowStartPage: boolean) => void
+class InterfaceStore {
+	readyState: WebSocket["readyState"] = WebSocketReadyState.CLOSED
+	isSwitchingOrganization: boolean = false
+	isConnecting: boolean = false
+	showReloadButton: boolean = false
+	isShowStartPage: boolean = true
+
+	constructor() {
+		makeAutoObservable(this)
+	}
+
+	updateIsShowStartPage(isShowStartPage: boolean) {
+		this.isShowStartPage = isShowStartPage
+	}
+
+	setReadyState(readyState: WebSocket["readyState"]) {
+		this.readyState = readyState
+	}
+
+	setIsSwitchingOrganization(isSwitchingOrganization: boolean) {
+		this.isSwitchingOrganization = isSwitchingOrganization
+	}
+
+	setIsConnecting(isConnecting: boolean) {
+		this.isConnecting = isConnecting
+	}
+
+	setShowReloadButton(showReloadButton: boolean) {
+		this.showReloadButton = showReloadButton
+	}
 }
 
-// 状态记录
-// FIXME: 需要改名
-export const useInterafceStore = create<InterfaceStoreState>((set) => ({
-	readyState: WebSocketReadyState.CLOSED,
-	isSwitchingOrganization: false,
-	isConnecting: false,
-	showReloadButton: false,
-	isShowStartPage: true,
-	updateIsShowStartPage: (isShowStartPage: boolean) => {
-		set({ isShowStartPage })
-	},
-}))
+// 创建全局单例
+export const interfaceStore = new InterfaceStore()
