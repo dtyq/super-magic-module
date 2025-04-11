@@ -24,7 +24,7 @@ function MessageSeenStatus({ unreadCount, messageId }: MessageStatusProps) {
 	const { currentConversation } = ConversationStore
 
 	// 发送失败，不显示
-	if (MessageStore.sendStatusMap.get(messageId) === SendStatus.Failed) {
+	if (MessageStore.sendStatusMap.get(messageId) !== SendStatus.Success) {
 		return null
 	}
 

@@ -35,7 +35,7 @@ const MessageRenderer = observer(
 		const { styles, cx } = useStyles()
 		const MessageComponent = MessageFactory.getComponent(type)
 
-		if(!MessageComponent) {
+		if (!MessageComponent) {
 			return null
 		}
 

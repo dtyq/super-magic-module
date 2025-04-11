@@ -52,7 +52,7 @@ export const useStyles = createStyles(({ css, token }, { fontSize }: { fontSize:
 			background-color: ${token?.magicColorScales.grey[0]};
 			position: relative;
 			user-select: none;
-			padding: 0 0 20px 0;
+			padding: 20px 0;
 			padding-bottom: ${calculateRelativeSize(30, fontSize)};
 			transition: padding 0.3s;
 			will-change: transform;

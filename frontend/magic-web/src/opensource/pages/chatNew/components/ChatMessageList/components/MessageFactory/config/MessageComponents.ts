@@ -53,6 +53,7 @@ const messageComponents: Record<string, MessageComponent> = {
 			if (!message.text?.stream_options) return false
 			return message.text?.stream_options?.status === StreamStatus.Streaming
 		},
+
 		isReasoningStreamingParser: (message: TextConversationMessage) => {
 			if (!message.text?.stream_options) return false
 			return (
