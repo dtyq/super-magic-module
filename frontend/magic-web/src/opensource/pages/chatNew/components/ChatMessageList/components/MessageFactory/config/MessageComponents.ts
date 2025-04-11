@@ -49,10 +49,16 @@ const messageComponents: Record<string, MessageComponent> = {
 		contentParser: (content: TextConversationMessage) => content.text?.content,
 		reasoningContentParser: (content: TextConversationMessage) =>
 			content.text?.reasoning_content,
-		isStreamingParser: (message: TextConversationMessage) =>
-			message.text?.stream_options?.status === StreamStatus.Streaming,
-		isReasoningStreamingParser: (message: TextConversationMessage) =>
-			message.text?.stream_options?.status !== StreamStatus.End && !message.text?.content,
+		isStreamingParser: (message: TextConversationMessage) => {
+			if (!message.text?.stream_options) return false
+			return message.text?.stream_options?.status === StreamStatus.Streaming
+		},
+		isReasoningStreamingParser: (message: TextConversationMessage) => {
+			if (!message.text?.stream_options) return false
+			return (
+				message.text?.stream_options?.status !== StreamStatus.End && !message.text?.content
+			)
+		},
 		fileParser: (message: TextConversationMessage, referFileId?: string) => {
 			if (referFileId) {
 				return []
@@ -67,11 +73,17 @@ const messageComponents: Record<string, MessageComponent> = {
 		contentParser: (content: MarkdownConversationMessage) => content.markdown?.content,
 		reasoningContentParser: (content: MarkdownConversationMessage) =>
 			content.markdown?.reasoning_content,
-		isStreamingParser: (message: MarkdownConversationMessage) =>
-			message.markdown?.stream_options?.status === StreamStatus.Streaming,
-		isReasoningStreamingParser: (message: MarkdownConversationMessage) =>
-			message.markdown?.stream_options?.status !== StreamStatus.End &&
-			!message.markdown?.content,
+		isStreamingParser: (message: MarkdownConversationMessage) => {
+			if (!message.markdown?.stream_options) return false
+			return message.markdown?.stream_options?.status === StreamStatus.Streaming
+		},
+		isReasoningStreamingParser: (message: MarkdownConversationMessage) => {
+			if (!message.markdown?.stream_options) return false
+			return (
+				message.markdown?.stream_options?.status !== StreamStatus.End &&
+				!message.markdown?.content
+			)
+		},
 		fileParser: (message: MarkdownConversationMessage) => message.markdown?.attachments,
 		showFileComponent: true,
 		loader: () => import("../components/Markdown"),
