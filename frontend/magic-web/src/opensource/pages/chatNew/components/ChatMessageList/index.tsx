@@ -211,6 +211,7 @@ const ChatMessageList = observer(() => {
 		const distance = Math.abs(scrollTop + clientHeight - scrollHeight)
 
 		state.setIsAtBottom(distance < 50)
+		canScroll = distance < 50
 
 		const isScrollUp = lastScrollTop - scrollTop > 0
 		lastScrollTop = scrollTop
