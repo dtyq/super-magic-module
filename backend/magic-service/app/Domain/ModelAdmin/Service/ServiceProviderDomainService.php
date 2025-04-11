@@ -879,6 +879,11 @@ class ServiceProviderDomainService
         return $this->serviceProviderModelsRepository->getById($id);
     }
 
+    public function getModelByIdOrVersion(string $key): ?ServiceProviderModelsEntity
+    {
+        return $this->serviceProviderModelsRepository->getByIdOrVersion($key);
+    }
+
     public function deleteServiceProviderForAdmin(string $serviceProviderConfigId, string $organizationCode)
     {
         Db::beginTransaction();

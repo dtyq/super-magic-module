@@ -34,7 +34,6 @@ use Hyperf\Odin\Contract\Api\Response\ResponseInterface;
 use Hyperf\Odin\Contract\Model\EmbeddingInterface;
 use Hyperf\Odin\Contract\Model\ModelInterface;
 use Hyperf\Odin\Exception\LLMException;
-use Hyperf\Odin\Model\AbstractModel;
 use Hyperf\Odin\Tool\Definition\ToolDefinition;
 use Hyperf\Odin\Utils\MessageUtil;
 use Hyperf\Odin\Utils\ToolUtil;
@@ -60,26 +59,17 @@ class LLMAppService extends AbstractLLMAppService
         $models = array_merge($chatModels, $embeddingModels);
 
         $list = [];
-        /**
-         * @var AbstractModel $model
-         */
-        foreach ($models as $name => $model) {
-            $attributes = $this->modelGatewayMapper->getAttributes($model->getModelName());
-            $createdAt = $attributes['created_at'] ?? null;
+        foreach ($models as $name => $odinModel) {
             $modelConfigEntity = new ModelConfigEntity();
-            if ($createdAt instanceof DateTime) {
-                $modelConfigEntity->setCreatedAt($createdAt);
-            } elseif (is_string($createdAt)) {
-                $modelConfigEntity->setCreatedAt(new DateTime($createdAt));
-            } else {
-                $modelConfigEntity->setCreatedAt(new DateTime());
-            }
-
-            $modelConfigEntity->setModel($model->getModelName());
-            $modelConfigEntity->setName($attributes['label'] ?? $name);
-            $modelConfigEntity->setOwnerBy($attributes['owner_by'] ?? 'Magic');
+            $modelConfigEntity->setModel($odinModel->getModel()->getModelName());
+            $modelConfigEntity->setName($odinModel->getAttributes()->getLabel() ?: $odinModel->getAttributes()->getName());
+            $modelConfigEntity->setOwnerBy($odinModel->getAttributes()->getOwner());
+            $modelConfigEntity->setCreatedAt($odinModel->getAttributes()->getCreatedAt());
             if ($withInfo) {
-                $modelConfigEntity->setInfo($model->getModelOptions()->toArray());
+                $modelConfigEntity->setInfo([
+                    'attributes' => $odinModel->getAttributes()->toArray(),
+                    'options' => $odinModel->getModel()->getModelOptions()->toArray(),
+                ]);
             }
 
             $list[$name] = $modelConfigEntity;
