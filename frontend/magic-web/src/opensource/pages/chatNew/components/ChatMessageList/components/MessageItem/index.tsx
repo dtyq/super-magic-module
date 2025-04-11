@@ -45,6 +45,8 @@ const Avatar = memo(
 		size: number
 		uid: string
 	}) {
+		const { styles } = useStyles({ fontSize: 16, isMultipleCheckedMode: false })
+
 		// 使用 useMemo 缓存 info 对象，避免每次渲染都创建新对象
 		const info = useMemo(() => {
 			if (avatar) {
@@ -56,6 +58,7 @@ const Avatar = memo(
 
 		return (
 			<MagicAvatar
+				className={styles.avatar}
 				src={info.avatar_url}
 				size={size}
 				onClick={(e: any) => {
@@ -107,7 +110,7 @@ const MessageItem = memo(function MessageItem({
 
 	return (
 		<div
-			id={message_id}
+			// id={message_id}
 			className={cx(
 				styles.flexContainer,
 				styles.container,
@@ -121,7 +124,12 @@ const MessageItem = memo(function MessageItem({
 			{!is_self && avatarComponent}
 
 			{/* 消息内容和状态 */}
-			<Flex vertical gap={4} align={is_self ? "flex-end" : "flex-start"}>
+			<Flex
+				vertical
+				gap={4}
+				className={styles.contentWrapper}
+				align={is_self ? "flex-end" : "flex-start"}
+			>
 				<MessageContent
 					message_id={message_id}
 					message={message}

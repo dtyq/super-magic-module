@@ -1,4 +1,4 @@
-import { useEffect, type PropsWithChildren } from "react"
+import { type PropsWithChildren } from "react"
 import { useLocation, useSearchParams } from "react-router-dom"
 import { useNavigate } from "@/opensource/hooks/useNavigate"
 import { useTranslation } from "react-i18next"
@@ -14,6 +14,7 @@ import { loginService, userService } from "@/services"
 import { useAuthorization } from "@/opensource/models/user/hooks"
 import { useClusterCode } from "@/opensource/providers/ClusterProvider"
 import { useStyles } from "./styles"
+import { LoginValueKey } from "@/opensource/pages/login/constants"
 
 const AuthenticationKey = "authorization"
 
@@ -49,28 +50,30 @@ function AuthenticationProvider({ children }: PropsWithChildren) {
 		const tempToken = clusterCode || accounts?.[accountIndex]?.deployCode
 		const magicOrgSyncStep = loginService.magicOrganizationSyncStep(tempToken as string)
 		const userSyncStep = loginService.accountSyncStep(tempToken as string)
-		return Promise.resolve()
-			.then(() => {
-				return loginService.authorizationSyncStep({
-					access_token,
-				} as Login.UserLoginsResponse)
-			})
-			.then(magicOrgSyncStep)
-			// @ts-ignore
-			.then(loginService.organizationFetchStep)
-			.then(loginService.organizationSyncStep)
-			.then(userSyncStep)
-			.then(() => {
-				// 临时处理
-				const isSearchRoutePath = window.location.pathname.indexOf("search.html") > -1
-				if (!isSearchRoutePath && ["/", RoutePath.Login].includes(pathname)) {
-					navigate(RoutePath.Chat, { replace: true })
-				}
-				return accountFetch()
-			})
-			.then(() => {
-				return userService.login()
-			})
+		return (
+			Promise.resolve()
+				.then(() => {
+					return loginService.authorizationSyncStep({
+						access_token,
+					} as Login.UserLoginsResponse)
+				})
+				.then(magicOrgSyncStep)
+				// @ts-ignore
+				.then(loginService.organizationFetchStep)
+				.then(loginService.organizationSyncStep)
+				.then(userSyncStep)
+				.then(() => {
+					// 临时处理
+					const isSearchRoutePath = window.location.pathname.indexOf("search.html") > -1
+					if (!isSearchRoutePath && ["/", RoutePath.Login].includes(pathname)) {
+						navigate(RoutePath.Chat, { replace: true })
+					}
+					return accountFetch()
+				})
+				.then(() => {
+					return userService.login()
+				})
+		)
 	})
 
 	const [success, { setTrue: loginSuccess, setFalse: loginFail }] = useBoolean(false)
@@ -93,16 +96,37 @@ function AuthenticationProvider({ children }: PropsWithChildren) {
 	})
 
 	useMount(() => {
+		if (!latestAuth && window.location.pathname !== RoutePath.Login) {
+			navigate(
+				{
+					pathname: RoutePath.Login,
+					search: new URLSearchParams({
+						[LoginValueKey.REDIRECT_URL]: window.location.href,
+					}).toString(),
+				},
+				{ replace: true },
+			)
+			return
+		}
+
 		if (!defaultIcon.bot) {
 			mutate()
 		}
 	})
 
-	useEffect(() => {
-		if (!latestAuth) {
-			navigate(RoutePath.Login, { replace: true })
-		}
-	}, [latestAuth, navigate, pathname])
+	// useEffect(() => {
+	// 	if (!latestAuth) {
+	// 		navigate(
+	// 			{
+	// 				pathname: RoutePath.Login,
+	// 				search: new URLSearchParams({
+	// 					[LoginValueKey.REDIRECT_URL]: window.location.href,
+	// 				}).toString(),
+	// 			},
+	// 			{ replace: true },
+	// 		)
+	// 	}
+	// }, [latestAuth, navigate, pathname])
 
 	if (!success) {
 		return (

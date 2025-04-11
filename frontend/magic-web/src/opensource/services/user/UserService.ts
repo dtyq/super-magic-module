@@ -18,7 +18,7 @@ import chatDb from "@/opensource/database/chat"
 import MessageSeqIdService from "@/opensource/services/chat/message/MessageSeqIdService"
 import MessageService from "@/opensource/services/chat/message/MessageService"
 import conversationService from "@/opensource/services/chat/conversation/ConversationService"
-import { useInterafceStore } from "@/opensource/stores/interface"
+import { interfaceStore } from "@/opensource/stores/interface"
 import { ChatApi } from "@/apis"
 
 export interface OrganizationResponse {
@@ -432,7 +432,7 @@ export class UserService {
 	}
 
 	async switchUser(magicUser: User.UserInfo) {
-		useInterafceStore.setState({ isSwitchingOrganization: true })
+		interfaceStore.setIsSwitchingOrganization(true)
 		const magicId = magicUser.magic_id
 		console.log("切换账户", magicId)
 		// 如果当前账户ID与传入的账户ID相同，则不进行切换
@@ -480,6 +480,6 @@ export class UserService {
 		/** 设置消息拉取 循环 */
 		MessageService.init()
 		// this.messagePullBusiness.registerMessagePullLoop()
-		useInterafceStore.setState({ isSwitchingOrganization: false })
+		interfaceStore.setIsSwitchingOrganization(false)
 	}
 }

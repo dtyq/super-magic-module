@@ -1,6 +1,6 @@
 import { observer, useLocalObservable } from "mobx-react-lite"
 import { useRef, useCallback, useEffect, lazy, Suspense, useLayoutEffect } from "react"
-import { useMemoizedFn, useMount } from "ahooks"
+import { useMemoizedFn } from "ahooks"
 import MessageStore from "@/opensource/stores/chatNew/message"
 import MessageService from "@/opensource/services/chat/message/MessageService"
 import conversationStore from "@/opensource/stores/chatNew/conversation"
@@ -36,9 +36,11 @@ import MessageItem from "./components/MessageItem"
 import GroupSeenPanelStore, {
 	domClassName as GroupSeenPanelDomClassName,
 } from "@/opensource/stores/chatNew/groupSeenPanel"
+import { isMessageInView } from "./utils"
 
 let canScroll = true
 let isScrolling = false
+let lastScrollTop = 0
 let lastMessageId = ""
 
 const ChatMessageList = observer(() => {
@@ -174,11 +176,6 @@ const ChatMessageList = observer(() => {
 
 	// 加载更多历史消息
 	const loadMoreHistoryMessages = useMemoizedFn(async () => {
-		console.log(
-			"loadMoreHistoryMessages",
-			state.isLoadingMore,
-			MessageStore.hasMoreHistoryMessage,
-		)
 		if (state.isLoadingMore || !MessageStore.hasMoreHistoryMessage) return
 
 		try {
@@ -204,14 +201,25 @@ const ChatMessageList = observer(() => {
 	// 检查滚动位置并处理
 	const checkScrollPosition = useMemoizedFn(() => {
 		if (!wrapperRef.current || !initialRenderRef.current || isScrolling) return
+		// 初始化状态不处理
+		if (lastScrollTop === 0) {
+			lastScrollTop = wrapperRef.current.scrollTop
+			return
+		}
 
 		const { scrollTop, clientHeight, scrollHeight } = wrapperRef.current
 		const distance = Math.abs(scrollTop + clientHeight - scrollHeight)
 
 		state.setIsAtBottom(distance < 50)
-		// 提前加载
-		if (scrollTop < 150 && !state.isLoadingMore) {
-			loadMoreHistoryMessages()
+
+		const isScrollUp = lastScrollTop - scrollTop > 0
+		lastScrollTop = scrollTop
+		if (isScrollUp && !state.isLoadingMore) {
+			// 加载更多，判断第四条消息是否进入视图
+			const messageId = MessageStore.messages[3]?.message_id
+			if (isMessageInView(messageId, wrapperRef.current) || scrollTop < 150) {
+				loadMoreHistoryMessages()
+			}
 		}
 	})
 
@@ -224,7 +232,6 @@ const ChatMessageList = observer(() => {
 
 		// 如果最后一条消息为空，证明是初始化状态，滚动到底部
 		if (!lastMessageId) {
-			console.log("handleResize to bottom")
 			lastMessageId = messages[messages.length - 1]?.message_id
 			scrollToBottom(true)
 			return
@@ -253,11 +260,21 @@ const ChatMessageList = observer(() => {
 				behavior: "smooth",
 			})
 		}
+
+		// 数据变更，并且滚动条停留在顶部，加载多一页
+		if (wrapperRef.current && wrapperRef.current.scrollTop === 0) {
+			loadMoreHistoryMessages()
+			requestAnimationFrame(() => {
+				if (wrapperRef.current) {
+					wrapperRef.current.scrollTop = 200
+				}
+			})
+		}
 	})
 
 	const handleContainerScroll = throttle(() => {
 		checkScrollPosition()
-	}, 30)
+	}, 50)
 
 	// 切换会话或者话题
 	useEffect(() => {
@@ -265,15 +282,19 @@ const ChatMessageList = observer(() => {
 			wrapperRef.current.removeEventListener("scroll", handleContainerScroll)
 		}
 
+		state.reset()
+		lastMessageId = ""
+		canScroll = true
+		lastScrollTop = 0
 		initialRenderRef.current = false
 		scrollToBottom(true)
 
 		setTimeout(() => {
-			initialRenderRef.current = true
 			if (wrapperRef.current) {
 				wrapperRef.current.addEventListener("scroll", handleContainerScroll)
 			}
-		}, 300)
+			initialRenderRef.current = true
+		}, 1000)
 	}, [MessageStore.conversationId, MessageStore.topicId])
 
 	useLayoutEffect(() => {
@@ -298,16 +319,6 @@ const ChatMessageList = observer(() => {
 			}
 		})
 
-		// 切换会话，重置状态
-		const conversationDisposer = autorun(() => {
-			if (conversationStore.currentConversation) {
-				state.reset()
-				lastMessageId = ""
-				canScroll = true
-				initialRenderRef.current = false
-			}
-		})
-
 		function handleClick(e: MouseEvent) {
 			const target = e.target as HTMLElement
 			if (target.classList.contains("message-item-menu")) {
@@ -320,7 +331,6 @@ const ChatMessageList = observer(() => {
 
 		return () => {
 			focusDisposer()
-			conversationDisposer()
 			document.removeEventListener("click", handleClick)
 			state.reset()
 			resizeObserverRef.current?.disconnect()

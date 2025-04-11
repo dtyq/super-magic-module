@@ -1,11 +1,9 @@
 import { createStyles } from "antd-style"
 import { transparentize } from "polished"
 
-export const useStyles = createStyles(
-	(
-		{ css, isDarkMode, token },
-		/* { headerSize }: { headerSize?: { width: number; height: number } */
-	) => {
+export const useStyles = createStyles(({ css, isDarkMode, token }) =>
+	/* { headerSize }: { headerSize?: { width: number; height: number } */
+	{
 		return {
 			chat: css`
 				width: 100%;
@@ -26,16 +24,20 @@ export const useStyles = createStyles(
 				"--message-max-width": "100%",
 				userSelect: "none",
 			},
-
 			main: css`
-				height: 100%;
+				height: calc(100vh - ${token.titleBarHeight}px);
+				flex: 1;
+				min-width: 375px;
 			`,
 			header: css``,
 			chatList: css`
 				overflow-x: hidden;
+				flex: 1;
+				min-height: 300px;
 			`,
 			editor: css`
-				height: 40vh;
+				height: 35%;
+				min-height: 200px;
 			`,
 			chatListInner: css``,
 			magicInput: css`
@@ -53,7 +55,7 @@ export const useStyles = createStyles(
 			extra: css`
 				border-left: 1px solid ${token.colorBorder};
 				user-select: none;
-				width: 100%;
+				width: 240px;
 			`,
 
 			dragEnteredTipWrapper: css`

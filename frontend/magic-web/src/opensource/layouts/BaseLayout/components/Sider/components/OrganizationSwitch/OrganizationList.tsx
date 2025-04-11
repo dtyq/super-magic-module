@@ -17,7 +17,7 @@ import OrganizationDotsStore from "@/opensource/stores/chatNew/dots/Organization
 import { observer } from "mobx-react-lite"
 import { useOrganizationListStyles } from "./styles"
 import { userStore } from "@/opensource/models/user"
-import { useInterafceStore } from "@/opensource/stores/interface"
+import { interfaceStore } from "@/opensource/stores/interface"
 import { ContactApi } from "@/apis"
 
 interface OrganizationItemProps {
@@ -46,7 +46,7 @@ const OrganizationItem = observer((props: OrganizationItemProps) => {
 			}
 
 			try {
-				useInterafceStore.setState({ isSwitchingOrganization: true })
+				interfaceStore.setIsSwitchingOrganization(true)
 				// 账号不一致下要切换账号
 				if (accountInfo?.magic_id !== userInfo?.magic_id) {
 					await accountSwitch(
@@ -99,7 +99,7 @@ const OrganizationItem = observer((props: OrganizationItemProps) => {
 			} catch (err) {
 				console.error(err)
 			} finally {
-				useInterafceStore.setState({ isSwitchingOrganization: false })
+				interfaceStore.setIsSwitchingOrganization(false)
 			}
 		},
 	)

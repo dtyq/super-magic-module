@@ -39,7 +39,6 @@ export const useStyles = createStyles(
 				position: relative;
 				display: inline-block;
         		overflow: hidden;
-        
 				padding-inline: 1px;
         		color: var(--${prefixCls}-markdown-color);
 
@@ -47,7 +46,7 @@ export const useStyles = createStyles(
 				line-height: 1;
 				word-break: break-word;
 				height: max-content;
-				width: auto;
+				width: 100%;
 				user-select: text;
 			`)
 

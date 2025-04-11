@@ -90,16 +90,16 @@ const MemberDepartmentSelectPanel = memo((props: MemberDepartmentSelectPanelProp
 				// 	value: PanelKey.ByPartner,
 				// },
 		]
-		if (!withoutGroup) {
-			options.push({
-				label: t("memberDepartmentSelectPanel.byGroup"),
-				value: PanelKey.ByGroup,
-			})
-		}
+		// if (!withoutGroup) {
+		// 	options.push({
+		// 		label: t("memberDepartmentSelectPanel.byGroup"),
+		// 		value: PanelKey.ByGroup,
+		// 	})
+		// }
 
 		return options
-	}, [t, withoutGroup])
-	
+	}, [t])
+
 	const handleOk = useMemoizedFn(() => {
 		onOk?.({
 			department: departmentSelected,
@@ -243,11 +243,11 @@ const MemberDepartmentSelectPanel = memo((props: MemberDepartmentSelectPanelProp
 									count: userSelected.length,
 								})}
 							</span>
-							<span>
+							{/* <span>
 								{resolveToString(t("memberDepartmentSelectPanel.selectedGroups"), {
 									count: groupSelected.length,
 								})}
-							</span>
+							</span> */}
 							<span>
 								{resolveToString(
 									t("memberDepartmentSelectPanel.selectedDepartments"),
@@ -256,11 +256,11 @@ const MemberDepartmentSelectPanel = memo((props: MemberDepartmentSelectPanelProp
 									},
 								)}
 							</span>
-							<span>
+							{/* <span>
 								{resolveToString(t("memberDepartmentSelectPanel.selectedPartner"), {
 									count: partnerSelected.length,
 								})}
-							</span>
+							</span> */}
 						</Flex>
 						<Flex wrap="wrap">
 							{selected.map((item) => {

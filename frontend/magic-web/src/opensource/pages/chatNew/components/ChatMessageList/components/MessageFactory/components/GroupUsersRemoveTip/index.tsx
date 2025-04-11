@@ -1,8 +1,6 @@
 import type { HTMLAttributes } from "react"
 import { Fragment, memo } from "react"
 import type { GroupUsersRemoveMessage } from "@/types/chat/conversation_message"
-import MagicMemberAvatar from "@/opensource/components/business/MagicMemberAvatar"
-import { getUserName } from "@/utils/modules/chat"
 import { useTranslation } from "react-i18next"
 import { useTipStyles } from "../../../../hooks/useTipStyles"
 import GroupTipMemberRender from "../GroupTipMemberRender"
@@ -42,7 +40,7 @@ const GroupUsersRemoveTip = memo(({ content, className, onClick }: GroupUsersRem
 						{index === array.length - 1 ? "" : "、"}
 					</Fragment>
 				)
-			})}{" "}
+			})}
 			{t("chat.groupUsersRemoveTip.removeMember")}
 		</div>
 	)

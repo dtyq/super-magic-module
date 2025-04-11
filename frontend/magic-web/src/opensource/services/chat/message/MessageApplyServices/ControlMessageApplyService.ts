@@ -91,6 +91,7 @@ class ControlMessageApplyService {
 	 */
 	apply(message: SeqResponse<CMessage>, options: ApplyMessageOptions = {}) {
 		const { isHistoryMessage = false } = options
+		console.log("message type", message.message.type)
 
 		switch (message.message.type) {
 			case ControlEventMessageType.OpenConversation:

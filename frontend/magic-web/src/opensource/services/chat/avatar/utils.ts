@@ -56,13 +56,13 @@ export function textToBackgroundColor(name?: string) {
 	return `hsl(${hue}, ${saturation}%, ${lightness}%)`
 }
 
-export function textToTextColor(name?: string) {
+export function textToDisplayName(name?: string) {
 	if (!name) return ""
 	// 判断是中文名还是英文名
 	const isChinese = name.match(/[\u4e00-\u9fa5]/)
 	if (isChinese) {
-		// 截取中文名的后两个字符
-		return name.slice(-2)
+		// 截取中文名的后两个有效的中文字符,不包含标点符号
+		return name.replace(/[^\u4e00-\u9fa5]/g, "").slice(-2)
 	}
 	// 截取英文名的第一个大写字母
 	return name[0]?.toUpperCase() ?? ""

@@ -2,12 +2,12 @@ import { createStyles } from "antd-style"
 
 export const useStyles = createStyles(({ isDarkMode, css, prefixCls, token }) => ({
 	spin: css`
-		.${ prefixCls }-spin-blur {
+		.${prefixCls}-spin-blur {
 			opacity: 1;
 		}
 
-		.${ prefixCls }-spin {
-			--${ prefixCls }-spin-content-height: unset;
+		.${prefixCls}-spin {
+			--${prefixCls}-spin-content-height: unset;
 		}
 	`,
 	container: css`

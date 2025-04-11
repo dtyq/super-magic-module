@@ -10,6 +10,8 @@ import MessageReplyStore from "@/opensource/stores/chatNew/messageUI/Reply"
 import { observer } from "mobx-react-lite"
 import type { SendData } from "./MagicInput"
 import ConversationInput from "./MagicInput"
+import { interfaceStore } from "@/opensource/stores/interface"
+import ConversationBotDataService from "@/opensource/services/chat/conversation/ConversationBotDataService"
 
 interface MessageEditorProps {
 	visible?: boolean
@@ -74,6 +76,10 @@ const MessageEditor = observer(function MessageEditor({
 				},
 				MessageReplyStore.replyMessageId,
 			)
+
+			if (ConversationBotDataService.startPage && interfaceStore.isShowStartPage) {
+				interfaceStore.closeStartPage()
+			}
 		},
 	)
 

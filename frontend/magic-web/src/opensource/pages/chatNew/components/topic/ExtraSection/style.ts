@@ -21,13 +21,13 @@ export const useStyles = createStyles(({ css, token, prefixCls }) => ({
 	`,
 	body: css`
 		--${prefixCls}-padding-lg: 0 12px;
-    --${prefixCls}-card-body-padding: 0 12px;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    overflow: hidden;
-    user-select: none;
+		--${prefixCls}-card-body-padding: 0 12px;
+		width: 100%;
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+		overflow: hidden;
+		user-select: none;
 	`,
 	header: css`
 		height: 60px;

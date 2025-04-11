@@ -1,84 +1,94 @@
 import type { AvatarProps, BadgeProps } from "antd"
 import { Avatar, Badge } from "antd"
-import { forwardRef, memo, useEffect, useMemo, useState } from "react"
-import { isValidUrl } from "./utils"
+import { forwardRef, ReactNode, useEffect, useMemo, useState } from "react"
 import AvatarService from "@/opensource/services/chat/avatar"
+import { createStyles } from "antd-style"
+import { useMemoizedFn } from "ahooks"
 
 export interface MagicAvatarProps extends AvatarProps {
 	badgeProps?: BadgeProps
 }
 
-const MagicAvatar = memo(
-	forwardRef<HTMLSpanElement, MagicAvatarProps>(
-		({ children, src, size = 40, style, badgeProps, className, ...props }, ref) => {
-			const [innerSrc, setInnerSrc] = useState<string | null>(
-				isValidUrl(src as string) ? (src as string) : null,
+const useStyles = createStyles(({ token }) => ({
+	avatar: {
+		backgroundColor: token.magicColorScales.white,
+	},
+}))
+
+const getTextAvatar = (text: string | ReactNode, backgroundColor?: string, color?: string) => {
+	const textString = typeof text === "string" ? text : "未知"
+	return AvatarService.drawTextAvatar(textString, backgroundColor, color) ?? ""
+}
+
+const MagicAvatar = forwardRef<HTMLSpanElement, MagicAvatarProps>(
+	({ children, src, size = 40, style, badgeProps, className, ...props }, ref) => {
+		const { styles } = useStyles()
+
+		const [innerSrc, setInnerSrc] = useState<string>(
+			src && typeof src === "string"
+				? src
+				: getTextAvatar(children, style?.backgroundColor, style?.color),
+		)
+
+		useEffect(() => {
+			setInnerSrc(
+				typeof src === "string" && src
+					? src
+					: getTextAvatar(
+							typeof children === "string" ? children : "未知",
+							style?.backgroundColor,
+							style?.color,
+					  ),
 			)
+			// eslint-disable-next-line react-hooks/exhaustive-deps
+		}, [src])
 
-			useEffect(() => {
-				if (typeof children === "string") {
-					const res = AvatarService.drawTextAvatar(
-						children,
-						style?.backgroundColor,
-						style?.color,
-					)
-					if (res && !isValidUrl(res)) {
-						setInnerSrc(res)
-					}
-				}
-			}, [children])
+		const mergedStyle = useMemo(
+			() => ({
+				flex: "none",
+				...style,
+			}),
+			[style],
+		)
 
-			const mergedStyle = useMemo(
-				() => ({
-					flex: "none",
-					...style,
-				}),
-				[style],
-			)
+		const handleError = useMemoizedFn(() => {
+			setInnerSrc(getTextAvatar(children, style?.backgroundColor, style?.color))
+		})
 
-			// 处理图片加载失败
-			const handleError = () => {
-				if (typeof children === "string") {
-					const res = AvatarService.drawTextAvatar(
-						children,
-						style?.backgroundColor,
-						style?.color,
-					)
-					if (res) {
-						setInnerSrc(res)
-					}
-					return true
-				}
-				return false
-			}
-
-			const avatarContent = (
-				<Avatar
-					ref={ref}
-					style={mergedStyle}
-					size={size}
-					shape="square"
-					draggable={false}
-					className={className}
-					src={innerSrc}
-					onError={handleError}
-					{...props}
-				>
-					{children}
-				</Avatar>
-			)
-
-			if (!badgeProps) {
-				return avatarContent
-			}
-
+		const srcNode = useMemo(() => {
 			return (
-				<Badge offset={[-size, 0]} {...badgeProps}>
-					{avatarContent}
-				</Badge>
+				<img
+					src={innerSrc}
+					className={styles.avatar}
+					alt={typeof children === "string" ? children : "avatar"}
+					onError={handleError}
+				/>
 			)
-		},
-	),
+		}, [children, handleError, innerSrc, styles.avatar])
+
+		const avatarContent = (
+			<Avatar
+				ref={ref}
+				style={mergedStyle}
+				size={size}
+				shape="square"
+				draggable={false}
+				className={className}
+				src={src && typeof src === "object" ? src : srcNode}
+				{...props}
+			/>
+		)
+
+		if (!badgeProps) {
+			return avatarContent
+		}
+
+		return (
+			<Badge offset={[-size, 0]} {...badgeProps}>
+				{avatarContent}
+			</Badge>
+		)
+	},
 )
 
 export default MagicAvatar

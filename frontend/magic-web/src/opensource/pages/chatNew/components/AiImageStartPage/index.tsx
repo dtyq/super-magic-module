@@ -25,7 +25,6 @@ interface AiImageStartPageProps extends HTMLAttributes<HTMLDivElement> {
 const AiImageStartPage = memo(({ disabled }: AiImageStartPageProps) => {
 	const { styles } = useStyles()
 
-
 	const dataset = useMemo(() => {
 		return data.map((item) => ({
 			...item,

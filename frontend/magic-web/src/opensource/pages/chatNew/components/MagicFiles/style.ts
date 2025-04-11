@@ -20,7 +20,7 @@ export const useStyles = createStyles(
 				user-select: none;
 			`,
 			image: css`
-				border: 1px solid #d9d9d9;
+				border: 1px solid ${token.magicColorUsages.border};
 				border-radius: 6px;
 				overflow: hidden;
 				width: fit-content;

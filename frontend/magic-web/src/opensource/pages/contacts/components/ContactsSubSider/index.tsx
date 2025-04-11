@@ -17,12 +17,12 @@ import { useCurrentMagicOrganization } from "@/opensource/models/user/hooks"
 import { useContactStore } from "@/opensource/stores/contact/hooks"
 import MagicSpin from "@/opensource/components/base/MagicSpin"
 import useUserInfo from "@/opensource/hooks/chat/useUserInfo"
-import { colorScales } from "@/opensource/providers/ThemeProvider/colors"
 import { useStyles } from "./styles"
 import { Line } from "./Line"
 import { useContactPageDataContext } from "../ContactDataProvider/hooks"
 import { observer } from "mobx-react-lite"
 import { userStore } from "@/opensource/models/user"
+import { useTheme } from "antd-style"
 
 interface CurrentOrganizationProps {
 	onItemClick: (data: MagicListItemData) => void
@@ -134,6 +134,7 @@ function ContactsSubSider() {
 	const { pathname } = useLocation()
 	const { styles } = useStyles()
 	const navigate = useNavigate()
+	const { magicColorScales } = useTheme()
 
 	const [collapseKey, setCollapseKey] = useState<string>(pathname)
 
@@ -164,12 +165,13 @@ function ContactsSubSider() {
 							id: "aiAssistant",
 							route: RoutePath.ContactsAiAssistant,
 							title: t("contacts.subSider.aiAssistant"),
-							avatar: () => {
-								return (
-									<div className={styles.listAvatar} style={{ background: colorScales.brand[5] }}>
-										<MagicIcon color="currentColor" component={IconMagicBots} />
-									</div>
-								)
+							avatar: {
+								src: <MagicIcon color="currentColor" component={IconMagicBots} />,
+								style: {
+									background: magicColorScales.brand[5],
+									padding: 8,
+									color: "white",
+								},
 							},
 							extra: (
 								<MagicIcon
@@ -203,12 +205,13 @@ function ContactsSubSider() {
 							id: "myGroups",
 							route: RoutePath.ContactsMyGroups,
 							title: t("contacts.subSider.myGroups"),
-							avatar: () => {
-								return (
-									<div className={styles.listAvatar} style={{ background: colorScales.lightGreen[5] }}>
-										<MagicIcon color="currentColor" component={IconUsers} />
-									</div>
-								)
+							avatar: {
+								src: <MagicIcon color="currentColor" component={IconUsers} />,
+								style: {
+									background: magicColorScales.lightGreen[5],
+									padding: 8,
+									color: "white",
+								},
 							},
 							extra: (
 								<MagicIcon

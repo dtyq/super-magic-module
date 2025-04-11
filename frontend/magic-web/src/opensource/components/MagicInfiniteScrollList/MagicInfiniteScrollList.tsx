@@ -279,7 +279,7 @@ function MagicInfiniteScrollListComponent<D, ItemR extends MagicListItemType = M
 				data-testid="virtual-list"
 			>
 				{(item) => (
-					<div onClick={() => handleItemClick(item)}>
+					<div key={item.id} onClick={() => handleItemClick(item)}>
 						<CustomListItem data={item} />
 					</div>
 				)}

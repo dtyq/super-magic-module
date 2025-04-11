@@ -5,7 +5,7 @@ import type { ExtraProps } from "react-markdown"
 import { useIsStreaming } from "@/opensource/hooks/useIsStreaming"
 import { CodeLanguage } from "./const"
 import type { MarkdownProps } from "../../types"
-import CodeRenderFactory from "./CodeRenderFactory"
+import CodeRenderFactory from "../../factories/CodeRenderFactory"
 import { Skeleton } from "antd"
 
 const Code: FC<
