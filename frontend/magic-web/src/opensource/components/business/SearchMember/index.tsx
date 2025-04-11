@@ -52,7 +52,8 @@ const transformUserToListItem = (user: StructureUserItem): Data => {
 		dataType: StructureItemType.User,
 		id: user.user_id,
 		title: user.real_name,
-		avatar: user.avatar_url || {
+		avatar: {
+			src: user.avatar_url,
 			children: user.real_name,
 		},
 	}

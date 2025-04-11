@@ -1,9 +1,9 @@
 import type { AvatarProps, BadgeProps } from "antd"
 import { Avatar, Badge } from "antd"
-import { forwardRef, useEffect, useMemo, useState } from "react"
+import { forwardRef, ReactNode, useEffect, useMemo, useState } from "react"
 import AvatarService from "@/opensource/services/chat/avatar"
-import { useMemoizedFn } from "ahooks"
 import { createStyles } from "antd-style"
+import { useMemoizedFn } from "ahooks"
 
 export interface MagicAvatarProps extends AvatarProps {
 	badgeProps?: BadgeProps
@@ -15,14 +15,32 @@ const useStyles = createStyles(({ token }) => ({
 	},
 }))
 
+const getTextAvatar = (text: string | ReactNode, backgroundColor?: string, color?: string) => {
+	const textString = typeof text === "string" ? text : "未知"
+	return AvatarService.drawTextAvatar(textString, backgroundColor, color) ?? ""
+}
+
 const MagicAvatar = forwardRef<HTMLSpanElement, MagicAvatarProps>(
 	({ children, src, size = 40, style, badgeProps, className, ...props }, ref) => {
 		const { styles } = useStyles()
 
-		const [innerSrc, setInnerSrc] = useState<string>(src && typeof src === "string" ? src : "")
+		const [innerSrc, setInnerSrc] = useState<string>(
+			src && typeof src === "string"
+				? src
+				: getTextAvatar(children, style?.backgroundColor, style?.color),
+		)
 
 		useEffect(() => {
-			setInnerSrc(typeof src === "string" && src ? src : "")
+			setInnerSrc(
+				typeof src === "string" && src
+					? src
+					: getTextAvatar(
+							typeof children === "string" ? children : "未知",
+							style?.backgroundColor,
+							style?.color,
+					  ),
+			)
+			// eslint-disable-next-line react-hooks/exhaustive-deps
 		}, [src])
 
 		const mergedStyle = useMemo(
@@ -34,12 +52,7 @@ const MagicAvatar = forwardRef<HTMLSpanElement, MagicAvatarProps>(
 		)
 
 		const handleError = useMemoizedFn(() => {
-			const text = typeof children === "string" ? children : "未知"
-
-			const res = AvatarService.drawTextAvatar(text, style?.backgroundColor, style?.color)
-			if (res) {
-				setInnerSrc(res)
-			}
+			setInnerSrc(getTextAvatar(children, style?.backgroundColor, style?.color))
 		})
 
 		const srcNode = useMemo(() => {
