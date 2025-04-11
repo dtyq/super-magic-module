@@ -128,7 +128,7 @@ class MagicFlowEntity extends AbstractEntity
 
         // 流程试运行其实只需要 nodes
         if (empty($this->nodes)) {
-            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'flow.nodes.empty');
+            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'common.empty', ['label' => 'flow.fields.nodes']);
         }
         $this->collectNodes();
     }
@@ -180,7 +180,7 @@ class MagicFlowEntity extends AbstractEntity
         if ($this->enabled) {
             // 如果是要开启，需要检测是否有 nodes 配置
             if (empty($this->nodes)) {
-                ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'flow.node.empty');
+                ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'flow.node.cannot_enable_empty_nodes');
             }
         }
     }
@@ -613,35 +613,48 @@ class MagicFlowEntity extends AbstractEntity
 
     private function requiredValidate(): void
     {
+        $this->checkType();
+        $this->checkOrganizationCode();
+        $this->checkCreator();
         $this->checkName();
         $this->checkDescription();
 
-        if (empty($this->type)) {
-            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, '流程类型 不能为空');
-        }
-        if (empty($this->organizationCode)) {
-            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, '组织编码 不能为空');
-        }
-        if (empty($this->creator)) {
-            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, '创建人 不能为空');
-        }
-        if (empty($this->createdAt)) {
-            $this->createdAt = new DateTime();
-        }
         if (empty($this->toolSetId)) {
             $this->toolSetId = ConstValue::TOOL_SET_DEFAULT_CODE;
+        }
+    }
+
+    private function checkType(): void
+    {
+        if (! isset($this->type)) {
+            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'common.empty', ['label' => 'flow.fields.flow_type']);
+        }
+    }
+
+    private function checkOrganizationCode(): void
+    {
+        if (empty($this->organizationCode)) {
+            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'common.empty', ['label' => 'flow.fields.organization_code']);
+        }
+    }
+
+    private function checkCreator(): void
+    {
+        if (empty($this->creator)) {
+            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'common.empty', ['label' => 'flow.fields.creator']);
         }
     }
 
     private function checkName(): void
     {
         if (empty($this->name)) {
-            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, '流程名称 不能为空');
+            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'common.empty', ['label' => 'flow.fields.flow_name']);
         }
+
         if ($this->type === Type::Tools) {
             // 名称只能包含 字母、数字、下划线
             if (! preg_match('/^[a-zA-Z0-9_]+$/', $this->name)) {
-                ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, '工具名称 只能包含字母、数字、下划线');
+                ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'flow.tool.name.invalid_format');
             }
             // todo 要唯一
             // todo 内置工具名允许被使用
@@ -652,7 +665,7 @@ class MagicFlowEntity extends AbstractEntity
     {
         if ($this->type === Type::Tools) {
             if (empty($this->description)) {
-                ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, '工具描述 不能为空');
+                ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'common.empty', ['label' => 'flow.fields.tool_description']);
             }
         }
     }
@@ -665,7 +678,15 @@ class MagicFlowEntity extends AbstractEntity
             try {
                 $node->validate($strict);
             } catch (Throwable $throwable) {
-                ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, "节点[{$node->getNodeId()}][{$node->getNodeTypeName()}] 验证失败: " . $throwable->getMessage());
+                ExceptionBuilder::throw(
+                    FlowErrorCode::ValidateFailed,
+                    'flow.node.validation_failed',
+                    [
+                        'node_id' => $node->getNodeId(),
+                        'node_type' => $node->getNodeTypeName(),
+                        'error' => $throwable->getMessage(),
+                    ]
+                );
             }
         }
     }

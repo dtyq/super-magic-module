@@ -31,15 +31,15 @@ class MagicFlowMultiModalLogEntity extends AbstractEntity
     public function prepareForCreation(): void
     {
         if (empty($this->messageId)) {
-            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'common.empty', ['label' => 'message_id']);
+            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'common.empty', ['label' => 'flow.fields.message_id']);
         }
 
         if (empty($this->type)) {
-            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'common.empty', ['label' => 'type']);
+            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'common.empty', ['label' => 'flow.fields.type']);
         }
 
         if (empty($this->analysisResult)) {
-            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'common.empty', ['label' => 'analysis_result']);
+            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'common.empty', ['label' => 'flow.fields.analysis_result']);
         }
 
         if (empty($this->createdAt)) {
