@@ -74,7 +74,7 @@ const MagicAvatar = forwardRef<HTMLSpanElement, MagicAvatarProps>(
 				shape="square"
 				draggable={false}
 				className={className}
-				src={typeof src === "object" ? src : srcNode}
+				src={src && typeof src === "object" ? src : srcNode}
 				{...props}
 			/>
 		)
