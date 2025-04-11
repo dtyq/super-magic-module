@@ -54,6 +54,8 @@ class ModelGatewayMapper extends ModelMapper
 
     public function __construct(protected ConfigInterface $config, protected LoggerInterface $logger)
     {
+        $this->models['chat'] = [];
+        $this->models['embedding'] = [];
         parent::__construct($config, $logger);
 
         // 这里具有优先级的顺序来覆盖配置
