@@ -12,6 +12,8 @@ bin="${base_dirname}/bin/hyperf.php"
 # ........................
 # 执行迁移
 php "${bin}" migrate --force
+# 执行扩展包迁移
+php "${bin}" migrate:vendor
 
 # 执行seeders
 #php "${bin}" db:seed
