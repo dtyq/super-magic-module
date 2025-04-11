@@ -165,7 +165,6 @@ const ChatMessageList = observer(() => {
 		if (bottomRef?.current) {
 			isScrolling = true
 			bottomRef.current.scrollIntoView({ behavior: "smooth" })
-			console.log("scrollToBottom", bottomRef.current)
 		}
 
 		setTimeout(() => {
@@ -202,7 +201,6 @@ const ChatMessageList = observer(() => {
 	// 检查滚动位置并处理
 	const checkScrollPosition = useMemoizedFn(() => {
 		if (!wrapperRef.current || !initialRenderRef.current || isScrolling) return
-		console.log("checkScrollPosition", wrapperRef.current.scrollTop)
 		// 初始化状态不处理
 		if (lastScrollTop === 0) {
 			lastScrollTop = wrapperRef.current.scrollTop
@@ -219,11 +217,6 @@ const ChatMessageList = observer(() => {
 		if (isScrollUp && !state.isLoadingMore) {
 			// 加载更多，判断第四条消息是否进入视图
 			const messageId = MessageStore.messages[3]?.message_id
-			console.log(
-				"isMessageInView",
-				messageId,
-				isMessageInView(messageId, wrapperRef.current),
-			)
 			if (isMessageInView(messageId, wrapperRef.current) || scrollTop < 150) {
 				loadMoreHistoryMessages()
 			}
@@ -239,7 +232,6 @@ const ChatMessageList = observer(() => {
 
 		// 如果最后一条消息为空，证明是初始化状态，滚动到底部
 		if (!lastMessageId) {
-			console.log("handleResize to bottom")
 			lastMessageId = messages[messages.length - 1]?.message_id
 			scrollToBottom(true)
 			return
