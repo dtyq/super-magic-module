@@ -145,9 +145,12 @@ class KnowledgeBaseDocumentRepository extends KnowledgeBaseAbstractRepository im
     /**
      * 查看单个知识库文档详情.
      */
-    public function show(KnowledgeBaseDataIsolation $dataIsolation, string $documentCode): ?KnowledgeBaseDocumentEntity
+    public function show(KnowledgeBaseDataIsolation $dataIsolation, string $documentCode, bool $selectForUpdate = false): ?KnowledgeBaseDocumentEntity
     {
         $builder = $this->createBuilder($dataIsolation, KnowledgeBaseDocumentModel::query());
+        if ($selectForUpdate) {
+            $builder = $builder->lockForUpdate();
+        }
         $model = $builder->where('code', $documentCode)->orderBy('version', 'desc')->first();
 
         return $model ? new KnowledgeBaseDocumentEntity($model->toArray()) : null;
