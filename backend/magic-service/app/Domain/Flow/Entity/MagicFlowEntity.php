@@ -643,6 +643,9 @@ class MagicFlowEntity extends AbstractEntity
         if (empty($this->creator)) {
             ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'common.empty', ['label' => 'flow.fields.creator']);
         }
+        if (empty($this->createdAt)) {
+            $this->createdAt = new DateTime();
+        }
     }
 
     private function checkName(): void
