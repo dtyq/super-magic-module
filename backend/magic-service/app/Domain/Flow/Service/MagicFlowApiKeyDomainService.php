@@ -33,13 +33,13 @@ class MagicFlowApiKeyDomainService extends AbstractDomainService
             // 检查是否重复，毕竟是需要一对一的关系
             if ($magicFlowApiKeyEntity->getType() === ApiKeyType::Personal) {
                 if ($this->magicFlowApiKeyRepository->exist($dataIsolation, $magicFlowApiKeyEntity)) {
-                    ExceptionBuilder::throw(FlowErrorCode::BusinessException, 'flow.common.exist', ['label' => '当前会话的 api key']);
+                    ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'common.exist', ['label' => 'flow.fields.api_key']);
                 }
             }
         } else {
             $magicFlowApiKeyEntity = $this->magicFlowApiKeyRepository->getByCode($dataIsolation, $savingMagicFlowApiKeyEntity->getCode());
             if (! $magicFlowApiKeyEntity) {
-                ExceptionBuilder::throw(FlowErrorCode::BusinessException, 'flow.common.not_found', ['label' => $savingMagicFlowApiKeyEntity->getCode()]);
+                ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'common.not_found', ['label' => $savingMagicFlowApiKeyEntity->getCode()]);
             }
             $savingMagicFlowApiKeyEntity->prepareForModification($magicFlowApiKeyEntity);
         }
@@ -52,7 +52,7 @@ class MagicFlowApiKeyDomainService extends AbstractDomainService
         // 只能修改自己的
         $magicFlowApiKeyEntity = $this->magicFlowApiKeyRepository->getByCode($dataIsolation, $code, $operator);
         if (! $magicFlowApiKeyEntity) {
-            ExceptionBuilder::throw(FlowErrorCode::BusinessException, 'flow.common.not_found', ['label' => $code]);
+            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'common.not_found', ['label' => $code]);
         }
         $magicFlowApiKeyEntity->prepareForUpdateSecretKey();
         return $this->magicFlowApiKeyRepository->save($dataIsolation, $magicFlowApiKeyEntity);
@@ -62,7 +62,7 @@ class MagicFlowApiKeyDomainService extends AbstractDomainService
     {
         $magicFlowApiKeyEntity = $this->magicFlowApiKeyRepository->getByCode($dataIsolation, $code, $operator);
         if (! $magicFlowApiKeyEntity) {
-            ExceptionBuilder::throw(FlowErrorCode::BusinessException, 'flow.common.not_found', ['label' => $code]);
+            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'common.not_found', ['label' => $code]);
         }
         return $magicFlowApiKeyEntity;
     }
@@ -71,7 +71,7 @@ class MagicFlowApiKeyDomainService extends AbstractDomainService
     {
         $magicFlowApiKeyEntity = $this->magicFlowApiKeyRepository->getBySecretKey($dataIsolation, $secretKey);
         if (! $magicFlowApiKeyEntity) {
-            ExceptionBuilder::throw(FlowErrorCode::BusinessException, 'flow.common.not_found', ['label' => $secretKey]);
+            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'common.not_found', ['label' => $secretKey]);
         }
         return $magicFlowApiKeyEntity;
     }
@@ -88,7 +88,7 @@ class MagicFlowApiKeyDomainService extends AbstractDomainService
     {
         $magicFlowApiKeyEntity = $this->magicFlowApiKeyRepository->getByCode($dataIsolation, $code, $operator);
         if (! $magicFlowApiKeyEntity) {
-            ExceptionBuilder::throw(FlowErrorCode::BusinessException, 'flow.common.not_found', ['label' => $code]);
+            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'common.not_found', ['label' => $code]);
         }
 
         $this->magicFlowApiKeyRepository->destroy($dataIsolation, $magicFlowApiKeyEntity->getCode());

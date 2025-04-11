@@ -65,25 +65,25 @@ class MagicFlowAIModelEntity extends AbstractEntity
     public function prepareForSaving(): void
     {
         if (empty($this->name)) {
-            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'flow.name.empty');
+            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'common.empty', ['label' => 'flow.fields.model_name']);
         }
         if (empty($this->implementation)) {
-            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'flow.common.empty', ['label' => 'implementation']);
+            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'common.empty', ['label' => 'flow.fields.implementation']);
         }
         if (class_exists($this->implementation) === false) {
-            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'flow.common.not_found', ['label' => 'implementation']);
+            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'common.not_found', ['label' => 'flow.fields.implementation']);
         }
         if (empty($this->createdUid)) {
-            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'flow.creator.empty');
+            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'common.empty', ['label' => 'flow.fields.creator_uid']);
         }
         if (empty($this->createdAt)) {
             $this->createdAt = new DateTime();
         }
         if (empty($this->organizationCode)) {
-            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'flow.organization_code.empty');
+            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'common.empty', ['label' => 'flow.fields.organization_code']);
         }
         if ($this->supportEmbedding && ($this->vectorSize <= 0)) {
-            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'flow.common.invalid', ['label' => 'vector_size']);
+            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'common.invalid', ['label' => 'flow.fields.vector_size']);
         }
 
         $this->updatedUid = $this->createdUid;
@@ -111,11 +111,11 @@ class MagicFlowAIModelEntity extends AbstractEntity
     public function createRerank(): RerankInterface
     {
         if (! $this->enabled) {
-            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'flow.model.disabled', ['model_name' => $this->name]);
+            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'common.disabled', ['label' => 'flow.fields.model_name']);
         }
         $rerankModel = new $this->implementation($this->name, $this->getActualImplementationConfig());
         if (! $rerankModel instanceof RerankInterface) {
-            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'implementation must be instanceof RerankInterface');
+            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'flow.model.invalid_implementation_interface', ['interface' => 'RerankInterface']);
         }
         return $rerankModel;
     }

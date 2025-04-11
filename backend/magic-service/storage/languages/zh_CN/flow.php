@@ -61,6 +61,7 @@ return [
         'disabled' => '模型 [:model_name] 已禁用',
         'not_support_embedding' => '[:model_name] 不支持嵌入',
         'error_config_missing' => '配置项 :name 缺失，请检查相关设置或联系管理员处理。',
+        'invalid_implementation_interface' => '实现必须是 :interface 的实例',
     ],
     'max_record' => [
         'positive_integer' => '最大记录数 只能是 :min - :max 的正整数',
@@ -101,6 +102,8 @@ return [
             'empty' => '缓存时间 不能为空',
             'int_only' => '缓存时间 必须是正整数',
         ],
+        'cannot_enable_empty_nodes' => '当前流程未设置任何节点，无法被启用',
+        'validation_failed' => '节点[:node_id][:node_type] 验证失败: :error',
         'code' => [
             'empty' => '代码 不能为空',
             'empty_language' => '代码语言 不能为空',
@@ -156,16 +159,6 @@ return [
             'execute_failed' => '子流程[:flow_name] 执行失败 :error',
             'flow_id_empty' => '子流程ID 不能为空',
         ],
-        'tool' => [
-            'tool_id_empty' => '工具ID 不能为空',
-            'flow_not_found' => '工具 [:flow_code] 未找到',
-            'start_node_not_found' => '工具[:flow_code] 开始节点未找到',
-            'end_node_not_found' => '工具[:flow_code] 结束节点未找到',
-            'execute_failed' => '工具[:flow_name] 执行失败 :error',
-        ],
-        'end' => [
-            'must_exist' => '结束节点 必须存在',
-        ],
         'text_embedding' => [
             'text_empty' => '文本 不能为空',
         ],
@@ -189,6 +182,16 @@ return [
         'knowledge_fragment_remove' => [
             'metadata_business_id_empty' => '元数据或业务 ID 不能为空',
         ],
+        'tool' => [
+            'tool_id_empty' => '工具ID 不能为空',
+            'flow_not_found' => '工具 [:flow_code] 未找到',
+            'start_node_not_found' => '工具[:flow_code] 开始节点未找到',
+            'end_node_not_found' => '工具[:flow_code] 结束节点未找到',
+            'execute_failed' => '工具[:flow_name] 执行失败 :error',
+            'name' => [
+                'invalid_format' => '工具名称只能包含字母、数字、下划线',
+            ],
+        ],
     ],
     'executor' => [
         'unsupported_node_type' => '[:node_type] 不支持的节点类型',
@@ -198,5 +201,36 @@ return [
     ],
     'component' => [
         'format_error' => '[:label] 格式错误',
+    ],
+    'fields' => [
+        'flow_name' => '流程名称',
+        'flow_type' => '流程类型',
+        'organization_code' => '组织编码',
+        'creator' => '创建人',
+        'creator_uid' => '创建人UID',
+        'tool_name' => '工具名称',
+        'tool_description' => '工具描述',
+        'nodes' => '节点列表',
+        'node' => '节点',
+        'api_key' => 'API密钥',
+        'api_key_name' => 'API密钥名称',
+        'test_case_name' => '测试集名称',
+        'flow_code' => '流程编码',
+        'created_at' => '创建时间',
+        'case_config' => '测试配置',
+        'nickname' => '昵称',
+        'chat_time' => '聊天时间',
+        'message_type' => '消息类型',
+        'content' => '内容',
+        'open_time' => '打开时间',
+        'trigger_type' => '触发类型',
+        'message_id' => '消息ID',
+        'type' => '类型',
+        'analysis_result' => '分析结果',
+        'model_name' => '模型名称',
+        'implementation' => '实现方式',
+        'vector_size' => '向量大小',
+        'conversation_id' => '会话ID',
+        'modifier' => '修改人',
     ],
 ];

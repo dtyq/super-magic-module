@@ -183,16 +183,16 @@ class MagicFlowDraftEntity extends AbstractEntity
     private function requiredValidate(): void
     {
         if (empty($this->name)) {
-            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'flow.name.empty');
+            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'common.empty', ['label' => 'flow.fields.flow_name']);
         }
         if (empty($this->flowCode)) {
-            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'flow.flow_code.empty');
+            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'common.empty', ['label' => 'flow.fields.flow_code']);
         }
         if (empty($this->organizationCode)) {
-            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'flow.organization_code.empty');
+            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'common.empty', ['label' => 'flow.fields.organization_code']);
         }
         if (empty($this->creator)) {
-            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'flow.creator.empty');
+            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'common.empty', ['label' => 'flow.fields.creator']);
         }
         if (empty($this->createdAt)) {
             $this->createdAt = new DateTime();

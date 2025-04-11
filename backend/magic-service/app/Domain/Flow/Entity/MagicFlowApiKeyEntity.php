@@ -57,19 +57,19 @@ class MagicFlowApiKeyEntity extends AbstractEntity
     public function prepareForCreate(): void
     {
         if (empty($this->organizationCode)) {
-            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'flow.organization_code.empty');
+            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'common.empty', ['label' => 'flow.fields.organization_code']);
         }
         if (empty($this->flowCode)) {
-            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'flow.flow_code.empty');
+            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'common.empty', ['label' => 'flow.fields.flow_code']);
         }
         if (empty($this->name)) {
-            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'flow.name.empty');
+            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'common.empty', ['label' => 'flow.fields.api_key_name']);
         }
         if (empty($this->creator)) {
-            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'flow.creator.empty');
+            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'common.empty', ['label' => 'flow.fields.creator']);
         }
         if (empty($this->conversationId)) {
-            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'flow.conversation_id.empty');
+            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'common.empty', ['label' => 'flow.fields.conversation_id']);
         }
         if (empty($this->createdAt)) {
             $this->createdAt = new DateTime();
@@ -88,13 +88,13 @@ class MagicFlowApiKeyEntity extends AbstractEntity
     public function prepareForModification(MagicFlowApiKeyEntity $magicFlowApiKeyEntity): void
     {
         if (empty($this->organizationCode)) {
-            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'flow.organization_code.empty');
+            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'common.empty', ['label' => 'flow.fields.organization_code']);
         }
         if (empty($this->name)) {
-            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'flow.name.empty');
+            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'common.empty', ['label' => 'flow.fields.api_key_name']);
         }
         if (empty($this->creator)) {
-            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'flow.creator.empty');
+            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'common.empty', ['label' => 'flow.fields.creator']);
         }
 
         $magicFlowApiKeyEntity->setName($this->name);
@@ -107,7 +107,7 @@ class MagicFlowApiKeyEntity extends AbstractEntity
     public function prepareForUpdateSecretKey(): void
     {
         if (empty($this->modifier)) {
-            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'flow.creator.empty');
+            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'common.empty', ['label' => 'flow.fields.modifier']);
         }
 
         $this->secretKey = Code::ApiKeySK->gen();

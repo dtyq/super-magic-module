@@ -105,7 +105,7 @@ class MagicFlowDomainService extends AbstractDomainService
     {
         $magicFlow = $this->magicFlowRepository->getByCode($dataIsolation, $savingMagicFlow->getCode());
         if (! $magicFlow) {
-            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, "[{$savingMagicFlow->getCode()}] 不存在");
+            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'common.not_found', ['label' => $savingMagicFlow->getCode()]);
         }
         $savingMagicFlow->prepareForSaveNode($magicFlow);
 
