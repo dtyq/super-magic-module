@@ -75,7 +75,7 @@ class MagicChatAdminContactApi extends AbstractApi
         // 上一页的token. 对于mysql来说,返回累积偏移量;对于es来说,返回游标
         $pageToken = (string) $request->input('page_token', '');
         $queryType = (int) ($request->input('query_type') ?: UserQueryType::User->value);
-        if (! in_array($queryType, [1, 2])) {
+        if (! in_array($queryType, UserQueryType::types())) {
             ExceptionBuilder::throw(ChatErrorCode::INPUT_PARAM_ERROR, 'chat.common.param_error', ['param' => 'query_type']);
         }
         $queryType = UserQueryType::from($queryType);
@@ -115,7 +115,7 @@ class MagicChatAdminContactApi extends AbstractApi
             ExceptionBuilder::throw(ChatErrorCode::INPUT_PARAM_ERROR, 'chat.common.param_error', ['param' => 'query']);
         }
         $queryType = (int) $request->input('query_type', UserQueryType::User->value);
-        if (! in_array($queryType, [1, 2])) {
+        if (! in_array($queryType, UserQueryType::types())) {
             ExceptionBuilder::throw(ChatErrorCode::INPUT_PARAM_ERROR, 'chat.common.param_error', ['param' => 'query_type']);
         }
         $queryType = UserQueryType::from($queryType);

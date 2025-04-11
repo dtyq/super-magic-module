@@ -21,6 +21,8 @@ class KnowledgeBaseFragmentQuery extends Query
 
     public ?int $maxSyncTimes = null;
 
+    public bool $withTrashed = false;
+
     public static function fromGetFragmentListRequestDTO(GetFragmentListRequestDTO $dto): KnowledgeBaseFragmentQuery
     {
         $query = new self($dto->toArray());
@@ -78,6 +80,17 @@ class KnowledgeBaseFragmentQuery extends Query
     public function setDocumentCode(string $documentCode): KnowledgeBaseFragmentQuery
     {
         $this->documentCode = $documentCode;
+        return $this;
+    }
+
+    public function isWithTrashed(): bool
+    {
+        return $this->withTrashed;
+    }
+
+    public function setWithTrashed(bool $withTrashed): self
+    {
+        $this->withTrashed = $withTrashed;
         return $this;
     }
 }
