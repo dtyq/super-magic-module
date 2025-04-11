@@ -70,7 +70,7 @@ function FlowSubSider() {
 						}),
 						title: t("common.flow", { ns: "flow" }),
 						avatar: {
-							icon: <MagicIcon component={IconRouteSquare} color="currentColor" />,
+							src: <MagicIcon component={IconRouteSquare} color="currentColor" />,
 							style: { background: "#FF7D00", padding: 6 },
 						},
 						extra: <MagicIcon component={IconChevronRight} />,
@@ -81,7 +81,7 @@ function FlowSubSider() {
 						}),
 						title: t("common.toolset", { ns: "flow" }),
 						avatar: {
-							icon: <MagicIcon component={IconTools} color="currentColor" />,
+							src: <MagicIcon component={IconTools} color="currentColor" />,
 							style: { background: "#8BD236", padding: 6 },
 						},
 						extra: <MagicIcon component={IconChevronRight} />,

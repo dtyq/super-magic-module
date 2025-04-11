@@ -179,13 +179,12 @@ const ImageWrapper = observer((props: ImageWrapperProps) => {
 	const ImageNode = useMemo(() => {
 		if (fileInfo?.ext?.ext?.startsWith("svg") && fileInfo?.url) {
 			return (
-				// eslint-disable-next-line jsx-a11y/control-has-associated-label
 				<button
 					type="button"
 					className={cx(styles.button)}
 					onClick={onClick}
 					disabled={!fileInfo?.url}
-          draggable={false}
+					draggable={false}
 				>
 					<div
 						className={styles.image}
@@ -209,23 +208,22 @@ const ImageWrapper = observer((props: ImageWrapperProps) => {
 				{isLongImage && (
 					<span className={styles.longImageTip}>{t("chat.message.image.longImage")}</span>
 				)}
-				<button
-					type="button"
-					className={cx(styles.button)}
+				<img
+					ref={imageRef}
+					src={fileInfo?.url}
+					alt={alt ?? fileInfo?.fileName}
 					onClick={onClick}
-					disabled={!fileInfo?.url}
-				>
-					<img
-						ref={imageRef}
-						src={fileInfo?.url}
-						alt={alt ?? fileInfo?.fileName}
-						className={cx(styles.image, { [styles.longImage]: isLongImage }, className, 'magic-image')}
-						onError={onError}
-            onLoad={onLoad}
-            draggable={false}
-						{...rest}
-					/>
-				</button>
+					className={cx(
+						styles.image,
+						{ [styles.longImage]: isLongImage },
+						className,
+						"magic-image",
+					)}
+					onError={onError}
+					onLoad={onLoad}
+					draggable={false}
+					{...rest}
+				/>
 			</div>
 		)
 	}, [

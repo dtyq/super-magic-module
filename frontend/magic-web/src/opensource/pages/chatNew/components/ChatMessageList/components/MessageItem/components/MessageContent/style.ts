@@ -32,7 +32,8 @@ export const useStyles = createStyles(({ css, isDarkMode, token }) => ({
 		justify-content: flex-end;
 		padding-right: unset;
 		padding-left: 50px;
-		width: calc(100% - 46px);
+		width: fit-content;
+		max-width: calc(100% - 46px);
 		box-sizing: border-box;
 		user-select: none;
 		line-height: normal;
