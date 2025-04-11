@@ -162,6 +162,19 @@ class ServiceProviderModelsRepository extends AbstractModelRepository
         return ServiceProviderModelsEntityFactory::toEntity($result);
     }
 
+    public function getByIdOrVersion(string $key): ?ServiceProviderModelsEntity
+    {
+        $query = $this->serviceProviderModelsModel::query()
+            ->where('id', $key)
+            ->orWhere('model_version', $key);
+
+        $result = Db::selectOne($query->toSql(), $query->getBindings());
+        if (! $result) {
+            return null;
+        }
+        return ServiceProviderModelsEntityFactory::toEntity($result);
+    }
+
     /**
      * @param $serviceProviderModelsEntities ServiceProviderModelsEntity[]
      */
