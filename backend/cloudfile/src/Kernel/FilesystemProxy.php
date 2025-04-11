@@ -123,10 +123,14 @@ class FilesystemProxy extends Filesystem
             return $data;
         }
         $credential = $this->expand->getUploadCredential($credentialPolicy, $options);
+
+        $platform = $credential['platform'] ?? $this->adapterName;
+        $expires = $credential['expires'] ?? time() + $credentialPolicy->getExpires();
+        $temporaryCredential = $credential['temporary_credential'] ?? $credential;
         $data = [
-            'platform' => $this->adapterName,
-            'temporary_credential' => $credential,
-            'expires' => time() + $credentialPolicy->getExpires(),
+            'platform' => $platform,
+            'temporary_credential' => $temporaryCredential,
+            'expires' => (int) $expires,
         ];
         $this->setCache($cacheKey, $data, $credentialPolicy->getExpires() - 60);
         return $data;
