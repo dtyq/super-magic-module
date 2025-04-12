@@ -11,6 +11,7 @@ use App\Domain\Agent\Constant\InstructType;
 use App\Domain\Agent\Service\MagicAgentDomainService;
 use App\Domain\Chat\DTO\ChatCompletionsDTO;
 use App\Domain\Chat\Entity\MagicConversationEntity;
+use App\Domain\Chat\Entity\ValueObject\LLMModelEnum;
 use App\Domain\Chat\Service\MagicChatDomainService;
 use App\Domain\Chat\Service\MagicChatFileDomainService;
 use App\Domain\Chat\Service\MagicConversationDomainService;
@@ -19,7 +20,6 @@ use App\Domain\Chat\Service\MagicTopicDomainService;
 use App\Domain\Contact\Entity\ValueObject\DataIsolation;
 use App\Domain\File\Service\FileDomainService;
 use App\Domain\ModelGateway\Entity\Dto\CompletionDTO;
-use App\Domain\ModelGateway\Entity\ValueObject\MagicApiLLMEnum;
 use App\ErrorCode\AgentErrorCode;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Interfaces\Authorization\Web\MagicUserAuthorization;
@@ -88,7 +88,7 @@ class MagicConversationAppService extends MagicSeqAppService
         if (defined('MAGIC_ACCESS_TOKEN')) {
             $sendMsgGPTDTO->setAccessToken(MAGIC_ACCESS_TOKEN);
         }
-        $sendMsgGPTDTO->setModel(MagicApiLLMEnum::LOCAL_GEMMA2_2B->value);
+        $sendMsgGPTDTO->setModel(LLMModelEnum::GEMMA2_2B->value);
         $sendMsgGPTDTO->setBusinessParams([
             'organization_id' => $dataIsolation->getCurrentOrganizationCode(),
             'user_id' => $dataIsolation->getCurrentUserId(),

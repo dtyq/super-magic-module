@@ -53,8 +53,9 @@ class LLMChatNodeRunner extends AbstractLLMNodeRunner
         $paramsConfig = $this->node->getNodeParamsConfig();
 
         $modelName = $paramsConfig->getModel()->getValue()->getResult($executionData->getExpressionFieldData());
+        $orgCode = $executionData->getOperator()->getOrganizationCode();
         /** @var AbstractModel $model */
-        $model = $this->modelGatewayMapper->getChatModelProxy($modelName);
+        $model = $this->modelGatewayMapper->getChatModelProxy($modelName, $orgCode);
 
         // 默认视觉模型配置就是自己
         if ($paramsConfig->getModelConfig()->getVisionModel() === '') {
