@@ -61,7 +61,10 @@ class LLMAppService extends AbstractLLMAppService
         $list = [];
         foreach ($models as $name => $odinModel) {
             $modelConfigEntity = new ModelConfigEntity();
+            // 服务商的接入点
             $modelConfigEntity->setModel($odinModel->getModel()->getModelName());
+            // 模型类型
+            $modelConfigEntity->setType($odinModel->getAttributes()->getKey());
             $modelConfigEntity->setName($odinModel->getAttributes()->getLabel() ?: $odinModel->getAttributes()->getName());
             $modelConfigEntity->setOwnerBy($odinModel->getAttributes()->getOwner());
             $modelConfigEntity->setCreatedAt($odinModel->getAttributes()->getCreatedAt());
@@ -117,13 +120,14 @@ class LLMAppService extends AbstractLLMAppService
         try {
             // 尝试获取高可用模型配置
             $endpointResponseDTO = null;
-            $modeId = $this->getHighAvailableModelId($proxyModelRequest->getModel(), $endpointResponseDTO, $contextData['organization_code'] ?? null);
+            $orgCode = $contextData['organization_code'] ?? null;
+            $modeId = $this->getHighAvailableModelId($proxyModelRequest->getModel(), $endpointResponseDTO, $orgCode);
             if (empty($modeId)) {
                 $modeId = $proxyModelRequest->getModel();
             }
             $model = match ($proxyModelRequest->getType()) {
-                'chat' => $this->modelGatewayMapper->getChatModel($modeId),
-                'embedding' => $this->modelGatewayMapper->getEmbeddingModel($modeId),
+                'chat' => $this->modelGatewayMapper->getOrganizationChatModel($modeId, $orgCode),
+                'embedding' => $this->modelGatewayMapper->getOrganizationEmbeddingModel($modeId, $orgCode),
                 default => null
             };
             if (! $model || $model instanceof MagicAILocalModel) {

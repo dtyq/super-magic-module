@@ -155,10 +155,6 @@ class ServiceProviderDomainService
             ExceptionBuilder::throw(ServiceProviderErrorCode::ServiceProviderNotFound);
         }
         $serviceProviderConfigEntity->setProviderCode(ServiceProviderCode::tryFrom($serviceProviderEntity->getProviderCode()));
-        // todo 管理后台未适配官方服务商，只能返回 null 然后走 model-config 的配置，待解决
-        if ($serviceProviderEntity->getProviderType() === ServiceProviderType::OFFICIAL->value) {
-            return null;
-        }
         return $serviceProviderConfigEntity;
     }
 
@@ -879,9 +875,56 @@ class ServiceProviderDomainService
         return $this->serviceProviderModelsRepository->getById($id);
     }
 
-    public function getModelByIdOrVersion(string $key): ?ServiceProviderModelsEntity
+    /**
+     * 返回模型和服务商都被激活了的接入点列表.
+     * @return ServiceProviderModelsEntity[]
+     * @todo 要判断 model_parent_id 的模型和服务商是否激活？
+     */
+    public function getOrganizationActiveModelsByIdOrType(string $key, ?string $orgCode = null): array
     {
-        return $this->serviceProviderModelsRepository->getByIdOrVersion($key);
+        // 获取所有匹配条件的活跃模型
+        $models = $this->serviceProviderModelsRepository->getOrganizationActiveModelsByIdOrType($key, $orgCode);
+        if (empty($models)) {
+            return [];
+        }
+
+        // 提取所有模型的服务商配置ID
+        $configIds = [];
+        foreach ($models as $model) {
+            $configIds[] = $model->getServiceProviderConfigId();
+        }
+        $configIds = array_unique($configIds);
+
+        // 批量查询服务商配置
+        $configEntities = $this->serviceProviderConfigRepository->getByIds($configIds);
+        if (empty($configEntities)) {
+            return [];
+        }
+
+        // 创建服务商配置ID到配置实体的映射，同时提取服务商ID
+        $configMap = [];
+        foreach ($configEntities as $config) {
+            // 只保留活跃的服务商配置
+            if ($config->getStatus() === Status::ACTIVE->value) {
+                $configMap[$config->getId()] = $config;
+            }
+        }
+
+        if (empty($configMap)) {
+            return [];
+        }
+
+        // 最终筛选活跃的模型
+        $activeModels = [];
+        foreach ($models as $model) {
+            $configId = $model->getServiceProviderConfigId();
+            // 只检查服务商配置是否存在且活跃
+            if (isset($configMap[$configId])) {
+                $activeModels[] = $model;
+            }
+        }
+
+        return $activeModels;
     }
 
     public function deleteServiceProviderForAdmin(string $serviceProviderConfigId, string $organizationCode)

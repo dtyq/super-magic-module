@@ -7,6 +7,7 @@ declare(strict_types=1);
 
 namespace App\Application\Chat\Service;
 
+use App\Application\ModelGateway\Mapper\ModelGatewayMapper;
 use App\Domain\Chat\DTO\ConversationListQueryDTO;
 use App\Domain\Chat\DTO\Message\ChatMessage\AbstractAttachmentMessage;
 use App\Domain\Chat\DTO\Message\MessageInterface;
@@ -52,7 +53,6 @@ use App\Interfaces\Chat\Assembler\SeqAssembler;
 use Carbon\Carbon;
 use Hyperf\Codec\Json;
 use Hyperf\Context\ApplicationContext;
-use Hyperf\DbConnection\Annotation\Transactional;
 use Hyperf\DbConnection\Db;
 use Hyperf\Logger\LoggerFactory;
 use Hyperf\Redis\Redis;
@@ -83,7 +83,7 @@ class MagicChatMessageAppService extends MagicSeqAppService
         protected CacheInterface $cache,
         protected MagicUserDomainService $magicUserDomainService,
         protected Redis $redis,
-        protected LockerInterface $locker
+        protected LockerInterface $locker,
     ) {
         try {
             $this->logger = ApplicationContext::getContainer()->get(LoggerFactory::class)->get(get_class($this));
@@ -395,70 +395,76 @@ class MagicChatMessageAppService extends MagicSeqAppService
      * 比如根据发件方的seq,为收件方生成seq,投递seq.
      * @throws Throwable
      */
-    #[Transactional]
     public function dispatchMQChatMessage(MagicSeqEntity $senderSeqEntity): void
     {
-        # 以下是聊天消息. 采取写扩散:如果是群,则为群成员的每个人生成seq
-        // 1.获取会话信息
-        $senderConversationEntity = $this->magicChatDomainService->getConversationById($senderSeqEntity->getConversationId());
-        if ($senderConversationEntity === null) {
-            $this->logger->error(sprintf('messageDispatchError conversation not found:%s', Json::encode($senderSeqEntity)));
-            return;
-        }
-        $receiveConversationType = $senderConversationEntity->getReceiveType();
-        $senderMessageEntity = $this->magicChatDomainService->getMessageByMagicMessageId($senderSeqEntity->getMagicMessageId());
-        if ($senderMessageEntity === null) {
-            $this->logger->error(sprintf('messageDispatchError senderMessageEntity not found:%s', Json::encode($senderSeqEntity)));
-            return;
-        }
-        $magicSeqStatus = MagicMessageStatus::Unread;
-        // 根据会话类型,生成seq
-        switch ($receiveConversationType) {
-            case ConversationType::Ai:
-                try {
-                    # ai 可能参与私聊/群聊等场景,读取记忆时,需要读取自己会话窗口下的消息.
+        Db::beginTransaction();
+        try {
+            # 以下是聊天消息. 采取写扩散:如果是群,则为群成员的每个人生成seq
+            // 1.获取会话信息
+            $senderConversationEntity = $this->magicChatDomainService->getConversationById($senderSeqEntity->getConversationId());
+            if ($senderConversationEntity === null) {
+                $this->logger->error(sprintf('messageDispatchError conversation not found:%s', Json::encode($senderSeqEntity)));
+                return;
+            }
+            $receiveConversationType = $senderConversationEntity->getReceiveType();
+            $senderMessageEntity = $this->magicChatDomainService->getMessageByMagicMessageId($senderSeqEntity->getMagicMessageId());
+            if ($senderMessageEntity === null) {
+                $this->logger->error(sprintf('messageDispatchError senderMessageEntity not found:%s', Json::encode($senderSeqEntity)));
+                return;
+            }
+            $magicSeqStatus = MagicMessageStatus::Unread;
+            // 根据会话类型,生成seq
+            switch ($receiveConversationType) {
+                case ConversationType::Ai:
+                    try {
+                        # ai 可能参与私聊/群聊等场景,读取记忆时,需要读取自己会话窗口下的消息.
+                        $receiveSeqEntity = $this->magicChatDomainService->generateReceiveSequenceByChatMessage($senderSeqEntity, $senderMessageEntity, $magicSeqStatus);
+                        // 避免 seq 表承载太多功能,加太多索引,因此将话题的消息单独写入到 topic_messages 表中
+                        $this->magicChatDomainService->createTopicMessage($receiveSeqEntity);
+                        $this->pushReceiveChatSequence($senderMessageEntity, $receiveSeqEntity);
+                    } catch (Throwable$exception) {
+                        $errMsg = [
+                            'file' => $exception->getFile(),
+                            'line' => $exception->getLine(),
+                            'message' => $exception->getMessage(),
+                            'trace' => $exception->getTraceAsString(),
+                        ];
+                        $this->logger->error(sprintf(
+                            'messageDispatchError senderSeqEntity:%s errMsg:%s',
+                            Json::encode($senderSeqEntity->toArray()),
+                            Json::encode($errMsg)
+                        ));
+                    }
+                    break;
+                case ConversationType::User:
                     $receiveSeqEntity = $this->magicChatDomainService->generateReceiveSequenceByChatMessage($senderSeqEntity, $senderMessageEntity, $magicSeqStatus);
                     // 避免 seq 表承载太多功能,加太多索引,因此将话题的消息单独写入到 topic_messages 表中
                     $this->magicChatDomainService->createTopicMessage($receiveSeqEntity);
                     $this->pushReceiveChatSequence($senderMessageEntity, $receiveSeqEntity);
-                } catch (Throwable$exception) {
-                    $errMsg = [
-                        'file' => $exception->getFile(),
-                        'line' => $exception->getLine(),
-                        'message' => $exception->getMessage(),
-                        'trace' => $exception->getTraceAsString(),
-                    ];
-                    $this->logger->error(sprintf(
-                        'messageDispatchError senderSeqEntity:%s errMsg:%s',
-                        Json::encode($senderSeqEntity->toArray()),
-                        Json::encode($errMsg)
-                    ));
-                }
-                break;
-            case ConversationType::User:
-                $receiveSeqEntity = $this->magicChatDomainService->generateReceiveSequenceByChatMessage($senderSeqEntity, $senderMessageEntity, $magicSeqStatus);
-                // 避免 seq 表承载太多功能,加太多索引,因此将话题的消息单独写入到 topic_messages 表中
-                $this->magicChatDomainService->createTopicMessage($receiveSeqEntity);
-                $this->pushReceiveChatSequence($senderMessageEntity, $receiveSeqEntity);
-                break;
-            case ConversationType::Group:
-                $seqListCreateDTO = $this->magicChatDomainService->generateGroupReceiveSequence($senderSeqEntity, $senderMessageEntity, $magicSeqStatus);
-                // todo 群里面的话题消息也写入 topic_messages 表中
-                // 将这些 seq_id 合并为一条 mq 消息进行推送/消费
-                $seqIds = array_keys($seqListCreateDTO);
-                $messagePriority = $this->magicChatDomainService->getChatMessagePriority(ConversationType::Group, count($seqIds));
-                ! empty($seqIds) && $this->magicChatDomainService->batchPushSeq($seqIds, $messagePriority);
-                break;
-            case ConversationType::System:
-                throw new RuntimeException('To be implemented');
-            case ConversationType::CloudDocument:
-                throw new RuntimeException('To be implemented');
-            case ConversationType::MultidimensionalTable:
-                throw new RuntimeException('To be implemented');
-            case ConversationType::Topic:
-                throw new RuntimeException('To be implemented');
-            case ConversationType::App:
-                throw new RuntimeException('To be implemented');
+                    break;
+                case ConversationType::Group:
+                    $seqListCreateDTO = $this->magicChatDomainService->generateGroupReceiveSequence($senderSeqEntity, $senderMessageEntity, $magicSeqStatus);
+                    // todo 群里面的话题消息也写入 topic_messages 表中
+                    // 将这些 seq_id 合并为一条 mq 消息进行推送/消费
+                    $seqIds = array_keys($seqListCreateDTO);
+                    $messagePriority = $this->magicChatDomainService->getChatMessagePriority(ConversationType::Group, count($seqIds));
+                    ! empty($seqIds) && $this->magicChatDomainService->batchPushSeq($seqIds, $messagePriority);
+                    break;
+                case ConversationType::System:
+                    throw new RuntimeException('To be implemented');
+                case ConversationType::CloudDocument:
+                    throw new RuntimeException('To be implemented');
+                case ConversationType::MultidimensionalTable:
+                    throw new RuntimeException('To be implemented');
+                case ConversationType::Topic:
+                    throw new RuntimeException('To be implemented');
+                case ConversationType::App:
+                    throw new RuntimeException('To be implemented');
+            }
+            Db::commit();
+        } catch (Throwable$exception) {
+            Db::rollBack();
+            throw $exception;
         }
     }
 
@@ -542,7 +548,22 @@ PROMPT;
             return null;
         }
         $sendMsgGPTDTO = new CompletionDTO();
-        $sendMsgGPTDTO->setModel(LLMModelEnum::GPT_4O_MINI_GLOBAL->value);
+        // 从组织可用的模型列表中随便选一个可以聊天的模型
+        $odinModels = di(ModelGatewayMapper::class)->getChatModels($dataIsolation->getCurrentOrganizationCode()) ?? [];
+        $chatModelsName = array_keys($odinModels);
+        if (empty($chatModelsName)) {
+            return null;
+        }
+        // 避免随机到太差的模型，预定义几个
+        $priorityChatModelsName = [LLMModelEnum::GPT_4O->value, LLMModelEnum::DEEPSEEK_V3->value];
+        // 求交集
+        $modelsName = array_values(array_intersect($chatModelsName, $priorityChatModelsName));
+        if ($modelsName) {
+            $chatModelName = $modelsName[0];
+        } else {
+            $chatModelName = $chatModelsName[0];
+        }
+        $sendMsgGPTDTO->setModel($chatModelName);
         $sendMsgGPTDTO->setMessages($userMessages);
         $sendMsgGPTDTO->setBusinessParams([
             'organization_id' => $dataIsolation->getCurrentOrganizationCode(),
@@ -550,8 +571,9 @@ PROMPT;
             'business_id' => $topicId,
             'source_id' => 'rename_topic',
         ]);
-        $accessToken = $this->magicTopicDomainService->getMagicApiAccessToken(LLMModelEnum::GPT_4O_MINI_GLOBAL->value);
-        $sendMsgGPTDTO->setAccessToken($accessToken);
+        if (defined('MAGIC_ACCESS_TOKEN')) {
+            $sendMsgGPTDTO->setAccessToken(MAGIC_ACCESS_TOKEN);
+        }
         $sendMsgGPTDTO->setTemperature(0.1);
         // 开启流式
         $sendMsgGPTDTO->setStream(false);

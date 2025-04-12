@@ -79,8 +79,8 @@ class ServiceProviderModelsRepository extends AbstractModelRepository
     public function changeModelStatus(int $serviceProviderId, int $modelId, int $status): void
     {
         $this->serviceProviderModelsModel::query()
-            ->where('service_provider_config_id', $serviceProviderId)
             ->where('id', $modelId)
+            ->where('service_provider_config_id', $serviceProviderId)
             ->update(['status' => $status]);
 
         $this->handleModelsChangeAndDispatch([$modelId]);
@@ -118,8 +118,8 @@ class ServiceProviderModelsRepository extends AbstractModelRepository
     public function getModelStatusByServiceProviderConfigIdAndOrganizationCode(string $serviceProviderConfigId, string $organizationCode): array
     {
         $query = $this->serviceProviderModelsModel::query()
-            ->where('service_provider_config_id', $serviceProviderConfigId)
-            ->where('organization_code', $organizationCode);
+            ->where('organization_code', $organizationCode)
+            ->where('service_provider_config_id', $serviceProviderConfigId);
 
         return $this->executeQueryAndToEntities($query);
     }
@@ -145,8 +145,8 @@ class ServiceProviderModelsRepository extends AbstractModelRepository
 
         $query = $this->serviceProviderModelsModel::query()
             ->where('organization_code', $organizationCode)
-            ->whereIn('service_provider_config_id', $serviceProviderConfigIds)
-            ->where('status', Status::ACTIVE->value);
+            ->where('status', Status::ACTIVE->value)
+            ->whereIn('service_provider_config_id', $serviceProviderConfigIds);
 
         return $this->executeQueryAndToEntities($query);
     }
@@ -162,17 +162,69 @@ class ServiceProviderModelsRepository extends AbstractModelRepository
         return ServiceProviderModelsEntityFactory::toEntity($result);
     }
 
-    public function getByIdOrVersion(string $key): ?ServiceProviderModelsEntity
+    /**
+     * @return ServiceProviderModelsEntity[]
+     */
+    public function getOrganizationActiveModelsByIdOrType(string $key, ?string $orgCode = null): array
     {
-        $query = $this->serviceProviderModelsModel::query()
+        # 提升索引命中，先根据id查询，再根据model_id查询
+        // 第一次查询：根据id查询
+        $idQuery = $this->serviceProviderModelsModel::query()
             ->where('id', $key)
-            ->orWhere('model_version', $key);
+            ->where('status', Status::ACTIVE->value);
 
-        $result = Db::selectOne($query->toSql(), $query->getBindings());
-        if (! $result) {
-            return null;
+        if ($orgCode) {
+            $idQuery->where('organization_code', $orgCode);
         }
-        return ServiceProviderModelsEntityFactory::toEntity($result);
+
+        $resultById = Db::select($idQuery->toSql(), $idQuery->getBindings());
+
+        // 第二次查询：根据model_id查询
+        $modelIdQuery = $this->serviceProviderModelsModel::query()
+            ->where('model_id', $key)
+            ->where('status', Status::ACTIVE->value);
+
+        if ($orgCode) {
+            $modelIdQuery->where('organization_code', $orgCode);
+        }
+
+        $resultByModelId = Db::select($modelIdQuery->toSql(), $modelIdQuery->getBindings());
+
+        // 合并查询结果后统一转换为实体
+        $mergedResults = array_merge($resultById, $resultByModelId);
+        return ServiceProviderModelsEntityFactory::toEntities($mergedResults);
+    }
+
+    /**
+     * @return ServiceProviderModelsEntity[]
+     */
+    public function getActiveModelByIdOrVersion(string $key, ?string $orgCode = null): array
+    {
+        # 提升索引命中，先根据id查询，再根据model_id查询
+        // 第一次查询：根据id查询
+        $idQuery = $this->serviceProviderModelsModel::query()
+            ->where('id', $key)
+            ->where('status', Status::ACTIVE->value);
+
+        if ($orgCode) {
+            $idQuery->where('organization_code', $orgCode);
+        }
+
+        $resultById = Db::select($idQuery->toSql(), $idQuery->getBindings());
+
+        // 第二次查询：根据model_id查询
+        $modelIdQuery = $this->serviceProviderModelsModel::query();
+        if ($orgCode) {
+            $modelIdQuery->where('organization_code', $orgCode);
+        }
+
+        $modelIdQuery->where('status', Status::ACTIVE->value)->where('model_version', $key);
+
+        $resultByModelId = Db::select($modelIdQuery->toSql(), $modelIdQuery->getBindings());
+
+        // 合并查询结果后统一转换为实体
+        $mergedResults = array_merge($resultById, $resultByModelId);
+        return ServiceProviderModelsEntityFactory::toEntities($mergedResults);
     }
 
     /**
@@ -293,8 +345,8 @@ class ServiceProviderModelsRepository extends AbstractModelRepository
     {
         $query = $this->serviceProviderModelsModel->newQuery()
             ->where('organization_code', $organizationCode)
-            ->where('model_version', $modelVersion)
-            ->where('status', Status::ACTIVE->value);
+            ->where('status', Status::ACTIVE->value)
+            ->where('model_version', $modelVersion);
 
         $results = Db::select($query->toSql(), $query->getBindings());
         return ServiceProviderModelsEntityFactory::toEntities($results);
@@ -304,8 +356,8 @@ class ServiceProviderModelsRepository extends AbstractModelRepository
     {
         $query = $this->serviceProviderModelsModel->newQuery()
             ->where('organization_code', $organizationCode)
-            ->where('model_id', $modelId)
-            ->where('status', Status::ACTIVE->value);
+            ->where('status', Status::ACTIVE->value)
+            ->where('model_id', $modelId);
 
         return $this->executeQueryAndToEntities($query);
     }

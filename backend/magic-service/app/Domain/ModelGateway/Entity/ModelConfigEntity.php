@@ -20,12 +20,12 @@ class ModelConfigEntity extends AbstractEntity
     protected ?int $id = null;
 
     /**
-     * 唯一值.
+     * 服务商侧接入点 id.比如火山的：ep-xxxx.
      */
     protected string $model;
 
     /**
-     * 模型类型.
+     * 模型类型.比如：gtp4o.
      */
     protected string $type;
 

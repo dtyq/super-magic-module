@@ -4,9 +4,6 @@ declare(strict_types=1);
 /**
  * Copyright (c) The Magic , Distributed under the software license
  */
-use App\Domain\ModelGateway\Entity\ValueObject\MagicApiLLMEnum;
-use Hyperf\Odin\Model\OpenAIModel;
-
 use function Hyperf\Support\env;
 
 return [
@@ -29,18 +26,5 @@ return [
     // 访问国外的代理配置
     'http' => [
         'proxy' => env('HTTP_PROXY'),
-    ],
-    'default_access_token' => env('MAGIC_API_DEFAULT_ACCESS_TOKEN'),
-    'llm' => [
-        'models' => [
-            MagicApiLLMEnum::LOCAL_GEMMA2_2B->value => [
-                'implementation' => OpenAIModel::class,
-                'model' => env('LOCAL_GEMMA2_MODEL_ID', 'shareAI/gemma-2-2b-it-Chinese-DPO-GGUF'),
-                'config' => [
-                    'base_url' => env('CLOSEDAI_API', ''),
-                    'api_key' => env('CLOSEDAI_TOKEN', ''),
-                ],
-            ],
-        ],
     ],
 ];
