@@ -31,8 +31,16 @@ abstract class AbstractKernelAppService
      */
     public function getIcons(string $organizationCode, array $icons): array
     {
-        $icons = array_filter($icons);
-        return di(FileDomainService::class)->getLinks($organizationCode, $icons);
+        return $this->getFileLinks($organizationCode, $icons);
+    }
+
+    /**
+     * @return array<string,FileLink>
+     */
+    public function getFileLinks(string $organizationCode, array $fileLinks): array
+    {
+        $fileLinks = array_filter($fileLinks);
+        return di(FileDomainService::class)->getLinks($organizationCode, $fileLinks);
     }
 
     public function getFileLink(string $organizationCode, string $icon): ?FileLink

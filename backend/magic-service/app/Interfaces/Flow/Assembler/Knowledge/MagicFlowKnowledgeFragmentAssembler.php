@@ -9,15 +9,15 @@ namespace App\Interfaces\Flow\Assembler\Knowledge;
 
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseFragmentEntity;
 use App\Infrastructure\Core\ValueObject\Page;
-use App\Interfaces\Flow\DTO\Knowledge\MagicFlowKnowledgeFragmentDTO;
 use App\Interfaces\Kernel\DTO\PageDTO;
+use App\Interfaces\KnowledgeBase\DTO\KnowledgeBaseFragmentDTO;
 use DateTime;
 
 class MagicFlowKnowledgeFragmentAssembler
 {
-    public static function createDTO(KnowledgeBaseFragmentEntity $entity): MagicFlowKnowledgeFragmentDTO
+    public static function createDTO(KnowledgeBaseFragmentEntity $entity): KnowledgeBaseFragmentDTO
     {
-        $dto = new MagicFlowKnowledgeFragmentDTO();
+        $dto = new KnowledgeBaseFragmentDTO();
         $dto->setId((string) $entity->getId());
         $dto->setKnowledgeCode($entity->getKnowledgeCode());
         $dto->setContent($entity->getContent());
@@ -33,7 +33,7 @@ class MagicFlowKnowledgeFragmentAssembler
         return $dto;
     }
 
-    public static function createDO(MagicFlowKnowledgeFragmentDTO $dto): KnowledgeBaseFragmentEntity
+    public static function createDO(KnowledgeBaseFragmentDTO $dto): KnowledgeBaseFragmentEntity
     {
         $do = new KnowledgeBaseFragmentEntity();
         $do->setId((int) $dto->getId());

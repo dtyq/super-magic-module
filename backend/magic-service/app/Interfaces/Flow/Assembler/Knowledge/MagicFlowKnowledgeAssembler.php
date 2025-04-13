@@ -10,10 +10,10 @@ namespace App\Interfaces\Flow\Assembler\Knowledge;
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseEntity;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeType;
 use App\Infrastructure\Core\ValueObject\Page;
-use App\Interfaces\Flow\DTO\Knowledge\KnowledgeBaseDTO;
-use App\Interfaces\Flow\DTO\Knowledge\MagicFlowKnowledgeListDTO;
 use App\Interfaces\Kernel\Assembler\OperatorAssembler;
 use App\Interfaces\Kernel\DTO\PageDTO;
+use App\Interfaces\KnowledgeBase\DTO\KnowledgeBaseDTO;
+use App\Interfaces\KnowledgeBase\DTO\KnowledgeBaseListDTO;
 use DateTime;
 
 class MagicFlowKnowledgeAssembler
@@ -76,9 +76,9 @@ class MagicFlowKnowledgeAssembler
         return new PageDTO($page->getPage(), $total, $list);
     }
 
-    protected static function createListDTO(KnowledgeBaseEntity $magicFlowKnowledgeEntity, array $users): MagicFlowKnowledgeListDTO
+    protected static function createListDTO(KnowledgeBaseEntity $magicFlowKnowledgeEntity, array $users): KnowledgeBaseListDTO
     {
-        $listDTO = new MagicFlowKnowledgeListDTO($magicFlowKnowledgeEntity->toArray());
+        $listDTO = new KnowledgeBaseListDTO($magicFlowKnowledgeEntity->toArray());
         $listDTO->setId($magicFlowKnowledgeEntity->getCode());
         $listDTO->setCreator($magicFlowKnowledgeEntity->getCreator());
         $listDTO->setCreatedAt($magicFlowKnowledgeEntity->getCreatedAt());

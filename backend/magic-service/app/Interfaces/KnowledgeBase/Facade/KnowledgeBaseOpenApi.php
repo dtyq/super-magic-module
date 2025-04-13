@@ -7,19 +7,8 @@ declare(strict_types=1);
 
 namespace App\Interfaces\KnowledgeBase\Facade;
 
-use App\Application\KnowledgeBase\Service\KnowledgeBaseAppService;
-use App\Application\KnowledgeBase\Service\KnowledgeBaseFragmentAppService;
-use App\Application\KnowledgeBase\VectorDatabase\Similarity\KnowledgeSimilarityFilter;
-use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeType;
-use App\Domain\KnowledgeBase\Entity\ValueObject\Query\KnowledgeBaseFragmentQuery;
-use App\Domain\KnowledgeBase\Entity\ValueObject\Query\KnowledgeBaseQuery;
-use App\Infrastructure\Core\ValueObject\Page;
-use App\Interfaces\Flow\Assembler\Knowledge\MagicFlowKnowledgeAssembler;
-use App\Interfaces\Flow\Assembler\Knowledge\MagicFlowKnowledgeFragmentAssembler;
-use App\Interfaces\Flow\DTO\Knowledge\MagicFlowKnowledgeFragmentDTO;
 use App\Interfaces\Flow\Facade\Open\AbstractOpenApi;
 use Dtyq\ApiResponse\Annotation\ApiResponse;
-use Hyperf\Di\Annotation\Inject;
 
 #[ApiResponse(version: 'low_code')]
 class KnowledgeBaseOpenApi extends AbstractOpenApi

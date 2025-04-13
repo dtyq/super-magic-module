@@ -8,15 +8,19 @@ declare(strict_types=1);
 namespace App\Interfaces\KnowledgeBase\Assembler;
 
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseFragmentEntity;
-use App\Interfaces\Flow\DTO\Knowledge\MagicFlowKnowledgeFragmentDTO;
+use App\Interfaces\KnowledgeBase\DTO\KnowledgeBaseFragmentDTO;
 
 class KnowledgeBaseFragmentAssembler
 {
-    public static function entityToDTO(KnowledgeBaseFragmentEntity $entity): MagicFlowKnowledgeFragmentDTO
+    public static function entityToDTO(KnowledgeBaseFragmentEntity $entity): KnowledgeBaseFragmentDTO
     {
-        $dto = new MagicFlowKnowledgeFragmentDTO($entity->toArray());
+        $dto = new KnowledgeBaseFragmentDTO($entity->toArray());
         $dto->setKnowledgeBaseCode($entity->getKnowledgeCode());
         unset($dto->knowledgeCode);
         return $dto;
+    }
+
+    public static function createListDTO()
+    {
     }
 }

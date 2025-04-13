@@ -5,7 +5,7 @@ declare(strict_types=1);
  * Copyright (c) The Magic , Distributed under the software license
  */
 
-namespace App\Interfaces\Flow\DTO\Knowledge;
+namespace App\Interfaces\KnowledgeBase\DTO;
 
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseEntity;
 use App\Interfaces\Flow\DTO\AbstractFlowDTO;

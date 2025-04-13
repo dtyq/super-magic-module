@@ -13,28 +13,28 @@ use Hyperf\HttpServer\Router\Router;
 Router::addGroup('/api/v1/knowledge-bases', static function () {
     // 知识库
     Router::addGroup('', function () {
-        Router::post('', [KnowledgeBaseApi::class, 'createKnowledgeBase']);
-        Router::put('/{code}', [KnowledgeBaseApi::class, 'updateKnowledgeBase']);
-        Router::post('/queries', [KnowledgeBaseApi::class, 'getKnowledgeBaseList']);
-        Router::get('/{code}', [KnowledgeBaseApi::class, 'getKnowledgeBaseDetail']);
-        Router::delete('/{code}', [KnowledgeBaseApi::class, 'destroyKnowledgeBase']);
+        Router::post('', [KnowledgeBaseApi::class, 'create']);
+        Router::put('/{code}', [KnowledgeBaseApi::class, 'update']);
+        Router::post('/queries', [KnowledgeBaseApi::class, 'queries']);
+        Router::get('/{code}', [KnowledgeBaseApi::class, 'show']);
+        Router::delete('/{code}', [KnowledgeBaseApi::class, 'destroy']);
     });
 
     // 文档
     Router::addGroup('/{knowledgeBaseCode}/documents', function () {
-        Router::post('', [KnowledgeBaseDocumentApi::class, 'createDocument']);
-        Router::put('/{code}', [KnowledgeBaseDocumentApi::class, 'updateDocument']);
-        Router::post('/queries', [KnowledgeBaseDocumentApi::class, 'getDocumentList']);
-        Router::get('/{code}', [KnowledgeBaseDocumentApi::class, 'getDocumentDetail']);
-        Router::delete('/{code}', [KnowledgeBaseDocumentApi::class, 'destroyDocument']);
+        Router::post('', [KnowledgeBaseDocumentApi::class, 'create']);
+        Router::put('/{code}', [KnowledgeBaseDocumentApi::class, 'update']);
+        Router::post('/queries', [KnowledgeBaseDocumentApi::class, 'queries']);
+        Router::get('/{code}', [KnowledgeBaseDocumentApi::class, 'show']);
+        Router::delete('/{code}', [KnowledgeBaseDocumentApi::class, 'destroy']);
     });
 
     // 片段
     Router::addGroup('/{knowledgeBaseCode}/documents/{documentCode}/fragments', function () {
-        Router::post('', [KnowledgeBaseFragmentApi::class, 'createFragment']);
-        Router::put('/{id}', [KnowledgeBaseFragmentApi::class, 'updateFragment']);
-        Router::post('/queries', [KnowledgeBaseFragmentApi::class, 'getFragmentList']);
-        Router::get('/{id}', [KnowledgeBaseFragmentApi::class, 'fragmentShow']);
-        Router::delete('/{id}', [KnowledgeBaseFragmentApi::class, 'fragmentDestroy']);
+        Router::post('', [KnowledgeBaseFragmentApi::class, 'create']);
+        Router::put('/{id}', [KnowledgeBaseFragmentApi::class, 'update']);
+        Router::post('/queries', [KnowledgeBaseFragmentApi::class, 'queries']);
+        Router::get('/{id}', [KnowledgeBaseFragmentApi::class, 'show']);
+        Router::delete('/{id}', [KnowledgeBaseFragmentApi::class, 'destroy']);
     });
 }, ['middleware' => [RequestContextMiddleware::class]]);

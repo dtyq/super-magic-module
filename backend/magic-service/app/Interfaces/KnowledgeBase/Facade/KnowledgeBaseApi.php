@@ -10,7 +10,7 @@ namespace App\Interfaces\KnowledgeBase\Facade;
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseEntity;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeType;
 use App\Domain\KnowledgeBase\Entity\ValueObject\Query\KnowledgeBaseQuery;
-use App\Infrastructure\Core\ValueObject\Page;
+use App\Interfaces\Authorization\Web\MagicUserAuthorization;
 use App\Interfaces\Kernel\DTO\PageDTO;
 use App\Interfaces\KnowledgeBase\Assembler\KnowledgeBaseAssembler;
 use App\Interfaces\KnowledgeBase\DTO\Request\CreateKnowledgeBaseRequestDTO;
@@ -20,46 +20,41 @@ use Dtyq\ApiResponse\Annotation\ApiResponse;
 #[ApiResponse(version: 'low_code')]
 class KnowledgeBaseApi extends AbstractKnowledgeBaseApi
 {
-    public function createKnowledgeBase()
+    public function create()
     {
+        $authorization = $this->getAuthorization();
         $dto = CreateKnowledgeBaseRequestDTO::fromRequest($this->request);
-        $userAuthorization = $this->getAuthorization();
         $entity = (new KnowledgeBaseEntity($dto->toArray()))->setType(KnowledgeType::UserKnowledgeBase);
-        $entity = $this->knowledgeBaseAppService->save($userAuthorization, $entity, $dto->getDocumentFiles());
+        $entity = $this->knowledgeBaseAppService->save($authorization, $entity, $dto->getDocumentFiles());
         return KnowledgeBaseAssembler::entityToDTO($entity);
     }
 
-    public function updateKnowledgeBase()
+    public function update(string $code)
     {
+        $authorization = $this->getAuthorization();
         $dto = UpdateKnowledgeBaseRequestDTO::fromRequest($this->request);
-        $userAuthorization = $this->getAuthorization();
+        $dto->setCode($code);
 
         $entity = (new KnowledgeBaseEntity($dto->toArray()))->setType(KnowledgeType::UserKnowledgeBase);
-        $entity = $this->knowledgeBaseAppService->save($userAuthorization, $entity);
+        $entity = $this->knowledgeBaseAppService->save($authorization, $entity);
         return KnowledgeBaseAssembler::entityToDTO($entity);
     }
 
-    public function getKnowledgeBaseList()
+    public function queries()
     {
-        $params = $this->request->all();
-        $query = new KnowledgeBaseQuery();
-
-        $userAuthorization = $this->getAuthorization();
-
+        /** @var MagicUserAuthorization $authorization */
+        $authorization = $this->getAuthorization();
+        $query = new KnowledgeBaseQuery($this->request->all());
         $query->setOrder(['updated_at' => 'desc']);
-        $query->setType($params['type'] ?? KnowledgeType::UserKnowledgeBase->value);
-        $query->setSearchType($params['search_type'] ?? null);
-        isset($params['name']) && $query->setName($params['name']);
-        $page = new Page((int) ($params['page'] ?? 1), (int) ($params['page_size'] ?? 100));
-        $result = $this->knowledgeBaseAppService->queries($userAuthorization, $query, $page);
-        $knowledgeBaseCodes = array_map(fn ($item) => $item->getCode(), $result['list']);
-        // 补充文档数量
-        $knowledgeBaseDocumentCountMap = $this->knowledgeBaseDocumentAppService->getDocumentCountByKnowledgeBaseCodes($userAuthorization, $knowledgeBaseCodes);
-        $list = KnowledgeBaseAssembler::entitiesToListDTO($result['list'], $result['users'], $knowledgeBaseDocumentCountMap);
+        $query->setType(KnowledgeType::UserKnowledgeBase->value);
+        $page = $this->createPage();
+
+        $result = $this->knowledgeBaseAppService->queries($authorization, $query, $page);
+        $list = KnowledgeBaseAssembler::entitiesToListDTO($result['list'], $result['users']);
         return new PageDTO($page->getPage(), $result['total'], $list);
     }
 
-    public function getKnowledgeBaseDetail(string $code)
+    public function show(string $code)
     {
         $userAuthorization = $this->getAuthorization();
         $magicFlowKnowledgeEntity = $this->knowledgeBaseAppService->show($userAuthorization, $code);
@@ -68,7 +63,7 @@ class KnowledgeBaseApi extends AbstractKnowledgeBaseApi
         return KnowledgeBaseAssembler::entityToDTO($magicFlowKnowledgeEntity)->setDocumentCount($knowledgeBaseDocumentCountMap[$code] ?? 0);
     }
 
-    public function destroyKnowledgeBase(string $code)
+    public function destroy(string $code)
     {
         $this->knowledgeBaseAppService->destroy($this->getAuthorization(), $code);
     }
