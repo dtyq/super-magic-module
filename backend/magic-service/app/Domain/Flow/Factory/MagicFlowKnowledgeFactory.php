@@ -9,7 +9,6 @@ namespace App\Domain\Flow\Factory;
 
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseEntity;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeSyncStatus;
-use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeType;
 use App\Domain\KnowledgeBase\Entity\ValueObject\RetrieveConfig;
 use App\Domain\KnowledgeBase\Repository\Persistence\Model\KnowledgeBaseModel;
 
@@ -23,7 +22,7 @@ class MagicFlowKnowledgeFactory
         $entity->setVersion($model->version);
         $entity->setName($model->name);
         $entity->setDescription($model->description);
-        $entity->setType(KnowledgeType::from($model->type));
+        $entity->setType($model->type);
         $entity->setEnabled($model->enabled);
         $entity->setBusinessId($model->business_id);
         $entity->setSyncStatus(KnowledgeSyncStatus::from($model->sync_status));
@@ -69,7 +68,7 @@ class MagicFlowKnowledgeFactory
             'version' => $entity->getVersion(),
             'name' => $entity->getName(),
             'description' => $entity->getDescription(),
-            'type' => $entity->getType()->value,
+            'type' => $entity->getType(),
             'enabled' => $entity->isEnabled(),
             'business_id' => $entity->getBusinessId(),
             'sync_status' => $entity->getSyncStatus()->value,

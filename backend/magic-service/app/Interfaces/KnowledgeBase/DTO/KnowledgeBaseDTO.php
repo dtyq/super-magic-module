@@ -278,7 +278,7 @@ class KnowledgeBaseDTO extends AbstractFlowDTO
         $dto->setCode($entity->getCode());
         $dto->setName($entity->getName());
         $dto->setDescription($entity->getDescription());
-        $dto->setType($entity->getType()->value);
+        $dto->setType($entity->getType());
         $dto->setEnabled($entity->isEnabled());
         $dto->setBusinessId($entity->getBusinessId());
         $dto->setSyncStatus($entity->getSyncStatus()->value);

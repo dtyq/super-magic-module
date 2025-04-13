@@ -13,7 +13,6 @@ use App\Domain\KnowledgeBase\Entity\KnowledgeBaseFragmentEntity;
 use App\Domain\KnowledgeBase\Entity\ValueObject\DocumentFileVO;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeBaseDataIsolation;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeSyncStatus;
-use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeType;
 use App\Domain\KnowledgeBase\Entity\ValueObject\Query\KnowledgeBaseFragmentQuery;
 use App\Domain\KnowledgeBase\Entity\ValueObject\Query\KnowledgeBaseQuery;
 use App\Domain\KnowledgeBase\Event\KnowledgeBaseRemovedEvent;
@@ -161,9 +160,9 @@ readonly class KnowledgeBaseDomainService
         $this->magicFlowKnowledgeRepository->updateWordCount($dataIsolation, $knowledgeCode, $deltaWordCount);
     }
 
-    public function generateTempCodeByBusinessId(KnowledgeType $knowledgeType, string $businessId): string
+    public function generateTempCodeByBusinessId(int $knowledgeType, string $businessId): string
     {
-        $key = 'knowledge-code:generate:' . $knowledgeType->value . ':' . $businessId;
+        $key = 'knowledge-code:generate:' . $knowledgeType . ':' . $businessId;
         if ($this->cache->has($key)) {
             return $this->cache->get($key);
         }
@@ -172,9 +171,9 @@ readonly class KnowledgeBaseDomainService
         return $code;
     }
 
-    public function getTempCodeByBusinessId(KnowledgeType $knowledgeType, string $businessId): string
+    public function getTempCodeByBusinessId(int $knowledgeType, string $businessId): string
     {
-        $key = 'knowledge-code:generate:' . $knowledgeType->value . ':' . $businessId;
+        $key = 'knowledge-code:generate:' . $knowledgeType . ':' . $businessId;
         $value = $this->cache->get($key, '');
         $this->cache->delete($key);
         return $value;
