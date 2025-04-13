@@ -18,6 +18,7 @@ readonly class MagicFlowKnowledgeFragmentClearCrontab
         // 定时清理软删的知识库和片段 仅保留 1 天
 
         $this->clearKnowledge();
+        $this->clearDocument();
         $this->clearFragment();
     }
 
@@ -26,7 +27,7 @@ readonly class MagicFlowKnowledgeFragmentClearCrontab
         $lastId = 0;
         while (true) {
             $ids = [];
-            $data = Db::table('magic_flow_knowledge')->where('id', '>', $lastId)->whereNotNull('deleted_at')->limit(200)->get();
+            $data = Db::table('knowledge_bases')->where('id', '>', $lastId)->whereNotNull('deleted_at')->limit(200)->get();
             foreach ($data as $item) {
                 $diff = time() - strtotime($item['deleted_at']);
                 if ($diff > 86400) {
@@ -36,7 +37,27 @@ readonly class MagicFlowKnowledgeFragmentClearCrontab
             if (empty($ids)) {
                 break;
             }
-            Db::table('magic_flow_knowledge')->whereIn('id', $ids)->delete();
+            Db::table('knowledge_bases')->whereIn('id', $ids)->delete();
+            $lastId = end($ids);
+        }
+    }
+
+    private function clearDocument(): void
+    {
+        $lastId = 0;
+        while (true) {
+            $ids = [];
+            $data = Db::table('knowledge_base_documents')->where('id', '>', $lastId)->whereNotNull('deleted_at')->limit(200)->get();
+            foreach ($data as $item) {
+                $diff = time() - strtotime($item['deleted_at']);
+                if ($diff > 86400) {
+                    $ids[] = $item['id'];
+                }
+            }
+            if (empty($ids)) {
+                break;
+            }
+            Db::table('knowledge_base_documents')->whereIn('id', $ids)->delete();
             $lastId = end($ids);
         }
     }
@@ -46,7 +67,7 @@ readonly class MagicFlowKnowledgeFragmentClearCrontab
         $lastId = 0;
         while (true) {
             $ids = [];
-            $data = Db::table('magic_flow_knowledge_fragment')->where('id', '>', $lastId)->whereNotNull('deleted_at')->limit(200)->get();
+            $data = Db::table('knowledge_base_fragments')->where('id', '>', $lastId)->whereNotNull('deleted_at')->limit(200)->get();
             foreach ($data as $item) {
                 $diff = time() - strtotime($item['deleted_at']);
                 if ($diff > 86400) {
@@ -56,7 +77,7 @@ readonly class MagicFlowKnowledgeFragmentClearCrontab
             if (empty($ids)) {
                 break;
             }
-            Db::table('magic_flow_knowledge_fragment')->whereIn('id', $ids)->delete();
+            Db::table('knowledge_base_fragments')->whereIn('id', $ids)->delete();
             $lastId = end($ids);
         }
     }
