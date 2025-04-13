@@ -5,12 +5,12 @@ declare(strict_types=1);
  * Copyright (c) The Magic , Distributed under the software license
  */
 
-namespace App\Interfaces\Flow\DTO\Knowledge;
+namespace App\Interfaces\KnowledgeBase\DTO;
 
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeSyncStatus;
 use App\Interfaces\Flow\DTO\AbstractFlowDTO;
 
-class MagicFlowKnowledgeFragmentDTO extends AbstractFlowDTO
+class KnowledgeBaseFragmentDTO extends AbstractFlowDTO
 {
     public string $knowledgeCode;
 
@@ -45,7 +45,7 @@ class MagicFlowKnowledgeFragmentDTO extends AbstractFlowDTO
         return $this->knowledgeBaseCode;
     }
 
-    public function setKnowledgeBaseCode(string $knowledgeBaseCode): MagicFlowKnowledgeFragmentDTO
+    public function setKnowledgeBaseCode(string $knowledgeBaseCode): KnowledgeBaseFragmentDTO
     {
         $this->knowledgeBaseCode = $knowledgeBaseCode;
         return $this;
@@ -117,7 +117,7 @@ class MagicFlowKnowledgeFragmentDTO extends AbstractFlowDTO
         return $this->documentCode;
     }
 
-    public function setDocumentCode(string $documentCode): MagicFlowKnowledgeFragmentDTO
+    public function setDocumentCode(string $documentCode): KnowledgeBaseFragmentDTO
     {
         $this->documentCode = $documentCode;
         return $this;

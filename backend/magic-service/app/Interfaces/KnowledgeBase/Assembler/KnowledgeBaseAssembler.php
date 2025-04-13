@@ -8,8 +8,8 @@ declare(strict_types=1);
 namespace App\Interfaces\KnowledgeBase\Assembler;
 
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseEntity;
-use App\Interfaces\Flow\DTO\Knowledge\KnowledgeBaseDTO;
-use App\Interfaces\Flow\DTO\Knowledge\MagicFlowKnowledgeListDTO;
+use App\Interfaces\KnowledgeBase\DTO\KnowledgeBaseDTO;
+use App\Interfaces\KnowledgeBase\DTO\KnowledgeBaseListDTO;
 
 class KnowledgeBaseAssembler
 {
@@ -49,7 +49,7 @@ class KnowledgeBaseAssembler
     public static function entitiesToListDTO(array $entities, array $users = [], array $knowledgeBaseDocumentCountMap = []): array
     {
         return array_map(
-            fn (KnowledgeBaseEntity $entity) => MagicFlowKnowledgeListDTO::fromEntity($entity, $users, $knowledgeBaseDocumentCountMap),
+            fn (KnowledgeBaseEntity $entity) => KnowledgeBaseListDTO::fromEntity($entity, $users, $knowledgeBaseDocumentCountMap),
             $entities,
         );
     }

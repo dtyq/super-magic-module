@@ -5,13 +5,13 @@ declare(strict_types=1);
  * Copyright (c) The Magic , Distributed under the software license
  */
 
-namespace App\Interfaces\Flow\DTO\Knowledge;
+namespace App\Interfaces\KnowledgeBase\DTO;
 
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseEntity;
 use App\Interfaces\Flow\DTO\AbstractFlowDTO;
 use App\Interfaces\Kernel\Assembler\OperatorAssembler;
 
-class MagicFlowKnowledgeListDTO extends AbstractFlowDTO
+class KnowledgeBaseListDTO extends AbstractFlowDTO
 {
     public string $code = '';
 
@@ -188,7 +188,7 @@ class MagicFlowKnowledgeListDTO extends AbstractFlowDTO
         return $this->wordCount;
     }
 
-    public function setWordCount(int $wordCount): MagicFlowKnowledgeListDTO
+    public function setWordCount(int $wordCount): KnowledgeBaseListDTO
     {
         $this->wordCount = $wordCount;
         return $this;
@@ -199,7 +199,7 @@ class MagicFlowKnowledgeListDTO extends AbstractFlowDTO
         return $this->documentCount;
     }
 
-    public function setDocumentCount(int $documentCount): MagicFlowKnowledgeListDTO
+    public function setDocumentCount(int $documentCount): KnowledgeBaseListDTO
     {
         $this->documentCount = $documentCount;
         return $this;
@@ -210,7 +210,7 @@ class MagicFlowKnowledgeListDTO extends AbstractFlowDTO
         return $this->code;
     }
 
-    public function setCode(string $code): MagicFlowKnowledgeListDTO
+    public function setCode(string $code): KnowledgeBaseListDTO
     {
         $this->code = $code;
         return $this;
@@ -226,9 +226,9 @@ class MagicFlowKnowledgeListDTO extends AbstractFlowDTO
         $this->icon = $icon;
     }
 
-    public static function fromEntity(KnowledgeBaseEntity $entity, array $users = [], array $knowledgeBaseDocumentCountMap = []): MagicFlowKnowledgeListDTO
+    public static function fromEntity(KnowledgeBaseEntity $entity, array $users = [], array $knowledgeBaseDocumentCountMap = []): KnowledgeBaseListDTO
     {
-        $listDTO = new MagicFlowKnowledgeListDTO($entity->toArray());
+        $listDTO = new KnowledgeBaseListDTO($entity->toArray());
         $listDTO->setId($entity->getId());
         $listDTO->setCode($entity->getCode());
         $listDTO->setCreator($entity->getCreator());

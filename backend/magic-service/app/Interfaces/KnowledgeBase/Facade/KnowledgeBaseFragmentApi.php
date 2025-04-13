@@ -21,9 +21,11 @@ use Dtyq\ApiResponse\Annotation\ApiResponse;
 #[ApiResponse(version: 'low_code')]
 class KnowledgeBaseFragmentApi extends AbstractKnowledgeBaseApi
 {
-    public function createFragment()
+    public function create(string $knowledgeBaseCode, string $documentCode)
     {
         $dto = CreateFragmentRequestDTO::fromRequest($this->request);
+        $dto->setKnowledgeBaseCode($knowledgeBaseCode);
+        $dto->setDocumentCode($documentCode);
         $userAuthorization = $this->getAuthorization();
 
         $entity = (new KnowledgeBaseFragmentEntity($dto->toArray()))
@@ -33,9 +35,12 @@ class KnowledgeBaseFragmentApi extends AbstractKnowledgeBaseApi
         return KnowledgeBaseFragmentAssembler::entityToDTO($entity);
     }
 
-    public function updateFragment()
+    public function update(string $knowledgeBaseCode, string $documentCode, string $id)
     {
         $dto = UpdateFragmentRequestDTO::fromRequest($this->request);
+        $dto->setKnowledgeBaseCode($knowledgeBaseCode);
+        $dto->setDocumentCode($documentCode);
+        $dto->setId($id);
         $userAuthorization = $this->getAuthorization();
 
         $entity = (new KnowledgeBaseFragmentEntity($dto->toArray()))
@@ -45,10 +50,12 @@ class KnowledgeBaseFragmentApi extends AbstractKnowledgeBaseApi
         return KnowledgeBaseFragmentAssembler::entityToDTO($entity);
     }
 
-    public function getFragmentList()
+    public function queries(string $knowledgeBaseCode, string $documentCode)
     {
         $dto = GetFragmentListRequestDTO::fromRequest($this->request);
         $query = KnowledgeBaseFragmentQuery::fromGetFragmentListRequestDTO($dto);
+        $query->setKnowledgeCode($knowledgeBaseCode);
+        $query->setDocumentCode($documentCode);
         $page = new Page($dto->getPage(), $dto->getPageSize());
         $result = $this->knowledgeBaseFragmentAppService->queries($this->getAuthorization(), $query, $page);
         $list = array_map(function (KnowledgeBaseFragmentEntity $entity) {
@@ -57,13 +64,13 @@ class KnowledgeBaseFragmentApi extends AbstractKnowledgeBaseApi
         return new PageDTO($page->getPage(), $result['total'], $list);
     }
 
-    public function fragmentShow(string $knowledgeBaseCode, string $documentCode, int $id)
+    public function show(string $knowledgeBaseCode, string $documentCode, int $id)
     {
         $entity = $this->knowledgeBaseFragmentAppService->show($this->getAuthorization(), $knowledgeBaseCode, $documentCode, $id);
         return KnowledgeBaseFragmentAssembler::entityToDTO($entity);
     }
 
-    public function fragmentDestroy(string $knowledgeBaseCode, string $documentCode, int $id)
+    public function destroy(string $knowledgeBaseCode, string $documentCode, int $id)
     {
         $this->knowledgeBaseFragmentAppService->destroy($this->getAuthorization(), $knowledgeBaseCode, $documentCode, $id);
     }

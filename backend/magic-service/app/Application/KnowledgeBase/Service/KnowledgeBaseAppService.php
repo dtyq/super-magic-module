@@ -40,8 +40,8 @@ class KnowledgeBaseAppService extends AbstractKnowledgeAppService
             }
         }
 
-        // 查询权限
-        if (! $magicFlowKnowledgeEntity->shouldCreate()) {
+        // 更惨数据 - 查询权限
+        if (! $magicFlowKnowledgeEntity->shouldCreate() && ! $oldKnowledge) {
             $oldKnowledge = $this->knowledgeBaseDomainService->show($dataIsolation, $magicFlowKnowledgeEntity->getCode(), false);
         }
         $operation = Operation::None;
@@ -50,13 +50,17 @@ class KnowledgeBaseAppService extends AbstractKnowledgeAppService
             $operation->validate('w', $oldKnowledge->getCode());
         }
 
-        // 设置固定的嵌入模型和向量数据库
+        // 设置嵌入模型和向量数据库
         $model = $this->serviceProviderDomainService->findSelectedActiveProviderByType($dataIsolation->getCurrentOrganizationCode(), ModelType::EMBEDDING);
         $magicFlowKnowledgeEntity->setModel($model ?? EmbeddingGenerator::defaultModel());
         $magicFlowKnowledgeEntity->setVectorDB(VectorStoreDriver::default()->value);
-        $files = $this->getIcons($dataIsolation->getCurrentOrganizationCode(), array_map(fn ($dto) => $dto->getKey(), $documentFiles));
+
+        // 获取 文件
+        $files = $this->getFileLinks($dataIsolation->getCurrentOrganizationCode(), array_map(fn ($dto) => $dto->getKey(), $documentFiles));
         foreach ($documentFiles as $documentFile) {
-            $documentFile->setFileLink($files[$documentFile->getKey()]);
+            if ($fileLink = $files[$documentFile->getKey()] ?? null) {
+                $documentFile->setFileLink($fileLink);
+            }
         }
 
         $knowledgeBaseEntity = $this->knowledgeBaseDomainService->save($dataIsolation, $magicFlowKnowledgeEntity, DocumentFileVO::fromDTOList($documentFiles));
@@ -64,15 +68,6 @@ class KnowledgeBaseAppService extends AbstractKnowledgeAppService
         $iconFileLink = $this->getFileLink($dataIsolation->getCurrentOrganizationCode(), $knowledgeBaseEntity->getIcon());
         $knowledgeBaseEntity->setIcon($iconFileLink?->getUrl() ?? '');
         return $knowledgeBaseEntity;
-    }
-
-    public function saveProcess(Authenticatable $authorization, KnowledgeBaseEntity $savingKnowledgeEntity): KnowledgeBaseEntity
-    {
-        $dataIsolation = $this->createKnowledgeBaseDataIsolation($authorization);
-        $this->getKnowledgeOperation($dataIsolation, $savingKnowledgeEntity->getCode())->validate('w', $savingKnowledgeEntity->getCode());
-
-        $savingKnowledgeEntity->setCreator($dataIsolation->getCurrentUserId());
-        return $this->knowledgeBaseDomainService->saveProcess($dataIsolation, $savingKnowledgeEntity);
     }
 
     public function getByBusinessId(Authenticatable $authorization, string $businessId, ?int $type = null): ?KnowledgeBaseEntity
