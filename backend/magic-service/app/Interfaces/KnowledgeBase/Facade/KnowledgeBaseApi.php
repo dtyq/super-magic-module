@@ -24,7 +24,7 @@ class KnowledgeBaseApi extends AbstractKnowledgeBaseApi
     {
         $authorization = $this->getAuthorization();
         $dto = CreateKnowledgeBaseRequestDTO::fromRequest($this->request);
-        $entity = (new KnowledgeBaseEntity($dto->toArray()))->setType(KnowledgeType::UserKnowledgeBase);
+        $entity = (new KnowledgeBaseEntity($dto->toArray()))->setType(KnowledgeType::UserKnowledgeBase->value);
         $entity = $this->knowledgeBaseAppService->save($authorization, $entity, $dto->getDocumentFiles());
         return KnowledgeBaseAssembler::entityToDTO($entity);
     }
@@ -35,7 +35,7 @@ class KnowledgeBaseApi extends AbstractKnowledgeBaseApi
         $dto = UpdateKnowledgeBaseRequestDTO::fromRequest($this->request);
         $dto->setCode($code);
 
-        $entity = (new KnowledgeBaseEntity($dto->toArray()))->setType(KnowledgeType::UserKnowledgeBase);
+        $entity = (new KnowledgeBaseEntity($dto->toArray()))->setType(KnowledgeType::UserKnowledgeBase->value);
         $entity = $this->knowledgeBaseAppService->save($authorization, $entity);
         return KnowledgeBaseAssembler::entityToDTO($entity);
     }
