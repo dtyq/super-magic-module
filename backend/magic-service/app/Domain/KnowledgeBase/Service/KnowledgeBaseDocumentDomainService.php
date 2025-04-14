@@ -132,13 +132,13 @@ readonly class KnowledgeBaseDocumentDomainService
     public function getOrCreateDefaultDocument(KnowledgeBaseDataIsolation $dataIsolation, KnowledgeBaseEntity $knowledgeBaseEntity): KnowledgeBaseDocumentEntity
     {
         // 尝试获取默认文档
-        $documentEntity = $this->knowledgeBaseDocumentRepository->show($dataIsolation, KnowledgeBaseDocumentEntity::getDefaultDocumentCode());
+        $documentEntity = $this->knowledgeBaseDocumentRepository->show($dataIsolation, $knowledgeBaseEntity->getDefaultDocumentCode());
         if ($documentEntity) {
             return $documentEntity;
         }
         // 如果文档不存在，创建新的默认文档
         $documentEntity = (new KnowledgeBaseDocumentEntity())
-            ->setCode(KnowledgeBaseDocumentEntity::getDefaultDocumentCode())
+            ->setCode($knowledgeBaseEntity->getDefaultDocumentCode())
             ->setName('未命名文档')
             ->setKnowledgeBaseCode($knowledgeBaseEntity->getCode())
             ->setCreatedUid($knowledgeBaseEntity->getCreator())

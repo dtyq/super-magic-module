@@ -59,6 +59,7 @@ readonly class KnowledgeBaseFragmentDomainService
     ): KnowledgeBaseFragmentEntity {
         $savingMagicFlowKnowledgeFragmentEntity->setKnowledgeCode($knowledgeBaseEntity->getCode());
         $savingMagicFlowKnowledgeFragmentEntity->setDocumentCode($knowledgeBaseDocumentEntity->getCode());
+        $savingMagicFlowKnowledgeFragmentEntity->setCreator($dataIsolation->getCurrentUserId());
 
         // 如果有业务id，并且业务 ID 存在，也可以相当于更新
         $knowledgeBaseFragmentEntity = null;

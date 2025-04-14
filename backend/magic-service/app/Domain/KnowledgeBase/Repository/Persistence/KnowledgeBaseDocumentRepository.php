@@ -55,7 +55,7 @@ class KnowledgeBaseDocumentRepository extends KnowledgeBaseAbstractRepository im
 
         // 创建模型并保存
         $model = KnowledgeBaseDocumentModel::withTrashed()
-            ->firstOrNew(
+            ->firstOrCreate(
                 [
                     'knowledge_base_code' => $attributes['knowledge_base_code'] ?? null,
                     'code' => $attributes['code'] ?? null,

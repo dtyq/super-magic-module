@@ -146,6 +146,10 @@ class ModelGatewayMapper extends ModelMapper
     protected function loadEnvModels(): void
     {
         // env 添加的模型增加上 attributes
+        /**
+         * @var string $name
+         * @var AbstractModel $model
+         */
         foreach ($this->models['chat'] as $name => $model) {
             $this->attributes[$name] = new OdinModelAttributes(
                 key: $name,
@@ -156,6 +160,11 @@ class ModelGatewayMapper extends ModelMapper
                 createdAt: new DateTime(),
                 owner: 'MagicOdin',
             );
+            $this->logger->info('EnvModelRegister', [
+                'key' => $name,
+                'model' => $model->getModelName(),
+                'implementation' => get_class($model),
+            ]);
         }
         foreach ($this->models['embedding'] as $name => $model) {
             $this->attributes[$name] = new OdinModelAttributes(
@@ -167,6 +176,12 @@ class ModelGatewayMapper extends ModelMapper
                 createdAt: new DateTime(),
                 owner: 'MagicOdin',
             );
+            $this->logger->info('EnvModelRegister', [
+                'key' => $name,
+                'model' => $model->getModelName(),
+                'implementation' => get_class($model),
+                'vector_size' => $model->getModelOptions()->getVectorSize(),
+            ]);
         }
     }
 
