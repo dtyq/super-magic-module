@@ -23,7 +23,7 @@ interface CloudFileRepositoryInterface
 
     public function upload(string $organizationCode, UploadFile $uploadFile, StorageBucketType $storage = StorageBucketType::Private, bool $autoDir = true): void;
 
-    public function getSimpleUploadTemporaryCredential(string $organizationCode, string $storage = 'private'): array;
+    public function getSimpleUploadTemporaryCredential(string $organizationCode, StorageBucketType $storage = StorageBucketType::Private, bool $autoDir = true): array;
 
     /**
      * @return array<string, FilePreSignedUrl>
@@ -32,9 +32,5 @@ interface CloudFileRepositoryInterface
 
     public function getMetas(array $paths, string $organizationCode): array;
 
-    public function getDefaultIconPaths(): array;
-
-    public function getDefaultIconDir(string $appId = 'open'): string;
-
-    public function getDir(string $organizationCode, string $appId = 'open'): string;
+    public function getDefaultIconPaths(string $appId = 'open'): array;
 }

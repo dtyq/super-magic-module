@@ -34,16 +34,6 @@ readonly class FileDomainService
         return $list;
     }
 
-    public function getDefaultIconPaths(): array
-    {
-        return $this->cloudFileRepository->getDefaultIconPaths();
-    }
-
-    public function getDefaultIconDir(): string
-    {
-        return $this->cloudFileRepository->getDefaultIconDir();
-    }
-
     public function getLink(string $organizationCode, string $filePath, ?StorageBucketType $bucketType = null): ?FileLink
     {
         return $this->cloudFileRepository->getLinks($organizationCode, [$filePath], $bucketType)[$filePath] ?? null;
@@ -59,7 +49,7 @@ readonly class FileDomainService
         $this->cloudFileRepository->upload($organizationCode, $uploadFile, $storage);
     }
 
-    public function getSimpleUploadTemporaryCredential(string $organizationCode, string $storage = 'private'): array
+    public function getSimpleUploadTemporaryCredential(string $organizationCode, StorageBucketType $storage = StorageBucketType::Private): array
     {
         return $this->cloudFileRepository->getSimpleUploadTemporaryCredential($organizationCode, $storage);
     }

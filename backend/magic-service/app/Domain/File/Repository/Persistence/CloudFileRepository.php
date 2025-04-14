@@ -118,7 +118,7 @@ class CloudFileRepository implements CloudFileRepositoryInterface
             'sts' => false,
             'role_session_name' => 'magic',
             // 采用在文件路径中增加配置名的形式后续获取链接时自动识别
-            'dir' => $autoDir ? $this->getDir($organizationCode) . '/' . md5($storage->value) : '',
+            'dir' => $autoDir ? $organizationCode . '/open/' . md5($storage->value) : '',
         ]);
         $filesystem->uploadByCredential($uploadFile, $credentialPolicy, $this->getOptions($organizationCode));
     }
@@ -129,14 +129,14 @@ class CloudFileRepository implements CloudFileRepositoryInterface
         $filesystem->upload($uploadFile, $this->getOptions($organizationCode));
     }
 
-    public function getSimpleUploadTemporaryCredential(string $organizationCode, string $storage = 'private'): array
+    public function getSimpleUploadTemporaryCredential(string $organizationCode, StorageBucketType $storage = StorageBucketType::Private, bool $autoDir = true): array
     {
-        $filesystem = $this->cloudFile->get($storage);
+        $filesystem = $this->cloudFile->get($storage->value);
         $credentialPolicy = new CredentialPolicy([
             'sts' => false,
             'role_session_name' => 'magic',
             // 采用在文件路径中增加配置名的形式后续获取链接时自动识别
-            'dir' => $this->getDir($organizationCode) . '/' . md5($storage),
+            'dir' => $autoDir ? $organizationCode . '/open/' . md5($storage->value) : '',
         ]);
         return $filesystem->getUploadTemporaryCredential($credentialPolicy, $this->getOptions($organizationCode));
     }
@@ -154,37 +154,28 @@ class CloudFileRepository implements CloudFileRepositoryInterface
         return $this->cloudFile->get(StorageBucketType::Private->value)->getMetas($paths, $this->getOptions($organizationCode));
     }
 
-    public function getDefaultIconPaths(): array
+    public function getDefaultIconPaths(string $appId = 'open'): array
     {
-        $appId = 'open';
-        $defaultIconPath = BASE_PATH . '/storage/files/' . $this->getDefaultIconDir($appId);
+        $localPath = self::DEFAULT_ICON_ORGANIZATION_CODE . '/open/default';
+        $defaultIconPath = BASE_PATH . '/storage/files/' . $localPath;
         $files = glob($defaultIconPath . '/*.png');
-        return array_map(static function ($file) {
-            return str_replace(BASE_PATH . '/storage/files/', '', $file);
+        return array_map(static function ($file) use ($localPath, $appId) {
+            $file = str_replace(BASE_PATH . '/storage/files/', '', $file);
+            return str_replace($localPath, self::DEFAULT_ICON_ORGANIZATION_CODE . '/' . $appId . '/default', $file);
         }, $files);
-    }
-
-    public function getDefaultIconDir(string $appId = 'open'): string
-    {
-        return $this->getDir(self::DEFAULT_ICON_ORGANIZATION_CODE, $appId) . '/default';
-    }
-
-    public function getDir(string $organizationCode, string $appId = 'open'): string
-    {
-        return $organizationCode . '/' . $appId;
     }
 
     protected function getOptions(string $organizationCode): array
     {
         return [
             'organization_code' => $organizationCode,
-            'cache' => false,
+            //            'cache' => false,
         ];
     }
 
-    protected function isDefaultIconPath(string $path): bool
+    protected function isDefaultIconPath(string $path, string $appId = 'open'): bool
     {
-        $prefix = $this->getDefaultIconDir('');
+        $prefix = self::DEFAULT_ICON_ORGANIZATION_CODE . '/' . $appId . '/default';
         return Str::startsWith($path, $prefix);
     }
 }
