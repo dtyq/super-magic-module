@@ -187,6 +187,11 @@ class ConversationService {
 			// 清除Agent信息
 			ConversationTaskService.clearAgentInfo()
 
+			// 获取会话用户/群组信息
+			if (!conversation.isGroupConversation) {
+				userInfoService.fetchUserInfos([conversation.receive_id], 2)
+			}
+
 			// 如果是AI会话
 			if (conversation.isAiConversation) {
 				await this.initAiConversation(conversation)

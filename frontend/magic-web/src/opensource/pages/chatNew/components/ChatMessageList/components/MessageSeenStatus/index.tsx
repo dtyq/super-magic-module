@@ -23,8 +23,11 @@ function MessageSeenStatus({ unreadCount, messageId }: MessageStatusProps) {
 	const { styles, cx } = useStyles()
 	const { currentConversation } = ConversationStore
 
-	// 发送失败，不显示
-	if (MessageStore.sendStatusMap.get(messageId) !== SendStatus.Success) {
+	// 自己发送的消息，发送失败，不显示
+	if (
+		MessageStore.sendStatusMap.get(messageId) &&
+		MessageStore.sendStatusMap.get(messageId) !== SendStatus.Success
+	) {
 		return null
 	}
 
@@ -37,7 +40,6 @@ function MessageSeenStatus({ unreadCount, messageId }: MessageStatusProps) {
 					return <StatusContent icon={IconEye} text={t("chat.unread")} />
 				case unreadCount === 0:
 					return <StatusContent icon={IconEyeCheck} text={t("chat.read")} />
-
 				default:
 					return null
 			}

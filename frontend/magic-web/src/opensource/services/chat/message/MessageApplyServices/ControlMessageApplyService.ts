@@ -250,6 +250,8 @@ class ControlMessageApplyService {
 				// 如果是单聊，尝试获取用户信息
 				if (items[0].receive_type === MessageReceiveType.User) {
 					userInfoService.fetchUserInfos([items[0].receive_id], 2)
+				} else if (items[0].receive_type === MessageReceiveType.Group) {
+					groupInfoService.fetchGroupInfos([items[0].receive_id])
 				}
 				ConversationService.addNewConversation(items[0])
 			})
