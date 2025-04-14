@@ -93,9 +93,6 @@ class FilesystemProxy extends Filesystem
         $credentialPolicy->setSts(false);
         $credentialPolicy->setContentType($uploadFile->getMimeType());
         $credential = $this->getUploadTemporaryCredential($credentialPolicy, $options);
-        if (isset($credential['temporary_credential'])) {
-            $credential = $credential['temporary_credential'];
-        }
         $this->getSimpleUploadInstance($this->adapterName)->uploadObject($credential, $uploadFile);
         $uploadFile->release();
     }
