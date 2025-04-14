@@ -26,14 +26,24 @@ export const useStyles = createStyles(({ css, token }) => {
 			overflow-x: hidden;
 			text-align: center;
 		`,
+		content: css`
+			gap: 50px;
+			flex: 1;
+			@media screen and (max-width: 768px) {
+				gap: 20px;
+			}
+		`,
 		main: css`
 			padding: 40px 50px;
 			height: 100%;
 			flex: 1;
 			overflow-y: auto;
 			overflow-x: hidden;
+			justify-content: flex-start;
+
 			@media (max-width: 700px) {
 				padding: 40px 10px;
+				gap: 30px;
 			}
 		`,
 		contentWrapper: css`
