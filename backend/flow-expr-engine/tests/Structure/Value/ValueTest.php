@@ -39,6 +39,61 @@ JSON, true);
         $this->assertInstanceOf(Value::class, $value);
     }
 
+    public function testBuild1()
+    {
+        $array = json_decode(<<<'JSON'
+{
+    "type": "const",
+    "const_value": [
+        {
+            "args": null,
+            "name": "",
+            "type": "input",
+            "value": ""
+        }
+    ],
+    "expression_value": [
+        {
+            "type": "fields",
+            "value": "message",
+            "name": "message"
+        }
+    ]
+}
+JSON, true);
+        $builder = new ValueBuilder();
+        $value = $builder->build($array);
+
+        $this->assertInstanceOf(Value::class, $value);
+        $this->assertNotNull($value?->getConstValue());
+
+        $array = json_decode(<<<'JSON'
+{
+    "type": "expression",
+    "const_value": [
+        {
+            "args": null,
+            "name": "",
+            "type": "input",
+            "value": ""
+        }
+    ],
+    "expression_value": [
+        {
+            "type": "input",
+            "value": "",
+            "name": "message"
+        }
+    ]
+}
+JSON, true);
+        $builder = new ValueBuilder();
+        $value = $builder->build($array);
+
+        $this->assertInstanceOf(Value::class, $value);
+        $this->assertNotNull($value?->getExpressionValue());
+    }
+
     public function testIn()
     {
         $array = json_decode(<<<'JSON'

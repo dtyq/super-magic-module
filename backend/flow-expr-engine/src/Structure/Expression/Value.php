@@ -133,11 +133,23 @@ class Value extends Structure implements JsonSerializable
                 unset($item);
                 $constValue = $expressionBuilder->build($constValue);
                 if (! $constValue) {
-                    $constValue = new Expression([new ExpressionItem(ExpressionType::Input, '', '')]);
+                    // 此时可能数据在 expression 中， 尝试获取
+                    $constValue = $expressionBuilder->build($data['expression_value'] ?? []);
+                    if (! $constValue) {
+                        $constValue = new Expression([new ExpressionItem(ExpressionType::Input, '', '')]);
+                    }
                 }
                 return new Value($type, $constValue, null, $dataType);
             case ValueType::Expression:
                 $expressionValue = $expressionBuilder->build($data['expression_value'] ?? []);
+                if (! $expressionValue) {
+                    // 此时可能在固定值中，尝试获取
+                    $expressionValue = $expressionBuilder->build($data['const_value'] ?? []);
+                    if (! $expressionValue) {
+                        $expressionValue = new Expression([new ExpressionItem(ExpressionType::Input, '', '')]);
+                    }
+                    $expressionValue->setIsStringTemplate(true);
+                }
                 return new Value($type, null, $expressionValue, $dataType);
             default:
                 return null;
