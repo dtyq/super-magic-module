@@ -229,7 +229,7 @@ class KnowledgeBaseListDTO extends AbstractFlowDTO
     public static function fromEntity(KnowledgeBaseEntity $entity, array $users = [], array $knowledgeBaseDocumentCountMap = []): KnowledgeBaseListDTO
     {
         $listDTO = new KnowledgeBaseListDTO($entity->toArray());
-        $listDTO->setId($entity->getId());
+        $listDTO->setId($entity->getCode());
         $listDTO->setCode($entity->getCode());
         $listDTO->setCreator($entity->getCreator());
         $listDTO->setCreatedAt($entity->getCreatedAt());
