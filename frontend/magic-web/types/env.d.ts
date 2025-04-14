@@ -25,6 +25,10 @@ interface ImportMetaEnv {
 	readonly MAGIC_TEAMSHARE_WEB_URL?: string
 	readonly MAGIC_KEEWOOD_WEB_URL?: string
 	readonly MAGIC_EDITION?: string
+	/** 版权信息 */
+	readonly MAGIC_COPYRIGHT?: string
+	/** ICP 备案号 */
+	readonly MAGIC_ICP_CODE?: string
 }
 
 interface ImportMeta {
