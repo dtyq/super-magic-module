@@ -47,6 +47,9 @@ class AliyunSimpleUpload extends SimpleUpload
      */
     public function uploadObject(array $credential, UploadFile $uploadFile): void
     {
+        if (isset($credential['temporary_credential'])) {
+            $credential = $credential['temporary_credential'];
+        }
         // 检查必填参数
         if (! isset($credential['host']) || ! isset($credential['dir']) || ! isset($credential['policy']) || ! isset($credential['accessid']) || ! isset($credential['signature'])) {
             throw new CloudFileException('Oss upload credential is invalid');

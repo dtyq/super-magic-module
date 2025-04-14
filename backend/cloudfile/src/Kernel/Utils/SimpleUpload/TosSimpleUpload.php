@@ -18,6 +18,9 @@ class TosSimpleUpload extends SimpleUpload
 {
     public function uploadObject(array $credential, UploadFile $uploadFile): void
     {
+        if (isset($credential['temporary_credential'])) {
+            $credential = $credential['temporary_credential'];
+        }
         if (! isset($credential['dir']) || ! isset($credential['policy']) || ! isset($credential['x-tos-server-side-encryption']) || ! isset($credential['x-tos-algorithm']) || ! isset($credential['x-tos-date']) || ! isset($credential['x-tos-credential']) || ! isset($credential['x-tos-signature'])) {
             throw new CloudFileException('Tos upload credential is invalid');
         }
