@@ -46,7 +46,7 @@ interface KnowledgeBaseDocumentRepositoryInterface
     /**
      * 查看单个知识库文档详情.
      */
-    public function show(KnowledgeBaseDataIsolation $dataIsolation, string $documentCode): ?KnowledgeBaseDocumentEntity;
+    public function show(KnowledgeBaseDataIsolation $dataIsolation, string $documentCode, bool $selectForUpdate = false): ?KnowledgeBaseDocumentEntity;
 
     /**
      * 删除知识库文档.

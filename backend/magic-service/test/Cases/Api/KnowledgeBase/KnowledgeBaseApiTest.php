@@ -279,6 +279,10 @@ class KnowledgeBaseApiTest extends HttpTestCase
             $this->getCommonHeaders()
         );
         $this->assertSame(FlowErrorCode::KnowledgeValidateFailed->value, $res['code']);
+        // 验证知识库字符数变为0
+        $res = $this->get(self::API . '/' . $document['knowledge_base_code'], [], $this->getCommonHeaders());
+        $this->assertSame(1000, $res['code'], $res['message']);
+        $this->assertSame(0, $res['data']['word_count']);
     }
 
     public function testCreateFragment()
