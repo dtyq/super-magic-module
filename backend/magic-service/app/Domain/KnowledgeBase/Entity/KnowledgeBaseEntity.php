@@ -552,6 +552,11 @@ class KnowledgeBaseEntity extends AbstractEntity
         $this->wordCount = $wordCount;
     }
 
+    public function getDefaultDocumentCode(): string
+    {
+        return $this->code . '-DEFAULT-DOC';
+    }
+
     private static function createTemplate(string $organizationCode, string $code, string $creator): KnowledgeBaseEntity
     {
         $self = new self();
