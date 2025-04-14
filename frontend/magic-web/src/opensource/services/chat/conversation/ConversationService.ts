@@ -29,7 +29,6 @@ import { ChatApi } from "@/apis"
 import { User } from "@/types/user"
 import { userStore } from "@/opensource/models/user"
 import LastConversationService from "./LastConversationService"
-import { Bot } from "@/types/bot"
 
 /**
  * 会话服务
@@ -360,9 +359,7 @@ class ConversationService {
 				}
 
 				// 重新拉取一遍用户信息和群聊信息, 保证数据最新
-				requestIdleCallback(() => {
-					this.refreshConversationReceiveData()
-				})
+				this.refreshConversationReceiveData()
 			},
 		)
 	}

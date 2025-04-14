@@ -7,7 +7,9 @@ export const useStyles = createStyles(
 			container: css`
 				cursor: pointer;
 				display: flex;
-				width: 340px;
+				width: fit-content;
+				max-width: 340px;
+				min-width: 200px;
 				flex-direction: column;
 				justify-content: center;
 				align-items: flex-start;
