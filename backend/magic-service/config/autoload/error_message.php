@@ -20,9 +20,8 @@ use App\ErrorCode\TokenErrorCode;
 use App\ErrorCode\UserErrorCode;
 use App\ErrorCode\UserTaskErrorCode;
 use App\Infrastructure\Core\Exception\BusinessException;
-use Hyperf\Config\ProviderConfig;
 
-$errors = [
+return [
     'exception_class' => BusinessException::class,
     'error_code_mapper' => [
         HttpErrorCode::class => [100, 600],
@@ -42,12 +41,3 @@ $errors = [
         ServiceProviderErrorCode::class => [44000, 44999],
     ],
 ];
-
-$configFromProviders = [];
-if (class_exists(ProviderConfig::class)) {
-    $configFromProviders = ProviderConfig::load();
-}
-
-$error_message = $configFromProviders['error_message'] ?? [];
-$errors['error_code_mapper'] = array_merge($errors['error_code_mapper'], $error_message['error_code_mapper'] ?? []);
-return $errors;
