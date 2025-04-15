@@ -34,8 +34,13 @@ class OpenAIProxyExceptionHandler extends AbstractExceptionHandler
             $errorMessage = $previousException->getMessage();
             $errorCode = $previousException->getCode();
         } else {
-            $errorMessage = 'system error';
-            $statusCode = 500;
+            if ($throwable instanceof BusinessException) {
+                $errorMessage = $throwable->getMessage();
+                $errorCode = $throwable->getCode();
+            } else {
+                $errorMessage = 'system error';
+                $statusCode = 500;
+            }
         }
 
         $errorMessage = preg_replace('/https?:\/\/[^\s]+/', '', $errorMessage);
