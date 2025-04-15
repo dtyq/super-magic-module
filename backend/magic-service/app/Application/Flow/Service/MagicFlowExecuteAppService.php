@@ -130,7 +130,7 @@ class MagicFlowExecuteAppService extends AbstractFlowAppService
         $operator->setRealName($account?->getRealName());
         $operator->setSourceId($apiChatDTO->getShareOptions('source_id', 'sk_flow'));
 
-        $magicFlow = $this->getFlow($flowDataIsolation, $apiChatDTO->getFlowCode(), [Type::Main]);
+        $magicFlow = $this->getFlow($flowDataIsolation, $apiChatDTO->getFlowCode(), [Type::Main], operationValidate: 'read');
         // 设置指令
         $messageEntity = new TextMessage(['content' => $apiChatDTO->getMessage()]);
         if (! empty($apiChatDTO->getInstruction())) {
@@ -190,7 +190,7 @@ class MagicFlowExecuteAppService extends AbstractFlowAppService
         $operator->setRealName($account?->getRealName());
         $operator->setSourceId($apiChatDTO->getShareOptions('source_id', 'sk_flow'));
 
-        $magicFlow = $this->getFlow($flowDataIsolation, $apiChatDTO->getFlowCode(), [Type::Sub, Type::Tools]);
+        $magicFlow = $this->getFlow($flowDataIsolation, $apiChatDTO->getFlowCode(), [Type::Sub, Type::Tools], operationValidate: 'read');
 
         // 设置指令
         $messageEntity = new TextMessage(['content' => $apiChatDTO->getMessage()]);
@@ -247,8 +247,7 @@ class MagicFlowExecuteAppService extends AbstractFlowAppService
         }
 
         // 检查是否具有该流程的权限
-        $flow = $this->getFlow($flowDataIsolation, $log->getFlowCode());
-        $this->getFlowOperation($flowDataIsolation, $flow)->validate('read', $apiChatDTO->getTaskId());
+        $this->getFlow($flowDataIsolation, $log->getFlowCode(), operationValidate: 'read');
 
         return $log;
     }
@@ -403,7 +402,7 @@ class MagicFlowExecuteAppService extends AbstractFlowAppService
         return $msgInstruct;
     }
 
-    private function getFlow(FlowDataIsolation $dataIsolation, string $flowId, ?array $types = null): MagicFlowEntity
+    private function getFlow(FlowDataIsolation $dataIsolation, string $flowId, ?array $types = null, string $operationValidate = ''): MagicFlowEntity
     {
         $magicFlow = $this->magicFlowDomainService->getByCode($dataIsolation, $flowId);
         if (! $magicFlow) {
@@ -444,6 +443,10 @@ class MagicFlowExecuteAppService extends AbstractFlowAppService
             $magicFlow->setVersionCode($flowVersion->getCode());
         }
         $magicFlow->setAgentId((string) $agentId);
+
+        if ($operationValidate) {
+            $this->getFlowOperation($dataIsolation, $magicFlow)->validate($operationValidate, $flowId);
+        }
 
         return $magicFlow;
     }

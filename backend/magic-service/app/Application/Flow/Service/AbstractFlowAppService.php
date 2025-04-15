@@ -129,11 +129,13 @@ abstract class AbstractFlowAppService extends AbstractKernelAppService
     private function getOperationByMain(PermissionDataIsolation $dataIsolation, MagicFlowEntity $flowEntity): Operation
     {
         $permissionDataIsolation = $this->createPermissionDataIsolation($dataIsolation);
-        $agent = $this->magicAgentDomainService->getByFlowCode($flowEntity->getCode());
+        if (! $agentId = $flowEntity->getAgentId()) {
+            $agentId = $this->magicAgentDomainService->getByFlowCode($flowEntity->getCode())->getId();
+        }
         return $this->operationPermissionAppService->getOperationByResourceAndUser(
             $permissionDataIsolation,
             ResourceType::AgentCode,
-            $agent->getId(),
+            $agentId,
             $dataIsolation->getCurrentUserId()
         );
     }
