@@ -8,7 +8,6 @@ declare(strict_types=1);
 namespace App\Application\Chat\Event\Subscribe\Agent;
 
 use App\Application\Chat\Service\MagicChatMessageAppService;
-use App\Application\Flow\Service\MagicFlowExecuteAppService;
 use App\Domain\Chat\Entity\MagicSeqEntity;
 use App\Domain\Chat\Entity\ValueObject\MessageType\ChatMessageType;
 use App\Domain\Chat\Event\Agent\UserCallAgentFailEvent;
@@ -26,8 +25,6 @@ use function Hyperf\Translation\__;
 class UserCallAgentFailSubscriber implements ListenerInterface
 {
     public function __construct(
-        protected MagicChatMessageAppService $magicChatMessageAppService,
-        protected MagicFlowExecuteAppService $magicFlowExecuteAppService,
     ) {
     }
 
@@ -62,7 +59,7 @@ class UserCallAgentFailSubscriber implements ListenerInterface
             $seqDTO->setSeqType($messageInterface->getMessageTypeEnum());
             // 原样输出扩展参数
             $seqDTO->setExtra($seqEntity->getExtra());
-            $this->magicChatMessageAppService->aiSendMessage($seqDTO, $appMessageId, doNotParseReferMessageId: true);
+            di(MagicChatMessageAppService::class)->aiSendMessage($seqDTO, $appMessageId, doNotParseReferMessageId: true);
         } catch (Throwable $throwable) {
             $logger = ApplicationContext::getContainer()->get(LoggerFactory::class)->get(get_class($this));
             $logger->error('UserCallAgentEventError', [
