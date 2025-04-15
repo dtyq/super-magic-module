@@ -25,8 +25,6 @@ class OpenAIProxyExceptionHandler extends AbstractExceptionHandler
         $statusCode = 400;
         $errorCode = $throwable->getCode();
 
-        var_dump(get_class($throwable));
-
         $previousException = $throwable->getPrevious();
         if ($previousException instanceof LLMException) {
             $errorMessage = $previousException->getPrevious()?->getMessage() ?? $previousException->getMessage();
