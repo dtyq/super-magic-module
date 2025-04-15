@@ -187,6 +187,7 @@ class LLMAppService extends AbstractLLMAppService
                 $exception
             );
 
+            $this->logModelCallFailure($proxyModelRequest->getModel(), $exception);
             ExceptionBuilder::throw(MagicApiErrorCode::MODEL_RESPONSE_FAIL, $exception->getMessage(), throwable: $exception);
         } catch (Throwable $throwable) {
             $startTime = $startTime ?? microtime(true);
