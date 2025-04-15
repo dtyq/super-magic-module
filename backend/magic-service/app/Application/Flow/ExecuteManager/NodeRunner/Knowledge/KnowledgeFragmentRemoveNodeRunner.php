@@ -8,6 +8,7 @@ declare(strict_types=1);
 namespace App\Application\Flow\ExecuteManager\NodeRunner\Knowledge;
 
 use App\Application\Flow\ExecuteManager\ExecutionData\ExecutionData;
+use App\Application\KnowledgeBase\VectorDatabase\Similarity\KnowledgeSimilarityFilter;
 use App\Application\KnowledgeBase\VectorDatabase\Similarity\KnowledgeSimilarityManager;
 use App\Domain\Flow\Entity\ValueObject\NodeParamsConfig\Knowledge\KnowledgeFragmentRemoveNodeParamsConfig;
 use App\Domain\Flow\Entity\ValueObject\NodeType;
@@ -67,7 +68,10 @@ class KnowledgeFragmentRemoveNodeRunner extends AbstractKnowledgeNodeRunner
             $fragmentDomainService->destroy($knowledgeBaseDataIsolation, $KnowledgeEntity, $fragment);
             return;
         }
+        $filter = new KnowledgeSimilarityFilter();
+        $filter->setKnowledgeCodes([$knowledgeCode]);
+        $filter->setMetadataFilter($metadataFilter);
 
-        di(KnowledgeSimilarityManager::class)->destroyByMetadataFilter($knowledgeBaseDataIsolation, $KnowledgeEntity, $metadataFilter);
+        di(KnowledgeSimilarityManager::class)->destroyByMetadataFilter($knowledgeBaseDataIsolation, $KnowledgeEntity, $filter);
     }
 }

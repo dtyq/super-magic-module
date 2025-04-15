@@ -70,6 +70,15 @@ class KnowledgeBaseAppService extends AbstractKnowledgeAppService
         return $knowledgeBaseEntity;
     }
 
+    public function saveProcess(Authenticatable $authorization, KnowledgeBaseEntity $savingKnowledgeEntity): KnowledgeBaseEntity
+    {
+        $dataIsolation = $this->createKnowledgeBaseDataIsolation($authorization);
+        $savingKnowledgeEntity->setCreator($dataIsolation->getCurrentUserId());
+        $this->checkKnowledgeBaseOperation($dataIsolation, 'w', $savingKnowledgeEntity->getCode());
+
+        return $this->knowledgeBaseDomainService->saveProcess($dataIsolation, $savingKnowledgeEntity);
+    }
+
     public function getByBusinessId(Authenticatable $authorization, string $businessId, ?int $type = null): ?KnowledgeBaseEntity
     {
         if (empty($businessId)) {

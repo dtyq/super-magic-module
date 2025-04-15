@@ -7,6 +7,8 @@ declare(strict_types=1);
 
 namespace App\Application\KnowledgeBase\Service;
 
+use App\Application\KnowledgeBase\VectorDatabase\Similarity\KnowledgeSimilarityFilter;
+use App\Application\KnowledgeBase\VectorDatabase\Similarity\KnowledgeSimilarityManager;
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseFragmentEntity;
 use App\Domain\KnowledgeBase\Entity\ValueObject\Query\KnowledgeBaseFragmentQuery;
 use App\Infrastructure\Core\ValueObject\Page;
@@ -49,5 +51,17 @@ class KnowledgeBaseFragmentAppService extends AbstractKnowledgeAppService
         $knowledgeBaseEntity = $this->knowledgeBaseDomainService->show($dataIsolation, $knowledgeBaseCode);
         $oldEntity = $this->knowledgeBaseFragmentDomainService->show($dataIsolation, $id);
         $this->knowledgeBaseFragmentDomainService->destroy($dataIsolation, $knowledgeBaseEntity, $oldEntity);
+    }
+
+    public function destroyByMetadataFilter(Authenticatable $authorization, string $knowledgeBaseCode, array $metadataFilter): void
+    {
+        $dataIsolation = $this->createKnowledgeBaseDataIsolation($authorization);
+        $this->checkKnowledgeBaseOperation($dataIsolation, 'del', $knowledgeBaseCode);
+        $knowledgeBaseEntity = $this->knowledgeBaseDomainService->show($dataIsolation, $knowledgeBaseCode);
+
+        $filter = new KnowledgeSimilarityFilter();
+        $filter->setKnowledgeCodes([$knowledgeBaseCode]);
+        $filter->setMetadataFilter($metadataFilter);
+        di(KnowledgeSimilarityManager::class)->destroyByMetadataFilter($dataIsolation, $knowledgeBaseEntity, $filter);
     }
 }
