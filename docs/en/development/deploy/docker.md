@@ -49,7 +49,7 @@ cp .env.example .env
 - API Service: http://localhost:9501
 - Web Application: http://localhost:8080
   - Account `13800138001`：Password `123456`
-  - Account `13800139001`：Password `123456`
+  - Account `13900139001`：Password `123456`
 - RabbitMQ Management Interface: http://localhost:15672
   - Username: admin
   - Password: magic123456

@@ -49,9 +49,9 @@ curl -X POST -H "Content-Type: application/json" -d '{"email":"admin@example.com
 
 ## 5. Password Information
 
-This implementation uses the last 6 digits of the phone number as the default password:
+Default Accounts and password:
 
 - Account `13800138001`: Password is `123456`
-- Account `13800139001`: Password is `123456`
+- Account `13900139001`: Password is `123456`
 
 In production environments, please ensure the implementation of secure password storage and verification mechanisms. 
