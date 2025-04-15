@@ -109,17 +109,18 @@ class LLMAppService extends AbstractLLMAppService
      */
     protected function processRequest(ProxyModelRequestInterface $proxyModelRequest, callable $modelCallFunction): ResponseInterface
     {
-        // 验证访问令牌与模型权限
-        $accessToken = $this->validateAccessToken($proxyModelRequest);
-
-        // 数据隔离处理
-        $dataIsolation = LLMDataIsolation::create()->disabled();
-
-        // 解析业务参数
-        $contextData = $this->parseBusinessContext($dataIsolation, $accessToken, $proxyModelRequest);
+        $endpointResponseDTO = null;
         try {
+            // 验证访问令牌与模型权限
+            $accessToken = $this->validateAccessToken($proxyModelRequest);
+
+            // 数据隔离处理
+            $dataIsolation = LLMDataIsolation::create()->disabled();
+
+            // 解析业务参数
+            $contextData = $this->parseBusinessContext($dataIsolation, $accessToken, $proxyModelRequest);
+
             // 尝试获取高可用模型配置
-            $endpointResponseDTO = null;
             $orgCode = $contextData['organization_code'] ?? null;
             $modeId = $this->getHighAvailableModelId($proxyModelRequest->getModel(), $endpointResponseDTO, $orgCode);
             if (empty($modeId)) {
@@ -186,7 +187,7 @@ class LLMAppService extends AbstractLLMAppService
                 $exception
             );
 
-            throw $exception;
+            ExceptionBuilder::throw(MagicApiErrorCode::MODEL_RESPONSE_FAIL, $exception->getMessage(), throwable: $exception);
         } catch (Throwable $throwable) {
             $startTime = $startTime ?? microtime(true);
             // 计算响应耗时
@@ -206,7 +207,7 @@ class LLMAppService extends AbstractLLMAppService
                 $message = $throwable->getMessage();
             }
             $this->logModelCallFailure($proxyModelRequest->getModel(), $throwable);
-            ExceptionBuilder::throw(MagicApiErrorCode::MODEL_RESPONSE_FAIL, $message);
+            ExceptionBuilder::throw(MagicApiErrorCode::MODEL_RESPONSE_FAIL, $message, throwable: $throwable);
         }
     }
 

@@ -65,7 +65,7 @@ class ExceptionBuilder
         $self->validateErrorCode();
         $exceptionClass = $self->initializeExceptionClass();
         /** @var BusinessException $exception */
-        $exception = new $exceptionClass($message, $self->getCode());
+        $exception = new $exceptionClass($message, $self->getCode(), $throwable);
         $self->setExceptionMessage($exception, $replace, $locale);
         throw $exception;
     }
