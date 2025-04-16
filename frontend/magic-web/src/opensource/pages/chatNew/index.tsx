@@ -29,19 +29,6 @@ const ChatNew = observer(() => {
 
 	const showExtra = conversationStore.topicOpen
 
-	if (!conversationStore.currentConversation) {
-		return (
-			<Flex flex={1} className={styles.chat} id={ChatDomId.ChatContainer}>
-				<MagicSplitter className={styles.splitter}>
-					<MagicSplitter.Panel min={200} defaultSize={240} max={300}>
-						<ChatSubSider />
-					</MagicSplitter.Panel>
-					<MagicSplitter.Panel />
-				</MagicSplitter>
-			</Flex>
-		)
-	}
-
 	const onResizeEnd = useMemoizedFn((size: number[]) => {
 		interfaceStore.setChatInputDefaultHeight(size[2])
 	})
@@ -108,6 +95,19 @@ const ChatNew = observer(() => {
 				<Suspense fallback={null}>
 					{conversationStore.settingOpen && <SettingExtraSection />}
 				</Suspense>
+			</Flex>
+		)
+	}
+
+	if (!conversationStore.currentConversation) {
+		return (
+			<Flex flex={1} className={styles.chat} id={ChatDomId.ChatContainer}>
+				<MagicSplitter className={styles.splitter}>
+					<MagicSplitter.Panel min={200} defaultSize={240} max={300}>
+						<ChatSubSider />
+					</MagicSplitter.Panel>
+					<MagicSplitter.Panel />
+				</MagicSplitter>
 			</Flex>
 		)
 	}
