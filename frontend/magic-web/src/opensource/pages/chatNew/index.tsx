@@ -16,6 +16,7 @@ import Header from "./components/ChatHeader"
 import ChatImagePreviewModal from "./components/ChatImagePreviewModal"
 import DragFileSendTip from "./components/ChatMessageList/components/DragFileSendTip"
 import AiImageStartPage from "./components/AiImageStartPage"
+import { useMemoizedFn } from "ahooks"
 
 const TopicExtraSection = lazy(() => import("./components/topic/ExtraSection"))
 const SettingExtraSection = lazy(() => import("./components/setting"))
@@ -41,6 +42,10 @@ const ChatNew = observer(() => {
 		)
 	}
 
+	const onResizeEnd = useMemoizedFn((size: number[]) => {
+		interfaceStore.setChatInputDefaultHeight(size[2])
+	})
+
 	const Main = () => {
 		// 如果开启了startPage，则显示startPage
 		if (ConversationBotDataService.startPage && interfaceStore.isShowStartPage) {
@@ -49,7 +54,7 @@ const ChatNew = observer(() => {
 
 		return (
 			<>
-				<Flex vertical className={styles.main} flex={1}>
+				{/* <Flex vertical className={styles.main} flex={1}>
 					<Header />
 					<div className={styles.chatList}>
 						<DragFileSendTip>
@@ -63,7 +68,32 @@ const ChatNew = observer(() => {
 							// scrollControl={null}
 						/>
 					</div>
-				</Flex>
+				</Flex> */}
+				<MagicSplitter layout="vertical" className={styles.main} onResizeEnd={onResizeEnd}>
+					<MagicSplitter.Panel min={60} defaultSize={60} max={60}>
+						<Header />
+					</MagicSplitter.Panel>
+					<MagicSplitter.Panel>
+						<div className={styles.chatList}>
+							<DragFileSendTip>
+								<ChatMessageList />
+							</DragFileSendTip>
+						</div>
+					</MagicSplitter.Panel>
+					<MagicSplitter.Panel
+						min={200}
+						defaultSize={interfaceStore.chatInputDefaultHeight}
+						max="50%"
+					>
+						<div className={styles.editor}>
+							<MessageEditor
+								disabled={false}
+								visible
+								// scrollControl={null}
+							/>
+						</div>
+					</MagicSplitter.Panel>
+				</MagicSplitter>
 				{showExtra && (
 					<div className={styles.extra}>
 						<Suspense fallback={null}>

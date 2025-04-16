@@ -8,6 +8,12 @@ class InterfaceStore {
 	isConnecting: boolean = false
 	showReloadButton: boolean = false
 	isShowStartPageKey = platformKey("isShowStartPage")
+	chatInputDefaultHeightKey = platformKey("chatInputDefaultHeight")
+
+	/**
+	 * 聊天输入框默认高度
+	 */
+	chatInputDefaultHeight = Number(localStorage.getItem(this.chatInputDefaultHeightKey)) || 240
 
 	/**
 	 * 是否显示启动页
@@ -37,6 +43,11 @@ class InterfaceStore {
 
 	setShowReloadButton(showReloadButton: boolean) {
 		this.showReloadButton = showReloadButton
+	}
+
+	setChatInputDefaultHeight(height: number) {
+		this.chatInputDefaultHeight = height
+		localStorage.setItem(this.chatInputDefaultHeightKey, height.toString())
 	}
 }
 
