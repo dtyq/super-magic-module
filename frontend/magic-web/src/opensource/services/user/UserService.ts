@@ -31,7 +31,6 @@ export interface OrganizationResponse {
 }
 
 export class UserService {
-
 	private readonly contactApi: typeof apis.ContactApi
 
 	private readonly service: Container
@@ -53,7 +52,7 @@ export class UserService {
 			console.log("open", { reconnect })
 			if (reconnect) {
 				console.log("重新连接成功，自动登录")
-				this.login()
+				this.login(false)
 			}
 		})
 	}
@@ -218,7 +217,10 @@ export class UserService {
 	setTeamshareOrganizationCode(organizationCode: string) {
 		const user = new UserRepository()
 		const { magicOrganizationMap } = userStore.user
-		const orgMap = keyBy(Object.values(magicOrganizationMap), "third_platform_organization_code")
+		const orgMap = keyBy(
+			Object.values(magicOrganizationMap),
+			"third_platform_organization_code",
+		)
 		const orgCode = orgMap?.[organizationCode]?.magic_organization_code
 		user.setOrganizationCode(orgCode)
 		user.setTeamshareOrganizationCode(organizationCode)
@@ -296,7 +298,7 @@ export class UserService {
 					})
 				await this.service.get<LoginService>("loginService").organizationSyncStep(response)
 
-				await this.login()
+				await this.login(true)
 			}
 		}
 	}
@@ -387,7 +389,7 @@ export class UserService {
 			.catch(console.error)
 	}
 
-	login() {
+	login(showLoginLoading = true) {
 		const { authorization } = userStore.user
 
 		if (!authorization) {
@@ -405,7 +407,7 @@ export class UserService {
 				.then(async (res) => {
 					userStore.user.setUserInfo(res.data.user)
 					// 切换 chat 数据
-					await this.switchUser(res.data.user)
+					await this.switchUser(res.data.user, showLoginLoading)
 				})
 				.catch((err) => {
 					if (err.code === 3103) {
@@ -431,10 +433,11 @@ export class UserService {
 		this.lastLogin = null
 	}
 
-	async switchUser(magicUser: User.UserInfo) {
-		interfaceStore.setIsSwitchingOrganization(true)
+	async switchUser(magicUser: User.UserInfo, showSwitchLoading = true) {
 		const magicId = magicUser.magic_id
 		console.log("切换账户", magicId)
+		if (showSwitchLoading) interfaceStore.setIsSwitchingOrganization(true)
+
 		// 如果当前账户ID与传入的账户ID相同，则不进行切换
 		if (this.magicId !== magicId) {
 			this.magicId = magicId
@@ -480,6 +483,6 @@ export class UserService {
 		/** 设置消息拉取 循环 */
 		MessageService.init()
 		// this.messagePullBusiness.registerMessagePullLoop()
-		interfaceStore.setIsSwitchingOrganization(false)
+		if (showSwitchLoading) interfaceStore.setIsSwitchingOrganization(false)
 	}
 }

@@ -71,7 +71,7 @@ function AuthenticationProvider({ children }: PropsWithChildren) {
 					return accountFetch()
 				})
 				.then(() => {
-					return userService.login()
+					return userService.login(true)
 				})
 		)
 	})
