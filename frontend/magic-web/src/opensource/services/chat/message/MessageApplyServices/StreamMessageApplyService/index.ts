@@ -1,5 +1,3 @@
-/* eslint-disable class-methods-use-this */
-import { useStreamMessageStore } from "@/opensource/stores/stream-message"
 import type { StreamResponse, SeqResponse } from "@/types/request"
 import { StreamStatus } from "@/types/request"
 import type {
@@ -15,6 +13,8 @@ import AiSearchApplyService from "../ChatMessageApplyServices/AiSearchApplyServi
 import MessageService from "../../MessageService"
 import type { StreamMessageTask } from "./types"
 import { sliceMessage } from "./utils"
+import ConversationService from "../../../conversation/ConversationService"
+import { getSlicedText } from "../../../conversation/utils"
 
 const console = new Logger("StreamMessageApplyService", "blue", { console: false })
 
@@ -186,79 +186,96 @@ class StreamMessageApplyService {
 			task.triggeredRender = true
 			console.log(`[executeType] 任务状态: ${task.status}, 剩余任务数: ${task.tasks.length}`)
 
-			const processNextChunk = () => {
-				// 动态调整批处理大小，根据任务状态和剩余任务量
-				let batchSize = 1 // 默认批处理大小
+			// 创建字符缓冲区，用于平滑字符输出
+			const buffer: StreamResponse[] = []
+			// 控制输出速度的基础字符间隔时间(ms)
+			const baseInterval = 20
+			// 上次输出的时间戳
+			let lastOutputTime = Date.now()
+			// 字符输出间隔(ms)
+			let outputInterval = baseInterval
+			// 字符预加载阈值，当缓冲区字符数低于此值时主动拉取更多任务
+			const bufferThreshold = 10
+			// 平均字符输出速率，单位: 字符/秒
+			const avgOutputRate = 30
+			// 用于计算平均输出速度的窗口大小
+			const speedWindowSize = 20
+			// 最近输出的字符时间间隔记录
+			const recentIntervals: number[] = []
 
-				// 如果任务已标记为完成，增加批处理大小以加快处理速度
-				if (task.status === "done") {
-					// 根据剩余任务量动态调整批处理大小
-					const remainingTasks = task.tasks.length
-					if (remainingTasks > 100) {
-						batchSize = 20 // 大量任务时使用较大批次
-					} else if (remainingTasks > 50) {
-						batchSize = 10 // 中等数量任务
-					} else if (remainingTasks > 20) {
-						batchSize = 5 // 较少任务
+			const processNextChunk = () => {
+				const now = Date.now()
+				const timeSinceLastOutput = now - lastOutputTime
+
+				// 补充缓冲区
+				if (buffer.length < bufferThreshold && task.tasks.length > 0) {
+					// 从任务队列中获取新字符到缓冲区
+					const newChars = task.tasks.splice(0, Math.min(30, task.tasks.length))
+					buffer.push(...newChars)
+				}
+
+				// 处理输出逻辑
+				if (buffer.length > 0 && timeSinceLastOutput >= outputInterval) {
+					// 从缓冲区获取一个字符进行处理
+					const message = buffer.shift()
+					if (message) {
+						this.appendStreamMessage(messageId, message)
+					}
+
+					// 更新时间戳
+					lastOutputTime = now
+
+					// 根据内容复杂度调整输出间隔
+					const contentLength =
+						message?.content?.length ||
+						message?.llm_response?.length ||
+						message?.reasoning_content?.length ||
+						0
+
+					// 调整输出间隔，保持稳定的打字机效果
+					// 存储当前间隔到历史记录中
+					recentIntervals.push(outputInterval)
+					// 保持窗口大小固定
+					if (recentIntervals.length > speedWindowSize) {
+						recentIntervals.shift()
+					}
+
+					// 计算平均间隔，使输出更加平滑
+					const avgInterval =
+						recentIntervals.reduce((sum, val) => sum + val, 0) /
+						(recentIntervals.length || 1)
+
+					// 动态调整输出间隔
+					if (task.status === "done") {
+						// 任务已完成，可以稍微加快速度，但仍保持平滑
+						outputInterval = Math.max(10, avgInterval * 0.9)
 					} else {
-						batchSize = 3 // 少量任务
+						// 根据内容长度和当前平均速率动态调整
+						const targetInterval = 1000 / avgOutputRate // 目标间隔时间
+						// 在当前平均间隔和目标间隔之间平滑过渡
+						outputInterval = avgInterval * 0.7 + targetInterval * 0.3
+						// 内容长度影响：长内容稍微延长间隔，短内容保持正常
+						if (contentLength > 1) {
+							outputInterval = Math.min(outputInterval * 1.2, 80)
+						}
+						// 确保间隔在合理范围内
+						outputInterval = Math.max(15, Math.min(outputInterval, 50))
 					}
 				}
 
-				if (task.tasks.length > 0) {
-					// 获取要处理的批次（不超过剩余任务数量）
-					const currentBatch = task.tasks.splice(
-						0,
-						Math.min(batchSize, task.tasks.length),
-					)
-
-					// 处理当前批次的所有消息
-					currentBatch.forEach((message) => {
-						if (message) {
-							this.appendStreamMessage(messageId, message)
-						}
+				// 继续处理或结束条件
+				if (buffer.length > 0 || task.tasks.length > 0 || task.status !== "done") {
+					// 使用requestAnimationFrame获得更平滑的动画效果
+					requestAnimationFrame(() => {
+						processNextChunk()
 					})
-
-					// 计算下一批次的延迟时间
-					const maxContentLength = Math.max(
-						...currentBatch.map(
-							(message) =>
-								message?.content?.length ||
-								message?.llm_response?.length ||
-								message?.reasoning_content?.length ||
-								0,
-						),
-					)
-
-					// 调整延迟时间，使输出更加连贯自然
-					let delay = 30 // 基础延迟时间
-
-					// 如果任务已完成，减少延迟时间
-					if (task.status === "done") {
-						const remainingTasks = task.tasks.length
-						if (remainingTasks > 50) {
-							delay = 10
-						} else if (remainingTasks > 20) {
-							delay = 5
-						} else {
-							delay = 2
-						}
-					} else {
-						// 正常流式输出时，根据内容长度调整延迟
-						const charPerMs = 0.3
-						delay = Math.max(20, Math.min(maxContentLength / charPerMs, 80))
-					}
-
-					setTimeout(() => {
-						processNextChunk()
-					}, delay)
-				} else if (task.status === "done" && task.tasks.length === 0) {
+				} else if (
+					task.status === "done" &&
+					buffer.length === 0 &&
+					task.tasks.length === 0
+				) {
+					// 所有任务完成，标记流结束
 					this.removeFromTaskMap(messageId)
-					useStreamMessageStore.getState().markStreamEnd(messageId)
-				} else {
-					setTimeout(() => {
-						processNextChunk()
-					}, 20)
 				}
 			}
 
@@ -404,30 +421,36 @@ class StreamMessageApplyService {
 			}
 		} else if (status === StreamStatus.End) {
 			console.log(`[applyTextStreamMessage] 处理结束状态消息`)
-			MessageService.updateMessage(
-				conversationId,
-				topicId,
-				messageId,
-				(m) => {
-					const textMessage = m.message as TextConversationMessage
-					if (textMessage.text) {
-						textMessage.text.content = content
-						textMessage.text.reasoning_content = reasoning_content
-						if (textMessage.text.stream_options) {
-							textMessage.text.stream_options.status = StreamStatus.End
-						}
+
+			// 更新消息状态
+			MessageService.updateMessage(conversationId, topicId, messageId, (m) => {
+				const textMessage = m.message as TextConversationMessage
+				if (textMessage.text) {
+					if (textMessage.text.stream_options) {
+						textMessage.text.stream_options.status = StreamStatus.End
 					}
-					return m
-				},
-				true,
-			)
+				}
+				return m
+			})
+
+			// 更新最后一条消息
+			ConversationService.updateLastReceiveMessage(conversationId, {
+				time: Date.now(),
+				seq_id: messageId,
+				type: ConversationMessageType.Text,
+				text: content.slice(0, 50),
+				topic_id: topicId,
+			})
+
+			// 落库
+			MessageService.updateDbMessage(messageId, conversationId, {
+				"message.text.content": content,
+				"message.text.reasoning_content": reasoning_content,
+				"message.text.stream_options.status": StreamStatus.End,
+			} as Partial<SeqResponse<ConversationMessage>>)
 		}
 		this.finishTask(target_seq_id)
 		console.log(`[applyTextStreamMessage] 文本流式消息处理完成`)
-	}
-
-	getReasoningContentMap(target_seq_id: string) {
-		return useStreamMessageStore.getState().getReasoningContentMap(target_seq_id)
 	}
 
 	/**
@@ -452,23 +475,33 @@ class StreamMessageApplyService {
 			}
 		} else if (status === StreamStatus.End) {
 			console.log(`[applyMarkdownStreamMessage] 处理结束状态消息`)
-			MessageService.updateMessage(
-				conversationId,
-				topicId,
-				messageId,
-				(m) => {
-					const markdownMessage = m.message as MarkdownConversationMessage
-					if (markdownMessage.markdown) {
-						markdownMessage.markdown.content = content
-						markdownMessage.markdown.reasoning_content = reasoning_content
-						if (markdownMessage.markdown.stream_options) {
-							markdownMessage.markdown.stream_options.status = StreamStatus.End
-						}
+			// 更新消息状态
+			MessageService.updateMessage(conversationId, topicId, messageId, (m) => {
+				const markdownMessage = m.message as MarkdownConversationMessage
+				if (markdownMessage.markdown) {
+					// PS： 这里不更新内容，因为内容是流式消息，由打字机去更新就好了
+					if (markdownMessage.markdown.stream_options) {
+						markdownMessage.markdown.stream_options.status = StreamStatus.End
 					}
-					return m
-				},
-				true,
-			)
+				}
+				return m
+			})
+
+			// 更新最后一条消息
+			ConversationService.updateLastReceiveMessage(conversationId, {
+				time: Date.now(),
+				seq_id: messageId,
+				type: ConversationMessageType.Markdown,
+				text: content.slice(0, 50),
+				topic_id: topicId,
+			})
+
+			// 落库
+			MessageService.updateDbMessage(messageId, conversationId, {
+				"message.markdown.content": content,
+				"message.markdown.reasoning_content": reasoning_content,
+				"message.markdown.stream_options.status": StreamStatus.End,
+			} as Partial<SeqResponse<ConversationMessage>>)
 		}
 		this.finishTask(target_seq_id)
 		console.log(`[applyMarkdownStreamMessage] Markdown流式消息处理完成`)
@@ -499,25 +532,36 @@ class StreamMessageApplyService {
 			}
 		} else if (status === StreamStatus.End) {
 			console.log(`[applyAggregateAISearchCardStreamMessage] 处理结束状态消息`)
+
 			// 更新根问题的回答
-			MessageService.updateMessage(
-				conversationId,
-				topicId,
-				messageId,
-				(m) => {
-					const textMessage = m.message as AggregateAISearchCardConversationMessage
-					if (textMessage.aggregate_ai_search_card) {
-						textMessage.aggregate_ai_search_card.llm_response = llm_response
-						textMessage.aggregate_ai_search_card.reasoning_content = reasoning_content
-						if (textMessage.aggregate_ai_search_card.stream_options) {
-							textMessage.aggregate_ai_search_card.stream_options.status =
-								StreamStatus.End
-						}
+			MessageService.updateMessage(conversationId, topicId, messageId, (m) => {
+				const textMessage = m.message as AggregateAISearchCardConversationMessage
+				if (textMessage.aggregate_ai_search_card) {
+					// PS： 这里不更新内容，因为内容是流式消息，由打字机去更新就好了
+					if (textMessage.aggregate_ai_search_card.stream_options) {
+						textMessage.aggregate_ai_search_card.stream_options.status =
+							StreamStatus.End
 					}
-					return m
-				},
-				true,
-			)
+				}
+				return m
+			})
+
+			// 更新最后一条消息
+			ConversationService.updateLastReceiveMessage(conversationId, {
+				time: Date.now(),
+				seq_id: messageId,
+				type: ConversationMessageType.AggregateAISearchCard,
+				text: llm_response.slice(0, 50),
+				topic_id: topicId,
+			})
+
+			// 落库
+			MessageService.updateDbMessage(messageId, conversationId, {
+				"message.aggregate_ai_search_card.llm_response": llm_response,
+				"message.aggregate_ai_search_card.reasoning_content": reasoning_content,
+				"message.aggregate_ai_search_card.stream_options.status": StreamStatus.End,
+			} as Partial<SeqResponse<ConversationMessage>>)
+
 			this.finishTask(target_seq_id)
 		}
 		console.log(`[applyAggregateAISearchCardStreamMessage] AI搜索卡片流式消息处理完成`)

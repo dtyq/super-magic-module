@@ -40,6 +40,7 @@ import ConversationService from "../conversation/ConversationService"
 import { getSlicedText } from "../conversation/utils"
 import DotsService from "../dots/DotsService"
 import { userStore } from "@/opensource/models/user"
+import { UpdateSpec } from "dexie"
 
 const console = new Logger("MessageService", "blue")
 const BigPageSize = 30
@@ -1167,7 +1168,7 @@ class MessageService {
 	updateDbMessage(
 		localMessageId: string,
 		conversation_id: string,
-		changes: Partial<SeqResponse<ConversationMessage>>,
+		changes: UpdateSpec<SeqResponse<ConversationMessage>>,
 	) {
 		this.messageDbService.updateMessage(localMessageId, conversation_id, changes)
 	}
