@@ -195,10 +195,6 @@ class MagicChatHttpApi extends AbstractApi
     {
         $authorization = $this->getAuthorization();
         $topicName = $this->magicChatMessageAppService->intelligenceRenameTopicName($authorization, $topicId, $conversationId);
-        // 如果标题长度超过20个字符则后面的用...代替
-        if (mb_strlen($topicName) > 20) {
-            $topicName = mb_substr($topicName, 0, 20) . '...';
-        }
         return [
             'conversation_id' => $conversationId,
             'id' => $topicId,
