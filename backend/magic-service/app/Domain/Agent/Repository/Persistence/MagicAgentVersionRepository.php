@@ -244,4 +244,26 @@ class MagicAgentVersionRepository implements MagicAgentVersionRepositoryInterfac
         unset($model['agent_id'],$model['agent_name'],$model['agent_avatar'],$model['agent_description']);
         return MagicAgentVersionFactory::toEntity($model->toArray());
     }
+
+    /**
+     * 基于游标分页获取指定组织的机器人版本列表.
+     * @param string $organizationCode 组织代码
+     * @param array $botVersionIds 机器人版本ID列表
+     * @param string $cursor 游标ID，如果为空字符串则从最新开始
+     * @param int $pageSize 每页数量
+     */
+    public function getAgentsByOrganizationWithCursor(string $organizationCode, array $botVersionIds, string $cursor, int $pageSize): array
+    {
+        $query = $this->agentVersionModel::query()
+            ->where('organization_code', $organizationCode)
+            ->whereIn('id', $botVersionIds)
+            ->orderBy('id', 'desc')
+            ->limit($pageSize);
+
+        if ($cursor !== '') {
+            $query->where('id', '<', (int) $cursor);
+        }
+
+        return $query->get()->toArray();
+    }
 }
