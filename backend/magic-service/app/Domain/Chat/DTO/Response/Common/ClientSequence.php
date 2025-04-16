@@ -67,7 +67,7 @@ class ClientSequence extends AbstractEntity
 
     public function getMagicId(): string
     {
-        return $this->magicId;
+        return $this->magicId ?? '';
     }
 
     public function setMagicId(?string $magicId): void
@@ -87,7 +87,7 @@ class ClientSequence extends AbstractEntity
 
     public function getMessageId(): string
     {
-        return $this->messageId;
+        return $this->messageId ?? '';
     }
 
     public function setMessageId(?string $messageId): void
@@ -97,7 +97,7 @@ class ClientSequence extends AbstractEntity
 
     public function getReferMessageId(): ?string
     {
-        return $this->referMessageId;
+        return $this->referMessageId ?? null;
     }
 
     public function setReferMessageId(?string $referMessageId): void
@@ -107,7 +107,7 @@ class ClientSequence extends AbstractEntity
 
     public function getSenderMessageId(): ?string
     {
-        return $this->senderMessageId;
+        return $this->senderMessageId ?? null;
     }
 
     public function setSenderMessageId(?string $senderMessageId): void
@@ -117,7 +117,7 @@ class ClientSequence extends AbstractEntity
 
     public function getConversationId(): ?string
     {
-        return $this->conversationId;
+        return $this->conversationId ?? null;
     }
 
     public function setConversationId(?string $conversationId): void

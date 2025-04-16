@@ -69,7 +69,7 @@ class ClientMessage extends AbstractEntity
 
     public function getMagicMessageId(): string
     {
-        return $this->magicMessageId;
+        return $this->magicMessageId ?? '';
     }
 
     public function setMagicMessageId(string $magicMessageId): void
@@ -79,7 +79,7 @@ class ClientMessage extends AbstractEntity
 
     public function getAppMessageId(): ?string
     {
-        return $this->appMessageId;
+        return $this->appMessageId ?? null;
     }
 
     public function setAppMessageId(?string $appMessageId): void
@@ -89,7 +89,7 @@ class ClientMessage extends AbstractEntity
 
     public function getTopicId(): ?string
     {
-        return $this->topicId;
+        return $this->topicId ?? null;
     }
 
     public function setTopicId(?string $topicId): void
@@ -109,7 +109,7 @@ class ClientMessage extends AbstractEntity
 
     public function getUnreadCount(): ?int
     {
-        return $this->unreadCount;
+        return $this->unreadCount ?? null;
     }
 
     public function setUnreadCount(?int $unreadCount): void
@@ -119,7 +119,7 @@ class ClientMessage extends AbstractEntity
 
     public function getSenderId(): string
     {
-        return $this->senderId;
+        return $this->senderId ?? '';
     }
 
     public function setSenderId(string $senderId): void
@@ -139,7 +139,7 @@ class ClientMessage extends AbstractEntity
 
     public function getStatus(): ?string
     {
-        return $this->status;
+        return $this->status ?? null;
     }
 
     public function setStatus(?string $status): void

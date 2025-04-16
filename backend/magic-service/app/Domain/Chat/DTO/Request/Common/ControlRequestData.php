@@ -24,7 +24,7 @@ class ControlRequestData extends AbstractEntity
 
     public function getReferMessageId(): string
     {
-        return $this->referMessageId;
+        return $this->referMessageId ?? '';
     }
 
     public function setReferMessageId(?string $referMessageId): void
@@ -48,7 +48,7 @@ class ControlRequestData extends AbstractEntity
 
     public function getRequestId(): string
     {
-        return $this->requestId;
+        return $this->requestId ?? '';
     }
 
     public function setRequestId(?string $requestId): void

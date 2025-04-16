@@ -43,7 +43,7 @@ class Message extends AbstractEntity
 
     public function getAppMessageId(): string
     {
-        return $this->appMessageId;
+        return $this->appMessageId ?? '';
     }
 
     public function setAppMessageId(?string $appMessageId): void
@@ -53,7 +53,7 @@ class Message extends AbstractEntity
 
     public function getSendTime(): int
     {
-        return $this->sendTime;
+        return $this->sendTime ?? time();
     }
 
     public function setSendTime(?int $sendTime): void
@@ -63,7 +63,7 @@ class Message extends AbstractEntity
 
     public function getTopicId(): string
     {
-        return $this->topicId;
+        return $this->topicId ?? '';
     }
 
     public function setTopicId(?string $topicId): void

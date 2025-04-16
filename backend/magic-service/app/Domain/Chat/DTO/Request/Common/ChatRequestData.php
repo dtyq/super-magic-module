@@ -32,7 +32,7 @@ class ChatRequestData extends AbstractEntity
 
     public function getReferMessageId(): string
     {
-        return $this->referMessageId;
+        return $this->referMessageId ?? '';
     }
 
     public function setReferMessageId(?string $referMessageId): void
