@@ -1,4 +1,4 @@
-import { IconRouteSquare, IconTools, IconChevronRight, IconFileDatabase } from "@tabler/icons-react"
+import { IconRouteSquare, IconTools, IconChevronRight, IconFileTextAi } from "@tabler/icons-react"
 import { useState } from "react"
 import { MagicList } from "@/opensource/components/MagicList"
 import { useLocation } from "react-router"
@@ -8,9 +8,10 @@ import MagicIcon from "@/opensource/components/base/MagicIcon"
 import SubSiderContainer from "@/opensource/layouts/BaseLayout/components/SubSider"
 import { IconMagicBots } from "@/enhance/tabler/icons-react"
 import { FlowRouteType } from "@/types/flow"
-import { createStyles, useAntdToken } from "antd-style"
+import { createStyles } from "antd-style"
 import { useTranslation } from "react-i18next"
 import { replaceRouteParams } from "@/utils/route"
+import { isCommercial } from "@/utils/env"
 
 const useStyles = createStyles(({ css }) => {
 	return {
@@ -30,8 +31,6 @@ function FlowSubSider() {
 	const { pathname } = useLocation()
 
 	const [collapseKey, setCollapseKey] = useState<string>(pathname)
-
-	const token = useAntdToken()
 
 	const { styles } = useStyles()
 
@@ -56,14 +55,6 @@ function FlowSubSider() {
 						},
 						extra: <MagicIcon component={IconChevronRight} />,
 					},
-					// {
-					// 	id: `${RoutePath.Flows}?type=${FlowType.Main}`,
-					// 	title: "工作流",
-					// 	avatar: {
-					// 		icon: <MagicIcon component={IconRouteSquare} />,
-					// 		style: { background: "#FF7D00", padding: 8 },
-					// 	},
-					// },
 					{
 						id: replaceRouteParams(RoutePath.Flows, {
 							type: FlowRouteType.Sub,
@@ -86,19 +77,29 @@ function FlowSubSider() {
 						},
 						extra: <MagicIcon component={IconChevronRight} />,
 					},
-					{
-						id: replaceRouteParams(RoutePath.Flows, {
-							type: FlowRouteType.Knowledge,
-						}),
-						title: t("vectorDatabase.name", { ns: "flow" }),
-						avatar: {
-							icon: <MagicIcon component={IconFileDatabase} color="currentColor" />,
-							style: {
-								background: token.magicColorScales.violet[5],
-								padding: 8,
-							},
-						},
-					},
+					...(!isCommercial()
+						? [
+								{
+									id: replaceRouteParams(RoutePath.Flows, {
+										type: FlowRouteType.VectorKnowledge,
+									}),
+									title: t("vectorDatabase.name", { ns: "flow" }),
+									avatar: {
+										src: (
+											<MagicIcon
+												component={IconFileTextAi}
+												color="currentColor"
+											/>
+										),
+										style: {
+											background: "#32C436",
+											padding: 6,
+										},
+									},
+									extra: <MagicIcon component={IconChevronRight} />,
+								},
+						  ]
+						: []),
 				]}
 			/>
 		</SubSiderContainer>

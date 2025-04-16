@@ -101,7 +101,7 @@ export default function KnowledgeDetail() {
 	const { data } = useKnowledgeStore((state) => state.useKnowledgeDetail)(id as string)
 
 	const backToKnowledge = useMemoizedFn(() => {
-		navigate(replaceRouteParams(RoutePath.Flows, { type: FlowRouteType.Knowledge }))
+		navigate(replaceRouteParams(RoutePath.Flows, { type: FlowRouteType.VectorKnowledge }))
 	})
 
 	const [keyword, setKeyword] = useState("")

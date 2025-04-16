@@ -867,7 +867,7 @@
 			"insertCursor": "消息内容中光标位置",
 			"insertInstruction": "插入指令值",
 			"insertLocation": "指令插入位置",
-			"insertLocationTip": "当选择“消息内容中光标位置”时，会根据光标所在位置插入指令，如光标失焦则补充至消息内容后方。",
+			"insertLocationTip": "当选择\"消息内容中光标位置\"时，会根据光标所在位置插入指令，如光标失焦则补充至消息内容后方。",
 			"instructionContent": "指令内容",
 			"instructionContentPlaceholder": "输入指令发送的内容，将会在用户发送消息时，补充在消息中。支持使用@添加指令值。",
 			"instructionDesc": "指令描述",
@@ -1006,7 +1006,8 @@
 		"searchTips": "查询不到任何",
 		"tools": "工具",
 		"toolsNum": "${num} 个工具",
-		"version": "版本"
+		"version": "版本",
+		"viewDetails": "查看详情"
 	},
 	"form": {
 		"groupAvatar": "群头像",
@@ -1046,7 +1047,7 @@
 		"joinShortlist": {
 			"alreadyJoin": "已加入候选名单",
 			"alreadyJoinDescription": "我们将尽快为您发送邀请码，以便您优先体验我们的服务。",
-			"alreadyJoinTitle": "您已成功加入“候选名单”",
+			"alreadyJoinTitle": "您已成功加入\"候选名单\"",
 			"back": "返回上一步",
 			"description": "我们正处于内测阶段，您可以通过加入候选名单获得邀请码体验我们的服务",
 			"emailInvalid": "邮箱格式有误",

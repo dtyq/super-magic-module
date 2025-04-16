@@ -164,7 +164,7 @@ export default function VectorKnowledgeCreate() {
 	const handleBack = useMemoizedFn(() => {
 		navigate(
 			replaceRouteParams(RoutePath.Flows, {
-				type: FlowRouteType.Knowledge,
+				type: FlowRouteType.VectorKnowledge,
 			}),
 		)
 	})

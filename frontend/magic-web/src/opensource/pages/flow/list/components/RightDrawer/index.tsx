@@ -113,7 +113,7 @@ function RightDrawer({
 					setDrawerItems(items)
 				}
 				break
-			case FlowRouteType.Knowledge:
+			case FlowRouteType.VectorKnowledge:
 				break
 			default:
 				break

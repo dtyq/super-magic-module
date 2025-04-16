@@ -4,11 +4,11 @@ import MagicAvatar from "@/opensource/components/base/MagicAvatar"
 import defaultFlowAvatar from "@/assets/logos/flow-avatar.png"
 import defaultToolAvatar from "@/assets/logos/tool-avatar.png"
 import defaultAgentAvatar from "@/assets/logos/agent-avatar.jpg"
+import defaultKnowledgeAvatar from "@/assets/logos/knowledge-avatar.png"
 import { FlowRouteType } from "@/types/flow"
 import { useTranslation } from "react-i18next"
 import useStyles from "./style"
 import type { AvatarCard } from "./types"
-import DEFAULT_KNOWLEDGE_ICON from "@/assets/logos/knowledge-avatar.png"
 
 interface PromptCardProps {
 	data: AvatarCard
@@ -43,9 +43,9 @@ const PromptCard = memo(
 					return <img src={defaultFlowAvatar} className={styles.defaultAvatar} alt="" />
 				case FlowRouteType.Tools:
 					return <img src={defaultToolAvatar} className={styles.defaultAvatar} alt="" />
-				case FlowRouteType.Knowledge:
+				case FlowRouteType.VectorKnowledge:
 					return (
-						<img src={DEFAULT_KNOWLEDGE_ICON} className={styles.defaultAvatar} alt="" />
+						<img src={defaultKnowledgeAvatar} className={styles.defaultAvatar} alt="" />
 					)
 				default:
 					return <img src={defaultAgentAvatar} className={styles.defaultAvatar} alt="" />

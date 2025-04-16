@@ -1006,7 +1006,8 @@
 		"searchTips": "Can't find any",
 		"tools": "tool",
 		"toolsNum": "${num} tools",
-		"version": "version"
+		"version": "version",
+		"viewDetails": "View Details"
 	},
 	"form": {
 		"groupAvatar": "Group avatar",
