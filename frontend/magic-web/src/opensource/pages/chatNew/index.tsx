@@ -46,6 +46,10 @@ const ChatNew = observer(() => {
 		interfaceStore.setChatInputDefaultHeight(size[2])
 	})
 
+	const onChatSiderResizeEnd = useMemoizedFn((size: number[]) => {
+		interfaceStore.setChatSiderDefaultWidth(size[0])
+	})
+
 	const Main = () => {
 		// 如果开启了startPage，则显示startPage
 		if (ConversationBotDataService.startPage && interfaceStore.isShowStartPage) {
@@ -53,7 +57,7 @@ const ChatNew = observer(() => {
 		}
 
 		return (
-			<>
+			<Flex>
 				{/* <Flex vertical className={styles.main} flex={1}>
 					<Header />
 					<div className={styles.chatList}>
@@ -104,14 +108,22 @@ const ChatNew = observer(() => {
 				<Suspense fallback={null}>
 					{conversationStore.settingOpen && <SettingExtraSection />}
 				</Suspense>
-			</>
+			</Flex>
 		)
 	}
 
 	return (
 		<Flex flex={1} className={styles.chat} id={ChatDomId.ChatContainer}>
-			<ChatSubSider />
-			{Main()}
+			<MagicSplitter onResizeEnd={onChatSiderResizeEnd}>
+				<MagicSplitter.Panel
+					min={200}
+					defaultSize={interfaceStore.chatSiderDefaultWidth}
+					max={300}
+				>
+					<ChatSubSider />
+				</MagicSplitter.Panel>
+				<MagicSplitter.Panel>{Main()}</MagicSplitter.Panel>
+			</MagicSplitter>
 			<ChatImagePreviewModal />
 			{conversationStore.currentConversation.isGroupConversation && (
 				<Suspense fallback={null}>
