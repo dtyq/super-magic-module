@@ -19,6 +19,15 @@ const useStyles = createStyles(({ css, token }) => ({
 			border-bottom: 1px solid ${token.colorBorder};
 		}
 	`,
+	title: css`
+		flex-shrink: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	`,
+	extra: css`
+		flex-shrink: 0;
+	`,
 }))
 
 const SettingListItem = memo(({ data, className, onClick, ...props }: MagicListItemProps) => {
@@ -37,7 +46,9 @@ const SettingListItem = memo(({ data, className, onClick, ...props }: MagicListI
 			onClick={() => onClick?.(data)}
 			{...props}
 		>
-			{typeof data.title === "function" ? data.title(isHover) : data.title}
+			<div className={styles.title}>
+				{typeof data.title === "function" ? data.title(isHover) : data.title}
+			</div>
 			{typeof data.extra === "function" ? data.extra(isHover) : data.extra}
 		</Flex>
 	)

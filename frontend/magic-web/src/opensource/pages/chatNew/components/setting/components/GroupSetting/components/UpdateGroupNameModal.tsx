@@ -53,6 +53,8 @@ const UpdateGroupNameModal = memo((props: OpenableProps<UpdateGroupNameModalProp
 			<Input
 				placeholder={t("chat.groupSetting.groupNamePlaceholder")}
 				value={groupName}
+				showCount
+				maxLength={50}
 				onChange={(e) => setGroupName(e.target.value)}
 			/>
 		</MagicModal>

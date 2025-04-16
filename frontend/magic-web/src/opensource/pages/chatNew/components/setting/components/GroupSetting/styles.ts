@@ -5,9 +5,14 @@ export default createStyles(({ css, isDarkMode, prefixCls, token }) => ({
 	groupAvatar: css`
 		padding: 2.5px;
 		box-sizing: content-box;
+		overflow: hidden;
 	`,
 	groupInfo: css`
 		padding: 0 10px;
+		overflow: hidden;
+	`,
+	groupInfoContent: css`
+		width: 280px;
 	`,
 	groupName: css`
 		color: ${token.colorText};
@@ -15,6 +20,9 @@ export default createStyles(({ css, isDarkMode, prefixCls, token }) => ({
 		font-size: 14px;
 		font-weight: 600;
 		line-height: 20px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	`,
 	groupNotice: css`
 		color: ${token.colorTextQuaternary};
@@ -92,5 +100,11 @@ export default createStyles(({ css, isDarkMode, prefixCls, token }) => ({
 	viewAllMembersButton: css`
 		margin-top: 8px;
 		color: ${isDarkMode ? token.magicColorUsages.text[2] : token.magicColorUsages.text[1]};
+	`,
+	groupNameContent: css`
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		max-width: 90%;
 	`,
 }))

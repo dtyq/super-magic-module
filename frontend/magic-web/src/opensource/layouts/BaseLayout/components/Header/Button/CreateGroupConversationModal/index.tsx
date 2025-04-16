@@ -199,6 +199,8 @@ function CreateGroupConversationModal({ open, close, ...props }: CreateGroupConv
 								style={{ marginBottom: 16 }}
 							>
 								<Input
+									showCount
+									maxLength={50}
 									placeholder={t("form.placeholder.groupName", {
 										ns: "interface",
 									})}
