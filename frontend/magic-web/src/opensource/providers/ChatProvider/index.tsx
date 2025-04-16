@@ -93,8 +93,6 @@ const ChatProvider = observer(function ChatProvider({ children }: ChatServicePro
 		[styles.container, styles.spin, t],
 	)
 
-	if (location.pathname === RoutePath.Login) return children
-
 	if (isSwitchingOrganization) {
 		return Fallback
 	}

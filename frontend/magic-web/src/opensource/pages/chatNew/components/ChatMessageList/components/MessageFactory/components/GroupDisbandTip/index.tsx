@@ -1,4 +1,4 @@
-import type { GroupDisbandMessage } from "@/types/chat/conversation_message"
+import type { GroupDisbandMessage } from "@/types/chat/control_message"
 import type { HTMLAttributes } from "react"
 import { memo } from "react"
 import { useTranslation } from "react-i18next"

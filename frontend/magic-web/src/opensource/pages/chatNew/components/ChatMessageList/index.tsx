@@ -20,7 +20,7 @@ import type {
 	GroupUsersRemoveMessage,
 	GroupUpdateMessage,
 	GroupDisbandMessage,
-} from "@/types/chat/conversation_message"
+} from "@/types/chat/control_message"
 import { ControlEventMessageType } from "@/types/chat"
 import { useFontSize } from "@/opensource/providers/AppearanceProvider/hooks"
 import AiConversationMessageLoading from "./components/AiConversationMessageLoading"

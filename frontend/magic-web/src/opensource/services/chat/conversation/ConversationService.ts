@@ -148,6 +148,7 @@ class ConversationService {
 		})
 
 		this.deleteConversation(conversationId)
+		conversationStore.setCurrentConversation(undefined)
 	}
 
 	/**

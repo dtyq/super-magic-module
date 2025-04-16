@@ -1,4 +1,4 @@
-import type { GroupAddMemberMessage } from "@/types/chat/conversation_message"
+import type { GroupAddMemberMessage } from "@/types/chat/control_message"
 import MagicMemberAvatar from "@/opensource/components/business/MagicMemberAvatar"
 import { useTranslation } from "react-i18next"
 import { Fragment } from "react/jsx-runtime"
