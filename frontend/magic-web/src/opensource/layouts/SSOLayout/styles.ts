@@ -10,6 +10,8 @@ export const useStyles = createStyles(({ css, token }) => {
 			background-position: center;
 			background-repeat: no-repeat;
 			position: relative;
+			overflow: hidden;
+			overflow-y: auto;
 		`,
 		dragBar: css`
 			width: 100%;
@@ -22,7 +24,6 @@ export const useStyles = createStyles(({ css, token }) => {
 			width: 100%;
 			height: 100%;
 			box-sizing: border-box;
-			overflow-y: auto;
 			overflow-x: hidden;
 			text-align: center;
 		`,
@@ -64,6 +65,7 @@ export const useStyles = createStyles(({ css, token }) => {
 				min-width: 375px;
 				border: none;
 				overflow: hidden;
+				background-color: transparent;
 			}
 			margin-top: 50px;
 			margin-bottom: 20px;
