@@ -159,6 +159,11 @@ class MagicChatMessageAppService extends MagicSeqAppService
         $topicId = $chatRequest->getData()->getMessage()->getTopicId();
         $seqExtra = new SeqExtra();
         $seqExtra->setMagicEnvId($userAuthorization->getMagicEnvId());
+        // 是否是编辑消息
+        $editMessageOptions = $chatRequest->getData()->getEditMessageOptions();
+        if ($editMessageOptions !== null) {
+            $seqExtra->setEditMessageOptions($editMessageOptions);
+        }
         // seq 的扩展信息. 如果需要检索话题的消息,请查询 topic_messages 表
         $topicId && $seqExtra->setTopicId($topicId);
         $seqDTO->setExtra($seqExtra);

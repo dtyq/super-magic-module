@@ -7,10 +7,13 @@ declare(strict_types=1);
 
 namespace App\Domain\Chat\Entity\Items;
 
+use App\Domain\Chat\DTO\Message\Trait\EditMessageOptionsTrait;
 use App\Domain\Chat\Entity\AbstractEntity;
 
 class SeqExtra extends AbstractEntity
 {
+    use EditMessageOptionsTrait;
+
     /**
      * 序列号所属会话 id.
      */
@@ -42,5 +45,14 @@ class SeqExtra extends AbstractEntity
     {
         $this->topicId = $topicId;
         return $this;
+    }
+
+    // seqExtra 有些字段是不允许复制的
+    public function getExtraCanCopyData(): array
+    {
+        return [
+            'magic_env_id' => $this->getMagicEnvId(),
+            'topic_id' => $this->getTopicId(),
+        ];
     }
 }

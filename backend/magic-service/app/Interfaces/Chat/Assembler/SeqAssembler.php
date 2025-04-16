@@ -23,6 +23,7 @@ use App\Domain\Chat\Entity\MagicTopicEntity;
 use App\Domain\Chat\Entity\ValueObject\MagicMessageStatus;
 use App\Domain\Chat\Entity\ValueObject\MessageType\ChatMessageType;
 use App\Domain\Chat\Entity\ValueObject\MessageType\ControlMessageType;
+use App\Domain\Chat\Entity\ValueObject\MessageType\MessageOptionsEnum;
 use App\Domain\Contact\Entity\MagicUserEntity;
 use App\ErrorCode\ChatErrorCode;
 use App\Infrastructure\Core\Constants\Order;
@@ -292,6 +293,8 @@ class SeqAssembler
             // 本条消息所属组织
             'organization_code' => $seqEntity->getOrganizationCode(),
             'message' => $clientSeqMessage,
+            // 编辑消息的选项
+            MessageOptionsEnum::EDIT_MESSAGE_OPTIONS->value => $seqEntity->getExtra()?->getEditMessageOptions(),
         ];
         return new ClientSequence($clientSequenceData);
     }

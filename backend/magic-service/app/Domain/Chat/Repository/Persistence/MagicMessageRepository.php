@@ -8,6 +8,7 @@ declare(strict_types=1);
 namespace App\Domain\Chat\Repository\Persistence;
 
 use App\Domain\Chat\Entity\MagicMessageEntity;
+use App\Domain\Chat\Entity\MagicMessageVersionEntity;
 use App\Domain\Chat\Repository\Facade\MagicMessageRepositoryInterface;
 use App\Domain\Chat\Repository\Persistence\Model\MagicMessageModel;
 use App\Interfaces\Chat\Assembler\MessageAssembler;
@@ -60,6 +61,16 @@ class MagicMessageRepository implements MagicMessageRepositoryInterface
     {
         $this->magicMessage::query()->where('magic_message_id', $messageEntity->getMagicMessageId())->update(
             [
+                'content' => Json::encode($messageEntity->getContent()->toArray()),
+            ]
+        );
+    }
+
+    public function updateMessageContentAndVersionId(MagicMessageEntity $messageEntity, MagicMessageVersionEntity $magicMessageVersionEntity): void
+    {
+        $this->magicMessage::query()->where('magic_message_id', $messageEntity->getMagicMessageId())->update(
+            [
+                'current_version_id' => $magicMessageVersionEntity->getVersionId(),
                 'content' => Json::encode($messageEntity->getContent()->toArray()),
             ]
         );

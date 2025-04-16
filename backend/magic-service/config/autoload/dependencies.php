@@ -23,6 +23,7 @@ use App\Domain\Authentication\Repository\Facade\AuthenticationRepositoryInterfac
 use App\Domain\Authentication\Repository\Implement\AuthenticationRepository;
 use App\Domain\Chat\Repository\Facade\MagicChatConversationRepositoryInterface;
 use App\Domain\Chat\Repository\Facade\MagicChatFileRepositoryInterface;
+use App\Domain\Chat\Repository\Facade\MagicChatMessageVersionsRepositoryInterface;
 use App\Domain\Chat\Repository\Facade\MagicChatSeqRepositoryInterface;
 use App\Domain\Chat\Repository\Facade\MagicChatTopicRepositoryInterface;
 use App\Domain\Chat\Repository\Facade\MagicContactIdMappingRepositoryInterface;
@@ -36,6 +37,7 @@ use App\Domain\Chat\Repository\Persistence\MagicChatTopicRepository;
 use App\Domain\Chat\Repository\Persistence\MagicContactIdMappingRepository;
 use App\Domain\Chat\Repository\Persistence\MagicFriendRepository;
 use App\Domain\Chat\Repository\Persistence\MagicMessageRepository;
+use App\Domain\Chat\Repository\Persistence\MagicMessageVersionsRepository;
 use App\Domain\Chat\Repository\Persistence\MagicStreamMessageRepository;
 use App\Domain\Contact\Repository\Facade\MagicAccountRepositoryInterface;
 use App\Domain\Contact\Repository\Facade\MagicDepartmentRepositoryInterface;
@@ -168,6 +170,7 @@ $dependencies = [
     MagicContactIdMappingRepositoryInterface::class => MagicContactIdMappingRepository::class,
     OrganizationsPlatformRepositoryInterface::class => OrganizationsPlatformRepository::class,
     OpenPlatformConfigInterface::class => OpenPlatformConfigItem::class,
+    MagicChatMessageVersionsRepositoryInterface::class => MagicMessageVersionsRepository::class,
 
     // socket-io的发布订阅改为rabbitmq实现,但是房间还是用redis
     AdapterInterface::class => RedisAdapter::class,

@@ -45,20 +45,10 @@ class ClientMessage extends AbstractEntity
 
     public function __construct(array $data)
     {
-        $messageType = $data['type'];
-        $this->magicMessageId = $data['magic_message_id'];
-        $this->appMessageId = $data['app_message_id'] ?? null;
-        $this->topicId = $data['topic_id'] ?? null;
-        $this->type = $messageType;
-        $this->unreadCount = $data['unread_count'] ?? null;
-        $this->senderId = $data['sender_id'];
-        $this->sendTime = $data['send_time'];
-        $this->status = $data['status'] ?? null;
-        if ($data['content'] instanceof MessageInterface) {
-            $this->content = $data['content'];
-        } else {
-            $this->content = MessageAssembler::getMessageStructByArray($messageType, $data['content']);
+        if (! $data['content'] instanceof MessageInterface) {
+            $data['content'] = MessageAssembler::getMessageStructByArray($data['type'], $data['content']);
         }
+        parent::__construct($data);
     }
 
     public function toArray(bool $filterNull = false): array
