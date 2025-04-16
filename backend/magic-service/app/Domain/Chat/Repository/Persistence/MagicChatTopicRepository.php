@@ -19,6 +19,7 @@ use App\ErrorCode\ChatErrorCode;
 use App\Infrastructure\Core\Constants\Order;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Infrastructure\Util\IdGenerator\IdGenerator;
+use App\Interfaces\Chat\Assembler\SeqAssembler;
 use App\Interfaces\Chat\Assembler\TopicAssembler;
 use Hyperf\Cache\Annotation\Cacheable;
 use Hyperf\DbConnection\Db;
@@ -228,7 +229,9 @@ class MagicChatTopicRepository implements MagicChatTopicRepositoryInterface
         $seqList = Db::select($query->toSql(), $query->getBindings());
         // 根据 seqIds 获取消息详情
         $seqIds = array_column($seqList, 'seq_id');
-        return $this->seqRepository->getConversationMessagesBySeqIds($seqIds);
+        $clientSequenceResponses = $this->seqRepository->getConversationMessagesBySeqIds($seqIds, $order);
+
+        return SeqAssembler::sortSeqList($clientSequenceResponses, $order);
     }
 
     public function deleteTopicByIds(array $ids)

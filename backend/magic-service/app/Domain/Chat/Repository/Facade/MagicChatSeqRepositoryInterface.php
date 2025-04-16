@@ -16,6 +16,7 @@ use App\Domain\Chat\Entity\ValueObject\MagicMessageStatus;
 use App\Domain\Chat\Entity\ValueObject\MessageType\ControlMessageType;
 use App\Domain\Contact\Entity\MagicUserEntity;
 use App\Domain\Contact\Entity\ValueObject\DataIsolation;
+use App\Infrastructure\Core\Constants\Order;
 
 interface MagicChatSeqRepositoryInterface
 {
@@ -74,7 +75,7 @@ interface MagicChatSeqRepositoryInterface
     /**
      * @return ClientSequenceResponse[]
      */
-    public function getConversationMessagesBySeqIds(array $messageIds): array;
+    public function getConversationMessagesBySeqIds(array $messageIds, Order $order): array;
 
     public function getMessageReceiveList(string $messageId, string $magicId, ConversationType $userType): ?array;
 

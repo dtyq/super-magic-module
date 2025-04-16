@@ -171,7 +171,7 @@ class MagicChatSeqRepository implements MagicChatSeqRepositoryInterface
         }
         $query->orderBy('seq_id', $direction)->limit($limit);
         $seqList = Db::select($query->toSql(), $query->getBindings());
-        return $this->getMessagesBySeqList($seqList);
+        return $this->getMessagesBySeqList($seqList, $order);
     }
 
     /**
@@ -229,13 +229,13 @@ sql;
     /**
      * @return ClientSequenceResponse[]
      */
-    public function getConversationMessagesBySeqIds(array $messageIds): array
+    public function getConversationMessagesBySeqIds(array $messageIds, Order $order): array
     {
         $query = $this->magicSeq::query()
             ->whereIn('id', $messageIds)
-            ->orderBy('id');
+            ->orderBy('id', $order->value);
         $seqList = Db::select($query->toSql(), $query->getBindings());
-        return $this->getMessagesBySeqList($seqList);
+        return $this->getMessagesBySeqList($seqList, $order);
     }
 
     /**
@@ -423,6 +423,7 @@ sql;
     }
 
     /**
+     * 对结果集强制重新降序排列.
      * @return ClientSequenceResponse[]
      */
     private function getClientSequencesResponse(array $seqInfos): array
@@ -464,12 +465,13 @@ sql;
      * 批量返回客户端需要的Seq结构.
      * @return ClientSequenceResponse[]
      */
-    private function getMessagesBySeqList(array $seqList): array
+    private function getMessagesBySeqList(array $seqList, Order $order = Order::Desc): array
     {
         // 从Messages表获取消息内容
         $magicMessageIds = array_column($seqList, 'magic_message_id');
         $messages = $this->magicMessageRepository->getMessages($magicMessageIds);
-        return SeqAssembler::getClientSeqStructs($seqList, $messages);
+        $clientSequenceResponses = SeqAssembler::getClientSeqStructs($seqList, $messages);
+        return SeqAssembler::sortSeqList($clientSequenceResponses, $order);
     }
 
     // 避免 redis 缓存序列化的对象,占用太多内存

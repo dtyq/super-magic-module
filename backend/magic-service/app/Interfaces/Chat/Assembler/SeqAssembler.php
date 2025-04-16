@@ -25,6 +25,7 @@ use App\Domain\Chat\Entity\ValueObject\MessageType\ChatMessageType;
 use App\Domain\Chat\Entity\ValueObject\MessageType\ControlMessageType;
 use App\Domain\Contact\Entity\MagicUserEntity;
 use App\ErrorCode\ChatErrorCode;
+use App\Infrastructure\Core\Constants\Order;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Infrastructure\Util\IdGenerator\IdGenerator;
 use Carbon\Carbon;
@@ -50,7 +51,7 @@ class SeqAssembler
     }
 
     /**
-     * 批量返回客户端需要的Seq结构.
+     * 批量返回客户端需要的Seq结构,对结果集强制重新降序排列.
      * @return ClientSequenceResponse[]
      */
     public static function getClientSeqStructs(array $seqInfos, array $messageInfos): array
@@ -212,6 +213,24 @@ class SeqAssembler
         } catch (Throwable $exception) {
             ExceptionBuilder::throw(ChatErrorCode::MESSAGE_TYPE_ERROR, throwable: $exception);
         }
+    }
+
+    /**
+     * @param ClientSequenceResponse[] $clientSequenceResponses
+     */
+    public static function sortSeqList(array $clientSequenceResponses, Order $order): array
+    {
+        // 按 $direction 对消息进行排序
+        if ($order === Order::Desc) {
+            usort($clientSequenceResponses, function (ClientSequenceResponse $a, ClientSequenceResponse $b) {
+                return $b->getSeq()->getSeqId() <=> $a->getSeq()->getSeqId();
+            });
+        } else {
+            usort($clientSequenceResponses, function (ClientSequenceResponse $a, ClientSequenceResponse $b) {
+                return $a->getSeq()->getSeqId() <=> $b->getSeq()->getSeqId();
+            });
+        }
+        return $clientSequenceResponses;
     }
 
     private static function getClientSequence(MagicSeqEntity $seqEntity, ?MagicMessageEntity $messageEntity = null): ClientSequence
