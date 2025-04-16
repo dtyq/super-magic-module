@@ -58,6 +58,7 @@ export const useVectorKnowledgeDetailStyles = createStyles(
 				border-radius: 6px;
 			`,
 			deleteText: css`
+				min-width: 80px;
 				color: #ff4d3a;
 			`,
 			tableContainer: css`

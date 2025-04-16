@@ -11,13 +11,14 @@ import { useNavigate } from "@/opensource/hooks/useNavigate"
 import { genFileData } from "@/opensource/pages/chatNew/components/MessageEditor/MagicInput/components/InputFiles/utils"
 import { useUpload } from "@/opensource/hooks/useUploadFiles"
 import { useTranslation } from "react-i18next"
-import { fileTypeIconsMap, documentSyncStatusMap } from "../../constant"
+import { fileTypeIconsMap, documentSyncStatusMap, DocumentOperationType } from "../../constant"
 import SubSider from "../SubSider"
 import { useVectorKnowledgeDetailStyles } from "./styles"
 import Setting from "../Setting"
 import type { Knowledge } from "@/types/knowledge"
 import { KnowledgeApi } from "@/apis"
 import DocumentUpload from "../Upload/DocumentUpload"
+import { useDocumentOperations } from "./hooks/useDocumentOperations"
 
 export default function VectorKnowledgeDetail() {
 	const { styles } = useVectorKnowledgeDetailStyles()
@@ -31,7 +32,7 @@ export default function VectorKnowledgeDetail() {
 
 	const [knowledgeDetail, setKnowledgeDetail] = useState<Knowledge.Detail>()
 
-	const [tableData, setTableData] = useState<Knowledge.EmbedDocumentDetail[]>([])
+	const [documentList, setDocumentList] = useState<Knowledge.EmbedDocumentDetail[]>([])
 
 	const [searchText, setSearchText] = useState("")
 
@@ -54,60 +55,97 @@ export default function VectorKnowledgeDetail() {
 		setSearchText(value)
 	})
 
-	// 删除文档
-	const handleDeleteFile = useMemoizedFn(async (code: string, name?: string) => {
-		await KnowledgeApi.deleteKnowledgeDocument({
-			knowledge_code: knowledgeBaseCode,
-			document_code: code,
-		})
-		if (name) {
-			message.success(t("knowledgeDatabase.deleteDocumentSuccess", { name }))
+	/**
+	 * 更新知识库详情
+	 */
+	const updateKnowledgeDetail = useMemoizedFn(async (code: string) => {
+		const res = await KnowledgeApi.getKnowledgeDetail(code)
+		if (res) {
+			setKnowledgeDetail(res)
 		}
 	})
 
-	// 删除单个文档
-	const handleDeleteSingleFile = useMemoizedFn(async (record: Knowledge.EmbedDocumentDetail) => {
-		Modal.confirm({
-			title: t("knowledgeDatabase.deleteDocument"),
-			content: t("knowledgeDatabase.confirmDeleteDocument", { name: record.name }),
-			onOk: async () => {
-				await handleDeleteFile(record.code)
-				getKnowledgeDocumentList(
-					knowledgeBaseCode,
-					searchText,
-					pageInfo.page,
-					pageInfo.pageSize,
-				)
-			},
-		})
-	})
+	/**
+	 * 获取知识库文档列表
+	 */
+	const getKnowledgeDocumentList = useMemoizedFn(
+		async (code: string, name: string, page: number, pageSize: number) => {
+			try {
+				// 使用类型断言处理API调用
+				const res = await (KnowledgeApi as any).getKnowledgeDocumentList({
+					code,
+					name: name || undefined,
+					page,
+					pageSize,
+				})
+				if (res) {
+					// 只更新documentList中已有的文档
+					if (documentList.length > 0 && res.page !== pageInfo.page) {
+						// 创建文档编码映射，用于快速查找
+						const documentListMap = new Map(
+							documentList.map((item) => [item.code, item]),
+						)
 
-	// 批量删除文档
-	const handleBatchDelete = useMemoizedFn(() => {
-		if (selectedRowKeys.length) {
-			Modal.confirm({
-				title: t("knowledgeDatabase.deleteDocument"),
-				content: t("knowledgeDatabase.confirmBatchDelete", {
-					count: selectedRowKeys.length,
-				}),
-				onOk: async () => {
-					await Promise.all(selectedRowKeys.map((code) => handleDeleteFile(code)))
-					message.success(t("common.deleteSuccess"))
-					getKnowledgeDocumentList(
-						knowledgeBaseCode,
-						searchText,
-						pageInfo.page,
-						pageInfo.pageSize,
-					)
-				},
-			})
-		} else {
-			message.warning(t("knowledgeDatabase.selectDeleteDocument"))
-		}
+						// 使用映射更新文档
+						const updatedDocumentList = [...documentList]
+						let hasUpdates = false
+
+						res.list.forEach((newItem: Knowledge.EmbedDocumentDetail) => {
+							if (documentListMap.has(newItem.code)) {
+								// 找到当前文档在数组中的索引
+								const index = updatedDocumentList.findIndex(
+									(item) => item.code === newItem.code,
+								)
+								if (index !== -1) {
+									// 更新文档
+									updatedDocumentList[index] = newItem
+									hasUpdates = true
+								}
+							}
+						})
+
+						// 只有在有更新时才设置状态
+						if (hasUpdates) {
+							setDocumentList(updatedDocumentList)
+						}
+					} else {
+						// 初始化时直接设置数据
+						setDocumentList(res.list)
+					}
+
+					setPageInfo((prev) => ({
+						...prev,
+						total: res.total,
+					}))
+				}
+			} catch (error) {
+				console.error("获取知识库文档列表失败:", error)
+				message.error(t("knowledgeDatabase.getDocumentListFailed"))
+			}
+		},
+	)
+
+	// 使用抽离出来的文档操作hook
+	const {
+		handleEnableSingleFile,
+		handleDisableSingleFile,
+		handleDeleteSingleFile,
+		handleBatchDelete,
+		handleBatchEnable,
+		handleBatchDisable,
+		handleRenameFile,
+	} = useDocumentOperations({
+		knowledgeBaseCode,
+		documentList,
+		selectedRowKeys,
+		setSelectedRowKeys,
+		pageInfo,
+		searchText,
+		getKnowledgeDocumentList,
 	})
 
 	// 获取文档状态标签
-	const getStatusTag = (syncStatus: number) => {
+	const getStatusTag = (syncStatus: number, record: Knowledge.EmbedDocumentDetail) => {
 		switch (syncStatus) {
 			case documentSyncStatusMap.Pending:
 				return (
@@ -123,9 +161,17 @@ export default function VectorKnowledgeDetail() {
 				)
 			case documentSyncStatusMap.Success:
 				return (
-					<Tag className={styles.statusTag} bordered={false} color="success">
-						{t("knowledgeDatabase.syncStatus.available")}
-					</Tag>
+					<>
+						{record.enabled ? (
+							<Tag className={styles.statusTag} bordered={false} color="success">
+								{t("knowledgeDatabase.syncStatus.available")}
+							</Tag>
+						) : (
+							<Tag className={styles.statusTag} bordered={false} color="warning">
+								{t("knowledgeDatabase.syncStatus.disabled")}
+							</Tag>
+						)}
+					</>
 				)
 			case documentSyncStatusMap.Failed:
 				return (
@@ -158,98 +204,44 @@ export default function VectorKnowledgeDetail() {
 		)
 	})
 
-	/**
-	 * 更新知识库详情
-	 */
-	const updateKnowledgeDetail = useMemoizedFn(async (code: string) => {
-		const res = await KnowledgeApi.getKnowledgeDetail(code)
-		if (res) {
-			setKnowledgeDetail(res)
-		}
-	})
-
-	/**
-	 * 获取知识库文档列表
-	 */
-	const getKnowledgeDocumentList = useMemoizedFn(
-		async (code: string, name: string, page: number, pageSize: number) => {
-			const res = await KnowledgeApi.getKnowledgeDocumentList({
-				code,
-				name: name || undefined,
-				page,
-				pageSize,
-			})
-			if (res) {
-				// 只更新tableData中已有的文档
-				if (tableData.length > 0 && res.page !== pageInfo.page) {
-					// 创建文档编码映射，用于快速查找
-					const tableDataMap = new Map(tableData.map((item) => [item.code, item]))
-
-					// 使用映射更新文档
-					const updatedTableData = [...tableData]
-					let hasUpdates = false
-
-					res.list.forEach((newItem) => {
-						if (tableDataMap.has(newItem.code)) {
-							// 找到当前文档在数组中的索引
-							const index = updatedTableData.findIndex(
-								(item) => item.code === newItem.code,
-							)
-							if (index !== -1) {
-								// 更新文档
-								updatedTableData[index] = newItem
-								hasUpdates = true
-							}
-						}
-					})
-
-					// 只有在有更新时才设置状态
-					if (hasUpdates) {
-						setTableData(updatedTableData)
-					}
-				} else {
-					// 初始化时直接设置数据
-					setTableData(res.list)
-				}
-
-				setPageInfo((prev) => ({
-					...prev,
-					total: res.total,
-				}))
-			}
-		},
-	)
-
 	const { uploadAndGetFileUrl } = useUpload({
 		storageType: "private",
 	})
 
 	/** 上传文件 */
 	const handleFileUpload = useMemoizedFn(async (file: File) => {
-		// 上传文件
-		const newFile = genFileData(file)
-		// 已通过 beforeFileUpload 预校验，故传入 () => true 跳过方法校验
-		const { fullfilled } = await uploadAndGetFileUrl([newFile], () => true)
-		// 更新上传的文件列表状态
-		if (fullfilled && fullfilled.length) {
-			const { path } = fullfilled[0].value
-			const res = await KnowledgeApi.addKnowledgeDocument({
-				knowledge_code: knowledgeBaseCode,
-				enabled: true,
-				document_file: {
-					name: file.name,
-					key: path,
-				},
-			})
-			if (res) {
-				message.success(t("knowledgeDatabase.uploadSuccess"))
-				getKnowledgeDocumentList(
-					knowledgeBaseCode,
-					searchText,
-					pageInfo.page,
-					pageInfo.pageSize,
-				)
+		try {
+			// 上传文件
+			const newFile = genFileData(file)
+			// 已通过 beforeFileUpload 预校验，故传入 () => true 跳过方法校验
+			const { fullfilled } = await uploadAndGetFileUrl([newFile], () => true)
+			// 更新上传的文件列表状态
+			if (fullfilled && fullfilled.length) {
+				const { path } = fullfilled[0].value
+				// 使用类型断言处理API调用
+				const res = await (KnowledgeApi as any).addKnowledgeDocument({
+					knowledge_code: knowledgeBaseCode,
+					enabled: true,
+					document_file: {
+						name: file.name,
+						key: path,
+					},
+				})
+				if (res) {
+					message.success(
+						t("knowledgeDatabase.uploadDocumentSuccess", { name: file.name }),
+					)
+					getKnowledgeDocumentList(
+						knowledgeBaseCode,
+						searchText,
+						pageInfo.page,
+						pageInfo.pageSize,
+					)
+				}
 			}
+		} catch (error) {
+			console.error("上传文件失败:", error)
+			message.error(t("knowledgeDatabase.uploadFailed"))
 		}
 	})
 
@@ -280,12 +272,14 @@ export default function VectorKnowledgeDetail() {
 		}
 	}, [])
 
+	// 获取知识库详情
 	useEffect(() => {
 		if (knowledgeBaseCode) {
 			updateKnowledgeDetail(knowledgeBaseCode)
 		}
 	}, [knowledgeBaseCode])
 
+	// 获取知识库文档列表
 	useEffect(() => {
 		if (knowledgeBaseCode) {
 			getKnowledgeDocumentList(
@@ -297,12 +291,13 @@ export default function VectorKnowledgeDetail() {
 		}
 	}, [knowledgeBaseCode, searchText, pageInfo.page, pageInfo.pageSize])
 
+	// 定时刷新文档列表
 	const timeoutRef = useRef<NodeJS.Timeout | null>(null)
 
 	useEffect(() => {
 		if (
-			tableData.length &&
-			tableData.some((item) =>
+			documentList.length &&
+			documentList.some((item) =>
 				[documentSyncStatusMap.Pending, documentSyncStatusMap.Processing].includes(
 					item.sync_status,
 				),
@@ -330,7 +325,7 @@ export default function VectorKnowledgeDetail() {
 				clearTimeout(timeoutRef.current)
 			}
 		}
-	}, [tableData])
+	}, [documentList])
 
 	// 表格列定义
 	const columns = [
@@ -373,8 +368,24 @@ export default function VectorKnowledgeDetail() {
 			width: 100,
 			render: (_: any, record: Knowledge.EmbedDocumentDetail) => (
 				<Dropdown
+					placement="bottomRight"
 					menu={{
 						items: [
+							{
+								label: <div>{t("knowledgeDatabase.rename")}</div>,
+								key: "rename",
+								onClick: () => handleRenameFile(record),
+							},
+							{
+								label: <div>{t("common.enable")}</div>,
+								key: "enable",
+								onClick: () => handleEnableSingleFile(record),
+							},
+							{
+								label: <div>{t("common.disabled")}</div>,
+								key: "disabled",
+								onClick: () => handleDisableSingleFile(record),
+							},
 							{
 								label: (
 									<div className={styles.deleteText}>
@@ -415,6 +426,16 @@ export default function VectorKnowledgeDetail() {
 									menu={{
 										items: [
 											{
+												label: <div>{t("common.enable")}</div>,
+												key: "enable",
+												onClick: () => handleBatchEnable(),
+											},
+											{
+												label: <div>{t("common.disabled")}</div>,
+												key: "disable",
+												onClick: () => handleBatchDisable(),
+											},
+											{
 												label: (
 													<div className={styles.deleteText}>
 														{t("knowledgeDatabase.delete")}
@@ -448,7 +469,7 @@ export default function VectorKnowledgeDetail() {
 								onChange: (codes) => setSelectedRowKeys(codes as string[]),
 							}}
 							columns={columns}
-							dataSource={tableData}
+							dataSource={documentList}
 							scroll={{ scrollToFirstRowOnChange: true, y: tableHeight }}
 							pagination={{
 								position: ["bottomLeft"],
@@ -478,7 +499,7 @@ export default function VectorKnowledgeDetail() {
 
 		return null
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [selectedRowKeys, columns, tableData, handleSearch, handleBatchDelete, currentDetailPage])
+	}, [selectedRowKeys, columns, documentList, handleSearch, handleBatchDelete, currentDetailPage])
 
 	return (
 		<Flex className={styles.wrapper}>
