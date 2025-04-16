@@ -3,7 +3,11 @@
  */
 import { fitViewRatio } from "@/MagicFlow/constants"
 import { useExternal } from "@/MagicFlow/context/ExternalContext/useExternal"
-import { useFlow } from "@/MagicFlow/context/FlowContext/useFlow"
+import {
+	useFlowEdges,
+	useNodeConfig,
+	useNodeConfigActions,
+} from "@/MagicFlow/context/FlowContext/useFlow"
 import { useNodes } from "@/MagicFlow/context/NodesContext/useNodes"
 import { useResize } from "@/MagicFlow/context/ResizeContext/useResize"
 import { EdgeModelTypes, defaultEdgeConfig } from "@/MagicFlow/edges"
@@ -57,7 +61,9 @@ export default function useFlowLayout({
 }: FlowLayoutProps) {
 	const { t } = useTranslation()
 
-	const { setEdges, edges, nodeConfig, setNodeConfig, notifyNodeChange } = useFlow()
+	const { setEdges, edges } = useFlowEdges()
+	const { nodeConfig } = useNodeConfig()
+	const { setNodeConfig, notifyNodeChange } = useNodeConfigActions()
 
 	const { setNodes, nodes } = useNodes()
 
@@ -664,8 +670,8 @@ export default function useFlowLayout({
 		showMinMap,
 		currentZoom,
 		onMove,
-		interaction,		
-        onFitView,
+		interaction,
+		onFitView,
 		onZoomIn,
 		onZoomOut,
 		onEdgeTypeChange,

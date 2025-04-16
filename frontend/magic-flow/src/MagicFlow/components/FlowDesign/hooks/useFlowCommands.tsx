@@ -1,4 +1,10 @@
-import { useFlow } from "@/MagicFlow/context/FlowContext/useFlow"
+import {
+	useFlowData,
+	useFlowEdges,
+	useFlowNodes,
+	useNodeConfig,
+	useNodeConfigActions,
+} from "@/MagicFlow/context/FlowContext/useFlow"
 import { useNodes } from "@/MagicFlow/context/NodesContext/useNodes"
 import { useUpdateEffect } from "ahooks"
 import { useMemo } from "react"
@@ -41,25 +47,24 @@ export default function useFlowCommand({
 }: UseFlowCommandProps) {
 	const { updateViewPortToTargetNode } = useViewport()
 
+	const { deleteNodes, updateNodesPosition, setSelectedNodeId, selectedNodeId, addNode } =
+		useFlowNodes()
+
+	const { nodeConfig } = useNodeConfig()
+
+	const { setNodeConfig, updateNodeConfig } = useNodeConfigActions()
+
 	const {
-		flow,
-		deleteNodes,
-		updateNodesPosition,
 		updateNextNodeIdsByConnect,
 		updateNextNodeIdsByDeleteEdge,
-		setSelectedNodeId,
 		edges,
 		setEdges,
-		selectedNodeId,
-		nodeConfig,
-		setNodeConfig,
-		updateNodeConfig,
-		addNode,
 		selectedEdgeId,
 		setSelectedEdgeId,
-		description,
 		onConnect,
-	} = useFlow()
+	} = useFlowEdges()
+
+	const { description, flow } = useFlowData()
 
 	const { flowInteractionRef, omitNodeKeys } = useExternal()
 

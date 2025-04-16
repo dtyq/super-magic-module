@@ -1,5 +1,5 @@
 import type { FormInstance } from "antd"
-import { useFlow } from "@dtyq/magic-flow/MagicFlow/context/FlowContext/useFlow"
+import { useFlowData } from "@dtyq/magic-flow/MagicFlow/context/FlowContext/useFlow"
 import { useCurrentNode } from "@dtyq/magic-flow/MagicFlow/nodes/common/context/CurrentNode/useCurrentNode"
 import { useUpdateEffect } from "ahooks"
 
@@ -9,7 +9,7 @@ type UseCurrentNodeUpdateProps = {
 }
 
 export default function useCurrentNodeUpdate({ form }: UseCurrentNodeUpdateProps) {
-	const { flow } = useFlow()
+	const { flow } = useFlowData()
 
 	const { currentNode } = useCurrentNode()
 

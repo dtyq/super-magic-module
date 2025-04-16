@@ -1,4 +1,4 @@
-import { useFlow } from "@/MagicFlow/context/FlowContext/useFlow"
+import { useFlowUI, useNodeConfig } from "@/MagicFlow/context/FlowContext/useFlow"
 import { useResize } from "@/MagicFlow/context/ResizeContext/useResize"
 import { useMemoizedFn } from "ahooks"
 import _ from "lodash"
@@ -7,8 +7,8 @@ import { controlDuration } from "../../FlowDesign/hooks/useFlowControls"
 import { MaterialPanelWidth } from "../../FlowMaterialPanel"
 
 export default function useViewport() {
-	const { showMaterialPanel, nodeConfig } = useFlow()
-
+	const { nodeConfig } = useNodeConfig()
+	const { showMaterialPanel } = useFlowUI()
 	const { setViewport } = useReactFlow()
 
 	const { windowSize } = useResize()

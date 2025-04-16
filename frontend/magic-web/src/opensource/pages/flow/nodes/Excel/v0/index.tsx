@@ -7,9 +7,8 @@ import { useMemoizedFn } from "ahooks"
 import MagicJSONSchemaEditorWrap from "@dtyq/magic-flow/common/BaseUI/MagicJsonSchemaEditorWrap"
 import { ShowColumns } from "@dtyq/magic-flow/MagicJsonSchemaEditor/constants"
 import { DisabledField } from "@dtyq/magic-flow/MagicJsonSchemaEditor/types/Schema"
-import { useFlow } from "@dtyq/magic-flow/MagicFlow/context/FlowContext/useFlow"
+import { useNodeConfigActions } from "@dtyq/magic-flow/MagicFlow/context/FlowContext/useFlow"
 import usePrevious from "@/opensource/pages/flow/common/hooks/usePrevious"
-import { customNodeType } from "@/opensource/pages/flow/constants"
 import useCurrentNodeUpdate from "@/opensource/pages/flow/common/hooks/useCurrentNodeUpdate"
 import NodeOutputWrap from "@/opensource/pages/flow/components/NodeOutputWrap/NodeOutputWrap"
 import { useTranslation } from "react-i18next"
@@ -21,7 +20,7 @@ export default function ExcelV0() {
 	const [form] = Form.useForm()
 	const { currentNode } = useCurrentNode()
 
-	const { updateNodeConfig } = useFlow()
+	const { updateNodeConfig } = useNodeConfigActions()
 
 	const { expressionDataSource } = usePrevious()
 

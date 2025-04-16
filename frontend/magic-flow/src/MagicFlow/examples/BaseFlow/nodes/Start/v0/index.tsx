@@ -1,4 +1,7 @@
-import { useFlow } from "@/MagicFlow/context/FlowContext/useFlow"
+import {
+	useFlowData,
+	useNodeConfigActions,
+} from "@/MagicFlow/context/FlowContext/useFlow"
 import { useCurrentNode } from "@/MagicFlow/nodes/common/context/CurrentNode/useCurrentNode"
 import TsInput from "@/common/BaseUI/Input"
 import TsSelect from "@/common/BaseUI/Select"
@@ -17,7 +20,8 @@ const Splitor = "$$"
 
 export default function StartV0() {
 	const [form] = Form.useForm()
-	const { nodeConfig, flow, updateNodeConfig } = useFlow()
+	const { flow } = useFlowData()
+	const { updateNodeConfig } = useNodeConfigActions()
 
 	const { currentNode } = useCurrentNode()
 
@@ -44,7 +48,6 @@ export default function StartV0() {
 	const onChange = useMemoizedFn(
 		// { '1.unit': "minutes" }
 		(changeValues) => {
-			if (!currentNode || !nodeConfig || !nodeConfig[currentNode.node_id]) return
 			const triggerTypeToConfig = {} as Record<string, any>
 			Object.keys(changeValues).forEach((changeValueKey) => {
 				const innerValue = Reflect.get(changeValues, changeValueKey)
@@ -64,7 +67,7 @@ export default function StartV0() {
 			 * }
 			 */
 
-			const node = nodeConfig[currentNode.node_id]
+			const node = currentNode
 
 			// eslint-disable-next-line no-restricted-syntax, prefer-const
 			for (let [triggerType, newConfig] of Object.entries(triggerTypeToConfig)) {

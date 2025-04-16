@@ -3,7 +3,7 @@ import { useForm } from "antd/lib/form/Form"
 import DropdownCard from "@dtyq/magic-flow/common/BaseUI/DropdownCard"
 
 import { useMemoizedFn } from "ahooks"
-import { useFlow } from "@dtyq/magic-flow/MagicFlow/context/FlowContext/useFlow"
+import { useNodeConfigActions } from "@dtyq/magic-flow/MagicFlow/context/FlowContext/useFlow"
 import { useCurrentNode } from "@dtyq/magic-flow/MagicFlow/nodes/common/context/CurrentNode/useCurrentNode"
 import { set } from "lodash-es"
 import MagicJSONSchemaEditorWrap from "@dtyq/magic-flow/common/BaseUI/MagicJsonSchemaEditorWrap"
@@ -30,7 +30,7 @@ import { isOnlyKnowledgeTypeChange } from "./utils/knowledgeTypeHelper"
 export default function LLMV1() {
 	const { t } = useTranslation()
 	const [form] = useForm()
-	const { nodeConfig, updateNodeConfig } = useFlow()
+	const { updateNodeConfig } = useNodeConfigActions()
 
 	const { currentNode } = useCurrentNode()
 
@@ -45,8 +45,6 @@ export default function LLMV1() {
 	const onValuesChange = useMemoizedFn((changeValues) => {
 		console.log("🚀 ~ onValuesChange ~ changeValues:", changeValues)
 
-		if (!currentNode || !nodeConfig || !nodeConfig[currentNode?.node_id]) return
-		const currentNodeConfig = nodeConfig[currentNode?.node_id]
 		console.log("form", form.getFieldsValue(true))
 
 		if (changeValues.model_config) {
@@ -68,12 +66,12 @@ export default function LLMV1() {
 			knowledgeValueChangeHandler()
 		} else {
 			Object.entries(changeValues).forEach(([changeKey, changeValue]) => {
-				set(currentNodeConfig, ["params", changeKey], changeValue)
+				set(currentNode, ["params", changeKey], changeValue)
 			})
 		}
 
 		updateNodeConfig({
-			...currentNodeConfig,
+			...currentNode,
 		})
 	})
 

@@ -12,7 +12,7 @@ import { useMemoizedFn } from "ahooks"
 import { cx } from "antd-style"
 import { nanoid } from "nanoid"
 import { get, find, findIndex, set, cloneDeep } from "lodash-es"
-import { useFlow } from "@dtyq/magic-flow/MagicFlow/context/FlowContext/useFlow"
+import { useFlow, useFlowData, useNodeConfigActions } from "@dtyq/magic-flow/MagicFlow/context/FlowContext/useFlow"
 import { useCurrentNode } from "@dtyq/magic-flow/MagicFlow/nodes/common/context/CurrentNode/useCurrentNode"
 import TsInput from "@dtyq/magic-flow/common/BaseUI/Input"
 import { useTranslation } from "react-i18next"
@@ -41,7 +41,8 @@ const Splitor = "$$"
 export default function StartV1() {
 	const { t } = useTranslation()
 	const [form] = Form.useForm()
-	const { nodeConfig, flow, updateNodeConfig } = useFlow()
+	const { updateNodeConfig } = useNodeConfigActions()
+	const { flow } = useFlowData()
 
 	const { currentNode } = useCurrentNode()
 
@@ -90,7 +91,7 @@ export default function StartV1() {
 	const onChange = useMemoizedFn(
 		// { '1.unit': "minutes" }
 		(changeValues) => {
-			if (!currentNode || !nodeConfig || !nodeConfig[currentNode.node_id]) return
+			if (!currentNode) return
 			const triggerTypeToConfig = {} as Record<string, any>
 			Object.keys(changeValues).forEach((changeValueKey) => {
 				const innerValue = Reflect.get(changeValues, changeValueKey)
@@ -110,7 +111,7 @@ export default function StartV1() {
 			 * }
 			 */
 
-			const node = nodeConfig[currentNode.node_id]
+			const node = currentNode
 
 			// eslint-disable-next-line no-restricted-syntax, prefer-const
 			for (let [triggerType, newConfig] of Object.entries(triggerTypeToConfig)) {

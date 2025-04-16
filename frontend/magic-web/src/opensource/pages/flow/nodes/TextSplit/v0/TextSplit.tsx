@@ -1,7 +1,7 @@
 import { Form } from "antd"
 import { useForm } from "antd/lib/form/Form"
 import { useMemoizedFn } from "ahooks"
-import { useFlow } from "@dtyq/magic-flow/MagicFlow/context/FlowContext/useFlow"
+import { useNodeConfigActions } from "@dtyq/magic-flow/MagicFlow/context/FlowContext/useFlow"
 import { useCurrentNode } from "@dtyq/magic-flow/MagicFlow/nodes/common/context/CurrentNode/useCurrentNode"
 import { set, cloneDeep } from "lodash-es"
 import DropdownCard from "@dtyq/magic-flow/common/BaseUI/DropdownCard"
@@ -19,7 +19,7 @@ import { v0Template } from "./template"
 export default function TextSplitV0() {
 	const { t } = useTranslation()
 	const [form] = useForm()
-	const { updateNodeConfig } = useFlow()
+	const { updateNodeConfig } = useNodeConfigActions()
 
 	const { currentNode } = useCurrentNode()
 

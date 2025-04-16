@@ -21,7 +21,6 @@ import {
 	uniqBy,
 	set,
 	omitBy,
-	unionBy,
 } from "lodash-es"
 // @ts-ignore
 import SnowFlakeId from "snowflake-id"
@@ -31,7 +30,6 @@ import type { ComponentTypes, UseableToolSet } from "@/types/flow"
 import { getLatestNodeVersion } from "@dtyq/magic-flow/MagicFlow/utils"
 import { customNodeType } from "../constants"
 import { shadow, unshadow } from "./shadow"
-import { ComponentType } from "react"
 import { JsonSchemaEditorProps } from "@dtyq/magic-flow/MagicJsonSchemaEditor"
 import { getDefaultSchema } from "@dtyq/magic-flow/MagicJsonSchemaEditor/utils/SchemaUtils"
 import { ContactApi } from "@/apis"

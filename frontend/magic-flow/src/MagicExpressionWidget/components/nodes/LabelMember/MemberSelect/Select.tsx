@@ -8,7 +8,6 @@ import { useMemoizedFn } from "ahooks"
 import i18next from "i18next"
 import { Member } from "../types"
 import "./styles/select.less"
-import { useNodes } from "@/MagicFlow/context/NodesContext/useNodes"
 
 export enum MemberType {
 	User = "user",
@@ -46,12 +45,11 @@ function MemberSelect({
 	const domRef = useRef<HTMLDivElement>(null)
 
 	const { edges } = useFlow()
-	const { nodes } = useNodes()
 	const { currentNode } = useCurrentNode()
 
 	const displayValue = useMemo(() => {
 		return _.cloneDeep(value)
-	}, [value, nodes, edges, currentNode])
+	}, [value, edges, currentNode])
 
 	const itemClick = useMemoizedFn((val: Member) => {
 		onChange([{ ...val, memberType: searchType }] as Member[])

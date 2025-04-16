@@ -3,7 +3,7 @@
  */
 
 import { useFlowInteraction } from "@/MagicFlow/components/FlowDesign/context/FlowInteraction/useFlowInteraction"
-import { useFlow } from "@/MagicFlow/context/FlowContext/useFlow"
+import { useFlowNodes } from "@/MagicFlow/context/FlowContext/useFlow"
 import { MagicFlow } from "@/MagicFlow/types/flow"
 import { useMemoizedFn, useUpdateEffect } from "ahooks"
 import { useEffect, useState } from "react"
@@ -14,7 +14,7 @@ type DropdownProps = {
 }
 
 export default function usePopup({ id, currentNode }: DropdownProps) {
-	const { selectedNodeId, setSelectedNodeId } = useFlow()
+	const { selectedNodeId, setSelectedNodeId } = useFlowNodes()
 
 	const { isDragging } = useFlowInteraction()
 

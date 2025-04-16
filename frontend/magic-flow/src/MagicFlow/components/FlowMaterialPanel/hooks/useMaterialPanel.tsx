@@ -1,8 +1,8 @@
-import { useFlow } from "@/MagicFlow/context/FlowContext/useFlow"
+import { useFlowUI } from "@/MagicFlow/context/FlowContext/useFlow"
 import { useMemo } from "react"
 
 export default function useMaterialPanel() {
-	const { showMaterialPanel, setShowMaterialPanel } = useFlow()
+	const { showMaterialPanel, setShowMaterialPanel } = useFlowUI()
 
 	const stickyButtonStyle = useMemo(() => {
 		return {

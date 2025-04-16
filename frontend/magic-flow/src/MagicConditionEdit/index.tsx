@@ -27,6 +27,8 @@ import { GlobalProvider } from "./context/Global/Provider"
 import { isEqualToDefaultCondition } from "./helpers"
 import { CustomConditionContainerStyle } from "./style"
 import { Expression } from "./types/expression"
+import { ThemeProvider } from "antd-style"
+import { CLASSNAME_PREFIX } from "@/common/constants"
 
 export enum ConditionEditMode {
 	/** 单行显示 */
@@ -513,6 +515,9 @@ function CustomConditionContainer(
 				return <ErrorContent />
 			}}
 		>
+		<ThemeProvider
+			prefixCls={CLASSNAME_PREFIX}
+		>
 			<CustomConditionContainerStyle>
 				<GlobalProvider
 					leftDisabledPos={leftDisabledPos}
@@ -534,6 +539,7 @@ function CustomConditionContainer(
 					/>
 				</GlobalProvider>
 			</CustomConditionContainerStyle>
+        </ThemeProvider>
 		</ErrorBoundary>
 	)
 }

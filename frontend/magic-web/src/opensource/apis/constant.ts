@@ -243,6 +243,8 @@ export const enum RequestUrl {
 	callAgent = "/api/chat",
 	/** Api Key 调用工具或流程  */
 	callToolOrFlow = "/api/param-call",
+	/** 获取节点模板 */
+	getNodeTemplate = "/api/v1/flows/node-template",
 
 	/** 发布流程版本 */
 	publishFlow = "/api/v1/flows/${flowId}/version/publish",

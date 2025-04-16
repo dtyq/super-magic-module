@@ -8,14 +8,14 @@ import React, { useEffect } from "react"
 import { MagicFlowContext } from "./Context"
 
 export const MagicFlowProvider = ({ children }: React.PropsWithChildren<{}>) => {
-	const defaultDisplayMaterialTypes = getRegisterNodeTypes()
 	const { updateDisplayMaterialType, updateNodeVersionSchema } = flowStore.getState()
 
 	const { nodeMap } = useNodeMap()
 
 	useEffect(() => {
+		const defaultDisplayMaterialTypes = getRegisterNodeTypes()
 		updateDisplayMaterialType(defaultDisplayMaterialTypes)
-	}, [defaultDisplayMaterialTypes])
+	}, [])
 
 	useEffect(() => {
 		updateNodeVersionSchema(nodeMap)

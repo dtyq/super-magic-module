@@ -7,7 +7,7 @@ import { useMemoizedFn } from "ahooks"
 import MagicJSONSchemaEditorWrap from "@dtyq/magic-flow/common/BaseUI/MagicJsonSchemaEditorWrap"
 import { ShowColumns } from "@dtyq/magic-flow/MagicJsonSchemaEditor/constants"
 import { DisabledField } from "@dtyq/magic-flow/MagicJsonSchemaEditor/types/Schema"
-import { useFlow } from "@dtyq/magic-flow/MagicFlow/context/FlowContext/useFlow"
+import { useNodeConfigActions } from "@dtyq/magic-flow/MagicFlow/context/FlowContext/useFlow"
 import { useTranslation } from "react-i18next"
 import styles from "./index.module.less"
 import usePrevious from "../../../common/hooks/usePrevious"
@@ -20,7 +20,7 @@ export default function LoaderV1() {
 	const [form] = Form.useForm()
 	const { currentNode } = useCurrentNode()
 
-	const { updateNodeConfig } = useFlow()
+	const { updateNodeConfig } = useNodeConfigActions()
 
 	const { expressionDataSource } = usePrevious()
 

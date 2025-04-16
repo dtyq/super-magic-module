@@ -1,6 +1,6 @@
 import { useFlowInteraction } from "@/MagicFlow/components/FlowDesign/context/FlowInteraction/useFlowInteraction"
 import FlowPopup from "@/MagicFlow/components/FlowPopup"
-import { useFlow } from "@/MagicFlow/context/FlowContext/useFlow"
+import { useFlowData, useFlowNodes } from "@/MagicFlow/context/FlowContext/useFlow"
 import { Popover } from "antd"
 import { useMemoizedFn, useUpdateEffect } from "ahooks"
 import clsx from "clsx"
@@ -33,7 +33,8 @@ export default function CustomHandle({
 }: SourceHandleProps) {
 	const [handleOvered, setHandleOvered] = useState(false)
 
-	const { selectedNodeId, debuggerMode } = useFlow()
+	const { selectedNodeId } = useFlowNodes()
+	const { debuggerMode } = useFlowData()
 	const { nodeClick } = useFlowInteraction()
 
 	const [openPopup, setPopupOpen] = useState(false)

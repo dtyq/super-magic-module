@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from "react"
+// @ts-nocheck
+import { useRef, useEffect } from "react"
 import { useMemoizedFn } from "ahooks"
 import type { MessageProps } from "./MessageItem"
 import StreamProcessor from "./StreamProcessor"
@@ -100,7 +101,9 @@ export default function useTestFunctions({
 							// 入队并记录日志
 							controller.enqueue(encodedLine)
 							console.log(
-								`已发送第${lineIndex}/${sseLines.length}行: ${line.slice(0, 50)}${line.length > 50 ? "..." : ""}`,
+								`已发送第${lineIndex}/${sseLines.length}行: ${line.slice(0, 50)}${
+									line.length > 50 ? "..." : ""
+								}`,
 							)
 
 							// 安排发送下一行，并设置超时保护
@@ -433,7 +436,10 @@ export default function useTestFunctions({
 						const end = Math.min(fullContent.length, i + 10)
 						sampleWithSpecialChars = fullContent.substring(start, end)
 						console.log(
-							`特殊字符样本位置: ${i}, 上下文: "${sampleWithSpecialChars.replace(/\n/g, "\\n")}"`,
+							`特殊字符样本位置: ${i}, 上下文: "${sampleWithSpecialChars.replace(
+								/\n/g,
+								"\\n",
+							)}"`,
 						)
 						break
 					}
@@ -446,12 +452,16 @@ export default function useTestFunctions({
 			// 使用更小的块大小处理特殊字符，确保编码正确
 			const safeChunkSize = hasSpecialChars ? Math.min(chunkSize, 3) : chunkSize
 			console.log(
-				`使用块大小: ${safeChunkSize} (${hasSpecialChars ? "检测到特殊字符" : "无特殊字符"})`,
+				`使用块大小: ${safeChunkSize} (${
+					hasSpecialChars ? "检测到特殊字符" : "无特殊字符"
+				})`,
 			)
 
 			// 记录原始内容和JSON编码后的内容，帮助调试
 			console.log(
-				`原始内容样例: "${fullContent.substring(0, 50)}${fullContent.length > 50 ? "..." : ""}"`,
+				`原始内容样例: "${fullContent.substring(0, 50)}${
+					fullContent.length > 50 ? "..." : ""
+				}"`,
 			)
 			const jsonEncoded = JSON.stringify(fullContent.substring(0, 50))
 			console.log(`JSON编码后: ${jsonEncoded}`)

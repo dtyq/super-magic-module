@@ -20,6 +20,8 @@ import useResize from "./hooks/useResize"
 import "./index.css"
 import styles from "./index.module.less"
 import { MagicFlow } from "./types/flow"
+import { CLASSNAME_PREFIX } from "@/common/constants"
+import { ConfigProvider } from "antd"
 
 export * from "./register/node"
 
@@ -80,7 +82,24 @@ export type MagicFlowInstance = {
 	updateNextNodeIdsByDeleteEdge: (nodeId: string, nextNodeIds: string[]) => void
 	/** 设置选中的节点 */
 	setSelectedNodeId: (nodeId: string) => void
+	/** 获取节点配置 */
+	getNodeConfig: () => Record<string, MagicFlow.Node>
 }
+
+// 使用memo包装内容组件，避免多余渲染
+const FlowContent = React.memo(
+	({ showHeader, className }: { showHeader: boolean; className: string }) => {
+		return (
+			<div className={className}>
+				{showHeader && <FlowHeader />}
+				<div className={clsx(styles.content, `${prefix}content`)}>
+					<FlowMaterialPanel />
+					<FlowDesign />
+				</div>
+			</div>
+		)
+	},
+)
 
 const MagicFlowComponent = React.forwardRef(
 	(
@@ -138,6 +157,8 @@ const MagicFlowComponent = React.forwardRef(
 			setNodeConfig,
 			notifyNodeChange,
 			deleteEdges,
+			isProcessing,
+			progress,
 		} = useBaseFlow({ currentFlow, paramsName })
 
 		useImperativeHandle(ref, () => ({
@@ -153,6 +174,9 @@ const MagicFlowComponent = React.forwardRef(
 					description,
 				}
 			},
+			getNodeConfig: () => {
+				return { ...nodeConfig }
+			},
 			addNode,
 			setNodes,
 			setNodeConfig,
@@ -164,6 +188,101 @@ const MagicFlowComponent = React.forwardRef(
 			setSelectedNodeId,
 		}))
 
+		// 使用useMemo缓存flowProviderProps以减少重新渲染
+		const flowProviderProps = useMemo(
+			() => ({
+				flow,
+				edges,
+				onEdgesChange,
+				onConnect,
+				updateFlow,
+				nodeConfig,
+				setNodeConfig,
+				updateNodeConfig,
+				addNode,
+				deleteNodes,
+				updateNodesPosition,
+				selectedNodeId,
+				setSelectedNodeId,
+				triggerNode,
+				selectedEdgeId,
+				setSelectedEdgeId,
+				setEdges,
+				updateNextNodeIdsByDeleteEdge,
+				updateNextNodeIdsByConnect,
+				description,
+				flowInstance,
+				debuggerMode,
+				getNewNodeIndex,
+				showMaterialPanel,
+				setShowMaterialPanel,
+				flowDesignListener,
+				notifyNodeChange,
+				deleteEdges,
+			}),
+			[
+				flow,
+				edges,
+				onEdgesChange,
+				onConnect,
+				updateFlow,
+				nodeConfig,
+				setNodeConfig,
+				updateNodeConfig,
+				addNode,
+				deleteNodes,
+				updateNodesPosition,
+				selectedNodeId,
+				setSelectedNodeId,
+				triggerNode,
+				selectedEdgeId,
+				setSelectedEdgeId,
+				setEdges,
+				updateNextNodeIdsByDeleteEdge,
+				updateNextNodeIdsByConnect,
+				description,
+				flowInstance,
+				debuggerMode,
+				getNewNodeIndex,
+				showMaterialPanel,
+				setShowMaterialPanel,
+				flowDesignListener,
+				notifyNodeChange,
+				deleteEdges,
+			],
+		)
+
+		// 使用useMemo缓存externalProviderProps以减少重新渲染
+		const externalProviderProps = useMemo(
+			() => ({
+				header,
+				nodeToolbar,
+				materialHeader,
+				paramsName,
+				onlyRenderVisibleElements,
+				layoutOnMount,
+				allowDebug,
+				showExtraFlowInfo,
+				flowInteractionRef,
+				omitNodeKeys,
+			}),
+			[
+				header,
+				nodeToolbar,
+				materialHeader,
+				paramsName,
+				onlyRenderVisibleElements,
+				layoutOnMount,
+				allowDebug,
+				showExtraFlowInfo,
+				flowInteractionRef,
+				omitNodeKeys,
+			],
+		)
+
+		// 使用useMemo缓存wrapper样式类名
+		const wrapperClassName = useMemo(() => clsx(styles.magicFlow, `${prefix}magic-flow`), [])
+
 		return (
 			<ErrorBoundary
 				fallbackRender={({ error }) => {
@@ -171,78 +290,34 @@ const MagicFlowComponent = React.forwardRef(
 					return <ErrorContent />
 				}}
 			>
-				<MagicFlowProvider>
-					<ExternalProvider
-						header={header}
-						nodeToolbar={nodeToolbar}
-						materialHeader={materialHeader}
-						paramsName={paramsName}
-						onlyRenderVisibleElements={onlyRenderVisibleElements}
-						layoutOnMount={layoutOnMount}
-						allowDebug={allowDebug}
-						showExtraFlowInfo={showExtraFlowInfo}
-						flowInteractionRef={flowInteractionRef}
-						omitNodeKeys={omitNodeKeys}
-					>
-						<ResizeProvider windowSize={windowSize}>
-							<ReactFlowProvider>
-								<NodesProvider
-									nodes={nodes}
-									setNodes={setNodes}
-									onNodesChange={onNodesChange}
-								>
-									<FlowProvider
-										flow={flow}
-										edges={edges}
-										onEdgesChange={onEdgesChange}
-										onConnect={onConnect}
-										updateFlow={updateFlow}
-										nodeConfig={nodeConfig}
-										setNodeConfig={setNodeConfig}
-										updateNodeConfig={updateNodeConfig}
-										addNode={addNode}
-										deleteNodes={deleteNodes}
-										updateNodesPosition={updateNodesPosition}
-										selectedNodeId={selectedNodeId}
-										setSelectedNodeId={setSelectedNodeId}
-										triggerNode={triggerNode}
-										selectedEdgeId={selectedEdgeId}
-										setSelectedEdgeId={setSelectedEdgeId}
-										setEdges={setEdges}
-										updateNextNodeIdsByDeleteEdge={
-											updateNextNodeIdsByDeleteEdge
-										}
-										updateNextNodeIdsByConnect={updateNextNodeIdsByConnect}
-										description={description}
-										flowInstance={flowInstance}
-										debuggerMode={debuggerMode}
-										getNewNodeIndex={getNewNodeIndex}
-										showMaterialPanel={showMaterialPanel}
-										setShowMaterialPanel={setShowMaterialPanel}
-										flowDesignListener={flowDesignListener}
-										notifyNodeChange={notifyNodeChange}
-										deleteEdges={deleteEdges}
+				<ConfigProvider prefixCls={CLASSNAME_PREFIX}>
+					<MagicFlowProvider>
+						<ExternalProvider {...externalProviderProps}>
+							<ResizeProvider windowSize={windowSize}>
+								<ReactFlowProvider>
+									<NodesProvider
+										nodes={nodes}
+										setNodes={setNodes}
+										onNodesChange={onNodesChange}
 									>
-										<div
-											className={clsx(
-												styles.magicFlow,
-												`${prefix}magic-flow`,
+										<FlowProvider {...flowProviderProps}>
+											<FlowContent
+												showHeader={showHeader}
+												className={wrapperClassName}
+											/>
+											{/* 分批加载指示器 */}
+											{isProcessing && (
+												<div className={styles.batchLoadingIndicator}>
+													加载中: {progress.current}/{progress.total} 批次
+												</div>
 											)}
-										>
-											{showHeader && <FlowHeader />}
-											<div
-												className={clsx(styles.content, `${prefix}content`)}
-											>
-												<FlowMaterialPanel />
-												<FlowDesign />
-											</div>
-										</div>
-									</FlowProvider>
-								</NodesProvider>
-							</ReactFlowProvider>
-						</ResizeProvider>
-					</ExternalProvider>
-				</MagicFlowProvider>
+										</FlowProvider>
+									</NodesProvider>
+								</ReactFlowProvider>
+							</ResizeProvider>
+						</ExternalProvider>
+					</MagicFlowProvider>
+				</ConfigProvider>
 			</ErrorBoundary>
 		)
 	},

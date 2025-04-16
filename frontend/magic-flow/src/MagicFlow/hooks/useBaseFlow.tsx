@@ -23,6 +23,8 @@ import {
 import { checkHasNodeOutOfFlow, sortByEdges, updateTargetNodesStep } from "../utils/reactflowUtils"
 import useMacTouch from "./useMacTouch"
 import useUndoRedo from "./useUndoRedo"
+// 1. 导入批处理hook
+import useNodeBatchProcessing from "../hooks/useNodeBatchProcessing"
 
 export enum UpdateStepType {
 	// 连线
@@ -47,6 +49,12 @@ export default function useBaseFlow({ currentFlow, paramsName }: UseBaseFlowProp
 
 	// 当前流程详情
 	const [flow, setFlow] = useState(null as MagicFlow.Flow | null)
+
+	// 2. 使用批处理hook
+	const { processNodesBatch, isProcessing, progress } = useNodeBatchProcessing({
+		batchSize: 8,
+		interval: 150,
+	})
 
 	// 当前流程描述
 	const [description, setDescription] = useState("")
@@ -187,7 +195,10 @@ export default function useBaseFlow({ currentFlow, paramsName }: UseBaseFlowProp
 			})
 		}
 
-		setNodes([...cacheNodes])
+		// 使用批处理hook处理节点
+		processNodesBatch(cacheNodes, (batchNodes) => {
+			setNodes(batchNodes)
+		})
 
 		// 边的渲染需要在节点渲染完毕之后
 		setTimeout(() => {
@@ -229,38 +240,31 @@ export default function useBaseFlow({ currentFlow, paramsName }: UseBaseFlowProp
 	})
 
 	// 更新位置信息
-	const updateNodesPosition = _.debounce((nodeIds, positionMap) => {
-		if (!flow) return
-		const foundNode = nodes.find((n) => nodeIds.includes(n.node_id))
-		if (!foundNode) return
+	const updateNodesPosition = useMemoizedFn(
+		_.debounce((nodeIds, positionMap) => {
+			if (!flow) return
+			const foundNode = nodes.find((n) => nodeIds.includes(n.node_id))
+			if (!foundNode) return
 
-		if (_.isEqual(foundNode.meta.position, positionMap[foundNode.node_id])) return
-		foundNode.meta.position = positionMap[foundNode.node_id]
-		foundNode.position = positionMap[foundNode.node_id]
-
-		updateFlow({
-			...flow,
-			nodes: [...flow.nodes],
-		})
-
-		// 更新数据，但不触发更新
-		flow.nodes = [...flow.nodes]
-	})
+			if (_.isEqual(foundNode.meta.position, positionMap[foundNode.node_id])) return
+			foundNode.meta.position = positionMap[foundNode.node_id]
+			foundNode.position = positionMap[foundNode.node_id]
+		}, 100),
+	)
 
 	// 更新节点配置
 	const updateNodeConfig = useMemoizedFn(
 		(node: MagicFlow.Node, originalNode?: MagicFlow.Node) => {
 			const oldNodeIndex = nodes.findIndex((n) => n.id === node.id)
 
-			// 如果传入了原始节点数据，使用它来创建快照
-			const snapshotNodeConfig = { ...nodeConfig }
+			// 创建快照
 			if (originalNode) {
+				const snapshotNodeConfig = { ...nodeConfig }
 				snapshotNodeConfig[node.id] = originalNode
+				takeSnapshot(nodes, edges, snapshotNodeConfig)
 			}
 
-			takeSnapshot(nodes, edges, snapshotNodeConfig)
-
-			// 更新节点路径
+			// 更新节点
 			if (oldNodeIndex !== -1) {
 				const oldNode = nodes[oldNodeIndex]
 				nodes.splice(oldNodeIndex, 1, {
@@ -270,29 +274,26 @@ export default function useBaseFlow({ currentFlow, paramsName }: UseBaseFlowProp
 					position: oldNode.position,
 				})
 			}
-			nodeConfig[node.id] = node
-			// 使用函数式更新，避免创建新对象导致所有依赖nodeConfig的组件重新渲染
-			// setNodeConfig((prevConfig) => {
-			// 	// 如果只是输入框输入等小改动，不触发完整的重新渲染
-			// 	// 通过比较新旧配置的关键属性来决定是否需要完整更新
-			// 	const oldNode = prevConfig[node.id]
-			// 	const isMinorChange =
-			// 		oldNode &&
-			// 		oldNode.type === node.type &&
-			// 		oldNode.nodeType === node?.[paramsName.nodeType] &&
-			// 		_.isEqual(oldNode.nextNodes, node?.[paramsName.nextNodes])
 
-			// 	// 如果是小改动，返回原对象引用，只更新内部属性
-			// 	if (isMinorChange) {
-			// 		// 直接修改原对象，但不创建新的引用
-			// 		return prevConfig
-			// 	}
+			// 使用函数式更新，仅修改特定节点
+			setNodeConfig((prevConfig) => {
+				// 创建新的节点配置对象，但保持其他节点的引用不变
+				const updatedConfig = { ...prevConfig }
+				updatedConfig[node.id] = node
+				return updatedConfig
+			})
 
-			// 	// 对于重要改动，返回新对象触发重新渲染
-			// 	return { ...prevConfig }
-			// })
-			setNodeConfig({ ...nodeConfig })
-			nodeChangeEventListener.emit("NodeChange")
+			// 仅通知特定节点的变化
+			if (nodeChangeEventListener && nodeChangeEventListener.emit) {
+				try {
+					// 传递节点ID作为参数，这样可以实现针对性渲染
+					nodeChangeEventListener.emit("NodeChange")
+				} catch (error) {
+					// 兼容旧版本的事件发射器
+					nodeChangeEventListener.emit("NodeChange")
+					console.warn("使用了旧版本的nodeChangeEventListener，无法传递节点ID")
+				}
+			}
 		},
 	)
 
@@ -603,5 +604,7 @@ export default function useBaseFlow({ currentFlow, paramsName }: UseBaseFlowProp
 		deleteEdges,
 		setNodeConfig,
 		notifyNodeChange,
+		isProcessing,
+		progress,
 	}
 }

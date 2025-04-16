@@ -1,7 +1,8 @@
 /* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
 import { useControllableValue, useMemoizedFn, useUpdateEffect } from "ahooks"
-import { Cascader, ConfigProvider, Modal } from "antd"
+import { Cascader, Modal } from "antd"
 import "antd/dist/reset.css"
+import { ThemeProvider } from "antd-style"
 // import { FIELDS_NAME, VALUE_TYPE } from "cai-json-edit/dist/JsonSchemaEditor/constants"
 import _, { cloneDeep, isEqual } from "lodash"
 import React, { useEffect, useMemo, useRef, useState } from "react"
@@ -39,6 +40,7 @@ import type {
 } from "./types"
 import { FIELDS_NAME, LabelTypeMap, VALUE_TYPE } from "./types"
 import { filterEmptyValues, filterNullValue, parseSizeToNumber, transferSpecialSign } from "./utils"
+import { CLASSNAME_PREFIX } from "@/common/constants"
 
 const CustomInputExpression = (props: InputExpressionProps) => {
 	const {
@@ -75,7 +77,6 @@ const CustomInputExpression = (props: InputExpressionProps) => {
 	const { nodeMap } = useNodeMap()
 
 	const { nodeClick, currentZoom } = useFlowInteraction()
-
 	// 将maxHeight统一转换为数字
 	const parsedMaxHeight = useMemo(() => parseSizeToNumber(maxHeight), [maxHeight])
 
@@ -86,12 +87,8 @@ const CustomInputExpression = (props: InputExpressionProps) => {
 		cloneValue.const_value = filterEmptyValues(cloneValue.const_value)
 		cloneValue.expression_value = filterEmptyValues(cloneValue.expression_value)
 
-		if (onlyExpression) {
-			cloneValue.type = VALUE_TYPE.EXPRESSION
-		}
-
 		return cloneValue
-	}, [propVal, onlyExpression])
+	}, [propVal])
 
 	// 当清空值时，需要记录当前的值类型
 	const [lastValueType, setLastValueType] = useState(VALUE_TYPE.CONST)
@@ -125,7 +122,6 @@ const CustomInputExpression = (props: InputExpressionProps) => {
 	const [allowExpressionGlobal, setAllowExpressionGlobal] = useState(allowExpression)
 
 	const valueFieldName = useMemo(() => {
-		if (onlyExpression) return FIELDS_NAME[VALUE_TYPE.EXPRESSION]
 		// 业务指定了类型，直接使用该类型
 		if (pointedValueType) return pointedValueType
 		if (!expressionVal) return FIELDS_NAME[VALUE_TYPE.CONST]
@@ -147,10 +143,9 @@ const CustomInputExpression = (props: InputExpressionProps) => {
 
 	const valueType = useMemo(() => {
 		if (pointedValueType === "const_value") return VALUE_TYPE.CONST
-		if (onlyExpression || mode === ExpressionMode.TextArea) return VALUE_TYPE.EXPRESSION
 		if (!expressionVal) return VALUE_TYPE.CONST
 		return expressionVal.type
-	}, [expressionVal, mode, onlyExpression])
+	}, [expressionVal])
 
 	const handleValueTypeChange = useMemoizedFn((valType: VALUE_TYPE) => {
 		if (!expressionVal) {
@@ -336,7 +331,6 @@ const CustomInputExpression = (props: InputExpressionProps) => {
 			onChange({
 				...expressionVal,
 				[valueFieldName]: [val],
-				type: onlyExpression ? VALUE_TYPE.EXPRESSION : expressionVal?.type,
 			})
 			return
 		}
@@ -483,13 +477,14 @@ const CustomInputExpression = (props: InputExpressionProps) => {
 				return <ErrorContent />
 			}}
 		>
-			<ArgsModalProvider
-				isOpenArgsModal={isOpenArgsModal}
-				openArgsModal={openArgsModal}
-				onConfirm={onConfirm}
-				onPopoverModalClick={onPopoverModalClick}
-				closeArgsModal={closeArgsModal}
-			>
+			<ThemeProvider prefixCls={CLASSNAME_PREFIX}>
+				<ArgsModalProvider
+					isOpenArgsModal={isOpenArgsModal}
+					openArgsModal={openArgsModal}
+					onConfirm={onConfirm}
+					onPopoverModalClick={onPopoverModalClick}
+					closeArgsModal={closeArgsModal}
+				>
 					<GlobalProvider
 						dataSource={_dataSource || ([] as ExpressionSource)}
 						allowExpression={allowExpression}
@@ -631,7 +626,8 @@ const CustomInputExpression = (props: InputExpressionProps) => {
 							</InputExpressionStyle>
 						</TextareaModeProvider>
 					</GlobalProvider>
-			</ArgsModalProvider>
+				</ArgsModalProvider>
+			</ThemeProvider>
 		</ErrorBoundary>
 	)
 }

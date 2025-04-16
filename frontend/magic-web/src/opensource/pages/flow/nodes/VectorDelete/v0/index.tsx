@@ -2,7 +2,7 @@ import { Form } from "antd"
 import { useForm } from "antd/lib/form/Form"
 import { useMemo } from "react"
 import { useMemoizedFn } from "ahooks"
-import { useFlow } from "@dtyq/magic-flow/MagicFlow/context/FlowContext/useFlow"
+import { useNodeConfigActions } from "@dtyq/magic-flow/MagicFlow/context/FlowContext/useFlow"
 import { useCurrentNode } from "@dtyq/magic-flow/MagicFlow/nodes/common/context/CurrentNode/useCurrentNode"
 import { set, cloneDeep } from "lodash-es"
 import MagicExpressionWrap from "@dtyq/magic-flow/common/BaseUI/MagicExpressionWrap"
@@ -13,7 +13,6 @@ import MagicJSONSchemaEditorWrap from "@dtyq/magic-flow/common/BaseUI/MagicJsonS
 import { useTranslation } from "react-i18next"
 import styles from "./index.module.less"
 import usePrevious from "../../../common/hooks/usePrevious"
-import { customNodeType } from "../../../constants"
 import KnowledgeSelect from "../../VectorSearch/v0/components/KnowledgeSelect/KnowledgeSelect"
 import useOldKnowledgeHandle from "../../VectorSearch/v0/components/KnowledgeSelect/hooks/useOldKnowledgeHandle"
 import useCurrentNodeUpdate from "../../../common/hooks/useCurrentNodeUpdate"
@@ -22,7 +21,7 @@ import { v0Template } from "./template"
 export default function VectorDeleteV0() {
 	const { t } = useTranslation()
 	const [form] = useForm()
-	const { updateNodeConfig } = useFlow()
+	const { updateNodeConfig } = useNodeConfigActions()
 
 	const { currentNode } = useCurrentNode()
 

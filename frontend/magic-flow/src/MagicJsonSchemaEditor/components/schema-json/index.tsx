@@ -1,4 +1,4 @@
-import { observer } from "../../../common/compat/mobx-compat"
+import { observer } from "mobx-react"
 import React, { ReactElement, RefObject, useContext } from "react"
 import { SchemaMobxContext } from "../../index"
 import Schema from "../../types/Schema"

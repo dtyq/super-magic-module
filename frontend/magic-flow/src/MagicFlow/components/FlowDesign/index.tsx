@@ -1,19 +1,11 @@
-import React, { useState } from "react"
-import ReactFlow, { Controls, MiniMap, Panel, SelectionMode } from "reactflow"
+import React, { useState, useMemo, memo, useCallback } from "react"
 import styles from "./index.module.less"
 
-import { prefix } from "@/MagicFlow/constants"
 import { useExternal } from "@/MagicFlow/context/ExternalContext/useExternal"
-import { Tooltip } from "antd"
-import clsx from "clsx"
-import "reactflow/dist/style.css"
-import { useFlow } from "../../context/FlowContext/useFlow"
+import { useFlow, useFlowEdges, useFlowUI } from "../../context/FlowContext/useFlow"
 import { edgeModels } from "../../edges"
-import { ConnectionLine } from "../../edges/ConnectionLine"
 import nodeModels from "../../nodes/index"
 import FlowBackground from "./components/FlowBackground"
-import { Interactions } from "./components/InteractionSelect"
-import SelectionTools from "./components/SelectionTools"
 import useSelections from "./components/SelectionTools/useSelections"
 import { FlowInteractionProvider } from "./context/FlowInteraction/Provider"
 import useFlowControls from "./hooks/useFlowControls"
@@ -22,11 +14,21 @@ import useNodeClick from "./hooks/useNodeClick"
 import useTargetToErrorNode from "./hooks/useTargetToErrorNode"
 import { useNodes } from "@/MagicFlow/context/NodesContext/useNodes"
 import useFlowCommand from "./hooks/useFlowCommands"
+// 导入新的叶子组件
+import FlowControls from "./components/sections/FlowControls"
+import FlowSelectionPanel from "./components/sections/FlowSelectionPanel"
+import FlowMiniMap from "./components/sections/FlowMiniMap"
+import ReactFlowComponent from "./components/sections/ReactFlowComponent"
 
-export default function FlowDesign() {
-	const { edges, onEdgesChange, onConnect, flowInstance } =
-		useFlow()
+// 使用memo将FlowDesign组件包装起来，避免不必要的渲染
+const FlowDesign = memo(function FlowDesign() {
+	// 使用更细粒度的hook替代全量useFlow，减少不必要的重渲染
+	const { onEdgesChange, onConnect } = useFlowEdges()
+	const { flowInstance } = useFlowUI()
 	const { nodes, onNodesChange } = useNodes()
+
+	// 获取edges，其他组件不依赖的数据通过专用hook获取
+	const { edges } = useFlowEdges()
 
 	// 分辨率小于15% | 全量渲染时，关闭params渲染
 	const [showParamsComp, setShowParamsComp] = useState(true)
@@ -53,14 +55,13 @@ export default function FlowDesign() {
 		showMinMap,
 		currentZoom,
 		onMove,
-		interaction,		
-        onInteractionChange,
+		interaction,
+		onInteractionChange,
 		onFitView,
 		onZoomIn,
 		onZoomOut,
 		onEdgeTypeChange,
 		onLock,
-
 	} = useFlowControls({
 		setShowParamsComp,
 		nodeClick,
@@ -96,7 +97,7 @@ export default function FlowDesign() {
 	/** 运行错误时，定位到错误节点 */
 	useTargetToErrorNode()
 
-    useFlowCommand({
+	useFlowCommand({
 		layout,
 		onInteractionChange,
 		onFitView,
@@ -110,143 +111,124 @@ export default function FlowDesign() {
 		onAddItem,
 	})
 
+	// 使用useMemo优化复杂的计算或对象创建
+	const visibleElements = useMemo(
+		() => externalOnlyRenderVisibleElements || onlyRenderVisibleElements,
+		[externalOnlyRenderVisibleElements, onlyRenderVisibleElements],
+	)
+
+	// 使用useMemo包装FlowInteractionProvider的props
+	const interactionProviderProps = useMemo(
+		() => ({
+			isDragging,
+			nodeClick,
+			resetLastLayoutData,
+			onAddItem,
+			layout,
+			showParamsComp,
+			showSelectionTools,
+			setShowSelectionTools,
+			onNodesDelete,
+			currentZoom,
+			reactFlowWrapper,
+			selectionNodes,
+			selectionEdges,
+		}),
+		[
+			isDragging,
+			nodeClick,
+			resetLastLayoutData,
+			onAddItem,
+			layout,
+			showParamsComp,
+			showSelectionTools,
+			setShowSelectionTools,
+			onNodesDelete,
+			currentZoom,
+			reactFlowWrapper,
+			selectionNodes,
+			selectionEdges,
+		],
+	)
+
+	// 使用useMemo包装ReactFlowComponent的props
+	const reactFlowProps = useMemo(
+		() => ({
+			nodeTypes: nodeModels,
+			edgeTypes: edgeModels,
+			nodes,
+			edges,
+			onNodesChange,
+			onEdgesChange,
+			onConnect,
+			onNodeClick,
+			onEdgeClick,
+			onNodeDragStart,
+			onNodeDrag,
+			onNodeDragStop,
+			onDrop,
+			onDragOver,
+			onClick: onReactFlowClick,
+			onNodesDelete,
+			onEdgesDelete,
+			onPaneClick: onPanelClick,
+			onMove,
+			onSelectionChange,
+			onSelectionEnd,
+			interaction,
+			flowInstance,
+			onlyRenderVisibleElements: visibleElements,
+		}),
+		[
+			nodes,
+			edges,
+			onNodesChange,
+			onEdgesChange,
+			onConnect,
+			onNodeClick,
+			onEdgeClick,
+			onNodeDragStart,
+			onNodeDrag,
+			onNodeDragStop,
+			onDrop,
+			onDragOver,
+			onReactFlowClick,
+			onNodesDelete,
+			onEdgesDelete,
+			onPanelClick,
+			onMove,
+			onSelectionChange,
+			onSelectionEnd,
+			interaction,
+			flowInstance,
+			visibleElements,
+		],
+	)
+
+	// 使用useMemo包装FlowSelectionPanel的props
+	const selectionPanelProps = useMemo(
+		() => ({
+			showSelectionTools,
+			setShowSelectionTools,
+			selectionNodes,
+			selectionEdges,
+			onCopy,
+		}),
+		[showSelectionTools, setShowSelectionTools, selectionNodes, selectionEdges, onCopy],
+	)
 
 	return (
 		<div className={styles.flowDesign} ref={reactFlowWrapper}>
-			<FlowInteractionProvider
-				isDragging={isDragging}
-				nodeClick={nodeClick}
-				resetLastLayoutData={resetLastLayoutData}
-				onAddItem={onAddItem}
-				layout={layout}
-				showParamsComp={showParamsComp}
-				showSelectionTools={showSelectionTools}
-				setShowSelectionTools={setShowSelectionTools}
-				//@ts-ignore
-				onNodesDelete={onNodesDelete}
-				currentZoom={currentZoom}
-				reactFlowWrapper={reactFlowWrapper}
-				selectionNodes={selectionNodes}
-				selectionEdges={selectionEdges}
-			>
-				<ReactFlow
-					//@ts-ignore
-					nodeTypes={nodeModels}
-					edgeTypes={edgeModels}
-					//@ts-ignore
-					nodes={nodes}
-					edges={edges}
-					onNodesChange={onNodesChange}
-					onEdgesChange={onEdgesChange}
-					onConnect={onConnect}
-					onNodeClick={onNodeClick}
-					onEdgeClick={onEdgeClick}
-					onNodeDragStart={onNodeDragStart}
-					onNodeDrag={onNodeDrag}
-					onNodeDragStop={onNodeDragStop}
-					onDrop={onDrop}
-					onDragOver={onDragOver}
-					onClick={onReactFlowClick}
-					onNodesDelete={onNodesDelete}
-					onEdgesDelete={onEdgesDelete}
-					minZoom={0.01}
-					maxZoom={8}
-					connectionLineComponent={ConnectionLine}
-					panOnScroll={interaction === Interactions.TouchPad}
-					zoomOnScroll={interaction === Interactions.Mouse}
-					panOnDrag={interaction === Interactions.Mouse}
-					// zoomOnPinch
-					selectionOnDrag
-					ref={flowInstance}
-					onPaneClick={onPanelClick}
-					zoomOnDoubleClick={false}
-					onlyRenderVisibleElements={
-						externalOnlyRenderVisibleElements || onlyRenderVisibleElements
-					}
-					// @ts-ignore
-					onMove={onMove}
-					selectionKeyCode={null}
-					onSelectionChange={onSelectionChange}
-					onSelectionEnd={onSelectionEnd}
-					// 选中部分就算选中
-					selectionMode={SelectionMode.Partial}
-				>
-					<Panel
-						position="top-center"
-						className={clsx(styles.selectionPanel, `${prefix}selection-panel`)}
-					>
-						<SelectionTools
-							show={showSelectionTools}
-							setShow={setShowSelectionTools}
-							selectionNodes={selectionNodes}
-							selectionEdges={selectionEdges}
-							onCopy={onCopy}
-						/>
-					</Panel>
-					<Controls
-						showFitView={false}
-						showInteractive={false}
-						showZoom={false}
-						className={clsx(styles.controls, `${prefix}controls`)}
-						position="bottom-right"
-					>
-						{controlItemGroups.map((controlItems, i) => {
-							return (
-								<div className={styles.groupWrap} key={`group-${i}`}>
-									{controlItems.map((c, index) => {
-										return (
-											<Tooltip
-												title={c.tooltips}
-												// @ts-ignore
-												onClick={c.callback}
-												key={`control-${c.tooltips}-${index}`}
-											>
-												<span
-													className={clsx(
-														styles.controlItem,
-														`${prefix}control-item`,
-														{
-															// @ts-ignore
-															[styles.lockItem]: c.isLock,
-															// @ts-ignore
-															[styles.isNotIcon]: c.isNotIcon,
-															// @ts-ignore
-															[styles.showMinMap]: c.showMinMap,
-														},
-													)}
-												>
-													{c.icon}
-												</span>
-											</Tooltip>
-										)
-									})}
-
-									<svg className={clsx(styles.line, `${prefix}line`)}>
-										<line
-											x1={-10}
-											y1={0}
-											x2={-10}
-											y2={20}
-											stroke="#1C1D2314"
-											strokeWidth="1"
-										/>
-									</svg>
-								</div>
-							)
-						})}
-					</Controls>
+			<FlowInteractionProvider {...interactionProviderProps}>
+				<ReactFlowComponent {...reactFlowProps}>
+					<FlowSelectionPanel {...selectionPanelProps} />
+					<FlowControls controlItemGroups={controlItemGroups} />
 					<FlowBackground />
-					{showMinMap && (
-						<MiniMap
-							nodeStrokeWidth={3}
-							pannable
-							position="bottom-right"
-							className={clsx(styles.minMap, `${prefix}min-map`)}
-							maskColor="rgba(0,0,0,0.2)"
-						/>
-					)}
-				</ReactFlow>
+					<FlowMiniMap showMinMap={showMinMap} />
+				</ReactFlowComponent>
 			</FlowInteractionProvider>
 		</div>
 	)
-}
+})
+
+export default FlowDesign

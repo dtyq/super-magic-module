@@ -1,5 +1,5 @@
 import FlowBackground from "@/MagicFlow/components/FlowDesign/components/FlowBackground"
-import { useFlow } from "@/MagicFlow/context/FlowContext/useFlow"
+import { useFlowNodes, useNodeConfig } from "@/MagicFlow/context/FlowContext/useFlow"
 import { Tooltip } from "antd"
 import { IconInfoCircle } from "@tabler/icons-react"
 import clsx from "clsx"
@@ -18,7 +18,8 @@ const connectionNodeIdSelector = (state: any) => state.connectionNodeId
 
 //@ts-ignore
 export default function GroupNode({ id, data, isConnectable, position }: NodeProps) {
-	const { selectedNodeId, debuggerMode, nodeConfig } = useFlow()
+	const { selectedNodeId } = useFlowNodes()
+	const { nodeConfig } = useNodeConfig()
 	const connectionNodeId = useStore(connectionNodeIdSelector)
 	const { t } = useTranslation()
 

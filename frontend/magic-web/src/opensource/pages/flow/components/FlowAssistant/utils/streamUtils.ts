@@ -6,7 +6,9 @@
  * 提取SSE数据行中的内容
  * 格式如: data:{"id":"xyz","event":"message","message":{"role":"assistant","content":"内容"}}
  */
-export const extractContent = (line: string): { content: string; isError: boolean; errorInfo: string } => {
+export const extractContent = (
+	line: string,
+): { content: string; isError: boolean; errorInfo: string } => {
 	if (!line.startsWith("data:") || line === "data:[DONE]")
 		return { content: "", isError: false, errorInfo: "" }
 
@@ -317,4 +319,4 @@ export const extractStatusInline = (content: string): string => {
 	}
 
 	return updatedContent
-} 
+}

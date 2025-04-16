@@ -9,7 +9,7 @@ import { IconHelp } from "@tabler/icons-react"
 import { get, set } from "lodash-es"
 import { useMemoizedFn, useMount } from "ahooks"
 import { useFlowStore } from "@/opensource/stores/flow"
-import { useFlow } from "@dtyq/magic-flow/MagicFlow/context/FlowContext/useFlow"
+import { useNodeConfigActions } from "@dtyq/magic-flow/MagicFlow/context/FlowContext/useFlow"
 import { replaceRouteParams } from "@/utils/route"
 import { RoutePath } from "@/const/routes"
 import usePrevious from "@/opensource/pages/flow/common/hooks/usePrevious"
@@ -34,7 +34,7 @@ export default function ToolsV0() {
 	const { currentNode } = useCurrentNode()
 
 	const [form] = Form.useForm()
-	const { updateNodeConfig } = useFlow()
+	const { updateNodeConfig } = useNodeConfigActions()
 
 	const { expressionDataSource } = usePrevious()
 

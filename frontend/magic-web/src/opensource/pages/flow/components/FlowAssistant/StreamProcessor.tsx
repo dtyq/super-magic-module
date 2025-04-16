@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useUpdateEffect } from "ahooks"
 import type React from "react"
 import { useEffect, useRef, useState, useCallback } from "react"
@@ -565,10 +566,12 @@ function StreamProcessor(props: StreamProcessorProps): React.ReactElement | null
 								`处理数据块失败(流ID: ${currentResponseBodyId}):`,
 								errorMessage,
 							)
-							onError(`${t("flowAssistant.error", { ns: "flow" })}: ${errorMessage}`)
 							setIsProcessing(false)
 							streamProcessingRef.current = false
 							errorDetectedRef.current = true
+							isCollectingCommandRef.current = false
+							cleanupStreamResources()
+							onError(`${t("flowAssistant.error", { ns: "flow" })}: ${errorMessage}`)
 						}
 					}
 				}

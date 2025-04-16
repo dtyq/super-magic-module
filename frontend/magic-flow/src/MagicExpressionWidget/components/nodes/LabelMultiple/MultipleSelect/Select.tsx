@@ -8,7 +8,6 @@ import { useMemoizedFn } from "ahooks"
 import i18next from "i18next"
 import { Multiple, MultipleOption } from "../types"
 import "./styles/select.less"
-import { useNodes } from "@/MagicFlow/context/NodesContext/useNodes"
 
 export type MultipleSelectProps = {
 	options: MultipleOption[]
@@ -33,12 +32,11 @@ function MultipleSelect({
 	const domRef = useRef<HTMLDivElement>(null)
 
 	const { edges } = useFlow()
-	const { nodes } = useNodes()
 	const { currentNode } = useCurrentNode()
 
 	const displayValue = useMemo(() => {
 		return _.cloneDeep(value)
-	}, [value, nodes, edges, currentNode])
+	}, [value, edges, currentNode])
 
 	const itemClick = useMemoizedFn((val: Multiple) => {
 		const newValues = [...value, val] as Multiple[]

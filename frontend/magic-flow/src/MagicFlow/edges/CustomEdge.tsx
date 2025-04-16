@@ -6,7 +6,7 @@ import React, { useState } from "react"
 import { EdgeProps, getBezierPath } from "reactflow"
 import FlowPopup from "../components/FlowPopup"
 import { prefix } from "../constants"
-import { useFlow } from "../context/FlowContext/useFlow"
+import { useFlowEdges } from "../context/FlowContext/useFlow"
 import styles from "./index.module.less"
 
 function CustomEdge({
@@ -24,7 +24,7 @@ function CustomEdge({
 	style,
 	data,
 }: EdgeProps) {
-	const { selectedEdgeId } = useFlow()
+	const { selectedEdgeId } = useFlowEdges()
 	const [popupOpen, setPopupOpen] = useState(false)
 
 	const { allowAddOnLine } = data
