@@ -264,6 +264,6 @@ class MagicAgentVersionRepository implements MagicAgentVersionRepositoryInterfac
             $query->where('id', '<', (int) $cursor);
         }
 
-        return $query->get()->toArray();
+        return Db::select($query->toSql(), $query->getBindings());
     }
 }

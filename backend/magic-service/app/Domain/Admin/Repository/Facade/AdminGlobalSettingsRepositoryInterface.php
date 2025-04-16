@@ -15,4 +15,16 @@ interface AdminGlobalSettingsRepositoryInterface
     public function getSettingsByTypeAndOrganization(AdminGlobalSettingsType $type, string $organization): ?AdminGlobalSettingsEntity;
 
     public function updateSettings(AdminGlobalSettingsEntity $entity): AdminGlobalSettingsEntity;
+
+    /**
+     * @param AdminGlobalSettingsType[] $types
+     * @return AdminGlobalSettingsEntity[]
+     */
+    public function getSettingsByTypesAndOrganization(array $types, string $organization): array;
+
+    /**
+     * @param AdminGlobalSettingsEntity[] $entities
+     * @return AdminGlobalSettingsEntity[]
+     */
+    public function updateSettingsBatch(array $entities): array;
 }

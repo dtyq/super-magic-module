@@ -50,17 +50,20 @@ class AdminAgentAppService
         $dataIsolation = $this->createDataIsolation($authorization);
         $allSettings = [];
 
-        // 只获取 Agent 相关的设置类型
+        // 获取所有 Agent 相关的设置类型
         $agentSettingsTypes = AdminGlobalSettingsType::getAssistantGlobalSettingsType();
-        foreach ($agentSettingsTypes as $type) {
-            $settings = $this->globalSettingsDomainService->getSettingsByType(
-                $type,
-                $dataIsolation
-            );
-            // 组装dto, 补充额外信息
-            $settingDTO = (new AgentGlobalSettingsDTO($settings->toArray()));
+
+        // 一次性获取所有设置
+        $settings = $this->globalSettingsDomainService->getSettingsByTypes(
+            $agentSettingsTypes,
+            $dataIsolation
+        );
+
+        // 处理所有设置
+        foreach ($settings as $setting) {
+            $settingDTO = (new AgentGlobalSettingsDTO($setting->toArray()));
             ExtraDetailAppenderFactory::createStrategy($settingDTO->getExtra())->appendExtraDetail($settingDTO->getExtra(), $authorization);
-            $settingName = AdminGlobalSettingsName::getByType($settings->getType());
+            $settingName = AdminGlobalSettingsName::getByType($setting->getType());
             $allSettings[$settingName] = $settingDTO;
         }
 
@@ -76,25 +79,27 @@ class AdminAgentAppService
         array $settings
     ): array {
         $dataIsolation = $this->createDataIsolation($authorization);
-        $updatedSettings = [];
         $agentSettingsTypes = array_map(fn ($type) => $type->value, AdminGlobalSettingsType::getAssistantGlobalSettingsType());
         $agentSettingsTypes = array_flip($agentSettingsTypes);
-        foreach ($settings as $setting) {
-            // 如果不是助理创建管理，则不更新
-            if (! isset($agentSettingsTypes[$setting->getType()->value])) {
-                continue;
-            }
-            $result = $this->globalSettingsDomainService->updateSettings(
-                (new AdminGlobalSettingsEntity())
-                    ->setType($setting->getType())
-                    ->setStatus($setting->getStatus())
-                    ->setExtra(AbstractSettingExtra::fromDataByType($setting->getExtra()->toArray(), $setting->getType())),
-                $dataIsolation
-            );
-            $updatedSettings[] = new AgentGlobalSettingsDTO($result->toArray());
-        }
 
-        return $updatedSettings;
+        // 过滤出需要更新的设置
+        $settingsToUpdate = array_filter($settings, function ($setting) use ($agentSettingsTypes) {
+            return isset($agentSettingsTypes[$setting->getType()->value]);
+        });
+
+        // 转换为实体对象
+        $entities = array_map(function ($setting) {
+            return (new AdminGlobalSettingsEntity())
+                ->setType($setting->getType())
+                ->setStatus($setting->getStatus())
+                ->setExtra(AbstractSettingExtra::fromDataByType($setting->getExtra()->toArray(), $setting->getType()));
+        }, $settingsToUpdate);
+
+        // 一次性更新所有设置
+        $updatedSettings = $this->globalSettingsDomainService->updateSettingsBatch($entities, $dataIsolation);
+
+        // 转换为DTO返回
+        return array_map(fn ($setting) => new AgentGlobalSettingsDTO($setting->toArray()), $updatedSettings);
     }
 
     public function getPublishedAgents(Authenticatable $authorization, string $pageToken, int $pageSize, AgentFilterType $type): GetPublishedAgentsResponseDTO
