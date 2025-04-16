@@ -3,6 +3,9 @@ import { LazyExoticComponent, ComponentType, lazy } from "react"
 import CodeComponents from "../components/Code/config/CodeComponents"
 import BaseRenderFactory from "./BaseRenderFactory"
 
+const Fallback = lazy(() => import("../components/Code/components/Fallback"))
+const InlineCode = lazy(() => import("../components/Code/components/InlineCode"))
+
 class CodeRenderFactory extends BaseRenderFactory<CodeRenderProps> {
 	constructor() {
 		super(CodeComponents)
@@ -13,7 +16,7 @@ class CodeRenderFactory extends BaseRenderFactory<CodeRenderProps> {
 	 * @returns 默认组件
 	 */
 	public getFallbackComponent(): LazyExoticComponent<ComponentType<CodeRenderProps>> {
-		return lazy(() => import("../components/Code/components/Fallback"))
+		return Fallback
 	}
 
 	/**
@@ -21,7 +24,7 @@ class CodeRenderFactory extends BaseRenderFactory<CodeRenderProps> {
 	 * @returns 行内代码组件
 	 */
 	getInlineComponent(): LazyExoticComponent<ComponentType<CodeRenderProps>> {
-		return lazy(() => import("../components/Code/components/InlineCode"))
+		return InlineCode
 	}
 }
 
