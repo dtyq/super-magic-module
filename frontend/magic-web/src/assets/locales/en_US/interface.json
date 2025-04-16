@@ -403,7 +403,7 @@
 			"dissolveGroup": "Dismiss group chat",
 			"groupAdmin": "Group management",
 			"groupAdminTip": "Related settings of group permissions",
-			"groupInWhich": "Belongs to ${name}",
+			"groupInWhich": "Belongs to {{name}}",
 			"groupName": "Group name",
 			"groupNamePlaceholder": "Please enter the group name",
 			"groupNotice": "Group announcement",

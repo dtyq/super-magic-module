@@ -34,10 +34,10 @@ export const useStyles = createStyles(({ css, isDarkMode, token }) =>
 				overflow-x: hidden;
 				flex: 1;
 				min-height: 300px;
+				height: 100%;
 			`,
 			editor: css`
-				height: 35%;
-				min-height: 200px;
+				height: 100%;
 			`,
 			chatListInner: css``,
 			magicInput: css`

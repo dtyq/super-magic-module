@@ -27,7 +27,6 @@ const ChatProvider = observer(function ChatProvider({ children }: ChatServicePro
 	const { t } = useTranslation("interface")
 	const { styles } = useStyles()
 
-	const magic_id = userStore.user.userInfo?.magic_id
 	const isSwitchingOrganization = interfaceStore.isSwitchingOrganization
 
 	useEffect(() => {
@@ -94,9 +93,7 @@ const ChatProvider = observer(function ChatProvider({ children }: ChatServicePro
 		[styles.container, styles.spin, t],
 	)
 
-	if (location.pathname === RoutePath.Login) return children
-
-	if (!magic_id || isSwitchingOrganization) {
+	if (isSwitchingOrganization) {
 		return Fallback
 	}
 

@@ -229,7 +229,11 @@ class ChatMessageApplyService {
 			}
 
 			// 如果是 AI 会话，此时消息列表的数量为 2，调用智能重命名
-			if (conversation?.isAiConversation && MessageStore.messages.length === 2) {
+			if (
+				conversation?.isAiConversation &&
+				MessageStore.messages.length === 2 &&
+				!isHistoryMessage
+			) {
 				// 调用智能重命名
 				chatTopicService.getAndSetMagicTopicName(message.message.topic_id ?? "")
 			}
@@ -241,7 +245,7 @@ class ChatMessageApplyService {
 					message.message.topic_id ?? "",
 				)
 
-				if (messages.length === 2) {
+				if (messages.length === 2 && !isHistoryMessage) {
 					// 调用智能重命名
 					chatTopicService.getAndSetMagicTopicName(message.message.topic_id ?? "")
 				}

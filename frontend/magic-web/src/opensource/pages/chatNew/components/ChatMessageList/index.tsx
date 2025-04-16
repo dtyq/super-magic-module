@@ -20,7 +20,7 @@ import type {
 	GroupUsersRemoveMessage,
 	GroupUpdateMessage,
 	GroupDisbandMessage,
-} from "@/types/chat/conversation_message"
+} from "@/types/chat/control_message"
 import { ControlEventMessageType } from "@/types/chat"
 import { useFontSize } from "@/opensource/providers/AppearanceProvider/hooks"
 import AiConversationMessageLoading from "./components/AiConversationMessageLoading"
@@ -52,6 +52,7 @@ const ChatMessageList = observer(() => {
 	const chatListRef = useRef<HTMLDivElement | null>(null)
 	const resizeObserverRef = useRef<ResizeObserver | null>(null)
 	const initialRenderRef = useRef(true)
+	const isContentChanging = useRef(false)
 	const state = useLocalObservable(() => ({
 		isLoadingMore: false,
 		isAtBottom: true,
@@ -211,12 +212,14 @@ const ChatMessageList = observer(() => {
 		const distance = Math.abs(scrollTop + clientHeight - scrollHeight)
 
 		state.setIsAtBottom(distance < 50)
+		canScroll = distance < 80
 
 		const isScrollUp = lastScrollTop - scrollTop > 0
 		lastScrollTop = scrollTop
 		if (isScrollUp && !state.isLoadingMore) {
 			// 加载更多，判断第四条消息是否进入视图
 			const messageId = MessageStore.messages[3]?.message_id
+
 			if (isMessageInView(messageId, wrapperRef.current) || scrollTop < 150) {
 				loadMoreHistoryMessages()
 			}
@@ -262,7 +265,11 @@ const ChatMessageList = observer(() => {
 		}
 
 		// 数据变更，并且滚动条停留在顶部，加载多一页
-		if (wrapperRef.current && wrapperRef.current.scrollTop === 0) {
+		if (
+			wrapperRef.current &&
+			wrapperRef.current.scrollTop === 0 &&
+			!MessageStore.hasMoreHistoryMessage
+		) {
 			loadMoreHistoryMessages()
 			requestAnimationFrame(() => {
 				if (wrapperRef.current) {
@@ -273,6 +280,9 @@ const ChatMessageList = observer(() => {
 	})
 
 	const handleContainerScroll = throttle(() => {
+		// 列表大小变化时，不处理
+		if (isContentChanging.current) return
+
 		checkScrollPosition()
 	}, 50)
 
@@ -303,7 +313,13 @@ const ChatMessageList = observer(() => {
 			debounce((entries) => {
 				const chatList = entries[0]
 				if (!chatList) return
+				// 列表大小变化
+				isContentChanging.current = true
 				handleResize()
+				// 重置
+				setTimeout(() => {
+					isContentChanging.current = false
+				}, 0)
 			}, 100),
 		)
 

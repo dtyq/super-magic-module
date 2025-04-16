@@ -40,8 +40,7 @@ const MagicAvatar = forwardRef<HTMLSpanElement, MagicAvatarProps>(
 							style?.color,
 					  ),
 			)
-			// eslint-disable-next-line react-hooks/exhaustive-deps
-		}, [src])
+		}, [src, children, style?.backgroundColor, style?.color])
 
 		const mergedStyle = useMemo(
 			() => ({

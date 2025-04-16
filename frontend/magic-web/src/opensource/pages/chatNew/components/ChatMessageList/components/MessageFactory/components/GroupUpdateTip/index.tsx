@@ -1,6 +1,6 @@
 import type { HTMLAttributes } from "react"
 import { memo } from "react"
-import type { GroupUpdateMessage } from "@/types/chat/conversation_message"
+import type { GroupUpdateMessage } from "@/types/chat/control_message"
 import { useTranslation } from "react-i18next"
 import { useTipStyles } from "../../../../hooks/useTipStyles"
 import GroupTipMemberRender from "../GroupTipMemberRender"

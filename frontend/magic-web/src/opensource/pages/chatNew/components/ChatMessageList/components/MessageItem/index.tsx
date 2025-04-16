@@ -17,6 +17,9 @@ import useStyles from "./style"
 import MagicAvatar from "@/opensource/components/base/MagicAvatar"
 import MemberCardStore from "@/opensource/stores/display/MemberCardStore"
 import useInfoStore from "@/opensource/stores/userInfo"
+import { useMemoizedFn } from "ahooks"
+import { getUserName } from "@/utils/modules/chat"
+import { observer } from "mobx-react-lite"
 
 interface MessageItemProps {
 	message_id: string
@@ -33,51 +36,48 @@ interface MessageItemProps {
 }
 
 // 头像独立，避免重复渲染
-const Avatar = memo(
-	function Avatar({
-		name,
-		avatar,
-		size,
-		uid,
-	}: {
-		name: string
-		avatar: string
-		size: number
-		uid: string
-	}) {
-		const { styles } = useStyles({ fontSize: 16, isMultipleCheckedMode: false })
+const Avatar = observer(function Avatar({
+	name,
+	avatar,
+	size,
+	uid,
+}: {
+	name: string
+	avatar: string
+	size: number
+	uid: string
+}) {
+	const { styles } = useStyles({ fontSize: 16, isMultipleCheckedMode: false })
+	const userInfo = useInfoStore.get(uid)
 
-		// 使用 useMemo 缓存 info 对象，避免每次渲染都创建新对象
-		const info = useMemo(() => {
-			if (avatar) {
-				return { name, avatar_url: getAvatarUrl(avatar) }
-			}
+	// 使用 useMemo 缓存 info 对象，避免每次渲染都创建新对象
+	const info = useMemo(() => {
+		if (avatar) {
+			return { name, avatar_url: getAvatarUrl(avatar) }
+		}
 
-			return { name, avatar_url: useInfoStore.get(uid)?.avatar_url }
-		}, [avatar, name, uid])
+		return { name: getUserName(userInfo), avatar_url: userInfo?.avatar_url }
+	}, [avatar, name, userInfo])
 
-		return (
-			<MagicAvatar
-				className={styles.avatar}
-				src={info.avatar_url}
-				size={size}
-				onClick={(e: any) => {
-					if (e) {
-						MemberCardStore.openCard(uid, { x: e.clientX, y: e.clientY })
-					}
-					e.stopPropagation()
-					e.preventDefault()
-				}}
-			>
-				{name}
-			</MagicAvatar>
-		)
-	},
-	(prevProps, nextProps) =>
-		prevProps.name === nextProps.name &&
-		prevProps.avatar === nextProps.avatar &&
-		prevProps.size === nextProps.size,
-)
+	const handleAvatarClick = useMemoizedFn((e) => {
+		if (e) {
+			MemberCardStore.openCard(uid, { x: e.clientX, y: e.clientY })
+		}
+		e.stopPropagation()
+		e.preventDefault()
+	})
+
+	return (
+		<MagicAvatar
+			className={styles.avatar}
+			src={info.avatar_url}
+			size={size}
+			onClick={handleAvatarClick}
+		>
+			{name}
+		</MagicAvatar>
+	)
+})
 
 const MessageItem = memo(function MessageItem({
 	message_id,

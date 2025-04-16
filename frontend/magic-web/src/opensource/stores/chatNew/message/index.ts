@@ -100,6 +100,10 @@ class MessageStore {
 		this.updateMessageSeenStatus(message.message_id || message?.temp_id || "", seen_status)
 		this.updateMessageId(message.message_id || message?.temp_id || "", message.message_id)
 		this.lastSeqId = message.seq_id || this.lastSeqId
+
+		if (this.messages.length === 1) {
+			this.firstSeqId = message.seq_id || ""
+		}
 	}
 
 	/**
@@ -126,6 +130,10 @@ class MessageStore {
 			this.messages.push(message)
 		}
 		this.lastSeqId = message.seq_id || this.lastSeqId
+
+		if (this.messages.length === 1) {
+			this.firstSeqId = message.seq_id || ""
+		}
 	}
 
 	updateMessageSendStatus(id: string, status: SendStatus) {

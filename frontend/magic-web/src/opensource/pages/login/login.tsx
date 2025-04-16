@@ -77,7 +77,7 @@ function LoginPage() {
 					.then(loginService.organizationSyncStep)
 					.then(userSyncStep)
 					.then(() => {
-						return Promise.resolve(userService.login())
+						return Promise.resolve(userService.login(false))
 					})
 					.then(redirect)
 					.catch((error) => {

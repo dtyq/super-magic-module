@@ -7,12 +7,11 @@ import type {
 	OpenConversationMessage,
 } from "@/types/chat/conversation"
 import type {
-	RevokeMessage,
 	ConversationMessageSend,
-	GroupCreateMessage,
 	ChatFileUrlData,
 	ConversationMessage,
 } from "@/types/chat/conversation_message"
+import type { RevokeMessage, GroupCreateMessage } from "@/types/chat/control_message"
 import {
 	type CMessage,
 	type MessageReceiveType,

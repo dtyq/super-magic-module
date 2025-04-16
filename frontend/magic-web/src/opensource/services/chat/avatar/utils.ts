@@ -42,7 +42,7 @@ export function textToColors(text: string) {
 }
 
 export function textToBackgroundColor(name?: string) {
-	if (!name) return ""
+	if (!name) return "#ffffff"
 
 	let hash = 0
 	for (let i = 0; i < name.length; i += 1) {
