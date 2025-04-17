@@ -9,6 +9,7 @@ namespace App\Domain\Admin\Repository\Persistence;
 
 use App\Domain\Admin\Entity\AdminGlobalSettingsEntity;
 use App\Domain\Admin\Entity\ValueObject\AdminGlobalSettingsType;
+use App\Domain\Admin\Entity\ValueObject\Extra\AbstractSettingExtra;
 use App\Domain\Admin\Repository\Facade\AdminGlobalSettingsRepositoryInterface;
 use App\Domain\Admin\Repository\Persistence\Model\AdminGlobalSettingsModel;
 use Hyperf\DbConnection\Db;
@@ -27,6 +28,8 @@ class AdminGlobalSettingsRepository implements AdminGlobalSettingsRepositoryInte
 
     public function updateSettings(AdminGlobalSettingsEntity $entity): AdminGlobalSettingsEntity
     {
+        /** @var ?AbstractSettingExtra $extra */
+        $extra = $entity->getExtra();
         $model = AdminGlobalSettingsModel::query()->updateOrCreate(
             [
                 'type' => $entity->getType()->value,
@@ -34,7 +37,7 @@ class AdminGlobalSettingsRepository implements AdminGlobalSettingsRepositoryInte
             ],
             [
                 'status' => $entity->getStatus()->value,
-                'extra' => $entity->getExtra()?->jsonSerialize(),
+                'extra' => $extra?->jsonSerialize(),
             ]
         );
 
@@ -74,11 +77,13 @@ class AdminGlobalSettingsRepository implements AdminGlobalSettingsRepositoryInte
 
         // 准备批量更新的数据
         $values = array_map(function ($entity) {
+            /** @var ?AbstractSettingExtra $extra */
+            $extra = $entity->getExtra();
             return [
                 'type' => $entity->getType()->value,
                 'organization' => $entity->getOrganization(),
                 'status' => $entity->getStatus()->value,
-                'extra' => $entity->getExtra()?->toJsonString(),
+                'extra' => $extra?->toJsonString(),
                 'created_at' => date('Y-m-d H:i:s'),
                 'updated_at' => date('Y-m-d H:i:s'),
             ];

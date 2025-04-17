@@ -1,0 +1,195 @@
+---
+description: Hyperf Web 开发规范
+globs: 
+alwaysApply: false
+---
+
+# Hyperf Web 开发规范
+参考文档：https://hyperf.wiki/3.1/#/
+
+## 框架概述
+
+Hyperf 是基于 Swoole 4.5+ 实现的高性能、高灵活性的 PHP 协程框架，内置协程服务器及大量常用的组件，性能较传统基于 PHP-FPM 的框架有质的提升，提供超高性能的同时，也保持着极其灵活的可扩展性，标准组件均基于 PSR 标准 实现，基于强大的依赖注入设计，保证了绝大部分组件或类都是可替换的。
+
+## 目录结构
+
+```
+├── app                   # 应用目录
+├── bin                   # 项目脚本目录
+├── config                # 配置文件目录
+├── deploy                # 部署相关目录
+├── migrations            # 数据库迁移目录
+├── public                # 对外访问目录
+├── runtime               # 运行时目录
+├── seeders               # 数据库填充目录
+├── storage               # 存储目录
+├── test                  # 测试目录
+└── vendor                # Composer 依赖目录
+```
+
+## 编码规范
+
+### 基本规范
+
+1. 严格遵循 PSR-12 编码规范
+2. 使用 PHP 8.0+ 特性
+3. 必须使用强类型声明：`declare(strict_types=1)`
+4. 使用构造器属性提升等新特性
+5. 合理使用注解功能
+
+### 命名规范
+
+#### 目录命名
+- 使用 PascalCase 命名目录
+- 遵循 PSR-4 自动加载规范
+
+#### 文件命名
+- 类文件名必须与类名一致
+- 使用 PascalCase 命名文件
+
+#### 类命名
+- Entity 类：`{聚合根名称}Entity`
+- Repository 接口：`{聚合根名称}RepositoryInterface`
+- Repository 实现：`{聚合根名称}Repository`
+- Service 类：`{业务名称}Service`
+- Domain 类：`{业务名称}DomainService`
+- DTO 类：`{用途}DTO`
+
+#### 方法命名
+- Repository: findById, findByXxx, save, remove
+- Service: create, update, delete, get, list
+- Controller: index, show, store, update, destroy
+
+#### 变量命名
+- 使用驼峰命名法
+- 布尔变量使用 is/has/can 等前缀
+
+
+## 控制器规范
+
+1. 控制器应该尽量保持简洁，主要职责是：
+   - 接收请求参数
+   - 调用相应的服务
+   - 返回响应结果
+
+2. 控制器方法命名应遵循 RESTful 风格：
+   - `index()`: 获取资源列表
+   - `show()`: 获取单个资源
+   - `store()`: 创建资源
+   - `update()`: 更新资源
+   - `destroy()`: 删除资源
+
+3. 控制器返回统一的响应格式：
+```php
+return $this->response->success([
+    'data' => $data,
+]);
+
+// 或者错误响应
+return $this->response->error('错误信息', 400);
+```
+
+## 服务层规范
+
+1. 服务层负责业务逻辑的处理，应该：
+   - 不包含控制器逻辑
+   - 不直接操作数据库
+   - 通过仓储接口获取数据
+   - 处理业务规则和流程
+
+2. 服务方法命名应该清晰表达业务意图：
+   - `createUser()`
+   - `updateUserProfile()`
+   - `changePassword()`
+
+## 仓储层规范
+
+1. 仓储层负责数据持久化，应该：
+   - 实现领域层定义的仓储接口
+   - 封装数据库操作细节
+   - 返回领域实体或集合
+   - 不包含业务逻辑
+
+2. 仓储方法命名应该清晰表达数据操作：
+   - `findById()`
+   - `findByEmail()`
+   - `save()`
+   - `remove()`
+
+## 异常处理规范
+
+1. 自定义异常应继承自 `Hyperf\Server\Exception\ServerException`
+2. 业务异常应该包含错误码和错误信息
+3. 使用全局异常处理器统一处理异常
+4. 不要在业务代码中使用 try-catch 捕获可预见的业务异常
+
+## 依赖注入规范
+
+1. 使用构造函数注入依赖
+2. 优先使用接口类型提示
+3. 使用构造函数注入，不使用 `#[Inject]` 注解
+```php
+class UserService
+{
+    public function __construct(
+        private readonly UserRepositoryInterface $userRepository,
+        private readonly LoggerFactory $loggerFactory
+    ) {
+        $this->logger = $loggerFactory->get(self::class);
+    }
+}
+```
+4. 避免服务循环依赖
+
+## 配置管理规范
+
+1. 配置文件应该放在 `config` 目录下
+2. 环境相关配置应该使用 `.env` 文件
+3. 敏感信息不应该硬编码在配置文件中
+4. 使用 `Hyperf\Config\Config` 获取配置
+
+## 日志规范
+
+1. 使用 `Hyperf\Logger\LoggerFactory` 创建日志实例
+2. 日志级别应该合理使用：
+   - DEBUG: 调试信息
+   - INFO: 一般信息
+   - WARNING: 警告信息
+   - ERROR: 错误信息
+   - CRITICAL: 严重错误
+3. 日志内容应该包含足够的上下文信息
+
+## 单元测试规范
+
+1. 使用 PHPUnit 编写单元测试
+2. 测试类应该放在 `test` 目录下
+3. 测试方法应该以 `test` 开头
+4. 每个测试方法应该只测试一个功能点
+5. 使用 Mock 对象隔离外部依赖
+
+## 性能优化规范
+
+1. 合理使用连接池
+2. 避免在请求处理过程中进行阻塞操作
+3. 使用协程并发处理 I/O 密集型任务
+4. 合理使用缓存减少数据库查询
+5. 使用异步任务处理耗时操作
+
+## 安全规范
+
+1. 输入验证：所有用户输入必须经过验证
+2. SQL 注入：使用参数化查询或 ORM
+3. XSS 防护：输出时进行 HTML 转义
+4. CSRF 防护：使用 CSRF Token
+5. 权限控制：实现细粒度的权限控制
+6. 敏感数据：加密存储敏感信息
+7. 日志记录：记录安全相关事件
+
+## 部署规范
+
+1. 使用 Docker 容器化部署
+2. 配置文件外部化
+3. 使用环境变量管理敏感配置
+4. 实现健康检查接口
+5. 配置监控和告警机制
+6. 实现平滑重启和优雅关闭
