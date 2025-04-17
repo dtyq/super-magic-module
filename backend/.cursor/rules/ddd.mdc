@@ -1,0 +1,144 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# DDD 分层架构目录规范
+
+```
+app/
+│   ├── Application/        # 应用层 - 协调领域对象完成用户请求的任务
+│   │   ├── Commands/       # 命令 - 
+│   │   └── Services/       # 应用服务 - 对外暴露的服务接口
+│   ├── Domain/             # 领域层 - 前端相关的核心业务逻辑
+│   │   ├── {领域}/          # 领域
+│   │   │   ├── Entities/   # 实体
+│   │   │   ├── ValueObjects/ # 值对象
+│   │   │   ├── Interfaces/   # 领域服务接口
+│   │   │   ├── Repositories/ # 仓储接口
+│   │   │   │   ├── Persistence/ # 仓储实现
+│   │   │   │   └── PO/         # 持久化对象
+│   │   │   └── Service/     # 领域服务实现
+│   └── Interfaces/         # 接口层 - 与外部系统交互
+│       ├── Api/            # API接口
+│       ├── Admin/          # 管理接口
+│       ├── Assembler/      # DTO 装配器
+│       ├── Console/        # 命令行接口
+│       └── DTO/            # 数据传输对象
+└── Infrastructure/         # 基础设施层 - 提供技术能力
+│   ├── Core/               # 核心基础设施
+│   └── Proxy/              # 代理实现     
+│   ├── Util/         # 工具类
+│   │   ├── Logger/  # 日志工具
+│   └── ExternalAPI/ # 外部服务
+├── Middleware/     # 中间件
+│   ├── Auth/     # 认证中间件
+│   ├── Log/     # 日志中间件
+├── Exception/   # 异常处理
+│   ├── Handler/ # 异常处理器
+│   ├── Domain/ # 领域异常
+│   └── System/ # 系统异常
+│
+├── Constants/  # 常量定义
+│
+└── Aspect/    # 切面处理
+```
+
+
+## 命名规范
+
+### 1. 实体类命名
+- 所有实体类必须以 `Entity` 结尾
+- 示例：`UserEntity`, `OrderEntity`
+
+### 2. 值对象命名
+- 所有值对象必须以 `VO` 结尾
+- 示例：`AddressVO`, `MoneyVO`
+
+### 3. 持久化对象命名
+- 所有持久化对象必须以 `PO` 结尾
+- 示例：`UserPO`, `OrderPO`
+
+### 4. 数据传输对象命名
+- 所有DTO必须以 `DTO` 结尾
+- 示例：`CreateUserDTO`, `UpdateOrderDTO`
+
+### 5. 仓储接口命名
+- 所有仓储接口必须以 `RepositoryInterface` 结尾
+- 示例：`UserRepositoryInterface`, `OrderRepositoryInterface`
+
+### 6. 仓储实现命名
+- 所有仓储实现必须以 `Repository` 结尾
+- 示例：`UserRepository`, `OrderRepository`
+
+### 7. 应用服务命名
+- 所有应用服务必须以 `AppService` 结尾
+- 示例：`UserAppService`, `OrderAppService`
+
+### 8. 领域服务命名
+- 所有领域服务必须以 `DomainService` 结尾
+- 示例：`UserDomainService`, `OrderDomainService`
+
+## 依赖规则
+
+1. 依赖方向必须从外层指向内层：
+   - Interfaces层可以依赖Application层和Domain层
+   - Application层可以依赖Domain层
+   - Domain层不应依赖外层
+
+2. 基础设施层的特殊性：
+   - Infrastructure层可以被所有层依赖
+   - Infrastructure层的实现类可以依赖Domain层的接口
+
+
+### DDD 实践规范
+
+#### 1. 领域层规范
+- 实体必须是充血模型
+- 值对象必须是不可变的
+- 领域服务处理跨实体的业务逻辑
+- 领域事件表达业务事件
+- 聚合根维护业务一致性
+
+#### 2. 应用层规范
+- 应用服务编排领域对象
+- 事务边界在应用服务层
+- 不包含业务规则
+- 负责协调领域对象
+
+#### 3. 基础设施层规范
+- 实现领域层定义的接口
+- 提供技术细节实现
+- 处理外部系统集成
+- 提供基础技术服务
+
+
+### DDD 规范下的实体设计与 #[Data] 注解使用规则
+#### 1. 实体设计规则
+##### 1.1 命名规范
+- **实体类名**：使用 PascalCase 并以 `Entity` 后缀结尾
+- **属性名**：使用 camelCase
+- **方法名**：使用 camelCase
+- **接口名**：使用 PascalCase 并以 `Interface` 后缀结尾
+- **值对象**：使用 PascalCase 并以 `ValueObject` 后缀结尾
+
+##### 1.2 文件结构
+```php
+<?php
+
+declare(strict_types=1);
+/**
+ * 版权声明
+ */
+
+namespace App\Domain\YourDomain\Entity;
+
+use PhpAccessor\Attribute\Data;
+
+#[Data]
+class YourEntity
+{
+    // 属性定义
+    // 方法定义
+}
+```
