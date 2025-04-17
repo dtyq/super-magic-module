@@ -12,6 +12,7 @@ use App\Domain\Admin\Entity\ValueObject\AdminGlobalSettingsType;
 use App\Domain\Admin\Entity\ValueObject\Extra\AbstractSettingExtra;
 use App\Infrastructure\Core\AbstractDTO;
 use App\Interfaces\Admin\DTO\Extra\AbstractSettingExtraDTO;
+use App\Interfaces\Admin\DTO\Extra\SettingExtraDTOInterface;
 use JsonSerializable;
 
 class AgentGlobalSettingsDTO extends AbstractDTO implements JsonSerializable
@@ -20,15 +21,7 @@ class AgentGlobalSettingsDTO extends AbstractDTO implements JsonSerializable
 
     private AdminGlobalSettingsStatus $status;
 
-    private ?AbstractSettingExtraDTO $extra = null;
-
-    public function __construct(?array $data = null)
-    {
-        if (isset($data['extra']) && is_array($data['extra'])) {
-            $data['extra'] = AbstractSettingExtraDTO::fromArrayAndType($data['extra'], AdminGlobalSettingsType::from($data['type']));
-        }
-        parent::__construct($data);
-    }
+    private ?SettingExtraDTOInterface $extra = null;
 
     public function setType(AdminGlobalSettingsType|int $type): self
     {
@@ -42,9 +35,11 @@ class AgentGlobalSettingsDTO extends AbstractDTO implements JsonSerializable
         return $this;
     }
 
-    public function setExtra(null|AbstractSettingExtra|AbstractSettingExtraDTO $extra): self
+    public function setExtra(null|AbstractSettingExtra|array|SettingExtraDTOInterface $extra): self
     {
-        if ($extra instanceof AbstractSettingExtra) {
+        if (is_array($extra)) {
+            $this->extra = AbstractSettingExtraDTO::fromArrayAndType($extra, $this->getType());
+        } elseif ($extra instanceof AbstractSettingExtra) {
             $this->extra = AbstractSettingExtraDTO::fromExtra($extra);
         } else {
             $this->extra = $extra;
@@ -62,7 +57,7 @@ class AgentGlobalSettingsDTO extends AbstractDTO implements JsonSerializable
         return $this->status;
     }
 
-    public function getExtra(): null|AbstractSettingExtraDTO|array
+    public function getExtra(): null|array|SettingExtraDTOInterface
     {
         return $this->extra;
     }

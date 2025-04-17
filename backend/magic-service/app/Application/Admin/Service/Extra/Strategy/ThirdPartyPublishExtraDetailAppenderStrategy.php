@@ -9,14 +9,14 @@ namespace App\Application\Admin\Service\Extra\Strategy;
 
 use App\Application\Chat\Service\MagicAgentAppService;
 use App\Domain\Agent\Entity\MagicAgentEntity;
-use App\Interfaces\Admin\DTO\Extra\AbstractSettingExtraDTO;
+use App\Interfaces\Admin\DTO\Extra\SettingExtraDTOInterface;
 use App\Interfaces\Admin\DTO\Extra\ThirdPartyPublishExtraDTO;
 use App\Interfaces\Authorization\Web\MagicUserAuthorization;
 use InvalidArgumentException;
 
 class ThirdPartyPublishExtraDetailAppenderStrategy implements ExtraDetailAppenderStrategyInterface
 {
-    public function appendExtraDetail(AbstractSettingExtraDTO $extraDTO, MagicUserAuthorization $userAuthorization): AbstractSettingExtraDTO
+    public function appendExtraDetail(SettingExtraDTOInterface $extraDTO, MagicUserAuthorization $userAuthorization): SettingExtraDTOInterface
     {
         if (! $extraDTO instanceof ThirdPartyPublishExtraDTO) {
             throw new InvalidArgumentException('Expected ThirdPartyPublishExtraDTO');

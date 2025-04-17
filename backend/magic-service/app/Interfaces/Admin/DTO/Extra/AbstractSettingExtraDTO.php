@@ -15,7 +15,7 @@ use App\Domain\Admin\Entity\ValueObject\Extra\ThirdPartyPublishExtra;
 use App\Infrastructure\Core\AbstractDTO;
 use JsonSerializable;
 
-abstract class AbstractSettingExtraDTO extends AbstractDTO implements JsonSerializable
+abstract class AbstractSettingExtraDTO extends AbstractDTO implements JsonSerializable, SettingExtraDTOInterface
 {
     public static function fromExtra(AbstractSettingExtra $extra): AbstractSettingExtraDTO
     {

@@ -11,15 +11,15 @@ use App\Application\Admin\Service\Extra\Strategy\AssistantCreateExtraDetailAppen
 use App\Application\Admin\Service\Extra\Strategy\DefaultFriendExtraDetailAppenderStrategy;
 use App\Application\Admin\Service\Extra\Strategy\ExtraDetailAppenderStrategyInterface;
 use App\Application\Admin\Service\Extra\Strategy\ThirdPartyPublishExtraDetailAppenderStrategy;
-use App\Interfaces\Admin\DTO\Extra\AbstractSettingExtraDTO;
 use App\Interfaces\Admin\DTO\Extra\AssistantCreateExtraDTO;
 use App\Interfaces\Admin\DTO\Extra\DefaultFriendExtraDTO;
+use App\Interfaces\Admin\DTO\Extra\SettingExtraDTOInterface;
 use App\Interfaces\Admin\DTO\Extra\ThirdPartyPublishExtraDTO;
 use InvalidArgumentException;
 
 class ExtraDetailAppenderFactory
 {
-    public static function createStrategy(AbstractSettingExtraDTO $extraDTO): ExtraDetailAppenderStrategyInterface
+    public static function createStrategy(SettingExtraDTOInterface $extraDTO): ExtraDetailAppenderStrategyInterface
     {
         return match (true) {
             $extraDTO instanceof DefaultFriendExtraDTO => new DefaultFriendExtraDetailAppenderStrategy(),

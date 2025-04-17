@@ -12,8 +12,8 @@ use App\Application\Chat\Service\MagicUserContactAppService;
 use App\Domain\Admin\Entity\ValueObject\Item\Member\MemberType;
 use App\Domain\Contact\DTO\DepartmentQueryDTO;
 use App\Domain\Contact\DTO\UserQueryDTO;
-use App\Interfaces\Admin\DTO\Extra\AbstractSettingExtraDTO;
 use App\Interfaces\Admin\DTO\Extra\AssistantCreateExtraDTO;
+use App\Interfaces\Admin\DTO\Extra\SettingExtraDTOInterface;
 use App\Interfaces\Authorization\Web\MagicUserAuthorization;
 use App\Interfaces\Chat\DTO\UserDepartmentDetailDTO;
 use App\Interfaces\Chat\DTO\UserDetailDTO;
@@ -21,7 +21,7 @@ use InvalidArgumentException;
 
 class AssistantCreateExtraDetailAppenderStrategy implements ExtraDetailAppenderStrategyInterface
 {
-    public function appendExtraDetail(AbstractSettingExtraDTO $extraDTO, MagicUserAuthorization $userAuthorization): AbstractSettingExtraDTO
+    public function appendExtraDetail(SettingExtraDTOInterface $extraDTO, MagicUserAuthorization $userAuthorization): SettingExtraDTOInterface
     {
         if (! $extraDTO instanceof AssistantCreateExtraDTO) {
             throw new InvalidArgumentException('Expected AssistantCreateExtraDTO');

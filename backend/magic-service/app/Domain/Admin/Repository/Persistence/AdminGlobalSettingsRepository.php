@@ -11,6 +11,7 @@ use App\Domain\Admin\Entity\AdminGlobalSettingsEntity;
 use App\Domain\Admin\Entity\ValueObject\AdminGlobalSettingsType;
 use App\Domain\Admin\Repository\Facade\AdminGlobalSettingsRepositoryInterface;
 use App\Domain\Admin\Repository\Persistence\Model\AdminGlobalSettingsModel;
+use Hyperf\DbConnection\Db;
 
 class AdminGlobalSettingsRepository implements AdminGlobalSettingsRepositoryInterface
 {
@@ -47,14 +48,15 @@ class AdminGlobalSettingsRepository implements AdminGlobalSettingsRepositoryInte
     public function getSettingsByTypesAndOrganization(array $types, string $organization): array
     {
         $typeValues = array_map(fn ($type) => $type->value, $types);
-        $models = AdminGlobalSettingsModel::query()
+        $query = AdminGlobalSettingsModel::query()
             ->whereIn('type', $typeValues)
-            ->where('organization', $organization)
-            ->get();
+            ->where('organization', $organization);
+
+        $models = Db::select($query->toSql(), $query->getBindings());
 
         $settings = [];
         foreach ($models as $model) {
-            $settings[] = new AdminGlobalSettingsEntity($model->toArray());
+            $settings[] = new AdminGlobalSettingsEntity($model);
         }
 
         return $settings;
@@ -93,11 +95,12 @@ class AdminGlobalSettingsRepository implements AdminGlobalSettingsRepositoryInte
         $typeValues = array_map(fn ($entity) => $entity->getType()->value, $entities);
         $organization = $entities[0]->getOrganization();
 
-        $models = AdminGlobalSettingsModel::query()
+        $query = AdminGlobalSettingsModel::query()
             ->whereIn('type', $typeValues)
-            ->where('organization', $organization)
-            ->get();
+            ->where('organization', $organization);
 
-        return array_map(fn ($model) => new AdminGlobalSettingsEntity($model->toArray()), $models->all());
+        $models = Db::select($query->toSql(), $query->getBindings());
+
+        return array_map(fn ($model) => new AdminGlobalSettingsEntity($model), $models);
     }
 }

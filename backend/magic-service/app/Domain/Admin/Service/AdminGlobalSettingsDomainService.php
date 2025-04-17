@@ -8,10 +8,10 @@ declare(strict_types=1);
 namespace App\Domain\Admin\Service;
 
 use App\Domain\Admin\Entity\AdminGlobalSettingsEntity;
+use App\Domain\Admin\Entity\ValueObject\AdminDataIsolation;
 use App\Domain\Admin\Entity\ValueObject\AdminGlobalSettingsStatus;
 use App\Domain\Admin\Entity\ValueObject\AdminGlobalSettingsType;
 use App\Domain\Admin\Repository\Facade\AdminGlobalSettingsRepositoryInterface;
-use App\Domain\Contact\Entity\ValueObject\DataIsolation;
 
 readonly class AdminGlobalSettingsDomainService
 {
@@ -20,7 +20,7 @@ readonly class AdminGlobalSettingsDomainService
     ) {
     }
 
-    public function getSettingsByType(AdminGlobalSettingsType $type, DataIsolation $dataIsolation): AdminGlobalSettingsEntity
+    public function getSettingsByType(AdminGlobalSettingsType $type, AdminDataIsolation $dataIsolation): AdminGlobalSettingsEntity
     {
         $settings = $this->globalSettingsRepository->getSettingsByTypeAndOrganization(
             $type,
@@ -42,7 +42,7 @@ readonly class AdminGlobalSettingsDomainService
 
     public function updateSettings(
         AdminGlobalSettingsEntity $settings,
-        DataIsolation $dataIsolation
+        AdminDataIsolation $dataIsolation
     ): AdminGlobalSettingsEntity {
         $settings->setOrganization($dataIsolation->getCurrentOrganizationCode());
         return $this->globalSettingsRepository->updateSettings($settings);
@@ -52,7 +52,7 @@ readonly class AdminGlobalSettingsDomainService
      * @param AdminGlobalSettingsType[] $types
      * @return AdminGlobalSettingsEntity[]
      */
-    public function getSettingsByTypes(array $types, DataIsolation $dataIsolation): array
+    public function getSettingsByTypes(array $types, AdminDataIsolation $dataIsolation): array
     {
         $settings = $this->globalSettingsRepository->getSettingsByTypesAndOrganization(
             $types,
@@ -88,7 +88,7 @@ readonly class AdminGlobalSettingsDomainService
      * @param AdminGlobalSettingsEntity[] $entities
      * @return AdminGlobalSettingsEntity[]
      */
-    public function updateSettingsBatch(array $entities, DataIsolation $dataIsolation): array
+    public function updateSettingsBatch(array $entities, AdminDataIsolation $dataIsolation): array
     {
         foreach ($entities as $entity) {
             $entity->setOrganization($dataIsolation->getCurrentOrganizationCode());

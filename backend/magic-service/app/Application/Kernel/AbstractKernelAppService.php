@@ -8,6 +8,7 @@ declare(strict_types=1);
 namespace App\Application\Kernel;
 
 use App\Application\Flow\ExecuteManager\ExecutionData\Operator;
+use App\Domain\Admin\Entity\ValueObject\AdminDataIsolation;
 use App\Domain\Authentication\Entity\ValueObject\AuthenticationDataIsolation;
 use App\Domain\Contact\Entity\ValueObject\DataIsolation as ContactDataIsolation;
 use App\Domain\File\Service\FileDomainService;
@@ -101,6 +102,17 @@ abstract class AbstractKernelAppService
     protected function createKnowledgeBaseDataIsolation(Authenticatable|BaseDataIsolation $authorization): KnowledgeBaseDataIsolation
     {
         $dataIsolation = new KnowledgeBaseDataIsolation();
+        if ($authorization instanceof BaseDataIsolation) {
+            $dataIsolation->extends($authorization);
+            return $dataIsolation;
+        }
+        $this->handleByAuthorization($authorization, $dataIsolation);
+        return $dataIsolation;
+    }
+
+    protected function createAdminDataIsolation(Authenticatable|BaseDataIsolation $authorization): AdminDataIsolation
+    {
+        $dataIsolation = new AdminDataIsolation();
         if ($authorization instanceof BaseDataIsolation) {
             $dataIsolation->extends($authorization);
             return $dataIsolation;

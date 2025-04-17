@@ -9,11 +9,12 @@ namespace App\Domain\Admin\Entity;
 
 use App\Domain\Admin\Entity\ValueObject\AdminGlobalSettingsStatus;
 use App\Domain\Admin\Entity\ValueObject\AdminGlobalSettingsType;
-use App\Domain\Admin\Entity\ValueObject\Extra\AbstractSettingExtra;
 use App\Domain\Admin\Entity\ValueObject\Extra\AssistantCreateExtra;
 use App\Domain\Admin\Entity\ValueObject\Extra\DefaultFriendExtra;
+use App\Domain\Admin\Entity\ValueObject\Extra\SettingExtraInterface;
 use App\Domain\Admin\Entity\ValueObject\Extra\ThirdPartyPublishExtra;
 use App\Domain\Contact\Entity\AbstractEntity;
+use Hyperf\Codec\Json;
 
 class AdminGlobalSettingsEntity extends AbstractEntity
 {
@@ -21,29 +22,15 @@ class AdminGlobalSettingsEntity extends AbstractEntity
 
     protected AdminGlobalSettingsType $type;
 
-    protected AdminGlobalSettingsStatus $status;
+    protected AdminGlobalSettingsStatus $status = AdminGlobalSettingsStatus::DISABLED;
 
-    protected ?AbstractSettingExtra $extra = null;
+    protected ?SettingExtraInterface $extra = null;
 
     protected string $organization;
 
     protected string $createdAt;
 
     protected string $updatedAt;
-
-    public function __construct(array $data = [])
-    {
-        if (isset($data['extra'])) {
-            // 根据 type 来决定使用哪个具体的 Extra 类
-            $extraClass = $this->getExtraClassByType($data['type'] ?? null);
-            if ($extraClass) {
-                $data['extra'] = new $extraClass($data['extra']);
-            }
-        }
-
-        parent::__construct($data);
-        $this->status = $this->status ?? AdminGlobalSettingsStatus::DISABLED;
-    }
 
     public function getId(): int
     {
@@ -78,13 +65,21 @@ class AdminGlobalSettingsEntity extends AbstractEntity
         return $this;
     }
 
-    public function getExtra(): ?AbstractSettingExtra
+    public function getExtra(): ?SettingExtraInterface
     {
         return $this->extra;
     }
 
-    public function setExtra(?AbstractSettingExtra $extra): self
+    public function setExtra(null|SettingExtraInterface|string $extra): self
     {
+        if (is_string($extra)) {
+            $extra = Json::decode($extra);
+            // 根据 type 来决定使用哪个具体的 Extra 类
+            $extraClass = $this->getExtraClassByType($this->getType()->value);
+            if ($extraClass) {
+                $extra = new $extraClass($extra);
+            }
+        }
         $this->extra = $extra;
         return $this;
     }

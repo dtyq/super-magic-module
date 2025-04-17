@@ -8,6 +8,7 @@ declare(strict_types=1);
 namespace App\Application\Admin\Service;
 
 use App\Application\Admin\Service\Extra\Factory\ExtraDetailAppenderFactory;
+use App\Application\Kernel\AbstractKernelAppService;
 use App\Domain\Admin\Entity\AdminGlobalSettingsEntity;
 use App\Domain\Admin\Entity\ValueObject\AdminGlobalSettingsName;
 use App\Domain\Admin\Entity\ValueObject\AdminGlobalSettingsType;
@@ -19,7 +20,6 @@ use App\Domain\Agent\Entity\MagicAgentEntity;
 use App\Domain\Agent\Service\MagicAgentDomainService;
 use App\Domain\Agent\Service\MagicAgentVersionDomainService;
 use App\Domain\File\Service\FileDomainService;
-use App\Infrastructure\Core\Traits\DataIsolationTrait;
 use App\Interfaces\Admin\DTO\AgentGlobalSettingsDTO;
 use App\Interfaces\Admin\DTO\Extra\Item\AgentItemDTO;
 use App\Interfaces\Admin\DTO\Response\GetPublishedAgentsResponseDTO;
@@ -29,10 +29,8 @@ use Qbhy\HyperfAuth\Authenticatable;
 
 use function Hyperf\Collection\last;
 
-class AdminAgentAppService
+class AdminAgentAppService extends AbstractKernelAppService
 {
-    use DataIsolationTrait;
-
     public function __construct(
         private readonly AdminGlobalSettingsDomainService $globalSettingsDomainService,
         private readonly MagicAgentDomainService $magicAgentDomainService,
@@ -47,7 +45,7 @@ class AdminAgentAppService
      */
     public function getGlobalSettings(Authenticatable $authorization): array
     {
-        $dataIsolation = $this->createDataIsolation($authorization);
+        $dataIsolation = $this->createAdminDataIsolation($authorization);
         $allSettings = [];
 
         // 获取所有 Agent 相关的设置类型
@@ -78,7 +76,7 @@ class AdminAgentAppService
         Authenticatable $authorization,
         array $settings
     ): array {
-        $dataIsolation = $this->createDataIsolation($authorization);
+        $dataIsolation = $this->createAdminDataIsolation($authorization);
         $agentSettingsTypes = array_map(fn ($type) => $type->value, AdminGlobalSettingsType::getAssistantGlobalSettingsType());
         $agentSettingsTypes = array_flip($agentSettingsTypes);
 
@@ -187,7 +185,7 @@ class AdminAgentAppService
      */
     private function getSelectedDefaultFriendRootIds(Authenticatable $authorization): array
     {
-        $dataIsolation = $this->createDataIsolation($authorization);
+        $dataIsolation = $this->createAdminDataIsolation($authorization);
         $settings = $this->globalSettingsDomainService->getSettingsByType(AdminGlobalSettingsType::DEFAULT_FRIEND, $dataIsolation);
         /** @var ?DefaultFriendExtra $extra */
         $extra = $settings->getExtra();

@@ -10,7 +10,7 @@ namespace App\Domain\Admin\Entity\ValueObject\Extra;
 use App\Domain\Admin\Entity\ValueObject\AdminGlobalSettingsType;
 use App\Infrastructure\Core\AbstractValueObject;
 
-class AbstractSettingExtra extends AbstractValueObject
+class AbstractSettingExtra extends AbstractValueObject implements SettingExtraInterface
 {
     public static function fromDataByType(?array $data, AdminGlobalSettingsType $type): ?AbstractSettingExtra
     {
