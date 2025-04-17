@@ -54,18 +54,18 @@ class MagicAgentAppService extends AbstractAppService
      * @param MagicUserAuthorization $authenticatable
      * @return MagicAgentEntity[]
      */
-    public function getAgentsForAdmin(array $botIds, Authenticatable $authenticatable): array
+    public function getAgentsForAdmin(array $agentIds, Authenticatable $authenticatable): array
     {
         // 获取机器人信息
-        $magicBotEntities = $this->magicAgentDomainService->getAgentByIds($botIds);
+        $magicAgentEntities = $this->magicAgentDomainService->getAgentByIds($agentIds);
 
-        $filePaths = array_column($magicBotEntities, 'avatar');
+        $filePaths = array_column($magicAgentEntities, 'agent_avatar');
         $fileLinks = $this->fileDomainService->getLinks($authenticatable->getOrganizationCode(), $filePaths);
 
-        foreach ($magicBotEntities as $magicBotEntity) {
-            $fileLink = $fileLinks[$magicBotEntity->getRobotAvatar()] ?? null;
-            $magicBotEntity->setRobotAvatar($fileLink?->getUrl() ?? '');
+        foreach ($magicAgentEntities as $magicAgentEntity) {
+            $fileLink = $fileLinks[$magicAgentEntity->getAgentAvatar()] ?? null;
+            $magicAgentEntity->setAgentAvatar($fileLink?->getUrl() ?? '');
         }
-        return $magicBotEntities;
+        return $magicAgentEntities;
     }
 }

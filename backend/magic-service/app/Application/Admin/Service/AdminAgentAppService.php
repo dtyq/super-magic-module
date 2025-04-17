@@ -130,7 +130,7 @@ class AdminAgentAppService
         }
 
         // 获取头像url
-        $avatars = array_column($agentVersions, 'robot_avatar');
+        $avatars = array_column($agentVersions, 'agent_avatar');
         $fileLinks = $this->fileDomainService->getLinks($organizationCode, $avatars);
 
         // 转换为AgentItemDTO格式
@@ -138,10 +138,10 @@ class AdminAgentAppService
         $result = [];
         foreach ($agentVersions as $agent) {
             /** @var ?FileLink $avatar */
-            $avatar = $fileLinks[$agent->getRobotAvatar()] ?? null;
+            $avatar = $fileLinks[$agent->getAgentAvatar()] ?? null;
             $item = new AgentItemDTO();
             $item->setRootId($agent->getRootId());
-            $item->setName($agent->getRobotName());
+            $item->setName($agent->getAgentName());
             $item->setAvatar($avatar?->getUrl() ?? '');
             $result[] = $item;
         }

@@ -246,17 +246,17 @@ class MagicAgentVersionRepository implements MagicAgentVersionRepositoryInterfac
     }
 
     /**
-     * 基于游标分页获取指定组织的机器人版本列表.
+     * 基于游标分页获取指定组织的助理版本列表.
      * @param string $organizationCode 组织代码
-     * @param array $botVersionIds 机器人版本ID列表
+     * @param array $agentVersionIds 助理版本ID列表
      * @param string $cursor 游标ID，如果为空字符串则从最新开始
      * @param int $pageSize 每页数量
      */
-    public function getAgentsByOrganizationWithCursor(string $organizationCode, array $botVersionIds, string $cursor, int $pageSize): array
+    public function getAgentsByOrganizationWithCursor(string $organizationCode, array $agentVersionIds, string $cursor, int $pageSize): array
     {
         $query = $this->agentVersionModel::query()
             ->where('organization_code', $organizationCode)
-            ->whereIn('id', $botVersionIds)
+            ->whereIn('id', $agentVersionIds)
             ->orderBy('id', 'desc')
             ->limit($pageSize);
 

@@ -35,8 +35,8 @@ class ThirdPartyPublishExtraDetailAppenderStrategy implements ExtraDetailAppende
         $agentEntities = array_column($agentEntities, null, 'id');
         foreach ($extraDTO->getSelectedAgents() as $selectedAgent) {
             $agentEntity = $agentEntities[(int) $selectedAgent->getRootId()] ?? null;
-            $selectedAgent->setName($agentEntity?->getRobotName())
-                ->setAvatar($agentEntity?->getRobotAvatar());
+            $selectedAgent->setName($agentEntity?->getAgentName())
+                ->setAvatar($agentEntity?->getAgentAvatar());
         }
         return $this;
     }
