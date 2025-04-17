@@ -21,6 +21,7 @@ use App\Domain\Agent\Service\MagicAgentDomainService;
 use App\Domain\Agent\Service\MagicAgentVersionDomainService;
 use App\Domain\File\Service\FileDomainService;
 use App\Interfaces\Admin\DTO\AgentGlobalSettingsDTO;
+use App\Interfaces\Admin\DTO\Extra\AbstractSettingExtraDTO;
 use App\Interfaces\Admin\DTO\Extra\Item\AgentItemDTO;
 use App\Interfaces\Admin\DTO\Response\GetPublishedAgentsResponseDTO;
 use App\Interfaces\Authorization\Web\MagicUserAuthorization;
@@ -87,10 +88,12 @@ class AdminAgentAppService extends AbstractKernelAppService
 
         // 转换为实体对象
         $entities = array_map(function ($setting) {
+            /** @var AbstractSettingExtraDTO $extra */
+            $extra = $setting->getExtra();
             return (new AdminGlobalSettingsEntity())
                 ->setType($setting->getType())
                 ->setStatus($setting->getStatus())
-                ->setExtra(AbstractSettingExtra::fromDataByType($setting->getExtra()->toArray(), $setting->getType()));
+                ->setExtra(AbstractSettingExtra::fromDataByType($extra->toArray(), $setting->getType()));
         }, $settingsToUpdate);
 
         // 一次性更新所有设置
