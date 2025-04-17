@@ -4,7 +4,6 @@ declare(strict_types=1);
 /**
  * Copyright (c) The Magic , Distributed under the software license
  */
-use App\Infrastructure\Util\Middleware\RequestContextMiddleware;
 use App\Interfaces\ModelAdmin\Facade\ServiceProviderApi;
 use Hyperf\HttpServer\Router\Router;
 
@@ -35,24 +34,6 @@ Router::addGroup('/api/v1/admin', static function () {
         Router::post('/connectivity-test', [ServiceProviderApi::class, 'connectivityTest']);
         Router::get('/by-category', [ServiceProviderApi::class, 'getServiceProvidersByCategory']);
         Router::get('/non-official-llm', [ServiceProviderApi::class, 'getNonOfficialLlmProviders']);
+        Router::get('/office-info', [ServiceProviderApi::class, 'isCurrentOrganizationOfficial']);
     });
 });
-
-// 超级管理员路由 todo xhy 先保留，新功能还需要等待开发
-Router::addGroup('/api/v1/super/admin', static function () {
-    Router::addGroup('/service-providers', static function () {
-        Router::post('', [ServiceProviderApi::class, 'addServiceProvider']);
-        Router::put('', [ServiceProviderApi::class, 'updateServiceProvider']);
-        Router::delete('/{serviceProviderConfigId}', [ServiceProviderApi::class, 'deleteServiceProviderForAdmin']);
-
-        // 模型管理
-        Router::post('/models', [ServiceProviderApi::class, 'saveModelToServiceProviderForAdmin']);
-        Router::delete('/models/{modelId}', [ServiceProviderApi::class, 'deleteModelForAdmin']);
-
-        // 模型标识管理
-        Router::post('/model-ids', [ServiceProviderApi::class, 'addModelId']);
-
-        // 原始模型管理
-        Router::delete('/original-models/{modelId}', [ServiceProviderApi::class, 'deleteOriginalModel']);
-    });
-}, ['middleware' => [RequestContextMiddleware::class]]);

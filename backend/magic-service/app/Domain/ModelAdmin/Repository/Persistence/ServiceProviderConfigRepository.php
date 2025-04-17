@@ -41,6 +41,15 @@ class ServiceProviderConfigRepository extends AbstractModelRepository
         return ServiceProviderConfigEntityFactory::toEntity($model->toArray());
     }
 
+    public function findByIdAndOrganizationCode(string $id, string $organizationCode): ?ServiceProviderConfigEntity
+    {
+        $model = $this->configModel::query()->where('id', $id)->where('organization_code', $organizationCode)->first();
+        if (! $model) {
+            return null;
+        }
+        return ServiceProviderConfigEntityFactory::toEntity($model->toArray());
+    }
+
     public function getById(int $id): ?ServiceProviderConfigEntity
     {
         $model = $this->configModel::query()->where('id', $id)->first();

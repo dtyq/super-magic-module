@@ -9,18 +9,14 @@ namespace App\Interfaces\ModelAdmin\Facade;
 
 use App\Application\Chat\Service\MagicAccountAppService;
 use App\Application\Chat\Service\MagicUserContactAppService;
-use App\Application\Kernel\SuperPermissionEnum;
 use App\Application\ModelAdmin\Service\ServiceProviderAppService;
 use App\Domain\ModelAdmin\Constant\ModelType;
 use App\Domain\ModelAdmin\Constant\ServiceProviderCategory;
 use App\Domain\ModelAdmin\Entity\ServiceProviderConfigEntity;
-use App\Domain\ModelAdmin\Entity\ServiceProviderEntity;
 use App\Domain\ModelAdmin\Entity\ServiceProviderModelsEntity;
 use App\Domain\ModelAdmin\Entity\ValueObject\ServiceProviderConfigDTO;
-use App\ErrorCode\ChatErrorCode;
 use App\ErrorCode\UserErrorCode;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
-use App\Infrastructure\Util\Auth\PermissionChecker;
 use App\Interfaces\Authorization\Web\MagicUserAuthorization;
 use Dtyq\ApiResponse\Annotation\ApiResponse;
 use Hyperf\Di\Annotation\Inject;
@@ -77,24 +73,15 @@ class ServiceProviderApi extends AbstractApi
         $this->serviceProviderAppService->updateModelStatus($modelId, $status, $organizationCode);
     }
 
-    // 获取模型列表(获取最新的模型) 也就是刷新当前厂商的模型信息
-    public function refreshModels(RequestInterface $request)
+    // 获取当前组织是否是官方组织
+    public function isCurrentOrganizationOfficial(): array
     {
-        $this->isInWhiteListForOrgization();
-        $authenticatable = $this->getAuthorization();
-        $serviceProviderConfigId = $request->input('service_provider_config_id');
-        /** @var MagicUserAuthorization $authenticatable */
-        $organizationCode = $authenticatable->getOrganizationCode();
-        $this->serviceProviderAppService->refreshModels($serviceProviderConfigId, $organizationCode);
-    }
-
-    // 添加服务商
-    public function addServiceProvider(RequestInterface $request)
-    {
-        $this->isInWhiteListForAdmin();
-        $authenticatable = $this->getAuthorization();
-        $serviceProviderEntity = new ServiceProviderEntity($request->all());
-        return $this->serviceProviderAppService->addServiceProvider($serviceProviderEntity);
+        $officialOrganization = config('service_provider.office_organization');
+        $organizationCode = $this->getAuthorization()->getOrganizationCode();
+        return [
+            'is_official' => $officialOrganization === $organizationCode,
+            'official_organization' => $officialOrganization,
+        ];
     }
 
     // 保存模型
@@ -147,15 +134,6 @@ class ServiceProviderApi extends AbstractApi
         $this->getAuthorization();
         $modelId = $request->input('model_id');
         $this->serviceProviderAppService->addOriginalModel($modelId);
-    }
-
-    // 删除原始模型id
-    public function deleteOriginalModel(RequestInterface $request, ?string $modelId = null)
-    {
-        $this->isInWhiteListForAdmin();
-        $modelId = $modelId ?? $request->input('model_id') ?? '';
-        $this->getAuthorization();
-        $this->serviceProviderAppService->deleteOriginalModel($modelId);
     }
 
     // 根据服务商分类获取模型
@@ -226,45 +204,6 @@ class ServiceProviderApi extends AbstractApi
         $this->serviceProviderAppService->deleteModelIdForOrganization($modelId, $authenticatable);
     }
 
-    // 删除模型(一般是官方的和文生图的模型)
-    public function deleteModelForAdmin(RequestInterface $request, ?string $modelId = null)
-    {
-        $this->isInWhiteListForAdmin();
-        /** @var MagicUserAuthorization $authenticatable */
-        $authenticatable = $this->getAuthorization();
-        $modelId = $modelId ?? $request->input('model_id') ?? '';
-        $this->serviceProviderAppService->deleteModelForAdmin($authenticatable, $modelId);
-    }
-
-    public function saveModelToServiceProviderForAdmin(RequestInterface $request)
-    {
-        $this->isInWhiteListForAdmin();
-        /** @var MagicUserAuthorization $authenticatable */
-        $authenticatable = $this->getAuthorization();
-        $serviceProviderModelsEntity = new ServiceProviderModelsEntity($request->all());
-        $serviceProviderModelsEntity->setOrganizationCode($authenticatable->getOrganizationCode());
-        return $this->serviceProviderAppService->saveModelToServiceProviderForAdmin($serviceProviderModelsEntity);
-    }
-
-    // 删除服务商
-    public function deleteServiceProviderForAdmin(RequestInterface $request, ?string $serviceProviderConfigId = null)
-    {
-        $this->isInWhiteListForAdmin();
-        $serviceProviderConfigId = $serviceProviderConfigId ?? $request->input('service_provider_config_id') ?? '';
-        /** @var MagicUserAuthorization $authenticatable */
-        $authenticatable = $this->getAuthorization();
-        $this->serviceProviderAppService->deleteServiceProviderForAdmin($serviceProviderConfigId, $authenticatable->getOrganizationCode());
-    }
-
-    public function updateServiceProvider(RequestInterface $request)
-    {
-        $this->isInWhiteListForAdmin();
-        /** @var MagicUserAuthorization $authenticatable */
-        $authenticatable = $this->getAuthorization();
-        $serviceProviderEntity = new ServiceProviderEntity($request->all());
-        return $this->serviceProviderAppService->updateServiceProvider($serviceProviderEntity, $authenticatable->getOrganizationCode());
-    }
-
     /**
      * 获取所有非官方LLM服务商列表
      * 直接从数据库中查询category为llm且provider_type不为OFFICIAL的服务商
@@ -276,14 +215,6 @@ class ServiceProviderApi extends AbstractApi
         $authenticatable = $this->getAuthorization();
         // 直接获取所有LLM类型的非官方服务商
         return $this->serviceProviderAppService->getAllNonOfficialProviders(ServiceProviderCategory::LLM, $authenticatable->getOrganizationCode());
-    }
-
-    public function addModelId(RequestInterface $request)
-    {
-        $this->isInWhiteListForAdmin();
-        $this->getAuthorization();
-        $modelId = $request->input('model_id');
-        return $this->serviceProviderAppService->addModelId($modelId);
     }
 
     private function getPhone(string $userId)
@@ -304,15 +235,6 @@ class ServiceProviderApi extends AbstractApi
         /** @var MagicUserAuthorization $authenticatable */
         if (empty($whiteMap) || ! isset($whiteMap[$authenticatable->getOrganizationCode()]) || ! in_array($phone, $whiteMap[$authenticatable->getOrganizationCode()])) {
             ExceptionBuilder::throw(UserErrorCode::ORGANIZATION_NOT_AUTHORIZE);
-        }
-    }
-
-    private function isInWhiteListForAdmin()
-    {
-        /** @var MagicUserAuthorization $authenticatable */
-        $authenticatable = $this->getAuthorization();
-        if (! PermissionChecker::mobileHasPermission($authenticatable->getMobile(), SuperPermissionEnum::SERVICE_PROVIDER_ADMIN)) {
-            ExceptionBuilder::throw(ChatErrorCode::OPERATION_FAILED);
         }
     }
 }

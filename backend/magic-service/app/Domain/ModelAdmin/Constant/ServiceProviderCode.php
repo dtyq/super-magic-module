@@ -8,6 +8,7 @@ declare(strict_types=1);
 namespace App\Domain\ModelAdmin\Constant;
 
 use App\Domain\ModelAdmin\Entity\ValueObject\ServiceProviderConfig;
+use Hyperf\Odin\Model\AwsBedrockModel;
 use Hyperf\Odin\Model\AzureOpenAIModel;
 use Hyperf\Odin\Model\DoubaoModel;
 use Hyperf\Odin\Model\OpenAIModel;
@@ -26,12 +27,14 @@ enum ServiceProviderCode: string
     case Tencent = 'Tencent';
     case TTAPI = 'TTAPI';
     case MiracleVision = 'MiracleVision';
+    case AWSBedrock = 'AWSBedrock';
 
     public function getImplementation(): string
     {
         return match ($this) {
             self::MicrosoftAzure => AzureOpenAIModel::class,
             self::Volcengine => DoubaoModel::class,
+            self::AWSBedrock => AwsBedrockModel::class,
             default => OpenAIModel::class,
         };
     }
@@ -43,7 +46,12 @@ enum ServiceProviderCode: string
                 'api_key' => $config->getApiKey(),
                 'api_base' => $config->getUrl(),
                 'api_version' => $config->getApiVersion(),
-                'deployment_name' => $config->getDeploymentName() ?: $name,
+                'deployment_name' => $config->getDeploymentName(),
+            ],
+            self::AWSBedrock => [
+                'access_key' => $config->getAk(),
+                'secret_key' => $config->getSk(),
+                'region' => $config->getRegion(),
             ],
             default => [
                 'api_key' => $config->getApiKey(),

@@ -42,34 +42,6 @@ class ServiceProviderServiceTest extends BaseTest
         $this->assertNotNull($aiVendorConfigDTO);
     }
 
-    public function testUpdateSeriveProvider()
-    {
-        $updateName = '测试修改接口-';
-        $aiVendorDomainService = $this->getServiceProviderService();
-        $aiVendorEntities = $aiVendorDomainService->getAllServiceProvider(1, 1);
-        if (count($aiVendorEntities) === 0) {
-            return;
-        }
-        $aiVendorEntity = $aiVendorEntities[0];
-        $newName = $updateName . $aiVendorEntity->getName();
-        $aiVendorEntity->setName($newName);
-        $aiVendorDomainService->updateServiceProviderById($aiVendorEntity);
-        $this->assertEquals($newName, $aiVendorEntity->getName());
-    }
-
-    public function testDeleteServicePropvider()
-    {
-        $aiVendorDomainService = $this->getServiceProviderService();
-        $aiVendorEntities = $aiVendorDomainService->getAllServiceProvider(1, 1);
-        if (count($aiVendorEntities) === 0) {
-            return;
-        }
-        $id = $aiVendorEntities[0]->getId();
-        $aiVendorDomainService->deleteServiceProviderById($id);
-        $aiVendorEntity = $aiVendorDomainService->getServiceProviderById($id);
-        $this->assertNull($aiVendorEntity);
-    }
-
     public function testGetServiceProvider()
     {
         $aiVendorDomainService = $this->getServiceProviderService();

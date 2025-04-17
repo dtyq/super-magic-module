@@ -11,6 +11,7 @@ use App\Application\ModelGateway\Service\LLMAppService;
 use App\Domain\File\Service\FileDomainService;
 use App\Domain\ModelAdmin\Constant\ModelType;
 use App\Domain\ModelAdmin\Constant\ServiceProviderCategory;
+use App\Domain\ModelAdmin\Constant\ServiceProviderCode;
 use App\Domain\ModelAdmin\Constant\ServiceProviderType;
 use App\Domain\ModelAdmin\Constant\Status;
 use App\Domain\ModelAdmin\Entity\ServiceProviderConfigEntity;
@@ -49,7 +50,6 @@ class ServiceProviderAppService
 
         // 获取服务商配置
         $serviceProviderConfigDTOS = $this->serviceProviderDomainService->getServiceProviderConfigs($organizationCode, $serviceProviderCategory);
-
         // 如果获取的服务商列表为空，则初始化该类别的服务商
         if (empty($serviceProviderConfigDTOS)) {
             $serviceProviderConfigDTOS = $this->serviceProviderDomainService->initOrganizationServiceProviders($organizationCode, $serviceProviderCategory);
@@ -58,6 +58,13 @@ class ServiceProviderAppService
         // 处理图标
         $this->processServiceProviderConfigIcons($serviceProviderConfigDTOS, $organizationCode);
 
+        $officeOrganization = config('service_provider.office_organization');
+        if ($authenticatable->getOrganizationCode() === $officeOrganization) {
+            $serviceProviderConfigDTOS = array_filter($serviceProviderConfigDTOS, function ($serviceProviderConfigDTO) {
+                return ServiceProviderCode::from($serviceProviderConfigDTO->getProviderCode()) !== ServiceProviderCode::Official;
+            });
+            $serviceProviderConfigDTOS = array_values($serviceProviderConfigDTOS);
+        }
         return $serviceProviderConfigDTOS;
     }
 
@@ -172,16 +179,6 @@ class ServiceProviderAppService
         return $this->serviceProviderDomainService->listOriginalModels($authorization->getOrganizationCode());
     }
 
-    /**
-     * 初始化组织的服务商信息
-     * 当新加入一个组织后，初始化该组织的服务商和模型配置.
-     * @return ServiceProviderConfigDTO[] 初始化后的服务商配置列表
-     */
-    public function initOrganizationServiceProviders(string $organizationCode, ?ServiceProviderCategory $serviceProviderCategory = null): array
-    {
-        return $this->serviceProviderDomainService->initOrganizationServiceProviders($organizationCode, $serviceProviderCategory);
-    }
-
     public function addOriginalModel(string $modelId)
     {
         $this->serviceProviderDomainService->addOriginalModel($modelId);
@@ -266,6 +263,18 @@ class ServiceProviderAppService
     }
 
     /**
+     * 对服务商配置中的敏感信息进行脱敏处理.
+     */
+    public function maskSensitiveConfigInfo(ServiceProviderConfigDTO $serviceProviderConfigDTO): void
+    {
+        $config = $serviceProviderConfigDTO->getConfig();
+        // 对敏感字段进行脱敏
+        $config->setAk($this->serviceProviderDomainService->maskString($config->getAk()));
+        $config->setSk($this->serviceProviderDomainService->maskString($config->getSk()));
+        $config->setApiKey($this->serviceProviderDomainService->maskString($config->getApiKey()));
+    }
+
+    /**
      * 获取联通测试类型.
      */
     private function getConnectivityTestType(string $category, int $modelType): string
@@ -317,37 +326,6 @@ class ServiceProviderAppService
         }
         $connectResponse->setStatus(true);
         return $connectResponse;
-    }
-
-    /**
-     * 对服务商配置中的敏感信息进行脱敏处理.
-     */
-    private function maskSensitiveConfigInfo(ServiceProviderConfigDTO $serviceProviderConfigDTO): void
-    {
-        $config = $serviceProviderConfigDTO->getConfig();
-
-        // 脱敏处理函数
-        $maskString = function (string $str): string {
-            if (empty($str)) {
-                return '';
-            }
-            $length = mb_strlen($str);
-            if ($length <= 6) {
-                return str_repeat('*', $length);
-            }
-
-            // 保留前三位和后三位，中间用与原字符数量相同的星号代替
-            $prefix = mb_substr($str, 0, 3);
-            $suffix = mb_substr($str, -3, 3);
-            $middleLength = $length - 6; // 减去前三位和后三位
-            $maskedMiddle = str_repeat('*', $middleLength);
-            return $prefix . $maskedMiddle . $suffix;
-        };
-
-        // 对敏感字段进行脱敏
-        $config->setAk($maskString($config->getAk()));
-        $config->setSk($maskString($config->getSk()));
-        $config->setApiKey($maskString($config->getApiKey()));
     }
 
     /**

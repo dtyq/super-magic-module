@@ -40,11 +40,17 @@ class ServiceProviderModelsEntity extends AbstractEntity
 
     protected int $sort = 0;
 
+    protected int $modelParentId = 0; // 模型父级ID
+
     protected array $translate = [];
 
     protected string $organizationCode = '';
 
+    protected array $visibleOrganizations = [];
+
     protected int $status = Status::ACTIVE->value; // 状态
+
+    protected int $isOffice = 0; // 是否为官方模型：0-否，1-是
 
     protected string $createdAt;
 
@@ -69,6 +75,10 @@ class ServiceProviderModelsEntity extends AbstractEntity
 
         if (empty($this->modelId)) {
             ExceptionBuilder::throw(ServiceProviderErrorCode::InvalidParameter, __('service_provider.model_id_required'));
+        }
+
+        if (! empty($this->name) && strlen($this->name) > 50) {
+            ExceptionBuilder::throw(ServiceProviderErrorCode::InvalidParameter, __('service_provider.name_max_length'));
         }
 
         if (empty($this->name)) {
@@ -110,6 +120,21 @@ class ServiceProviderModelsEntity extends AbstractEntity
     public function setStatus(int $status): void
     {
         $this->status = $status;
+    }
+
+    public function isOffice(): bool
+    {
+        return $this->isOffice === 1;
+    }
+
+    public function getIsOffice(): int
+    {
+        return $this->isOffice;
+    }
+
+    public function setIsOffice(bool|int $isOffice): void
+    {
+        $this->isOffice = (int) $isOffice;
     }
 
     public function getId(): ?int
@@ -277,5 +302,20 @@ class ServiceProviderModelsEntity extends AbstractEntity
         if (isset($this->translate['name'][$languages])) {
             $this->name = $this->translate['name'][$languages];
         }
+    }
+
+    public function getModelParentId(): int
+    {
+        return $this->modelParentId;
+    }
+
+    public function getVisibleOrganizations(): array
+    {
+        return $this->visibleOrganizations;
+    }
+
+    public function setModelParentId(int $modelParentId): void
+    {
+        $this->modelParentId = $modelParentId;
     }
 }
