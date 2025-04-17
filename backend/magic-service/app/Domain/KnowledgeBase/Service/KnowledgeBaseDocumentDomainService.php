@@ -208,6 +208,7 @@ readonly class KnowledgeBaseDocumentDomainService
         $newDocument->setCreatedAt($oldDocument->getCreatedAt());
         $newDocument->setCreatedUid($oldDocument->getCreatedUid());
         $newDocument->setDocType($oldDocument->getDocType());
+        $newDocument->setWordCount($oldDocument->getWordCount());
 
         // 更新时间
         $newDocument->setUpdatedAt(date('Y-m-d H:i:s'));

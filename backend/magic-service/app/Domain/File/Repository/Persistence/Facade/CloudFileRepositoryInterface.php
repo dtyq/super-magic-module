@@ -25,6 +25,13 @@ interface CloudFileRepositoryInterface
 
     public function getSimpleUploadTemporaryCredential(string $organizationCode, StorageBucketType $storage = StorageBucketType::Private, bool $autoDir = true): array;
 
+    public function getStsTemporaryCredential(
+        string $organizationCode,
+        StorageBucketType $bucketType = StorageBucketType::Private,
+        string $dir = '',
+        int $expires = 7200
+    ): array;
+
     /**
      * @return array<string, FilePreSignedUrl>
      */

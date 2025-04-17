@@ -26,6 +26,11 @@ interface MagicChatFileRepositoryInterface
      */
     public function getChatFileByIds(array $fileIds, ?string $order = null, ?int $limit = null): array;
 
+    /**
+     * 通过file_key查找文件.
+     */
+    public function getChatFileByFileKey(string $fileKey): ?MagicChatFileEntity;
+
     public function updateFile(MagicChatFileEntity $fileEntity): void;
 
     public function updateFileById(string $fileId, MagicChatFileEntity $entity);

@@ -1,7 +1,7 @@
 import { EXPRESSION_VALUE, InputExpressionValue } from "@/MagicExpressionWidget/types"
 import { DataSourceOption } from "@/common/BaseUI/DropdownRenderer/Reference"
 import ErrorContent from "@/common/BaseUI/ErrorComponent/ErrorComponent"
-import { message } from "antd"
+import { ConfigProvider, message } from "antd"
 import i18next from "i18next"
 import _, { get, isEmpty, isPlainObject, set } from "lodash"
 import React, {
@@ -515,31 +515,29 @@ function CustomConditionContainer(
 				return <ErrorContent />
 			}}
 		>
-		<ThemeProvider
-			prefixCls={CLASSNAME_PREFIX}
-		>
-			<CustomConditionContainerStyle>
-				<GlobalProvider
-					leftDisabledPos={leftDisabledPos}
-					disabledOperationPos={disabledOperationPos}
-					showTitlePosList={showTitlePosList}
-				>
-					<RelationGroup
-						pos=""
-						changeRef={changeRef}
-						conditionData={conditionData}
-						options={{
-							maxGroupDepth,
-							openConvertButton,
-							termWidth,
-							expressionSource,
-						}}
-						cacheDictionary={cacheDictionary}
-						readonly={readonly}
-					/>
-				</GlobalProvider>
-			</CustomConditionContainerStyle>
-        </ThemeProvider>
+			<ConfigProvider prefixCls={CLASSNAME_PREFIX}>
+				<CustomConditionContainerStyle>
+					<GlobalProvider
+						leftDisabledPos={leftDisabledPos}
+						disabledOperationPos={disabledOperationPos}
+						showTitlePosList={showTitlePosList}
+					>
+						<RelationGroup
+							pos=""
+							changeRef={changeRef}
+							conditionData={conditionData}
+							options={{
+								maxGroupDepth,
+								openConvertButton,
+								termWidth,
+								expressionSource,
+							}}
+							cacheDictionary={cacheDictionary}
+							readonly={readonly}
+						/>
+					</GlobalProvider>
+				</CustomConditionContainerStyle>
+			</ConfigProvider>
 		</ErrorBoundary>
 	)
 }

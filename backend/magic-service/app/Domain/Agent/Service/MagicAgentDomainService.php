@@ -192,6 +192,9 @@ class MagicAgentDomainService
         return $agents;
     }
 
+    /**
+     * @return array<MagicAgentEntity>
+     */
     public function getAgentByIds(array $agentIds): array
     {
         return $this->agentRepository->getAgentByIds($agentIds);
