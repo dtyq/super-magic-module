@@ -17,6 +17,8 @@ use App\Application\KnowledgeBase\VectorDatabase\Similarity\Driver\FullTextSimil
 use App\Application\KnowledgeBase\VectorDatabase\Similarity\Driver\GraphSimilaritySearchInterface;
 use App\Application\KnowledgeBase\VectorDatabase\Similarity\Driver\HybridSimilaritySearchInterface;
 use App\Application\KnowledgeBase\VectorDatabase\Similarity\Driver\SemanticSimilaritySearchInterface;
+use App\Domain\Admin\Repository\Facade\AdminGlobalSettingsRepositoryInterface;
+use App\Domain\Admin\Repository\Persistence\AdminGlobalSettingsRepository;
 use App\Domain\Agent\Repository\Facade\MagicBotThirdPlatformChatRepositoryInterface;
 use App\Domain\Agent\Repository\Persistence\MagicBotThirdPlatformChatRepository;
 use App\Domain\Authentication\Repository\Facade\AuthenticationRepositoryInterface;
@@ -263,6 +265,9 @@ $dependencies = [
     TextFileParserDriverInterface::class => TextFileParserDriver::class,
     ExcelFileParserDriverInterface::class => ExcelFileParserDriver::class,
     WordFileParserDriverInterface::class => WordFileParserDriver::class,
+
+    // admin
+    AdminGlobalSettingsRepositoryInterface::class => AdminGlobalSettingsRepository::class,
 ];
 
 // 如果存在重复,优先取dependencies_priority的配置,不存在重复，就合并

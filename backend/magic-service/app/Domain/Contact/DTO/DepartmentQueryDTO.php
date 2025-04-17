@@ -18,6 +18,8 @@ class DepartmentQueryDTO extends AbstractEntity
 
     protected string $departmentId = '';
 
+    protected array $departmentIds = [];
+
     /**
      * 下一页的token, 用于分页. 暂时值为mysql的offset,后续可能为es的scroll_id,或者自行实现快照机制.
      */
@@ -30,6 +32,17 @@ class DepartmentQueryDTO extends AbstractEntity
     protected DepartmentSumType $sumType = DepartmentSumType::DirectEmployee;
 
     protected int $pageSize = 100;
+
+    public function getDepartmentIds(): array
+    {
+        return $this->departmentIds;
+    }
+
+    public function setDepartmentIds(array $departmentIds): self
+    {
+        $this->departmentIds = $departmentIds;
+        return $this;
+    }
 
     public function getPageSize(): int
     {

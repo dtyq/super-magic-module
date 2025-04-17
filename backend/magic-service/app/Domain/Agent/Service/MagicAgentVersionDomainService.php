@@ -210,6 +210,20 @@ class MagicAgentVersionDomainService
     }
 
     /**
+     * 基于游标分页获取指定组织的助理版本列表.
+     * @param string $organizationCode 组织代码
+     * @param array $agentVersionIds 助理版本ID列表
+     * @param string $cursor 游标ID，如果为空字符串则从最新开始
+     * @param int $pageSize 每页数量
+     * @return array<MagicAgentVersionEntity>
+     */
+    public function getAgentsByOrganizationWithCursor(string $organizationCode, array $agentVersionIds, string $cursor, int $pageSize): array
+    {
+        $res = $this->agentVersionRepository->getAgentsByOrganizationWithCursor($organizationCode, $agentVersionIds, $cursor, $pageSize);
+        return array_map(fn ($item) => new MagicAgentVersionEntity($item), $res);
+    }
+
+    /**
      * 验证新版本号是否合法.
      * @throws BusinessException
      */
