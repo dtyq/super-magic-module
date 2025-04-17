@@ -1,8 +1,7 @@
 /* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
 import { useControllableValue, useMemoizedFn, useUpdateEffect } from "ahooks"
-import { Cascader, Modal } from "antd"
+import { Cascader, ConfigProvider, Modal } from "antd"
 import "antd/dist/reset.css"
-import { ThemeProvider } from "antd-style"
 // import { FIELDS_NAME, VALUE_TYPE } from "cai-json-edit/dist/JsonSchemaEditor/constants"
 import _, { cloneDeep, isEqual } from "lodash"
 import React, { useEffect, useMemo, useRef, useState } from "react"
@@ -477,7 +476,7 @@ const CustomInputExpression = (props: InputExpressionProps) => {
 				return <ErrorContent />
 			}}
 		>
-			<ThemeProvider prefixCls={CLASSNAME_PREFIX}>
+			<ConfigProvider prefixCls={CLASSNAME_PREFIX}>
 				<ArgsModalProvider
 					isOpenArgsModal={isOpenArgsModal}
 					openArgsModal={openArgsModal}
@@ -627,7 +626,7 @@ const CustomInputExpression = (props: InputExpressionProps) => {
 						</TextareaModeProvider>
 					</GlobalProvider>
 				</ArgsModalProvider>
-			</ThemeProvider>
+			</ConfigProvider>
 		</ErrorBoundary>
 	)
 }

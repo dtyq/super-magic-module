@@ -4,7 +4,7 @@
 import React, { createContext, useEffect, useImperativeHandle, useMemo, useState } from "react"
 import { ErrorBoundary } from "react-error-boundary"
 import { useTranslation } from "react-i18next"
-import { message } from "antd"
+import { ConfigProvider, message } from "antd"
 import "antd/dist/reset.css"
 import { reaction } from "mobx"
 import { observer } from "mobx-react"
@@ -22,7 +22,6 @@ import { Common } from "./types/Common"
 import Schema, { CustomFieldsConfig, CustomOptions } from "./types/Schema"
 import SchemaDescription from "./types/SchemaDescription"
 import { genRootField } from "./utils/helpers"
-import { ThemeProvider } from "antd-style"
 import { CLASSNAME_PREFIX } from "@/common/constants"
 
 /**
@@ -309,7 +308,7 @@ const JsonSchemaObserverEditor = observer(
 						return <ErrorContent />
 					}}
 				>
-					<ThemeProvider prefixCls={CLASSNAME_PREFIX}>
+					<ConfigProvider prefixCls={CLASSNAME_PREFIX}>
 						<div>
 							<GlobalStyle />
 							<GlobalProvider
@@ -337,7 +336,7 @@ const JsonSchemaObserverEditor = observer(
 								</ExportFieldsProvider>
 							</GlobalProvider>
 						</div>
-					</ThemeProvider>
+					</ConfigProvider>
 				</ErrorBoundary>
 			)
 		},
