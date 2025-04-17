@@ -19,8 +19,7 @@ class EditMessageOptions extends AbstractEntity
 
     public function __construct(?array $data = [])
     {
-        isset($data['magic_message_id']) && $this->setMagicMessageId($data['magic_message_id']);
-        isset($data['message_version_id']) && $this->setMessageVersionId($data['message_version_id']);
+        parent::__construct($data);
     }
 
     public function getMagicMessageId(): ?string

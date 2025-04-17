@@ -50,13 +50,6 @@ class MagicMessageVersionsRepository implements MagicChatMessageVersionsReposito
     // 组装 MagicMessageVersionEntity 对象
     private function assembleMessageVersionEntity(array $data): MagicMessageVersionEntity
     {
-        $message = new MagicMessageVersionEntity();
-        $message->setVersionId($data['version_id']);
-        $message->setMagicMessageId($data['magic_message_id']);
-        $message->setMessageContent($data['message_content']);
-        $message->setCreatedAt($data['created_at']);
-        $message->setUpdatedAt($data['updated_at']);
-        $message->setDeletedAt($data['deleted_at']);
-        return $message;
+        return new MagicMessageVersionEntity($data);
     }
 }

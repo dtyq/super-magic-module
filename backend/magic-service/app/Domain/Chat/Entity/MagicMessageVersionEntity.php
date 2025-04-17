@@ -23,7 +23,7 @@ class MagicMessageVersionEntity extends AbstractEntity
 
     public function __construct(?array $data = [])
     {
-        ! empty($data) && $this->initProperty($data);
+        parent::__construct($data);
     }
 
     public function getVersionId(): string
