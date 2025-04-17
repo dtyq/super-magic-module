@@ -58,15 +58,6 @@ class ServiceProviderModelsEntity extends AbstractEntity
 
     protected ?string $deletedAt;
 
-    public function __construct(?array $data = null)
-    {
-        parent::__construct($data);
-        // 嵌入模型支持嵌入参数默认为true
-        if ($this->getModelType() === ModelType::EMBEDDING->value && ! isset($data['config']['support_embedding'])) {
-            $this->config->setSupportEmbedding(true);
-        }
-    }
-
     public function valid()
     {
         if (empty($this->modelVersion)) {
