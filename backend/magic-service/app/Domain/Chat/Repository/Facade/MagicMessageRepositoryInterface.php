@@ -8,6 +8,7 @@ declare(strict_types=1);
 namespace App\Domain\Chat\Repository\Facade;
 
 use App\Domain\Chat\Entity\MagicMessageEntity;
+use App\Domain\Chat\Entity\MagicMessageVersionEntity;
 
 interface MagicMessageRepositoryInterface
 {
@@ -20,4 +21,6 @@ interface MagicMessageRepositoryInterface
     public function deleteByMagicMessageIds(array $magicMessageIds);
 
     public function updateMessageContent(MagicMessageEntity $messageEntity): void;
+
+    public function updateMessageContentAndVersionId(MagicMessageEntity $messageEntity, MagicMessageVersionEntity $magicMessageVersionEntity): void;
 }

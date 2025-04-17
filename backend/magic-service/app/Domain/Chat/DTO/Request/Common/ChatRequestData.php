@@ -7,10 +7,13 @@ declare(strict_types=1);
 
 namespace App\Domain\Chat\DTO\Request\Common;
 
+use App\Domain\Chat\DTO\Message\Trait\EditMessageOptionsTrait;
 use App\Domain\Chat\Entity\AbstractEntity;
 
 class ChatRequestData extends AbstractEntity
 {
+    use EditMessageOptionsTrait;
+
     protected Message $message;
 
     /**
@@ -24,23 +27,17 @@ class ChatRequestData extends AbstractEntity
 
     public function __construct(array $data)
     {
-        if ($data['message'] instanceof Message) {
-            $this->message = $data['message'];
-        } else {
-            $this->message = new Message($data['message']);
-        }
-        $this->conversationId = $data['conversation_id'];
-        $this->referMessageId = $data['refer_message_id'] ?? '';
+        parent::__construct($data);
     }
 
     public function getReferMessageId(): string
     {
-        return $this->referMessageId;
+        return $this->referMessageId ?? '';
     }
 
-    public function setReferMessageId(string $referMessageId): void
+    public function setReferMessageId(?string $referMessageId): void
     {
-        $this->referMessageId = $referMessageId;
+        $this->referMessageId = $referMessageId ?? '';
     }
 
     public function getMessage(): Message
@@ -48,9 +45,13 @@ class ChatRequestData extends AbstractEntity
         return $this->message;
     }
 
-    public function setMessage(Message $message): void
+    public function setMessage(null|array|Message $message): void
     {
-        $this->message = $message;
+        if ($message instanceof Message) {
+            $this->message = $message;
+        } else {
+            $this->message = new Message($message ?? []);
+        }
     }
 
     public function getConversationId(): string

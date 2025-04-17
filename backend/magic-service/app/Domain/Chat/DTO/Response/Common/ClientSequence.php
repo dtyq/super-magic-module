@@ -7,13 +7,17 @@ declare(strict_types=1);
 
 namespace App\Domain\Chat\DTO\Response\Common;
 
+use App\Domain\Chat\DTO\Message\Trait\EditMessageOptionsTrait;
 use App\Domain\Chat\Entity\AbstractEntity;
+use App\Domain\Chat\Entity\ValueObject\MessageType\MessageOptionsEnum;
 
 /**
  * 客户端收到的消息序列结构.
  */
 class ClientSequence extends AbstractEntity
 {
+    use EditMessageOptionsTrait;
+
     // 序列号归属账号id
     protected string $magicId;
 
@@ -38,23 +42,12 @@ class ClientSequence extends AbstractEntity
 
     public function __construct(array $data)
     {
-        $this->magicId = $data['magic_id'];
-        $this->seqId = $data['seq_id'];
-        $this->messageId = $data['message_id'];
-        $this->referMessageId = $data['refer_message_id'] ?? null;
-        $this->senderMessageId = $data['sender_message_id'] ?? null;
-        $this->conversationId = $data['conversation_id'] ?? null;
-        $this->organizationCode = $data['organization_code'];
-        if ($data['message'] instanceof ClientMessage) {
-            $this->message = $data['message'];
-        } else {
-            $this->message = new ClientMessage($data['message']);
-        }
+        parent::__construct($data);
     }
 
     public function toArray(bool $filterNull = false): array
     {
-        return [
+        $data = [
             'magic_id' => $this->getMagicId(),
             'seq_id' => $this->getSeqId(),
             'message_id' => $this->getMessageId(),
@@ -64,16 +57,22 @@ class ClientSequence extends AbstractEntity
             'organization_code' => $this->getOrganizationCode(),
             'message' => $this->getMessage()->toArray($filterNull),
         ];
+        // edit_message_options 字段大多数时候不需要返回
+        $editMessageOptions = $this->getEditMessageOptions();
+        if (! empty($editMessageOptions)) {
+            $data[MessageOptionsEnum::EDIT_MESSAGE_OPTIONS->value] = $editMessageOptions->toArray();
+        }
+        return $data;
     }
 
     public function getMagicId(): string
     {
-        return $this->magicId;
+        return $this->magicId ?? '';
     }
 
-    public function setMagicId(string $magicId): void
+    public function setMagicId(?string $magicId): void
     {
-        $this->magicId = $magicId;
+        $magicId !== null && $this->magicId = $magicId;
     }
 
     public function getSeqId(): string
@@ -81,24 +80,24 @@ class ClientSequence extends AbstractEntity
         return $this->seqId;
     }
 
-    public function setSeqId(string $seqId): void
+    public function setSeqId(?string $seqId): void
     {
-        $this->seqId = $seqId;
+        $seqId !== null && $this->seqId = $seqId;
     }
 
     public function getMessageId(): string
     {
-        return $this->messageId;
+        return $this->messageId ?? '';
     }
 
-    public function setMessageId(string $messageId): void
+    public function setMessageId(?string $messageId): void
     {
-        $this->messageId = $messageId;
+        $messageId !== null && $this->messageId = $messageId;
     }
 
     public function getReferMessageId(): ?string
     {
-        return $this->referMessageId;
+        return $this->referMessageId ?? null;
     }
 
     public function setReferMessageId(?string $referMessageId): void
@@ -108,7 +107,7 @@ class ClientSequence extends AbstractEntity
 
     public function getSenderMessageId(): ?string
     {
-        return $this->senderMessageId;
+        return $this->senderMessageId ?? null;
     }
 
     public function setSenderMessageId(?string $senderMessageId): void
@@ -118,7 +117,7 @@ class ClientSequence extends AbstractEntity
 
     public function getConversationId(): ?string
     {
-        return $this->conversationId;
+        return $this->conversationId ?? null;
     }
 
     public function setConversationId(?string $conversationId): void
@@ -141,8 +140,12 @@ class ClientSequence extends AbstractEntity
         return $this->message;
     }
 
-    public function setMessage(ClientMessage $message): void
+    public function setMessage(array|ClientMessage $message): void
     {
-        $this->message = $message;
+        if ($message instanceof ClientMessage) {
+            $this->message = $message;
+        } else {
+            $this->message = new ClientMessage($message);
+        }
     }
 }

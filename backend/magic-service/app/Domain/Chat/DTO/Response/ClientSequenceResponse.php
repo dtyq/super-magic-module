@@ -18,12 +18,7 @@ class ClientSequenceResponse extends AbstractEntity
 
     public function __construct(array $data)
     {
-        $this->type = $data['type'];
-        if ($data['seq'] instanceof ClientSequence) {
-            $this->seq = $data['seq'];
-        } else {
-            $this->seq = new ClientSequence($data['seq']);
-        }
+        parent::__construct($data);
     }
 
     public function toArray(): array
@@ -49,8 +44,12 @@ class ClientSequenceResponse extends AbstractEntity
         return $this->seq;
     }
 
-    public function setSeq(ClientSequence $seq): void
+    public function setSeq(array|ClientSequence $seq): void
     {
-        $this->seq = $seq;
+        if ($seq instanceof ClientSequence) {
+            $this->seq = $seq;
+        } else {
+            $this->seq = new ClientSequence($seq);
+        }
     }
 }

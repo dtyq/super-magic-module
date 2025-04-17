@@ -130,7 +130,7 @@ class ReplyMessageNodeRunner extends NodeRunner
         $senderUser = $executionData->getSenderEntities()['user'] ?? null;
         $receiverId = $senderUser?->getUserId() ?? $executionData->getOperator()->getUid();
         if ($flowSeqEntity = $executionData->getSenderEntities()['seq'] ?? null) {
-            $receiveSeqDTO->setExtra($flowSeqEntity->getExtra());
+            $receiveSeqDTO->setExtra($flowSeqEntity->getExtra()?->getExtraCanCopyData());
             $receiveSeqDTO->setReferMessageId($flowSeqEntity->getMessageId());
         }
         $magicChatMessageAppService = di(MagicChatMessageAppService::class);
@@ -302,7 +302,7 @@ class ReplyMessageNodeRunner extends NodeRunner
             ->setContent($messageContent);
 
         if ($flowSeqEntity = $executionData->getSenderEntities()['seq'] ?? null) {
-            $receiveSeqDTO->setExtra($flowSeqEntity->getExtra());
+            $receiveSeqDTO->setExtra($flowSeqEntity->getExtra()?->getExtraCanCopyData());
             $receiveSeqDTO->setReferMessageId($flowSeqEntity->getMessageId());
         }
 

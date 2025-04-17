@@ -299,8 +299,12 @@ class MagicChatHttpApi extends AbstractApi
     {
         $groupIds = (array) $request->input('group_ids', '');
         $pageToken = (string) $request->input('page_token', '');
-        $authorization = $this->getAuthorization();
-        $list = $this->chatGroupAppService->getGroupsInfo($groupIds, $authorization);
+        if (empty($groupIds)) {
+            $list = [];
+        } else {
+            $authorization = $this->getAuthorization();
+            $list = $this->chatGroupAppService->getGroupsInfo($groupIds, $authorization);
+        }
         return PageListAssembler::pageByMysql($list, $pageToken);
     }
 
