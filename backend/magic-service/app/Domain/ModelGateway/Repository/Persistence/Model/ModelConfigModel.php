@@ -96,7 +96,11 @@ class ModelConfigModel extends Model
         if (empty($config)) {
             return [];
         }
-        return Json::decode(AesUtil::decode($this->_getAesKey((string) $this->attributes['model']), $config));
+        $modelConfig = AesUtil::decode($this->_getAesKey((string) $this->attributes['model']), $config);
+        if ($modelConfig && json_validate($modelConfig)) {
+            return Json::decode($modelConfig);
+        }
+        return [];
     }
 
     /**

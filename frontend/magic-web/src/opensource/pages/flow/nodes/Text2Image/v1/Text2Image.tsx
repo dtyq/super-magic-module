@@ -2,7 +2,7 @@ import { Form, Flex } from "antd"
 import MagicSelect from "@dtyq/magic-flow/common/BaseUI/Select"
 import { useMemoizedFn } from "ahooks"
 import { useCurrentNode } from "@dtyq/magic-flow/MagicFlow/nodes/common/context/CurrentNode/useCurrentNode"
-import { useFlow } from "@dtyq/magic-flow/MagicFlow/context/FlowContext/useFlow"
+import { useNodeConfigActions } from "@dtyq/magic-flow/MagicFlow/context/FlowContext/useFlow"
 import { ExpressionMode } from "@dtyq/magic-flow/MagicExpressionWidget/constant"
 import DropdownCard from "@dtyq/magic-flow/common/BaseUI/DropdownCard"
 import { cx } from "antd-style"
@@ -29,7 +29,7 @@ export default function Text2ImageV1() {
 
 	const { currentNode } = useCurrentNode()
 
-	const { updateNodeConfig } = useFlow()
+	const { updateNodeConfig } = useNodeConfigActions()
 
 	const { ratioRenderConfig, getRatioValue, hasRatio, hasSize, hasSr, tooltip, getSelectModel } =
 		useRatio()

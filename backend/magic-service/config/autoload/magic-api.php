@@ -4,8 +4,8 @@ declare(strict_types=1);
 /**
  * Copyright (c) The Magic , Distributed under the software license
  */
-use App\Domain\ModelGateway\Entity\ValueObject\MagicApiLLMEnum;
-use Hyperf\Odin\Model\OpenAIModel;
+use App\Domain\Chat\Entity\ValueObject\LLMModelEnum;
+use Hyperf\Codec\Json;
 
 use function Hyperf\Support\env;
 
@@ -26,21 +26,15 @@ return [
         // 个人默认额度
         'user' => 1000,
     ],
+    // 全局的模型降级链
+    'model_fallback_chain' => [
+        // 聊天模型
+        'chat' => Json::decode(env('CHAT_MODEL_FALLBACK_CHAIN', '{}')) ?: [LLMModelEnum::GPT_41->value, LLMModelEnum::GPT_4O->value, LLMModelEnum::DEEPSEEK_V3->value],
+        // 嵌入
+        'embedding' => [],
+    ],
     // 访问国外的代理配置
     'http' => [
         'proxy' => env('HTTP_PROXY'),
-    ],
-    'default_access_token' => env('MAGIC_API_DEFAULT_ACCESS_TOKEN'),
-    'llm' => [
-        'models' => [
-            MagicApiLLMEnum::LOCAL_GEMMA2_2B->value => [
-                'implementation' => OpenAIModel::class,
-                'model' => env('LOCAL_GEMMA2_MODEL_ID', 'shareAI/gemma-2-2b-it-Chinese-DPO-GGUF'),
-                'config' => [
-                    'base_url' => env('CLOSEDAI_API', ''),
-                    'api_key' => env('CLOSEDAI_TOKEN', ''),
-                ],
-            ],
-        ],
     ],
 ];

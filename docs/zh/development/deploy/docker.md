@@ -50,7 +50,7 @@ cp .env.example .env
 - API 服务: http://localhost:9501
 - Web 应用: http://localhost:8080
   - 账号 `13800138001`：密码为 `123456`
-  - 账号 `13800139001`：密码为 `123456`
+  - 账号 `13900139001`：密码为 `123456`
 - RabbitMQ 管理界面: http://localhost:15672
   - 用户名: admin
   - 密码: magic123456

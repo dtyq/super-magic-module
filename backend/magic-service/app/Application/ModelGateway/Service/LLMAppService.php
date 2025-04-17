@@ -34,7 +34,6 @@ use Hyperf\Odin\Contract\Api\Response\ResponseInterface;
 use Hyperf\Odin\Contract\Model\EmbeddingInterface;
 use Hyperf\Odin\Contract\Model\ModelInterface;
 use Hyperf\Odin\Exception\LLMException;
-use Hyperf\Odin\Model\AbstractModel;
 use Hyperf\Odin\Tool\Definition\ToolDefinition;
 use Hyperf\Odin\Utils\MessageUtil;
 use Hyperf\Odin\Utils\ToolUtil;
@@ -60,26 +59,20 @@ class LLMAppService extends AbstractLLMAppService
         $models = array_merge($chatModels, $embeddingModels);
 
         $list = [];
-        /**
-         * @var AbstractModel $model
-         */
-        foreach ($models as $name => $model) {
-            $attributes = $this->modelGatewayMapper->getAttributes($model->getModelName());
-            $createdAt = $attributes['created_at'] ?? null;
+        foreach ($models as $name => $odinModel) {
             $modelConfigEntity = new ModelConfigEntity();
-            if ($createdAt instanceof DateTime) {
-                $modelConfigEntity->setCreatedAt($createdAt);
-            } elseif (is_string($createdAt)) {
-                $modelConfigEntity->setCreatedAt(new DateTime($createdAt));
-            } else {
-                $modelConfigEntity->setCreatedAt(new DateTime());
-            }
-
-            $modelConfigEntity->setModel($model->getModelName());
-            $modelConfigEntity->setName($attributes['label'] ?? $name);
-            $modelConfigEntity->setOwnerBy($attributes['owner_by'] ?? 'Magic');
+            // 服务商的接入点
+            $modelConfigEntity->setModel($odinModel->getModel()->getModelName());
+            // 模型类型
+            $modelConfigEntity->setType($odinModel->getAttributes()->getKey());
+            $modelConfigEntity->setName($odinModel->getAttributes()->getLabel() ?: $odinModel->getAttributes()->getName());
+            $modelConfigEntity->setOwnerBy($odinModel->getAttributes()->getOwner());
+            $modelConfigEntity->setCreatedAt($odinModel->getAttributes()->getCreatedAt());
             if ($withInfo) {
-                $modelConfigEntity->setInfo($model->getModelOptions()->toArray());
+                $modelConfigEntity->setInfo([
+                    'attributes' => $odinModel->getAttributes()->toArray(),
+                    'options' => $odinModel->getModel()->getModelOptions()->toArray(),
+                ]);
             }
 
             $list[$name] = $modelConfigEntity;
@@ -116,24 +109,26 @@ class LLMAppService extends AbstractLLMAppService
      */
     protected function processRequest(ProxyModelRequestInterface $proxyModelRequest, callable $modelCallFunction): ResponseInterface
     {
-        // 验证访问令牌与模型权限
-        $accessToken = $this->validateAccessToken($proxyModelRequest);
-
-        // 数据隔离处理
-        $dataIsolation = LLMDataIsolation::create()->disabled();
-
-        // 解析业务参数
-        $contextData = $this->parseBusinessContext($dataIsolation, $accessToken, $proxyModelRequest);
+        $endpointResponseDTO = null;
         try {
+            // 验证访问令牌与模型权限
+            $accessToken = $this->validateAccessToken($proxyModelRequest);
+
+            // 数据隔离处理
+            $dataIsolation = LLMDataIsolation::create()->disabled();
+
+            // 解析业务参数
+            $contextData = $this->parseBusinessContext($dataIsolation, $accessToken, $proxyModelRequest);
+
             // 尝试获取高可用模型配置
-            $endpointResponseDTO = null;
-            $modeId = $this->getHighAvailableModelId($proxyModelRequest->getModel(), $endpointResponseDTO, $contextData['organization_code'] ?? null);
+            $orgCode = $contextData['organization_code'] ?? null;
+            $modeId = $this->getHighAvailableModelId($proxyModelRequest->getModel(), $endpointResponseDTO, $orgCode);
             if (empty($modeId)) {
                 $modeId = $proxyModelRequest->getModel();
             }
             $model = match ($proxyModelRequest->getType()) {
-                'chat' => $this->modelGatewayMapper->getChatModel($modeId),
-                'embedding' => $this->modelGatewayMapper->getEmbeddingModel($modeId),
+                'chat' => $this->modelGatewayMapper->getOrganizationChatModel($modeId, $orgCode),
+                'embedding' => $this->modelGatewayMapper->getOrganizationEmbeddingModel($modeId, $orgCode),
                 default => null
             };
             if (! $model || $model instanceof MagicAILocalModel) {
@@ -192,7 +187,8 @@ class LLMAppService extends AbstractLLMAppService
                 $exception
             );
 
-            throw $exception;
+            $this->logModelCallFailure($proxyModelRequest->getModel(), $exception);
+            ExceptionBuilder::throw(MagicApiErrorCode::MODEL_RESPONSE_FAIL, $exception->getMessage(), throwable: $exception);
         } catch (Throwable $throwable) {
             $startTime = $startTime ?? microtime(true);
             // 计算响应耗时
@@ -212,7 +208,7 @@ class LLMAppService extends AbstractLLMAppService
                 $message = $throwable->getMessage();
             }
             $this->logModelCallFailure($proxyModelRequest->getModel(), $throwable);
-            ExceptionBuilder::throw(MagicApiErrorCode::MODEL_RESPONSE_FAIL, $message);
+            ExceptionBuilder::throw(MagicApiErrorCode::MODEL_RESPONSE_FAIL, $message, throwable: $throwable);
         }
     }
 

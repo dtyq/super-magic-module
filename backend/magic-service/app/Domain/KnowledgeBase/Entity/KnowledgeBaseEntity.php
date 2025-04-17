@@ -39,7 +39,7 @@ class KnowledgeBaseEntity extends AbstractEntity
 
     protected string $description = '';
 
-    protected KnowledgeType $type;
+    protected int $type;
 
     protected bool $enabled;
 
@@ -280,14 +280,13 @@ class KnowledgeBaseEntity extends AbstractEntity
         return $this;
     }
 
-    public function getType(): KnowledgeType
+    public function getType(): int
     {
         return $this->type;
     }
 
-    public function setType(int|KnowledgeType $type): static
+    public function setType(int $type): static
     {
-        is_int($type) && $type = KnowledgeType::from($type);
         $this->type = $type;
         return $this;
     }
@@ -519,7 +518,7 @@ class KnowledgeBaseEntity extends AbstractEntity
         $self = self::createTemplate($organizationCode, ConstValue::KNOWLEDGE_USER_CURRENT_TOPIC, $creator);
         $self->setName('当前话题');
         $self->setDescription("{$creator} 的话题");
-        $self->setType(KnowledgeType::UserTopic);
+        $self->setType(KnowledgeType::UserTopic->value);
         return $self;
     }
 
@@ -528,7 +527,7 @@ class KnowledgeBaseEntity extends AbstractEntity
         $self = self::createTemplate($organizationCode, ConstValue::KNOWLEDGE_USER_CURRENT_CONVERSATION, $creator);
         $self->setName('当前会话');
         $self->setDescription("{$creator} 的会话");
-        $self->setType(KnowledgeType::UserConversation);
+        $self->setType(KnowledgeType::UserConversation->value);
         return $self;
     }
 
@@ -551,6 +550,11 @@ class KnowledgeBaseEntity extends AbstractEntity
     public function setWordCount(int $wordCount): void
     {
         $this->wordCount = $wordCount;
+    }
+
+    public function getDefaultDocumentCode(): string
+    {
+        return $this->code . '-DEFAULT-DOC';
     }
 
     private static function createTemplate(string $organizationCode, string $code, string $creator): KnowledgeBaseEntity

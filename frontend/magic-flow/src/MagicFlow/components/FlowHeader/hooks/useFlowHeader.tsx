@@ -1,5 +1,4 @@
-import { useExternal } from "@/MagicFlow/context/ExternalContext/useExternal"
-import { useFlow } from "@/MagicFlow/context/FlowContext/useFlow"
+import { useFlowData, useFlowEdges, useNodeConfig } from "@/MagicFlow/context/FlowContext/useFlow"
 import { useNodes } from "@/MagicFlow/context/NodesContext/useNodes"
 import { checkHasNodeOutOfFlow, sortByEdges } from "@/MagicFlow/utils/reactflowUtils"
 import { Modal } from "antd"
@@ -14,10 +13,10 @@ import styles from "../index.module.less"
 
 export default function useFlowHeader() {
 	const { t } = useTranslation()
-	const { flow, edges, description, debuggerMode, nodeConfig } = useFlow()
+	const { nodeConfig } = useNodeConfig()
+	const { flow, description, debuggerMode } = useFlowData()
+	const { edges } = useFlowEdges()
 	const { nodes } = useNodes()
-
-	const { header } = useExternal()
 
 	// 返回事件
 	const back = useMemoizedFn(() => {})

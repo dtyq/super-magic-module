@@ -27,7 +27,6 @@ const useStyles = createStyles(({ css, prefixCls }) => {
 	}
 })
 
-// eslint-disable-next-line react-refresh/only-export-components
 const MagicSplitter = memo(
 	({ className, children, ...props }: PropsWithChildren<SplitterProps>) => {
 		const { styles, cx } = useStyles()

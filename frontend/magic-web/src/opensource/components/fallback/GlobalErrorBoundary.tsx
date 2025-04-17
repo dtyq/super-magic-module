@@ -31,30 +31,6 @@ function GlobalErrorBoundary({ children }: PropsWithChildren) {
 	return (
 		<ErrorBoundary
 			fallbackRender={({ error }) => {
-				console.error(error)
-				if (
-					!isDev &&
-					isString(error?.message) &&
-					error?.message?.startsWith("Failed to fetch dynamically imported module")
-				) {
-					setTimeout(() => {
-						window.location.reload()
-					}, 1000)
-
-					return (
-						<Flex vertical align="center" justify="center" className={styles.container}>
-							<Result
-								status="info"
-								title={t("FrontendVersionDetected")}
-								subTitle={t("PleaseReloadThePage")}
-							/>
-							{/* <MagicButton type="primary" onClick={() => window.location.reload()}>
-								{t("Reload")}
-							</MagicButton> */}
-							<MagicSpin spinning />
-						</Flex>
-					)
-				}
 				return (
 					<Result
 						status="error"

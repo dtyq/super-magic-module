@@ -12,17 +12,18 @@ import { Flex } from "antd"
 import AutoTooltipText from "@/opensource/components/other/AutoTooltipText"
 import { IconMagicBots } from "@/enhance/tabler/icons-react"
 import type { MagicListItemData } from "@/opensource/components/MagicList/types"
-import { useMemoizedFn } from "ahooks"
+import { useMemoizedFn, useMount } from "ahooks"
 import { useCurrentMagicOrganization } from "@/opensource/models/user/hooks"
 import { useContactStore } from "@/opensource/stores/contact/hooks"
 import MagicSpin from "@/opensource/components/base/MagicSpin"
-import useUserInfo from "@/opensource/hooks/chat/useUserInfo"
-import { colorScales } from "@/opensource/providers/ThemeProvider/colors"
 import { useStyles } from "./styles"
 import { Line } from "./Line"
 import { useContactPageDataContext } from "../ContactDataProvider/hooks"
 import { observer } from "mobx-react-lite"
 import { userStore } from "@/opensource/models/user"
+import { useTheme } from "antd-style"
+import { StructureUserItem } from "@/types/organization"
+import userInfoService from "@/opensource/services/userInfo"
 
 interface CurrentOrganizationProps {
 	onItemClick: (data: MagicListItemData) => void
@@ -33,7 +34,21 @@ const CurrentOrganization = observer(({ onItemClick }: CurrentOrganizationProps)
 	const { styles } = useStyles()
 	const organization = useCurrentMagicOrganization()
 
-	const { userInfo, isMutating } = useUserInfo(userStore.user.userInfo?.user_id, true)
+	const [userInfo, setUserInfo] = useState<StructureUserItem | null>(null)
+	const [isLoading, setIsLoading] = useState(false)
+
+	useMount(() => {
+		if (!userStore.user.userInfo?.user_id) return
+		setIsLoading(true)
+		userInfoService
+			.fetchUserInfos([userStore.user.userInfo?.user_id], 2)
+			.then((res) => {
+				setUserInfo(res[0])
+			})
+			.finally(() => {
+				setIsLoading(false)
+			})
+	})
 
 	const departmentIds = useMemo(
 		() =>
@@ -111,7 +126,7 @@ const CurrentOrganization = observer(({ onItemClick }: CurrentOrganizationProps)
 								name: n.name,
 							})),
 							title: (
-								<MagicSpin spinning={isMutating}>
+								<MagicSpin spinning={isLoading}>
 									<Flex gap={8} align="center" style={{ marginLeft: 40 }}>
 										{Line}
 										<span className={styles.departmentPathName}>
@@ -134,6 +149,7 @@ function ContactsSubSider() {
 	const { pathname } = useLocation()
 	const { styles } = useStyles()
 	const navigate = useNavigate()
+	const { magicColorScales } = useTheme()
 
 	const [collapseKey, setCollapseKey] = useState<string>(pathname)
 
@@ -164,12 +180,13 @@ function ContactsSubSider() {
 							id: "aiAssistant",
 							route: RoutePath.ContactsAiAssistant,
 							title: t("contacts.subSider.aiAssistant"),
-							avatar: () => {
-								return (
-									<div className={styles.listAvatar} style={{ background: colorScales.brand[5] }}>
-										<MagicIcon color="currentColor" component={IconMagicBots} />
-									</div>
-								)
+							avatar: {
+								src: <MagicIcon color="currentColor" component={IconMagicBots} />,
+								style: {
+									background: magicColorScales.brand[5],
+									padding: 8,
+									color: "white",
+								},
 							},
 							extra: (
 								<MagicIcon
@@ -203,12 +220,13 @@ function ContactsSubSider() {
 							id: "myGroups",
 							route: RoutePath.ContactsMyGroups,
 							title: t("contacts.subSider.myGroups"),
-							avatar: () => {
-								return (
-									<div className={styles.listAvatar} style={{ background: colorScales.lightGreen[5] }}>
-										<MagicIcon color="currentColor" component={IconUsers} />
-									</div>
-								)
+							avatar: {
+								src: <MagicIcon color="currentColor" component={IconUsers} />,
+								style: {
+									background: magicColorScales.lightGreen[5],
+									padding: 8,
+									color: "white",
+								},
 							},
 							extra: (
 								<MagicIcon

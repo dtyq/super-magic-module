@@ -87,7 +87,7 @@ export default function useFlowList({ flowType }: FlowListHooksProps) {
 				const { list, page, total } = response
 				return { list, page, total }
 			}
-			if (type === FlowRouteType.Knowledge) {
+			if (type === FlowRouteType.VectorKnowledge) {
 				const response = await KnowledgeApi.getKnowledgeList({
 					...params,
 					type: knowledgeType.UserKnowledgeDatabase,
@@ -160,7 +160,7 @@ export default function useFlowList({ flowType }: FlowListHooksProps) {
 			[FlowRouteType.Agent]: globalT("common.agent", { ns: "flow" }),
 			[FlowRouteType.Sub]: globalT("common.flow", { ns: "flow" }),
 			[FlowRouteType.Tools]: globalT("common.toolset", { ns: "flow" }),
-			[FlowRouteType.Knowledge]: globalT("common.knowledgeDatabase", { ns: "flow" }),
+			[FlowRouteType.VectorKnowledge]: globalT("common.knowledgeDatabase", { ns: "flow" }),
 		}
 		return map[flowType]
 	}, [flowType, globalT])
@@ -179,7 +179,7 @@ export default function useFlowList({ flowType }: FlowListHooksProps) {
 
 	const goToFlow = useMemoizedFn((id) => {
 		if (!id) return
-		if (flowType === FlowRouteType.Knowledge) {
+		if (flowType === FlowRouteType.VectorKnowledge) {
 			navigate(
 				replaceRouteParams(RoutePath.FlowKnowledgeDetail, {
 					id,
@@ -215,7 +215,7 @@ export default function useFlowList({ flowType }: FlowListHooksProps) {
 						// 删除子流程
 						await FlowApi.deleteFlow(flow.id)
 						break
-					case FlowRouteType.Knowledge:
+					case FlowRouteType.VectorKnowledge:
 						// 删除知识库
 						await KnowledgeApi.deleteKnowledge(flow.code)
 						break
@@ -287,7 +287,7 @@ export default function useFlowList({ flowType }: FlowListHooksProps) {
 				// 流程
 				await FlowApi.changeEnableStatus(flow.id)
 				break
-			case FlowRouteType.Knowledge:
+			case FlowRouteType.VectorKnowledge:
 				// 知识库
 				await KnowledgeApi.updateKnowledge({
 					code: flow.code,
@@ -406,7 +406,7 @@ export default function useFlowList({ flowType }: FlowListHooksProps) {
 	const getDropdownItems = useMemoizedFn((flow: MagicFlow.Flow | Knowledge.KnowledgeItem) => {
 		return (
 			<>
-				{flowType === FlowRouteType.Knowledge && (
+				{flowType === FlowRouteType.VectorKnowledge && (
 					<MagicButton
 						justify="flex-start"
 						icon={<MagicIcon component={IconEye} size={20} color="currentColor" />}
@@ -417,7 +417,7 @@ export default function useFlowList({ flowType }: FlowListHooksProps) {
 							goToKnowledgeDetail(flow.code)
 						}}
 					>
-						查看详情
+						{t("flow.viewDetails")}
 					</MagicButton>
 				)}
 				<MagicButton

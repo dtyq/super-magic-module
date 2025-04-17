@@ -3,7 +3,7 @@ import { useState } from "react"
 import { Button, Card, Input, Select, message, Spin, Space, Typography, Tabs } from "antd"
 import { IconArrowRight } from "@tabler/icons-react"
 import { createStyles } from "antd-style"
-import { convertJSONStringToDSL, convertDSLToJSONString } from "../../api/dslConverter"
+import { convertDSLToJSONString, convertJSONStringToDSL } from "../../utils/api/dslConverter"
 
 const { TextArea } = Input
 const { Text, Title } = Typography

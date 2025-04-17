@@ -5,8 +5,8 @@ import { useStyles } from "./styles"
 import AnimatedLoading, { loadingContainerStyle } from "./components/AnimatedLoading"
 import type { CommandStatus } from "./components/CommandStatusDisplay"
 import CommandStatusDisplay from "./components/CommandStatusDisplay"
-import { useCommandDetection } from "./hooks/useCommandDetection"
 import MagicMarkdown from "@/opensource/pages/chatNew/components/ChatMessageList/components/MessageFactory/components/Markdown/EnhanceMarkdown"
+import { useCommandDetection } from "./hooks/useCommandDetection"
 import USER_AVATAR_URL from "./static/user.png"
 import ASSISTANT_AVATAR_URL from "./static/assistant.png"
 
@@ -24,7 +24,7 @@ export interface MessageProps {
 	}
 	onConfirm?: (operationType: string, data?: any) => void
 	onCancel?: (operationType: string) => void
-	onRetry?: () => void
+	onRetry?: (messageId: string) => void
 }
 
 function MessageItem(props: MessageProps): React.ReactElement {
@@ -179,7 +179,7 @@ function MessageItem(props: MessageProps): React.ReactElement {
 						danger
 						icon={<ReloadOutlined />}
 						className={styles.retryButton}
-						onClick={onRetry}
+						onClick={() => onRetry?.(id)}
 						title="重试"
 					/>
 				)}

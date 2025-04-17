@@ -8,6 +8,14 @@ import { ConversationMessageType } from "@/types/chat/conversation_message"
 import { observer } from "mobx-react-lite"
 import MessageFactory from "./MessageFactory"
 import ConversationMessageProvider from "../MessageItem/components/ConversationMessageProvider"
+import { createStyles } from "antd-style"
+
+const useStyles = createStyles(() => ({
+	messageContent: {
+		width: "fit-content",
+		maxWidth: "100%",
+	},
+}))
 
 const MessageRenderer = observer(
 	({
@@ -24,9 +32,10 @@ const MessageRenderer = observer(
 		referMessageId?: string
 		referFileId?: string
 	}) => {
+		const { styles, cx } = useStyles()
 		const MessageComponent = MessageFactory.getComponent(type)
 
-		if(!MessageComponent) {
+		if (!MessageComponent) {
 			return null
 		}
 
@@ -47,7 +56,7 @@ const MessageRenderer = observer(
 		}
 
 		return (
-			<div className="message-content">
+			<div className={cx(styles.messageContent, "message-content")}>
 				<Suspense fallback={<Skeleton.Input active />}>
 					<ConversationMessageProvider messageId={messageId}>
 						<MessageComponent

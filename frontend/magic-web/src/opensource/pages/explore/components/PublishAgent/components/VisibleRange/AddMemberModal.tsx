@@ -58,6 +58,7 @@ export const AddMemberModal = ({ selected, onSubmit, onClose }: OpenableProps<Us
 			onSelectChange={setOrganizationChecked}
 			onOk={onOk}
 			onCancel={onCancel}
+			withoutGroup
 		/>
 	)
 }

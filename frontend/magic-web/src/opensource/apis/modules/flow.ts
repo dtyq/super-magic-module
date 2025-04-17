@@ -376,4 +376,15 @@ export const generateFlowApi = (fetch: HttpClient) => ({
 			},
 		})
 	},
+
+	/**
+	 * 获取节点模板
+	 */
+	getNodeTemplate(nodeType: string) {
+		return fetch.post<MagicFlow.Node>(genRequestUrl(RequestUrl.getNodeTemplate), {
+			params: {},
+			node_type: nodeType,
+            node_version: "latest"
+		})
+	},
 })

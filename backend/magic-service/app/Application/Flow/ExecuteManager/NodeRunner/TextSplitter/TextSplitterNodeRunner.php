@@ -36,7 +36,7 @@ class TextSplitterNodeRunner extends NodeRunner
         $params = $this->node->getParams();
 
         $content = ComponentFactory::fastCreate($params['content'] ?? []);
-        if (! $content?->isValue()) {
+        if (! $content || ! $content->isValue()) {
             ExceptionBuilder::throw(FlowErrorCode::ExecuteValidateFailed, 'flow.component.format_error', ['label' => 'content']);
         }
         $content->getValue()->getExpressionValue()?->setIsStringTemplate(true);
@@ -46,8 +46,8 @@ class TextSplitterNodeRunner extends NodeRunner
         }
 
         $splitter = DocumentSplitterSwitch::tryFrom($params['strategy'] ?? '') ?? DocumentSplitterSwitch::Auto;
-
-        $model = $this->modelGatewayMapper->getChatModelProxy(EmbeddingGenerator::defaultModel());
+        $orgCode = $executionData->getOperator()->getOrganizationCode();
+        $model = $this->modelGatewayMapper->getChatModelProxy(EmbeddingGenerator::defaultModel(), $orgCode);
 
         $splitTexts = $splitter->getSplitter()->split($model, $text);
 

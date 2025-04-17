@@ -34,6 +34,7 @@ const useStyles = createStyles(
 				user-select: none;
 				width: 100%;
 				gap: 8px;
+				overflow-x: hidden;
 
 				> .${message} {
 					align-items: flex-end;
@@ -61,6 +62,12 @@ const useStyles = createStyles(
 						width: 100%;
 					}
 				}
+			`,
+			avatar: css`
+				flex-shrink: 0;
+			`,
+			contentWrapper: css`
+				overflow-x: hidden;
 			`,
 		}
 	},

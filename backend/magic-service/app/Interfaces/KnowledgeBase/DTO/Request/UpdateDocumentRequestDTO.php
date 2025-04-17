@@ -50,7 +50,6 @@ class UpdateDocumentRequestDTO extends AbstractRequestDTO
             'code.max' => '文档编码长度不能超过64个字符',
             'name.required' => '文档名称不能为空',
             'name.max' => '文档名称长度不能超过255个字符',
-            'doc_type.min' => '文档类型必须大于等于0',
             'enabled.boolean' => '启用状态必须为布尔值',
         ];
     }

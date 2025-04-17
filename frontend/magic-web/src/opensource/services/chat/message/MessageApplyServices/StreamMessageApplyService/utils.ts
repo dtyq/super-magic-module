@@ -11,18 +11,21 @@ export function sliceMessage(message: StreamResponse) {
 	// 定义一个函数来处理字符串分割，将文本分割成更小的单位以实现逐字输出
 	const sliceString = (str: string) => {
 		// 对于极短的字符串，直接返回
-		if (str.length <= 2) {
+		if (!str || str.length === 0) {
+			return []
+		}
+
+		if (str.length <= 1) {
 			return [str]
 		}
 
-		// 将字符串分割成单个字符或极小的片段
+		// 将字符串分割成单个字符
 		const characters: string[] = []
-		const chunkSize = 1 // 或 2-3，取决于需要的平滑程度
 
-		// 逐字符分割
-		for (let i = 0; i < str.length; i += chunkSize) {
-			const chunk = str.substring(i, Math.min(i + chunkSize, str.length))
-			characters.push(chunk)
+		// 逐字符分割，确保每个字符单独处理
+		for (let i = 0; i < str.length; i++) {
+			const char = str.charAt(i)
+			characters.push(char)
 		}
 
 		return characters

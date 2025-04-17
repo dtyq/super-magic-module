@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next"
 import { useLocation } from "react-router"
 import { RoutePath } from "@/const/routes"
 import { bigNumCompare } from "@/utils/string"
-import { useInterafceStore } from "@/opensource/stores/interface"
+import { interfaceStore } from "@/opensource/stores/interface"
 import type { StreamResponse, WebSocketPayload } from "@/types/request"
 import MessageSeqIdService from "@/opensource/services/chat/message/MessageSeqIdService"
 import MessageService from "@/opensource/services/chat/message/MessageService"
@@ -16,9 +16,9 @@ import type { SeqRecord } from "@/opensource/apis/modules/chat/types"
 import chatWebSocket from "@/opensource/apis/clients/chatWebSocket"
 import { useAuthorization, useOrganization } from "@/opensource/models/user/hooks"
 import { userStore } from "@/opensource/models/user"
-import { useStyles } from "./styles"
-import ContactProvider from "../ContactProvider"
+import ContactProvider from "@/opensource/providers/ContactProvider"
 import { observer } from "mobx-react-lite"
+import { useStyles } from "./styles"
 
 interface ChatServiceProps extends PropsWithChildren {}
 
@@ -27,8 +27,7 @@ const ChatProvider = observer(function ChatProvider({ children }: ChatServicePro
 	const { t } = useTranslation("interface")
 	const { styles } = useStyles()
 
-	const magic_id = userStore.user.userInfo?.magic_id
-	const isSwitchingOrganization = useInterafceStore((state) => state.isSwitchingOrganization)
+	const isSwitchingOrganization = interfaceStore.isSwitchingOrganization
 
 	useEffect(() => {
 		const callback = (message: WebSocketPayload) => {
@@ -94,9 +93,7 @@ const ChatProvider = observer(function ChatProvider({ children }: ChatServicePro
 		[styles.container, styles.spin, t],
 	)
 
-	if (location.pathname === RoutePath.Login) return children
-
-	if (!magic_id || isSwitchingOrganization) {
+	if (isSwitchingOrganization) {
 		return Fallback
 	}
 

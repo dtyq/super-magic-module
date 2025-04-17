@@ -22,7 +22,6 @@ interface SendMessageResult {
  */
 export const useSendAgentMessage = () => {
 	const language = useGlobalLanguage(false)
-
 	/**
 	 * 发送消息到Agent并获取响应
 	 */
@@ -45,8 +44,7 @@ export const useSendAgentMessage = () => {
 				}
 
 				// 直接使用fetch API发送请求
-				const apiKey = "api-sk-67ebe621aa2cb7-76719050"
-				const apiUrl = `${env("MAGIC_SERVICE_BASE_URL")}/api/chat`
+				const apiUrl = `${env("MAGIC_SERVICE_BASE_URL")}/api/v2/magic/flows/built-chat`
 
 				// 针对 magic API请求需要将组织 Code 换成 magic 生态中的组织 Code，而非 teamshare 的组织 Code
 				const magicOrganizationCode = userStore.user.organizationCode
@@ -55,8 +53,7 @@ export const useSendAgentMessage = () => {
 					"Content-Type": "application/json",
 					authorization: userStore.user.authorization ?? "",
 					"organization-code": magicOrganizationCode ?? "",
-					language,
-					"api-key": apiKey,
+					language
 				}
 
 				console.log("发送Agent请求 headers:", headers)
@@ -69,6 +66,7 @@ export const useSendAgentMessage = () => {
 						message,
 						conversation_id: options.conversationId || "temp-conversation",
 						stream: true,
+						flow_code: "flow_assistant",
 					}),
 				})
 

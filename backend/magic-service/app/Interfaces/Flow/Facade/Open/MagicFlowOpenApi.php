@@ -26,7 +26,6 @@ class MagicFlowOpenApi extends AbstractOpenApi
     {
         $apiChatDTO = $this->createApiChatDTO();
         $apiChatDTO->setAsync(false);
-        $apiChatDTO->validate();
         return $this->magicFlowExecuteAppServiceService->apiChat($apiChatDTO);
     }
 

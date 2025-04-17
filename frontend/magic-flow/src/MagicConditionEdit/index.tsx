@@ -1,7 +1,7 @@
 import { EXPRESSION_VALUE, InputExpressionValue } from "@/MagicExpressionWidget/types"
 import { DataSourceOption } from "@/common/BaseUI/DropdownRenderer/Reference"
 import ErrorContent from "@/common/BaseUI/ErrorComponent/ErrorComponent"
-import { message } from "antd"
+import { ConfigProvider, message } from "antd"
 import i18next from "i18next"
 import _, { get, isEmpty, isPlainObject, set } from "lodash"
 import React, {
@@ -27,6 +27,8 @@ import { GlobalProvider } from "./context/Global/Provider"
 import { isEqualToDefaultCondition } from "./helpers"
 import { CustomConditionContainerStyle } from "./style"
 import { Expression } from "./types/expression"
+import { ThemeProvider } from "antd-style"
+import { CLASSNAME_PREFIX } from "@/common/constants"
 
 export enum ConditionEditMode {
 	/** 单行显示 */
@@ -513,27 +515,29 @@ function CustomConditionContainer(
 				return <ErrorContent />
 			}}
 		>
-			<CustomConditionContainerStyle>
-				<GlobalProvider
-					leftDisabledPos={leftDisabledPos}
-					disabledOperationPos={disabledOperationPos}
-					showTitlePosList={showTitlePosList}
-				>
-					<RelationGroup
-						pos=""
-						changeRef={changeRef}
-						conditionData={conditionData}
-						options={{
-							maxGroupDepth,
-							openConvertButton,
-							termWidth,
-							expressionSource,
-						}}
-						cacheDictionary={cacheDictionary}
-						readonly={readonly}
-					/>
-				</GlobalProvider>
-			</CustomConditionContainerStyle>
+			<ConfigProvider prefixCls={CLASSNAME_PREFIX}>
+				<CustomConditionContainerStyle>
+					<GlobalProvider
+						leftDisabledPos={leftDisabledPos}
+						disabledOperationPos={disabledOperationPos}
+						showTitlePosList={showTitlePosList}
+					>
+						<RelationGroup
+							pos=""
+							changeRef={changeRef}
+							conditionData={conditionData}
+							options={{
+								maxGroupDepth,
+								openConvertButton,
+								termWidth,
+								expressionSource,
+							}}
+							cacheDictionary={cacheDictionary}
+							readonly={readonly}
+						/>
+					</GlobalProvider>
+				</CustomConditionContainerStyle>
+			</ConfigProvider>
 		</ErrorBoundary>
 	)
 }

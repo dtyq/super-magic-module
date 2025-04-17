@@ -10,8 +10,6 @@ namespace App\Domain\ModelAdmin\Entity;
 use App\Domain\ModelAdmin\Constant\ServiceProviderCode;
 use App\Domain\ModelAdmin\Constant\Status;
 use App\Domain\ModelAdmin\Entity\ValueObject\ServiceProviderConfig;
-use App\ErrorCode\ServiceProviderErrorCode;
-use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use Hyperf\Codec\Json;
 
 class ServiceProviderConfigEntity extends AbstractEntity
@@ -81,11 +79,9 @@ class ServiceProviderConfigEntity extends AbstractEntity
         return $this->status;
     }
 
-    public function isActive()
+    public function isActive(): bool
     {
-        if ($this->getStatus() !== Status::ACTIVE->value) {
-            ExceptionBuilder::throw(ServiceProviderErrorCode::ServiceProviderNotActive);
-        }
+        return $this->getStatus() === Status::ACTIVE->value;
     }
 
     public function enable(): void

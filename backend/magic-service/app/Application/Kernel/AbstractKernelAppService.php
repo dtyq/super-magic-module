@@ -8,6 +8,7 @@ declare(strict_types=1);
 namespace App\Application\Kernel;
 
 use App\Application\Flow\ExecuteManager\ExecutionData\Operator;
+use App\Domain\Admin\Entity\ValueObject\AdminDataIsolation;
 use App\Domain\Authentication\Entity\ValueObject\AuthenticationDataIsolation;
 use App\Domain\Contact\Entity\ValueObject\DataIsolation as ContactDataIsolation;
 use App\Domain\File\Service\FileDomainService;
@@ -31,8 +32,16 @@ abstract class AbstractKernelAppService
      */
     public function getIcons(string $organizationCode, array $icons): array
     {
-        $icons = array_filter($icons);
-        return di(FileDomainService::class)->getLinks($organizationCode, $icons);
+        return $this->getFileLinks($organizationCode, $icons);
+    }
+
+    /**
+     * @return array<string,FileLink>
+     */
+    public function getFileLinks(string $organizationCode, array $fileLinks): array
+    {
+        $fileLinks = array_filter($fileLinks);
+        return di(FileDomainService::class)->getLinks($organizationCode, $fileLinks);
     }
 
     public function getFileLink(string $organizationCode, string $icon): ?FileLink
@@ -93,6 +102,17 @@ abstract class AbstractKernelAppService
     protected function createKnowledgeBaseDataIsolation(Authenticatable|BaseDataIsolation $authorization): KnowledgeBaseDataIsolation
     {
         $dataIsolation = new KnowledgeBaseDataIsolation();
+        if ($authorization instanceof BaseDataIsolation) {
+            $dataIsolation->extends($authorization);
+            return $dataIsolation;
+        }
+        $this->handleByAuthorization($authorization, $dataIsolation);
+        return $dataIsolation;
+    }
+
+    protected function createAdminDataIsolation(Authenticatable|BaseDataIsolation $authorization): AdminDataIsolation
+    {
+        $dataIsolation = new AdminDataIsolation();
         if ($authorization instanceof BaseDataIsolation) {
             $dataIsolation->extends($authorization);
             return $dataIsolation;

@@ -64,9 +64,9 @@ class MagicEnvironmentEntity extends AbstractEntity
         return $this->environmentCode;
     }
 
-    public function setEnvironmentCode(string $environmentCode): self
+    public function setEnvironmentCode(?string $environmentCode): self
     {
-        $this->environmentCode = $environmentCode;
+        $this->environmentCode = $environmentCode ?? '';
         return $this;
     }
 

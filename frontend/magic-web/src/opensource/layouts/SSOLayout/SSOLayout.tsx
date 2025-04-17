@@ -31,7 +31,7 @@ function SSOLayout() {
 							<LanguageSelect />
 							<AppearenceSwitch />
 						</Flex>
-						<Flex vertical align="center" gap={50}>
+						<Flex vertical align="center" className={styles.content}>
 							<TopMeta />
 							<Flex
 								vertical

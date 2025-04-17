@@ -21,6 +21,9 @@ class ObsSimpleUpload extends SimpleUpload
      */
     public function uploadObject(array $credential, UploadFile $uploadFile): void
     {
+        if (isset($credential['temporary_credential'])) {
+            $credential = $credential['temporary_credential'];
+        }
         if (! isset($credential['dir'])
             || ! isset($credential['policy'])
             || ! isset($credential['host'])

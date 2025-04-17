@@ -3,7 +3,10 @@ import { useForm } from "antd/lib/form/Form"
 import { ExpressionMode } from "@dtyq/magic-flow/MagicExpressionWidget/constant"
 import { useMemo } from "react"
 import { useMemoizedFn } from "ahooks"
-import { useFlow } from "@dtyq/magic-flow/MagicFlow/context/FlowContext/useFlow"
+import {
+	useFlow,
+	useNodeConfigActions,
+} from "@dtyq/magic-flow/MagicFlow/context/FlowContext/useFlow"
 import { useCurrentNode } from "@dtyq/magic-flow/MagicFlow/nodes/common/context/CurrentNode/useCurrentNode"
 import { set, cloneDeep } from "lodash-es"
 import { IconHelp } from "@tabler/icons-react"
@@ -19,22 +22,21 @@ import { v0Template } from "./template"
 export default function CacheSetter() {
 	const { t } = useTranslation()
 	const [form] = useForm()
-	const { nodeConfig, updateNodeConfig } = useFlow()
+	const { updateNodeConfig } = useNodeConfigActions()
 
 	const { currentNode } = useCurrentNode()
 
 	const { expressionDataSource } = usePrevious()
 
 	const onValuesChange = useMemoizedFn((changeValues) => {
-		if (!currentNode || !nodeConfig || !nodeConfig[currentNode?.node_id]) return
-		const currentNodeConfig = nodeConfig[currentNode?.node_id]
+		if (!currentNode) return
 
 		Object.entries(changeValues).forEach(([changeKey, changeValue]) => {
-			set(currentNodeConfig, ["params", changeKey], changeValue)
+			set(currentNode, ["params", changeKey], changeValue)
 		})
 
 		updateNodeConfig({
-			...currentNodeConfig,
+			...currentNode,
 		})
 	})
 

@@ -96,7 +96,7 @@ class LLMAssembler
         $list = [];
         foreach ($modelEntities as $modelEntity) {
             $data = [
-                'id' => $modelEntity->getModel(),
+                'id' => $modelEntity->getType(),
                 'object' => 'model',
                 'created_at' => $modelEntity->getCreatedAt()->getTimestamp(),
                 'owner_by' => $modelEntity->getOwnerBy() ?: 'magic',

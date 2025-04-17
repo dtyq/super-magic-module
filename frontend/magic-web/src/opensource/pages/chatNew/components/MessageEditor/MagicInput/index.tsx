@@ -26,7 +26,7 @@ import { useGlobalLanguage } from "@/opensource/models/config/hooks"
 import TopicService from "@/opensource/services/chat/topic/class"
 import { IMStyle, useAppearanceStore } from "@/opensource/providers/AppearanceProvider/context"
 import ConversationStore from "@/opensource/stores/chatNew/conversation"
-import { useInterafceStore } from "@/opensource/stores/interface"
+import { interfaceStore } from "@/opensource/stores/interface"
 import ReplyStore from "@/opensource/stores/chatNew/messageUI/Reply"
 import MessageReplyService from "@/opensource/services/chat/message/MessageReplyService"
 import EditorDraftService from "@/opensource/services/chat/editor/DraftService"
@@ -91,25 +91,23 @@ export interface MagicInputProps extends Omit<HTMLAttributes<HTMLDivElement>, "d
 	inputMainClassName?: string
 }
 
-const ConversationInput = observer((props: MagicInputProps) => {
-	const {
-		disabled = false,
-		tiptapProps,
-		visible = true,
-		theme = IMStyle.Standard,
-		placeholder,
-		onSend: onSendInProps,
-		sendWhenEnter = true,
-		clearAfterSend = true,
-		aiAutoCompletion,
-		value,
-		defaultValue,
-		onChange: onValueChange,
-		className,
-		inputMainClassName,
-		...rest
-	} = props
-
+const ConversationInput = observer(function ConversationInput({
+	disabled = false,
+	tiptapProps,
+	visible = true,
+	theme = IMStyle.Standard,
+	placeholder,
+	onSend: onSendInProps,
+	sendWhenEnter = true,
+	clearAfterSend = true,
+	aiAutoCompletion,
+	value,
+	defaultValue,
+	onChange: onValueChange,
+	className,
+	inputMainClassName,
+	...rest
+}: MagicInputProps) {
 	const { t } = useTranslation("interface")
 	// const { t: messageT } = useTranslation("message")
 	const language = useGlobalLanguage(false)
@@ -431,9 +429,9 @@ const ConversationInput = observer((props: MagicInputProps) => {
 		[standardStyles.button, theme, onFileChange],
 	)
 
-	const isShowStartPage = useInterafceStore((state) => state.isShowStartPage)
+	const isShowStartPage = interfaceStore.isShowStartPage
 	const onCreateTopic = useMemoizedFn(() => {
-		if (isShowStartPage) useInterafceStore.setState({ isShowStartPage: false })
+		if (isShowStartPage) interfaceStore.updateIsShowStartPage(false)
 		TopicService.createTopic?.()
 	})
 

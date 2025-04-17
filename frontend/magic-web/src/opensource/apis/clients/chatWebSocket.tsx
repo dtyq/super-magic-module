@@ -9,7 +9,7 @@ import { decodeSocketIoMessage } from "@/utils/socketio"
 import { isString, isUndefined } from "lodash-es"
 import Logger from "@/utils/log/Logger"
 import EventBus from "@/utils/eventBus"
-import { useInterafceStore } from "@/opensource/stores/interface"
+import { interfaceStore } from "@/opensource/stores/interface"
 import { UrlUtils } from "../utils"
 import { userService } from "@/services"
 
@@ -82,10 +82,8 @@ export class ChatWebSocket extends EventBus {
 		const that = this
 
 		return new Promise<WebSocket | null>((resolve) => {
-			useInterafceStore.setState({
-				isConnecting: true,
-				showReloadButton: false,
-			})
+			interfaceStore.setIsConnecting(true)
+			interfaceStore.setShowReloadButton(false)
 
 			try {
 				if (that.isConnected) {
@@ -108,9 +106,7 @@ export class ChatWebSocket extends EventBus {
 				// reject(error)
 			}
 		}).then((res) => {
-			useInterafceStore.setState({
-				isConnecting: false,
-			})
+			interfaceStore.setIsConnecting(false)
 			return res
 		})
 	}
@@ -320,10 +316,8 @@ export class ChatWebSocket extends EventBus {
 
 			if (this.reconnectAttempts >= this.maxReconnectAttempts) {
 				console.log("达到最大重连次数")
-				useInterafceStore.setState({
-					showReloadButton: true,
-					isConnecting: false,
-				})
+				interfaceStore.setShowReloadButton(true)
+				interfaceStore.setIsConnecting(false)
 				reject(new Error("达到最大重连次数"))
 				return
 			}
@@ -500,15 +494,15 @@ export class ChatWebSocket extends EventBus {
 const chatWebSocket = new ChatWebSocket()
 
 chatWebSocket.on("open", () => {
-	useInterafceStore.setState({ readyState: WebSocketReadyState.OPEN })
+	interfaceStore.setReadyState(WebSocketReadyState.OPEN)
 })
 
 chatWebSocket.on("close", () => {
-	useInterafceStore.setState({ readyState: WebSocketReadyState.CLOSED })
+	interfaceStore.setReadyState(WebSocketReadyState.CLOSED)
 })
 
 chatWebSocket.on("error", () => {
-	useInterafceStore.setState({ readyState: WebSocketReadyState.CLOSED })
+	interfaceStore.setReadyState(WebSocketReadyState.CLOSED)
 })
 
 export default chatWebSocket

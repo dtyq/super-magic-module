@@ -17,6 +17,7 @@ use App\Infrastructure\Core\Dag\VertexResult;
 use App\Infrastructure\Util\Odin\Agent;
 use App\Infrastructure\Util\Odin\AgentFactory;
 use Dtyq\FlowExprEngine\Component;
+use Hyperf\Odin\Contract\Model\ModelInterface;
 use Hyperf\Odin\Memory\MemoryManager;
 use Hyperf\Odin\Message\SystemMessage;
 use Hyperf\Odin\Model\AbstractModel;
@@ -29,15 +30,14 @@ abstract class AbstractLLMNodeRunner extends NodeRunner
         AbstractLLMNodeParamsConfig $LLMNodeParamsConfig,
         MemoryManager $memoryManager,
         string $systemPrompt,
-        /* @var AbstractModel $model */
-        ?AbstractModel $model = null,
+        null|AbstractModel|ModelInterface $model = null,
     ): Agent {
+        $orgCode = $executionData->getOperator()->getOrganizationCode();
+        $modelName = $LLMNodeParamsConfig->getModel()->getValue()->getResult($executionData->getExpressionFieldData());
         if (! $model) {
-            $modelName = $LLMNodeParamsConfig->getModel()->getValue()->getResult($executionData->getExpressionFieldData());
-            /** @var AbstractModel $model */
-            $model = $this->modelGatewayMapper->getChatModelProxy($modelName);
+            $model = $this->modelGatewayMapper->getChatModelProxy($modelName, $orgCode);
         }
-        $vertexResult->addDebugLog('model', $model->getModelName());
+        $vertexResult->addDebugLog('model', $modelName);
 
         // 加载 Agent 插件
         $this->loadAgentPlugins($LLMNodeParamsConfig, $systemPrompt);
@@ -61,7 +61,7 @@ abstract class AbstractLLMNodeRunner extends NodeRunner
             tools: $tools,
             temperature: $LLMNodeParamsConfig->getModelConfig()->getTemperature(),
             businessParams: [
-                'organization_id' => $executionData->getOperator()->getOrganizationCode(),
+                'organization_id' => $orgCode,
                 'user_id' => $executionData->getOperator()->getUid(),
                 'business_id' => $executionData->getAgentId(),
                 'source_id' => $executionData->getOperator()->getSourceId(),

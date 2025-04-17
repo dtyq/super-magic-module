@@ -80,7 +80,7 @@ const ImageWrapper = memo(
 			<img
 				alt={alt}
 				style={style}
-				className={cx(styles.image, className, { loaded }, 'image-wrapper')}
+				className={cx(styles.image, className, { loaded }, "image-wrapper")}
 				onError={onError}
 				onLoad={onLoad}
 				{...rest}

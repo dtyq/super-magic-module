@@ -96,14 +96,12 @@ const MagicFiles = ({ data, messageId, display = true }: MagicFileProps) => {
 	// 当文件是图片类型时, 显示单个图片
 	if (IMAGE_EXTENSIONS.includes(dataFirst.file_extension?.toLocaleLowerCase() ?? "")) {
 		return (
-			<div>
-				<ImageWrapper
-					className={styles.image}
-					src={fileUrls?.[dataFirst.file_id]?.url}
-					alt={dataFirst.file_name}
-					fileId={dataFirst.file_id}
-				/>
-			</div>
+			<ImageWrapper
+				className={styles.image}
+				src={fileUrls?.[dataFirst.file_id]?.url}
+				alt={dataFirst.file_name}
+				fileId={dataFirst.file_id}
+			/>
 		)
 	}
 

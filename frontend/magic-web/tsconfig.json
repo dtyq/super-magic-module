@@ -28,6 +28,8 @@
 		"paths": {
 			"@/*": ["./src/*"],
 			"@dtyq/magic-flow/*": ["./node_modules/@dtyq/magic-flow/dist/*"]
+            // 同步开发magic-flow时开启
+            // "@dtyq/magic-flow/*": ["../magic-flow/dist/*"]
 		}
 	},
 	"include": ["src/**/*", "types/**/*"],

@@ -94,7 +94,7 @@ function FlowListPage() {
 
 	/** 创建工作流 */
 	const createHandler = useMemoizedFn(() => {
-		if (flowType === FlowRouteType.Knowledge) {
+		if (flowType === FlowRouteType.VectorKnowledge) {
 			handleCreateKnowledge()
 		} else {
 			handleCardCancel()
@@ -113,7 +113,7 @@ function FlowListPage() {
 				<Flex align="center" justify="space-between" className={styles.top}>
 					<div className={styles.leftTitle}>{`${title}（${total}）`}</div>
 					<Flex align="center" gap={6}>
-						{flowType === FlowRouteType.Knowledge && (
+						{flowType === FlowRouteType.VectorKnowledge && (
 							<Select
 								style={{ width: 180 }}
 								options={vkSearchTypeOptions}
@@ -233,7 +233,7 @@ function FlowListPage() {
 					</div>
 				</MagicSpin>
 			</Flex>
-			{flowType !== FlowRouteType.Knowledge && (
+			{flowType !== FlowRouteType.VectorKnowledge && (
 				<RightDrawer
 					open={expandPanelOpen}
 					openAddOrUpdateFlow={openAddOrUpdateFlow}
@@ -245,7 +245,7 @@ function FlowListPage() {
 					getDropdownItems={getRightPanelDropdownItems}
 				/>
 			)}
-			{flowType !== FlowRouteType.Knowledge && (
+			{flowType !== FlowRouteType.VectorKnowledge && (
 				<AddOrUpdateFlow
 					flow={currentFlow}
 					tool={currentTool}
@@ -258,7 +258,7 @@ function FlowListPage() {
 					title={title}
 				/>
 			)}
-			{flowType === FlowRouteType.Knowledge && (
+			{flowType === FlowRouteType.VectorKnowledge && (
 				<UpdateKnowledgeModal
 					title={title}
 					details={currentFlow}

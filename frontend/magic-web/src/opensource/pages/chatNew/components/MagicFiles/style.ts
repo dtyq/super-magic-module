@@ -7,7 +7,9 @@ export const useStyles = createStyles(
 			container: css`
 				cursor: pointer;
 				display: flex;
-				width: 340px;
+				width: fit-content;
+				max-width: 340px;
+				min-width: 200px;
 				flex-direction: column;
 				justify-content: center;
 				align-items: flex-start;
@@ -20,7 +22,7 @@ export const useStyles = createStyles(
 				user-select: none;
 			`,
 			image: css`
-				border: 1px solid #d9d9d9;
+				border: 1px solid ${token.magicColorUsages.border};
 				border-radius: 6px;
 				overflow: hidden;
 				width: fit-content;

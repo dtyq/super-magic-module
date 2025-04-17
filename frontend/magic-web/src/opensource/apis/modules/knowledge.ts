@@ -105,6 +105,22 @@ export const generateKnowledgeApi = (fetch: HttpClient) => ({
 	},
 
 	/**
+	 * 更新知识库的文档
+	 */
+	updateKnowledgeDocument(params: Knowledge.UpdateKnowledgeDocumentParams) {
+		return fetch.put<Knowledge.Detail>(
+			genRequestUrl(RequestUrl.updateKnowledgeDocument, {
+				knowledge_code: params.knowledge_code,
+				document_code: params.document_code,
+			}),
+			{
+				name: params.name,
+				enabled: params.enabled,
+			},
+		)
+	},
+
+	/**
 	 * 删除知识库的文档
 	 */
 	deleteKnowledgeDocument(params: Knowledge.DeleteKnowledgeDocumentParams) {

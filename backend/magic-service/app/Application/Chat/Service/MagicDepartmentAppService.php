@@ -60,6 +60,18 @@ class MagicDepartmentAppService extends AbstractAppService
         return $this->filterDepartmentsHidden([$departmentEntity])[0] ?? null;
     }
 
+    /**
+     * 查询部门详情.
+     * @return array<MagicDepartmentEntity>
+     */
+    public function getDepartmentByIds(DepartmentQueryDTO $queryDTO, MagicUserAuthorization $userAuthorization): array
+    {
+        // 对于前端来说, -1 表示根部门信息.
+        $dataIsolation = $this->createDataIsolation($userAuthorization);
+        $departmentEntities = $this->magicDepartmentDomainService->getDepartmentByIds($dataIsolation, $queryDTO->getDepartmentIds(), true);
+        return $this->filterDepartmentsHidden($departmentEntities);
+    }
+
     public function getSubDepartments(DepartmentQueryDTO $queryDTO, MagicUserAuthorization $userAuthorization): array
     {
         $offset = 0;

@@ -5,7 +5,7 @@ import BaseDropdownRenderer from "@dtyq/magic-flow/common/BaseUI/DropdownRendere
 import TsSelect from "@dtyq/magic-flow/common/BaseUI/Select"
 import { useMemo, useState } from "react"
 import { useMemoizedFn, useMount } from "ahooks"
-import { useFlow } from "@dtyq/magic-flow/MagicFlow/context/FlowContext/useFlow"
+import { useNodeConfigActions } from "@dtyq/magic-flow/MagicFlow/context/FlowContext/useFlow"
 import { useCurrentNode } from "@dtyq/magic-flow/MagicFlow/nodes/common/context/CurrentNode/useCurrentNode"
 import { set, cloneDeep, get } from "lodash-es"
 import { useTranslation } from "react-i18next"
@@ -21,7 +21,7 @@ import { v0Template } from "./template"
 export default function MessageMemoryV0() {
 	const { t } = useTranslation()
 	const [form] = useForm()
-	const { nodeConfig, updateNodeConfig } = useFlow()
+	const { updateNodeConfig } = useNodeConfigActions()
 
 	const { currentNode } = useCurrentNode()
 	const [messageType, setMessageType] = useState(MessageType.Text)
@@ -35,18 +35,17 @@ export default function MessageMemoryV0() {
 	const { expressionDataSource } = usePrevious()
 
 	const onValuesChange = useMemoizedFn((changeValues) => {
-		if (!currentNode || !nodeConfig || !nodeConfig[currentNode?.node_id]) return
-		const currentNodeConfig = nodeConfig[currentNode?.node_id]
+		if (!currentNode) return
 
 		Object.entries(changeValues).forEach(([changeKey, changeValue]) => {
 			if (changeKey === "type") {
 				setMessageType(changeValue as MessageType)
 			}
-			set(currentNodeConfig, ["params", changeKey], changeValue)
+			set(currentNode, ["params", changeKey], changeValue)
 		})
 
 		updateNodeConfig({
-			...currentNodeConfig,
+			...currentNode,
 		})
 	})
 

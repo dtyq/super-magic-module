@@ -2,11 +2,8 @@ import { type CMessage, type MessageMaxSeqInfo } from "@/types/chat"
 import type { SeqResponse } from "@/types/request"
 import { bigNumCompare } from "@/utils/string"
 import { platformKey } from "@/utils/storage"
-import type {
-	GroupUsersRemoveMessage,
-	MessageCanRevoke,
-	ConversationMessageType,
-} from "@/types/chat/conversation_message"
+import type { MessageCanRevoke, ConversationMessageType } from "@/types/chat/conversation_message"
+import type { GroupUsersRemoveMessage } from "@/types/chat/control_message"
 import { CONVERSATION_MESSAGE_CAN_REVOKE_TYPES, ConversationGroupKey } from "@/const/chat"
 import { unique } from "radash"
 import { isAppMessageId } from "@/utils/random"

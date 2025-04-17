@@ -18,11 +18,12 @@ use App\Domain\ModelAdmin\Entity\ValueObject\ServiceProviderConfigDTO;
 use App\Domain\ModelAdmin\Entity\ValueObject\ServiceProviderModelsDTO;
 use App\Domain\ModelAdmin\Service\ServiceProviderDomainService;
 use App\Domain\ModelGateway\Service\ModelConfigDomainService;
-use App\ErrorCode\GenericErrorCode;
+use App\ErrorCode\ServiceProviderErrorCode;
 use App\Infrastructure\Core\Contract\Model\RerankInterface;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Infrastructure\Core\ValueObject\Page;
 use App\Infrastructure\ExternalAPI\MagicAIApi\MagicAILocalModel;
+use DateTime;
 use Hyperf\Contract\ConfigInterface;
 use Hyperf\Odin\Api\RequestOptions\ApiOptions;
 use Hyperf\Odin\Contract\Model\EmbeddingInterface;
@@ -31,6 +32,7 @@ use Hyperf\Odin\Factory\ModelFactory;
 use Hyperf\Odin\Model\AbstractModel;
 use Hyperf\Odin\Model\ModelOptions;
 use Hyperf\Odin\ModelMapper;
+use InvalidArgumentException;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -40,7 +42,8 @@ use Throwable;
 class ModelGatewayMapper extends ModelMapper
 {
     /**
-     * 自定义数据.
+     * 持久化的自定义数据.
+     * @var array<string, OdinModelAttributes>
      */
     protected array $attributes = [];
 
@@ -51,147 +54,138 @@ class ModelGatewayMapper extends ModelMapper
 
     public function __construct(protected ConfigInterface $config, protected LoggerInterface $logger)
     {
+        $this->models['chat'] = [];
+        $this->models['embedding'] = [];
         parent::__construct($config, $logger);
 
-        // 这里具有优先级的顺序来覆盖配置
+        // 这里具有优先级的顺序来覆盖配置,后续统一迁移到管理后台
+        $this->loadEnvModels();
         $this->loadFlowModels();
         $this->loadApiModels();
-        $this->loadAdminModels();
     }
 
-    public function getChatModelProxy(string $model): ModelInterface
+    public function exist(string $model): bool
+    {
+        if (isset($this->models['chat'][$model]) || isset($this->models['embedding'][$model])) {
+            return true;
+        }
+        return (bool) $this->getByAdmin($model);
+    }
+
+    /**
+     * 内部使用 chat 时，一定是使用该方法.
+     * 会自动替代为本地代理模型.
+     */
+    public function getChatModelProxy(string $model, ?string $orgCode = null): ModelInterface
     {
         /** @var AbstractModel $odinModel */
-        $odinModel = $this->getModel($model);
+        $odinModel = $this->getOrganizationChatModel($model, $orgCode);
         // 转换为代理
         return $this->createProxy($model, $odinModel->getModelOptions(), $odinModel->getApiRequestOptions());
     }
 
-    public function getEmbeddingModelProxy(string $model): EmbeddingInterface
+    /**
+     * 内部使用 embedding 时，一定是使用该方法.
+     * 会自动替代为本地代理模型.
+     */
+    public function getEmbeddingModelProxy(string $model, ?string $orgCode = null): EmbeddingInterface
     {
         /** @var AbstractModel $odinModel */
-        $odinModel = $this->getEmbeddingModel($model);
+        $odinModel = $this->getOrganizationEmbeddingModel($model, $orgCode);
         // 转换为代理
         return $this->createProxy($model, $odinModel->getModelOptions(), $odinModel->getApiRequestOptions());
     }
 
-    public function getChatModel(string $model): ModelInterface
+    /**
+     * 该方法获取到的一定是真实调用的模型.
+     * 仅 ModelGateway 领域使用.
+     * @param string $model 预期是管理后台的 model_id，过度阶段接受传入 model_version
+     */
+    public function getOrganizationChatModel(string $model, ?string $orgCode = null): ModelInterface
     {
-        $this->refreshByAdminConfig($model);
+        // 从管理后台获取模型配置
+        $odinModel = $this->getByAdmin($model, $orgCode);
+        if ($odinModel) {
+            return $odinModel->getModel();
+        }
+        // 最后一次尝试，从被预加载的模型中获取。注意，被预加载的模型是即将被废弃，后续需要迁移到管理后台
         return parent::getChatModel($model);
     }
 
-    public function getEmbeddingModel(string $model): EmbeddingInterface
+    /**
+     * 该方法获取到的一定是真实调用的模型.
+     * 仅 ModelGateway 领域使用.
+     * @param string $model 模型名称 预期是管理后台的 model_id，过度阶段接受 model_version
+     */
+    public function getOrganizationEmbeddingModel(string $model, ?string $orgCode = null): EmbeddingInterface
     {
-        $this->refreshByAdminConfig($model);
+        $odinModel = $this->getByAdmin($model, $orgCode);
+        if ($odinModel) {
+            return $odinModel->getModel();
+        }
         return parent::getEmbeddingModel($model);
     }
 
+    /**
+     * 获取当前组织下的所有可用 chat 模型.
+     * @return OdinModel[]
+     */
     public function getChatModels(string $organizationCode): array
     {
-        // 加载 admin 配置的所有 llm 模型
-        $providerConfigs = di(ServiceProviderDomainService::class)->getActiveModelsByOrganizationCode($organizationCode, ServiceProviderCategory::LLM);
-        foreach ($providerConfigs as $providerConfig) {
-            if (! $providerConfig->isEnabled()) {
-                continue;
-            }
-            foreach ($providerConfig->getModels() as $providerModel) {
-                if (! $providerModel->isActive()) {
-                    continue;
-                }
-
-                $this->initModelByAdmin($providerConfig, $providerModel);
-            }
-        }
-
-        return $this->getModels('chat');
+        return $this->getModelsByType($organizationCode, 'chat');
     }
 
+    /**
+     * 获取当前组织下的所有可用 embedding 模型.
+     */
     public function getEmbeddingModels(string $organizationCode): array
     {
-        // 加载 admin 配置的所有 embedding 模型
-        $providerConfigs = di(ServiceProviderDomainService::class)->getActiveModelsByOrganizationCode($organizationCode, ServiceProviderCategory::LLM);
-        foreach ($providerConfigs as $providerConfig) {
-            if (! $providerConfig->isEnabled()) {
-                continue;
-            }
-            foreach ($providerConfig->getModels() as $providerModel) {
-                if (! $providerModel->isActive()) {
-                    continue;
-                }
-
-                $this->initModelByAdmin($providerConfig, $providerModel);
-            }
-        }
-
-        return $this->getModels('embedding');
+        return $this->getModelsByType($organizationCode, 'embedding');
     }
 
-    public function getAttributes(string $modelName): array
+    protected function loadEnvModels(): void
     {
-        return $this->attributes[$modelName] ?? [];
+        // env 添加的模型增加上 attributes
+        /**
+         * @var string $name
+         * @var AbstractModel $model
+         */
+        foreach ($this->models['chat'] as $name => $model) {
+            $this->attributes[$name] = new OdinModelAttributes(
+                key: $name,
+                name: $name,
+                label: $name,
+                icon: '',
+                tags: [['type' => 1, 'value' => 'MagicAI']],
+                createdAt: new DateTime(),
+                owner: 'MagicOdin',
+            );
+            $this->logger->info('EnvModelRegister', [
+                'key' => $name,
+                'model' => $model->getModelName(),
+                'implementation' => get_class($model),
+            ]);
+        }
+        foreach ($this->models['embedding'] as $name => $model) {
+            $this->attributes[$name] = new OdinModelAttributes(
+                key: $name,
+                name: $name,
+                label: $name,
+                icon: '',
+                tags: [['type' => 1, 'value' => 'MagicAI']],
+                createdAt: new DateTime(),
+                owner: 'MagicOdin',
+            );
+            $this->logger->info('EnvModelRegister', [
+                'key' => $name,
+                'model' => $model->getModelName(),
+                'implementation' => get_class($model),
+                'vector_size' => $model->getModelOptions()->getVectorSize(),
+            ]);
+        }
     }
 
-    private function refreshByAdminConfig(string $model): void
-    {
-        if (! is_numeric($model)) {
-            return;
-        }
-        // 纯数字考虑去 admin 获取
-        $serviceProviderDomainService = di(ServiceProviderDomainService::class);
-        $providerModel = $serviceProviderDomainService->getModelById($model);
-        if (! $providerModel || ! $providerModel->isActive()) {
-            ExceptionBuilder::throw(GenericErrorCode::IllegalOperation, 'common.invalid', ['label' => $model]);
-        }
-        $providerConfig = $serviceProviderDomainService->getServiceProviderConfigByServiceProviderModel($providerModel);
-        if (! $providerConfig || ! $providerConfig->isActive()) {
-            ExceptionBuilder::throw(GenericErrorCode::IllegalOperation, 'common.invalid', ['label' => $model]);
-        }
-        $this->initModelByAdmin($providerModel, $providerConfig);
-    }
-
-    private function initModelByAdmin(ServiceProviderConfigDTO|ServiceProviderConfigEntity $providerConfigEntity, ServiceProviderModelsDTO|ServiceProviderModelsEntity $providerModelsEntity): void
-    {
-        if ($providerConfigEntity instanceof ServiceProviderConfigEntity) {
-            $serviceProviderCode = $providerConfigEntity->getProviderCode();
-        } else {
-            $serviceProviderCode = ServiceProviderCode::tryFrom($providerConfigEntity->getProviderCode());
-        }
-        $name = (string) $providerModelsEntity->getId();
-        $config = $providerConfigEntity->getConfig();
-        $modelVersion = $providerModelsEntity->getModelVersion();
-
-        if (! $serviceProviderCode) {
-            return;
-        }
-
-        $this->addModel($name, [
-            'model' => $name,
-            'implementation' => $serviceProviderCode->getImplementation(),
-            'config' => $serviceProviderCode->getImplementationConfig($config, $modelVersion),
-            'model_options' => [
-                'chat' => true,
-                'function_call' => true,
-                'embedding' => false,
-                'multi_modal' => false,
-                'vector_size' => 0,
-            ],
-        ]);
-        $this->addAttributes($name, [
-            'label' => $providerModelsEntity->getName(),
-            'icon' => $providerModelsEntity->getIcon(),
-            'tags' => [['type' => 1, 'value' => $serviceProviderCode->value]],
-            'created_at' => $providerModelsEntity->getCreatedAt(),
-            'owner_by' => 'MagicAI',
-        ]);
-    }
-
-    private function loadAdminModels()
-    {
-        // 这里是动态数据，就不提前加载了
-    }
-
-    private function loadApiModels(): void
+    protected function loadApiModels(): void
     {
         $modelConfigs = di(ModelConfigDomainService::class)->getByModels(['all']);
         foreach ($modelConfigs as $modelConfig) {
@@ -211,13 +205,18 @@ class ModelGatewayMapper extends ModelMapper
                         'vector_size' => 0,
                     ],
                 ]);
-                $this->addAttributes($key, [
-                    'label' => $modelConfig->getName(),
-                    'icon' => '',
-                    'tags' => [['type' => 1, 'value' => 'MagicAI']],
-                    'created_at' => $modelConfig->getCreatedAt(),
-                    'owner_by' => 'MagicAI',
-                ]);
+                $this->addAttributes(
+                    key: $key,
+                    attributes: new OdinModelAttributes(
+                        key: $key,
+                        name: $key,
+                        label: $modelConfig->getName(),
+                        icon: '',
+                        tags: [['type' => 1, 'value' => 'MagicAI']],
+                        createdAt: $modelConfig->getCreatedAt(),
+                        owner: 'MagicAI',
+                    )
+                );
                 $this->logger->info('ApiModelRegister', [
                     'key' => $key,
                     'model' => $modelConfig->getModel(),
@@ -236,7 +235,7 @@ class ModelGatewayMapper extends ModelMapper
         }
     }
 
-    private function loadFlowModels(): void
+    protected function loadFlowModels(): void
     {
         $query = new MagicFlowAIModelQuery();
         $query->setEnabled(true);
@@ -258,13 +257,18 @@ class ModelGatewayMapper extends ModelMapper
                         'vector_size' => $modelEntity->getVectorSize(),
                     ],
                 ]);
-                $this->addAttributes($modelEntity->getName(), [
-                    'label' => $modelEntity->getLabel(),
-                    'icon' => $modelEntity->getIcon(),
-                    'tags' => $modelEntity->getTags(),
-                    'created_at' => $modelEntity->getCreatedAt(),
-                    'owner_by' => 'MagicAI',
-                ]);
+                $this->addAttributes(
+                    key: $modelEntity->getName(),
+                    attributes: new OdinModelAttributes(
+                        key: $modelEntity->getName(),
+                        name: $modelEntity->getName(),
+                        label: $modelEntity->getLabel(),
+                        icon: $modelEntity->getIcon(),
+                        tags: $modelEntity->getTags(),
+                        createdAt: $modelEntity->getCreatedAt(),
+                        owner: 'MagicAI',
+                    )
+                );
                 $this->logger->info('FlowModelRegister', [
                     'key' => $key,
                     'model' => $key,
@@ -285,9 +289,147 @@ class ModelGatewayMapper extends ModelMapper
         }
     }
 
-    private function addAttributes(string $modelName, array $attributes): void
+    /**
+     * 获取当前组织下指定类型的所有可用模型.
+     * @param string $organizationCode 组织代码
+     * @param string $type 模型类型(chat|embedding)
+     * @return OdinModel[]
+     */
+    private function getModelsByType(string $organizationCode, string $type): array
     {
-        $this->attributes[$modelName] = $attributes;
+        $list = [];
+
+        // 获取已持久化的配置
+        $models = $this->getModels($type);
+        foreach ($models as $name => $model) {
+            $list[$name] = new OdinModel(key: $name, model: $model, attributes: $this->attributes[$name]);
+        }
+        // 加载 admin 配置的所有模型
+        $providerConfigs = di(ServiceProviderDomainService::class)->getActiveModelsByOrganizationCode($organizationCode, ServiceProviderCategory::LLM);
+        foreach ($providerConfigs as $providerConfig) {
+            if (! $providerConfig->isEnabled()) {
+                continue;
+            }
+            foreach ($providerConfig->getModels() as $providerModel) {
+                if (! $providerModel->isActive()) {
+                    continue;
+                }
+
+                $model = $this->createModelByAdmin($providerConfig, $providerModel);
+                if (! $model) {
+                    continue;
+                }
+                $list[$model->getAttributes()->getKey()] = $model;
+            }
+        }
+
+        return $list;
+    }
+
+    private function getByAdmin(string $model, ?string $orgCode = null): ?OdinModel
+    {
+        $serviceProviderDomainService = di(ServiceProviderDomainService::class);
+        $providerModels = $serviceProviderDomainService->getOrganizationActiveModelsByIdOrType($model, $orgCode);
+        if (empty($providerModels)) {
+            return null;
+        }
+        // 获取第一个模型
+        $providerModel = $providerModels[0];
+        if (! $providerModel->isActive()) {
+            ExceptionBuilder::throw(ServiceProviderErrorCode::ModelNotActive);
+        }
+        // providerConfig 提供 host和 api-key，providerModel 提供具体要使用的模型接入点
+        $providerConfig = $serviceProviderDomainService->getServiceProviderConfigByServiceProviderModel($providerModel);
+        if (! $providerConfig || ! $providerConfig->isActive()) {
+            ExceptionBuilder::throw(ServiceProviderErrorCode::ServiceProviderNotActive);
+        }
+        return $this->createModelByAdmin($providerConfig, $providerModel);
+    }
+
+    private function createModelByAdmin(ServiceProviderConfigDTO|ServiceProviderConfigEntity $providerConfigEntity, ServiceProviderModelsDTO|ServiceProviderModelsEntity $providerModelsEntity): ?OdinModel
+    {
+        if ($providerConfigEntity instanceof ServiceProviderConfigEntity) {
+            $serviceProviderCode = $providerConfigEntity->getProviderCode();
+        } else {
+            $serviceProviderCode = ServiceProviderCode::tryFrom($providerConfigEntity->getProviderCode());
+        }
+
+        // 服务商侧的接入点名称
+        $endpointName = $providerModelsEntity->getModelVersion();
+        $config = $providerConfigEntity->getConfig();
+        $modelVersion = $providerModelsEntity->getModelVersion();
+        // 模型列表接口，对外展示为模型的名称，如:gpt4o，而不是服务商侧的接入点名称：ep-volce-gpt4o
+        $modelId = $providerModelsEntity->getModelId();
+
+        if (! $serviceProviderCode) {
+            return null;
+        }
+
+        return new OdinModel(
+            key: $modelId,// 用户侧只返回模型名称，不返回服务商侧的接入点名称
+            model: $this->createModel($endpointName, [
+                'model' => $endpointName,
+                'implementation' => $serviceProviderCode->getImplementation(),
+                'config' => $serviceProviderCode->getImplementationConfig($config, $modelVersion),
+                'model_options' => [
+                    'chat' => true,
+                    'function_call' => true,
+                    'embedding' => false,
+                    'multi_modal' => false,
+                    'vector_size' => 0,
+                ],
+            ]),
+            attributes: new OdinModelAttributes(
+                key: $modelId,
+                name: $modelId, // 用户侧只返回模型名称，不返回服务商侧的接入点名称
+                label: $providerModelsEntity->getName(),
+                icon: $providerModelsEntity->getIcon(),
+                tags: [['type' => 1, 'value' => $serviceProviderCode->value]],
+                createdAt: new DateTime($providerModelsEntity->getCreatedAt()),
+                owner: 'MagicAI',
+            )
+        );
+    }
+
+    private function addAttributes(string $key, OdinModelAttributes $attributes): void
+    {
+        $this->attributes[$key] = $attributes;
+    }
+
+    private function createModel(string $model, array $item): EmbeddingInterface|ModelInterface
+    {
+        $implementation = $item['implementation'] ?? '';
+        if (! class_exists($implementation)) {
+            throw new InvalidArgumentException(sprintf('Implementation %s is not defined.', $implementation));
+        }
+
+        // 获取全局模型配置和API配置
+        $generalModelOptions = $this->config->get('odin.llm.general_model_options', []);
+        $generalApiOptions = $this->config->get('odin.llm.general_api_options', []);
+
+        // 全局配置可以被模型配置覆盖
+        $modelOptionsArray = array_merge($generalModelOptions, $item['model_options'] ?? []);
+        $apiOptionsArray = array_merge($generalApiOptions, $item['api_options'] ?? []);
+
+        // 创建选项对象
+        $modelOptions = new ModelOptions($modelOptionsArray);
+        $apiOptions = new ApiOptions($apiOptionsArray);
+
+        // 获取配置
+        $config = $item['config'] ?? [];
+
+        // 获取实际的端点名称，优先使用模型配置中的model字段
+        $endpoint = empty($item['model']) ? $model : $item['model'];
+
+        // 使用ModelFactory创建模型实例
+        return ModelFactory::create(
+            $implementation,
+            $endpoint,
+            $config,
+            $modelOptions,
+            $apiOptions,
+            $this->logger
+        );
     }
 
     private function createProxy(string $model, ModelOptions $modelOptions, ApiOptions $apiOptions): EmbeddingInterface|ModelInterface

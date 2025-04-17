@@ -93,9 +93,6 @@ class FilesystemProxy extends Filesystem
         $credentialPolicy->setSts(false);
         $credentialPolicy->setContentType($uploadFile->getMimeType());
         $credential = $this->getUploadTemporaryCredential($credentialPolicy, $options);
-        if (isset($credential['temporary_credential'])) {
-            $credential = $credential['temporary_credential'];
-        }
         $this->getSimpleUploadInstance($this->adapterName)->uploadObject($credential, $uploadFile);
         $uploadFile->release();
     }
@@ -123,10 +120,14 @@ class FilesystemProxy extends Filesystem
             return $data;
         }
         $credential = $this->expand->getUploadCredential($credentialPolicy, $options);
+
+        $platform = $credential['platform'] ?? $this->adapterName;
+        $expires = $credential['expires'] ?? time() + $credentialPolicy->getExpires();
+        $temporaryCredential = $credential['temporary_credential'] ?? $credential;
         $data = [
-            'platform' => $this->adapterName,
-            'temporary_credential' => $credential,
-            'expires' => time() + $credentialPolicy->getExpires(),
+            'platform' => $platform,
+            'temporary_credential' => $temporaryCredential,
+            'expires' => (int) $expires,
         ];
         $this->setCache($cacheKey, $data, $credentialPolicy->getExpires() - 60);
         return $data;

@@ -144,7 +144,7 @@ function CreateGroupConversationModal({ open, close, ...props }: CreateGroupConv
 						style={{ display: "flex", flexDirection: "column", height: "100%" }}
 						containerHeight={380}
 						filterResult={(result) => {
-							return result.filter((item:any) => {
+							return result.filter((item: any) => {
 								return !item.ai_code
 							})
 						}}
@@ -199,6 +199,8 @@ function CreateGroupConversationModal({ open, close, ...props }: CreateGroupConv
 								style={{ marginBottom: 16 }}
 							>
 								<Input
+									showCount
+									maxLength={50}
 									placeholder={t("form.placeholder.groupName", {
 										ns: "interface",
 									})}

@@ -1,6 +1,6 @@
 import { get, set } from "lodash-es"
 import type { FormInstance } from "antd"
-import { useFlow } from "@dtyq/magic-flow/MagicFlow/context/FlowContext/useFlow"
+import { useNodeConfigActions } from "@dtyq/magic-flow/MagicFlow/context/FlowContext/useFlow"
 import { useCurrentNode } from "@dtyq/magic-flow/MagicFlow/nodes/common/context/CurrentNode/useCurrentNode"
 import { useMemoizedFn } from "ahooks"
 
@@ -10,7 +10,7 @@ import { useMemoizedFn } from "ahooks"
  */
 export default function useFormListRemove() {
 	const { currentNode } = useCurrentNode()
-	const { updateNodeConfig } = useFlow()
+	const { updateNodeConfig } = useNodeConfigActions()
 
 	/**
 	 * 删除 Form.List 中的项

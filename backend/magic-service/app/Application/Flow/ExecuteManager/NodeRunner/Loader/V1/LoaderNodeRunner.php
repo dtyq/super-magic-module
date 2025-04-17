@@ -47,10 +47,11 @@ class LoaderNodeRunner extends NodeRunner
         $paramsConfig = $this->node->getNodeParamsConfig();
 
         $filesComponent = $paramsConfig->getFiles();
-        $files = $filesComponent->getForm()->getKeyValue($executionData->getExpressionFieldData());
-        if (empty($files)) {
-            ExceptionBuilder::throw(FlowErrorCode::FlowNodeValidateFailed, 'flow.node.loader.files_empty');
+        $files = $filesComponent->getForm()->getKeyValue($executionData->getExpressionFieldData()) ?? [];
+        if (! is_array($files)) {
+            $files = [];
         }
+        $files = array_filter($files);
 
         $filesContent = [];
         $resultContent = '';

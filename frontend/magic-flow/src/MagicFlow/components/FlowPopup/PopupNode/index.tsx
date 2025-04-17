@@ -1,6 +1,6 @@
 import { prefix } from "@/MagicFlow/constants"
 import { useExternal } from "@/MagicFlow/context/ExternalContext/useExternal"
-import { useFlow } from "@/MagicFlow/context/FlowContext/useFlow"
+import { useFlowEdges, useNodeConfig } from "@/MagicFlow/context/FlowContext/useFlow"
 import { defaultEdgeConfig } from "@/MagicFlow/edges"
 import { InnerHandleType } from "@/MagicFlow/nodes"
 import { usePopup } from "@/MagicFlow/nodes/common/context/Popup/usePopup"
@@ -30,13 +30,10 @@ type PopupNodeProps = {
 export default function PopupNode({ node, showIcon = true, inGroup }: PopupNodeProps) {
 	const { target, source, edgeId, sourceHandle, nodeId: targetNodeId } = useFlowPopup()
 
-	const {
-		edges,
-		setEdges,
-		updateNextNodeIdsByConnect,
-		updateNextNodeIdsByDeleteEdge,
-		nodeConfig,
-	} = useFlow()
+	const { edges, setEdges, updateNextNodeIdsByConnect, updateNextNodeIdsByDeleteEdge } =
+		useFlowEdges()
+
+	const { nodeConfig } = useNodeConfig()
 
 	const { updateViewPortToTargetNode } = useViewport()
 

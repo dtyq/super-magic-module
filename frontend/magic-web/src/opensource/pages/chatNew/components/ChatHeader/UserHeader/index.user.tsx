@@ -17,6 +17,7 @@ import { IconDots } from "@tabler/icons-react"
 import { ExtraSectionKey } from "@/opensource/pages/chatNew/types"
 import useStyles from "../styles"
 import CurrentTopic from "../CurrentTopic"
+import MagicAvatar from "@/opensource/components/base/MagicAvatar"
 
 interface HeaderProps extends HTMLAttributes<HTMLDivElement> {
 	conversation: Conversation
@@ -53,7 +54,9 @@ function HeaderRaw({ conversation, className }: HeaderProps) {
 				className={cx(styles.header, className)}
 			>
 				<Flex gap={8} align="center" flex={1}>
-					<MagicMemberAvatar uid={conversationUser?.user_id} />
+					<MagicAvatar src={conversationUser?.avatar_url} size={40}>
+						{getUserName(conversationUser)}
+					</MagicAvatar>
 					<Flex vertical flex={1}>
 						<span className={styles.headerTitle}>{getUserName(conversationUser)}</span>
 						<span className={styles.headerTopic}>

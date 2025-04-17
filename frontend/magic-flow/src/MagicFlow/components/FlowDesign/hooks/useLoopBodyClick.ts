@@ -4,9 +4,6 @@ import { MagicFlow } from '@/MagicFlow/types/flow'
 import { useMemoizedFn } from 'ahooks'
 
 export default function useLoopBodyClick() {
-	const { edges, setEdges } = useFlow()
-	const { nodes } = useNodes()
-
 
 	const elevateBodyEdgesLevel = useMemoizedFn((node: MagicFlow.Node) => {
 		// const relationNodesIds = nodes.filter((n) => n.meta.parent_id === node.id).map((n) => n.id)

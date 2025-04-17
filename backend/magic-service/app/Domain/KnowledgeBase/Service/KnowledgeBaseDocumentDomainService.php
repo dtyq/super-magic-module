@@ -23,6 +23,7 @@ use App\Infrastructure\Core\Embeddings\VectorStores\VectorStoreDriver;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Infrastructure\Core\ValueObject\Page;
 use Dtyq\AsyncEvent\AsyncEventUtil;
+use Hyperf\DbConnection\Db;
 
 /**
  * 知识库文档领域服务
@@ -66,9 +67,9 @@ readonly class KnowledgeBaseDocumentDomainService
     /**
      * 查看单个知识库文档详情.
      */
-    public function show(KnowledgeBaseDataIsolation $dataIsolation, string $documentCode): KnowledgeBaseDocumentEntity
+    public function show(KnowledgeBaseDataIsolation $dataIsolation, string $documentCode, bool $selectForUpdate = false): KnowledgeBaseDocumentEntity
     {
-        $document = $this->knowledgeBaseDocumentRepository->show($dataIsolation, $documentCode);
+        $document = $this->knowledgeBaseDocumentRepository->show($dataIsolation, $documentCode, $selectForUpdate);
         if ($document === null) {
             ExceptionBuilder::throw(FlowErrorCode::KnowledgeValidateFailed, 'common.not_found', ['label' => 'document']);
         }
@@ -80,13 +81,19 @@ readonly class KnowledgeBaseDocumentDomainService
      */
     public function destroy(KnowledgeBaseDataIsolation $dataIsolation, string $documentCode): void
     {
-        // 首先删除文档下的所有片段
-        $this->destroyFragments($dataIsolation, $documentCode);
-        $documentEntity = $this->show($dataIsolation, $documentCode);
-        // 然后删除文档本身
-        $this->knowledgeBaseDocumentRepository->destroy($dataIsolation, $documentCode);
+        $documentEntity = null;
+        Db::transaction(function () use ($dataIsolation, $documentCode) {
+            // 首先删除文档下的所有片段
+            $this->destroyFragments($dataIsolation, $documentCode);
+            $documentEntity = $this->show($dataIsolation, $documentCode, true);
+            // 然后删除文档本身
+            $this->knowledgeBaseDocumentRepository->destroy($dataIsolation, $documentCode);
+            // 更新字符数
+            $deltaWordCount = -$documentEntity->getWordCount();
+            $this->updateWordCount($dataIsolation, $documentEntity->getCode(), $deltaWordCount);
+        });
         // 异步删除向量数据库片段
-        AsyncEventUtil::dispatch(new KnowledgeBaseDocumentRemovedEvent($documentEntity));
+        ! is_null($documentEntity) && AsyncEventUtil::dispatch(new KnowledgeBaseDocumentRemovedEvent($documentEntity));
     }
 
     /**
@@ -132,13 +139,13 @@ readonly class KnowledgeBaseDocumentDomainService
     public function getOrCreateDefaultDocument(KnowledgeBaseDataIsolation $dataIsolation, KnowledgeBaseEntity $knowledgeBaseEntity): KnowledgeBaseDocumentEntity
     {
         // 尝试获取默认文档
-        $documentEntity = $this->knowledgeBaseDocumentRepository->show($dataIsolation, KnowledgeBaseDocumentEntity::getDefaultDocumentCode());
+        $documentEntity = $this->knowledgeBaseDocumentRepository->show($dataIsolation, $knowledgeBaseEntity->getDefaultDocumentCode());
         if ($documentEntity) {
             return $documentEntity;
         }
         // 如果文档不存在，创建新的默认文档
         $documentEntity = (new KnowledgeBaseDocumentEntity())
-            ->setCode(KnowledgeBaseDocumentEntity::getDefaultDocumentCode())
+            ->setCode($knowledgeBaseEntity->getDefaultDocumentCode())
             ->setName('未命名文档')
             ->setKnowledgeBaseCode($knowledgeBaseEntity->getCode())
             ->setCreatedUid($knowledgeBaseEntity->getCreator())
@@ -201,6 +208,7 @@ readonly class KnowledgeBaseDocumentDomainService
         $newDocument->setCreatedAt($oldDocument->getCreatedAt());
         $newDocument->setCreatedUid($oldDocument->getCreatedUid());
         $newDocument->setDocType($oldDocument->getDocType());
+        $newDocument->setWordCount($oldDocument->getWordCount());
 
         // 更新时间
         $newDocument->setUpdatedAt(date('Y-m-d H:i:s'));

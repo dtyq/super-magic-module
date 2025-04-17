@@ -3,7 +3,7 @@ import { useState } from "react"
 import type { HTTP } from "@/types/flow"
 import { useUpdateEffect } from "ahooks"
 import { useCurrentNode } from "@dtyq/magic-flow/MagicFlow/nodes/common/context/CurrentNode/useCurrentNode"
-import { useFlow } from "@dtyq/magic-flow/MagicFlow/context/FlowContext/useFlow"
+import { useFlow, useNodeConfigActions } from "@dtyq/magic-flow/MagicFlow/context/FlowContext/useFlow"
 import { omit, cloneDeep, set } from "lodash-es"
 import { ShowColumns } from "@dtyq/magic-flow/MagicJsonSchemaEditor/constants"
 import MagicJsonSchemaEditor from "@dtyq/magic-flow/MagicJsonSchemaEditor"
@@ -30,7 +30,7 @@ export default function HTTPNodeV1() {
 	const { expressionDataSource } = usePrevious()
 
 	const { currentNode } = useCurrentNode()
-	const { nodeConfig, updateNodeConfig, notifyNodeChange } = useFlow()
+	const { updateNodeConfig, notifyNodeChange } = useNodeConfigActions()
 
 	const [api, setApi] = useState<HTTP.Api>(
 		// @ts-ignore
@@ -61,13 +61,11 @@ export default function HTTPNodeV1() {
 	// 下游同步上游
 	useUpdateEffect(() => {
 		if (!currentNode) return
-		const currentNodeConfig = nodeConfig[currentNode?.node_id]
-		if (!currentNodeConfig) return
 		// @ts-ignore
-		set(currentNodeConfig, ["params", "api"], omitDomainPath(api))
+		set(currentNode, ["params", "api"], omitDomainPath(api))
 
-		if (currentNodeConfig?.output) {
-			currentNodeConfig.output.form.structure = output
+		if (currentNode?.output) {
+			currentNode.output.form.structure = output
 		}
 		notifyNodeChange?.()
 	}, [api, output])

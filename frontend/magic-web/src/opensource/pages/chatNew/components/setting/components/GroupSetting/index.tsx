@@ -76,8 +76,8 @@ const GroupSetting = observer(() => {
 				id: GroupSettingListItemId.UpdateGroupName,
 				title: t("chat.groupSetting.groupName"),
 				extra: (
-					<Flex align="center" gap={4}>
-						{groupInfo?.group_name}
+					<Flex align="center" gap={4} className={styles.groupNameContent}>
+						<div className={styles.groupNameContent}>{groupInfo?.group_name}</div>
 						<MagicIcon component={IconChevronRight} />
 					</Flex>
 				),
@@ -390,15 +390,13 @@ const GroupSetting = observer(() => {
 					className={styles.groupAvatar}
 					size={40}
 				/>
-				<Flex vertical gap={4}>
-					<Typography.Text className={styles.groupName}>
-						{groupInfo?.group_name}
-					</Typography.Text>
-					<Typography.Text className={styles.groupNotice}>
-						{resolveToString(t("chat.groupSetting.groupInWhich"), {
+				<Flex vertical className={styles.groupInfoContent}>
+					<div className={styles.groupName}>{groupInfo?.group_name}</div>
+					<div className={styles.groupNotice}>
+						{t("chat.groupSetting.groupInWhich", {
 							name: organization?.organization_name,
 						})}
-					</Typography.Text>
+					</div>
 				</Flex>
 			</Flex>
 			<MagicSpin spinning={loadingMembers} className={styles.memberSection}>

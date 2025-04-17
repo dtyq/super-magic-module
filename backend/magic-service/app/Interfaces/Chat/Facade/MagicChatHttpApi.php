@@ -38,8 +38,6 @@ use Dtyq\ApiResponse\Annotation\ApiResponse;
 use Hyperf\Codec\Json;
 use Hyperf\Contract\StdoutLoggerInterface;
 use Hyperf\HttpServer\Contract\RequestInterface;
-use Hyperf\Odin\Api\Response\ChatCompletionResponse;
-use Hyperf\Odin\Api\Response\ChatCompletionStreamResponse;
 use Hyperf\Odin\Api\Response\TextCompletionResponse;
 use Hyperf\Validation\Contract\ValidatorFactoryInterface;
 use Hyperf\Validation\Rule;
@@ -196,31 +194,7 @@ class MagicChatHttpApi extends AbstractApi
     public function intelligenceGetTopicName(string $conversationId, string $topicId): array
     {
         $authorization = $this->getAuthorization();
-        $sendMsgGPTDTO = $this->magicChatMessageAppService->intelligenceRenameTopicName($authorization, $topicId, $conversationId);
-        if ($sendMsgGPTDTO === null) {
-            return [
-                'conversation_id' => $conversationId,
-                'id' => $topicId,
-                'name' => '',
-            ];
-        }
-        $chatCompletionResponse = $this->llmAppService->chatCompletion($sendMsgGPTDTO);
-
-        if ($chatCompletionResponse instanceof ChatCompletionStreamResponse) {
-            $choices = [];
-            foreach ($chatCompletionResponse->getStreamIterator() as $choice) {
-                $choices[] = $choice->getMessage()->getContent();
-            }
-            $topicName = implode('', $choices);
-        } elseif ($chatCompletionResponse instanceof ChatCompletionResponse) {
-            $topicName = $chatCompletionResponse->getFirstChoice()?->getMessage()->getContent();
-        } else {
-            $topicName = '';
-        }
-        // 如果标题长度超过20个字符则后面的用...代替
-        if (mb_strlen($topicName) > 20) {
-            $topicName = mb_substr($topicName, 0, 20) . '...';
-        }
+        $topicName = $this->magicChatMessageAppService->intelligenceRenameTopicName($authorization, $topicId, $conversationId);
         return [
             'conversation_id' => $conversationId,
             'id' => $topicId,

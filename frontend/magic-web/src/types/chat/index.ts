@@ -3,10 +3,12 @@ import type { User } from "../user"
 import type {
 	AggregateAISearchCardConversationMessage,
 	ConversationMessage,
+} from "./conversation_message"
+import type {
 	HideConversationMessage,
 	MuteConversationMessage,
 	TopConversationMessage,
-} from "./conversation_message"
+} from "./control_message"
 import type { CreateTopicMessage, DeleteTopicMessage, UpdateTopicMessage } from "./topic"
 import type { ConversationFromService, OpenConversationMessage } from "./conversation"
 import type {
@@ -14,6 +16,7 @@ import type {
 	EndConversationInputMessage,
 } from "./conversation_input"
 import type { SeenMessage } from "./seen_message"
+import { AddFriendSuccessMessage } from "./control_message"
 
 /** 消息接收方类型 */
 export const enum MessageReceiveType {
@@ -114,6 +117,8 @@ export const enum ControlEventMessageType {
 	GroupUsersRemove = "group_users_remove",
 	/** 群更新 */
 	GroupUpdate = "group_update",
+	/** 添加好友成功 */
+	AddFriendSuccess = "add_friend_success",
 }
 
 /**
@@ -132,3 +137,4 @@ export type CMessage =
 	| MuteConversationMessage
 	| HideConversationMessage
 	| AggregateAISearchCardConversationMessage<true>
+	| AddFriendSuccessMessage

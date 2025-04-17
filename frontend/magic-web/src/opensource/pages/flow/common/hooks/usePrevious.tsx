@@ -3,7 +3,7 @@
  */
 
 import { cloneDeep, get, set, uniqBy } from "lodash-es"
-import { useFlow } from "@dtyq/magic-flow/MagicFlow/context/FlowContext/useFlow"
+import { useFlowData, useFlowEdges } from "@dtyq/magic-flow/MagicFlow/context/FlowContext/useFlow"
 import { useCurrentNode } from "@dtyq/magic-flow/MagicFlow/nodes/common/context/CurrentNode/useCurrentNode"
 import type { NodeSchema } from "@dtyq/magic-flow/MagicFlow/register/node"
 import { nodeManager } from "@dtyq/magic-flow/MagicFlow/register/node"
@@ -28,12 +28,15 @@ import { customNodeType, DynamicOutputNodeTypes } from "../../constants"
 import { checkIsInLoop, mergeOptionsIntoOne } from "../../utils/helpers"
 import { generateLoopItemOptions } from "./helpers"
 import { LoopTypes } from "../../nodes/Loop/v0/components/LoopTypeSelect"
+import { useFlowInstance } from "../../context/FlowInstanceContext"
 
 export default function usePrevious() {
-	const { edges, nodeConfig, flow } = useFlow()
+	const { flow } = useFlowData()
+	const { edges } = useFlowEdges()
 	const { currentNode } = useCurrentNode()
 	const { nodeMap: nodeSchemaMap } = useNodeMap()
 	const { instructList } = useBotStore()
+	const { flowInstance } = useFlowInstance()
 	const { t } = useTranslation()
 
 	const { methodsDataSource } = useFlowStore()
@@ -279,6 +282,11 @@ export default function usePrevious() {
 
 	const expressionDataSource = useMemo(() => {
 		if (!currentNode) return []
+		console.log(currentNode?.node_id, flowInstance?.current)
+		const nodeConfig = (flowInstance?.current?.getNodeConfig?.() || {}) as Record<
+			string,
+			MagicFlow.Node
+		>
 		const nodes = Object.values(nodeConfig)
 		let allPreNodes = getAllPredecessors(currentNode, nodes, edges)
 		// 如果是循环体内的节点，可引用的数据源为当前节点的上文节点+循环体的上文节点
@@ -455,7 +463,6 @@ export default function usePrevious() {
 		return expressionSources
 	}, [
 		currentNode,
-		nodeConfig,
 		edges,
 		filterCanReferenceNodes,
 		flow?.global_variable,
@@ -464,6 +471,7 @@ export default function usePrevious() {
 		updateVariableOption,
 		nodeSchemaMap,
 		generateInstructionsDataSource,
+		flowInstance,
 	])
 
 	return {

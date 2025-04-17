@@ -1,6 +1,7 @@
+import { env } from "@/utils/env"
 import { Flex } from "antd"
 import { createStyles } from "antd-style"
-import { HTMLAttributes, memo } from "react"
+import { HTMLAttributes, memo, useMemo } from "react"
 import { useTranslation } from "react-i18next"
 
 const useStyles = createStyles(({ css, isDarkMode, token }) => {
@@ -27,13 +28,25 @@ const useStyles = createStyles(({ css, isDarkMode, token }) => {
 const Copyright = memo(function Copyright({ className }: HTMLAttributes<HTMLDivElement>) {
 	const { styles, cx } = useStyles()
 	const { t } = useTranslation("login")
+
+	const IcpCode = useMemo(() => {
+		if (!env("MAGIC_ICP_CODE")) {
+			return null
+		}
+		return (
+			<>
+				<span>|</span>
+				<a href="https://beian.miit.gov.cn" style={{ color: "inherit" }}>
+					{env("MAGIC_ICP_CODE")}
+				</a>
+			</>
+		)
+	}, [])
+
 	return (
 		<Flex align="center" justify="center" className={cx(styles.brand, className)}>
-			<span>{t("copyright")}</span>
-			<span>|</span>
-			<a href="https://beian.miit.gov.cn" style={{ color: "inherit" }}>
-				粤ICP备2023088718号
-			</a>
+			<span>{env("MAGIC_COPYRIGHT") ?? t("copyright")}</span>
+			{IcpCode}
 		</Flex>
 	)
 })

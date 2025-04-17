@@ -32,7 +32,7 @@ export function getEdgeHandlePosition (sourceNode: Node, targetNode: Node) {
 }
 
 // 递归获取节点的所有前置节点
-export const getAllPredecessors = (curNode: MagicFlow.Node, nodes: MagicFlow.Node[], edges: Edge[], predecessors = [] as MagicFlow.Node[]): MagicFlow.Node[] => {
+export const getAllPredecessors = (curNode: MagicFlow.Node, nodes: Node[], edges: Edge[], predecessors = [] as MagicFlow.Node[]): MagicFlow.Node[] => {
 	// 使用 React Flow 提供的 getIncomers 函数获取节点的所有入度节点
     // @ts-ignore
 	const incomers = [...(getIncomers(curNode, nodes, edges) || [])] as MagicFlow.Node[]

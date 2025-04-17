@@ -120,7 +120,7 @@ function Card({
 		>
 			<PromptCard type={flowType} data={cardData} lineCount={lineCount} height={9} />
 			<Flex justify="space-between" align="center">
-				{flowType !== FlowRouteType.Knowledge && (
+				{flowType !== FlowRouteType.VectorKnowledge && (
 					<Flex gap={4} align="center">
 						{tagRender.map((item) => {
 							return (
@@ -143,7 +143,7 @@ function Card({
 			</Flex>
 			<Flex justify="space-between" align="center">
 				<div>{`${t("agent.createTo")} ${data.created_at?.replace(/-/g, "/")}`}</div>
-				{flowType === FlowRouteType.Knowledge && (
+				{flowType === FlowRouteType.VectorKnowledge && (
 					<Flex gap={5} align="center">
 						<div>
 							{tFlow("common.documentCount", {

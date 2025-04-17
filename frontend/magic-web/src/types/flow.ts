@@ -292,7 +292,7 @@ export enum FlowRouteType {
 	Agent = "agent",
 	Sub = "sub",
 	Tools = "tools",
-	Knowledge = "knowledge",
+	VectorKnowledge = "knowledge",
 }
 
 export namespace Flow {

@@ -9,7 +9,6 @@ namespace App\Application\Flow\Service;
 
 use App\Application\ModelGateway\Mapper\ModelGatewayMapper;
 use App\Domain\Flow\Entity\MagicFlowAIModelEntity;
-use Hyperf\Odin\Model\AbstractModel;
 use Qbhy\HyperfAuth\Authenticatable;
 
 class MagicFlowAIModelAppService extends AbstractFlowAppService
@@ -24,23 +23,19 @@ class MagicFlowAIModelAppService extends AbstractFlowAppService
 
         $list = [];
         $models = $mapper->getChatModels($dataIsolation->getCurrentOrganizationCode());
-        /** @var AbstractModel $model */
-        foreach ($models as $name => $model) {
-            if ($model->getModelOptions()->isEmbedding()) {
+        foreach ($models as $odinModel) {
+            if ($odinModel->getModel()->getModelOptions()->isEmbedding()) {
                 continue;
             }
-            $attributes = $mapper->getAttributes($model->getModelName());
-
-            $label = $attributes['label'] ?? $name;
 
             $modelEntity = new MagicFlowAIModelEntity();
-            $modelEntity->setName($model->getModelName());
-            $modelEntity->setModelName($model->getModelName());
-            $modelEntity->setLabel((string) $label);
-            $modelEntity->setIcon($attributes['icon'] ?? '');
-            $modelEntity->setTags($attributes['tags'] ?? []);
+            $modelEntity->setName($odinModel->getAttributes()->getName());
+            $modelEntity->setModelName($odinModel->getModel()->getModelName());
+            $modelEntity->setLabel($odinModel->getAttributes()->getLabel() ?: $odinModel->getAttributes()->getName());
+            $modelEntity->setIcon($odinModel->getAttributes()->getIcon());
+            $modelEntity->setTags($odinModel->getAttributes()->getTags());
             $modelEntity->setDefaultConfigs(['temperature' => 0.5]);
-            $modelEntity->setSupportMultiModal($model->getModelOptions()->isMultiModal());
+            $modelEntity->setSupportMultiModal($odinModel->getModel()->getModelOptions()->isMultiModal());
             $list[$modelEntity->getModelName()] = $modelEntity;
         }
         return [

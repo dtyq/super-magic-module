@@ -48,7 +48,7 @@ const MagicMermaid = memo(function MagicMermaid({
 				startOnLoad: false,
 				theme: "default",
 				securityLevel: "loose",
-				suppressErrorRendering: false,
+				suppressErrorRendering: true,
 			})
 
 			mermaidRef.current.innerHTML = data

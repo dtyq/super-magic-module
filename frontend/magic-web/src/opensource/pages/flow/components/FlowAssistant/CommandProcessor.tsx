@@ -42,15 +42,6 @@ function CommandProcessor(props: CommandProcessorProps): React.ReactElement | nu
 			commandExecutionRef.current = false
 			isProcessingRef.current = false
 
-			// 所有命令执行完成
-			// onCommandUpdate(messageId, [
-			// 	{
-			// 		type: "all",
-			// 		status: "completed",
-			// 		message: t("flowAssistant.commandsCompleted", { ns: "flow" }),
-			// 	},
-			// ])
-
 			onComplete()
 			return
 		}
@@ -108,7 +99,10 @@ function CommandProcessor(props: CommandProcessorProps): React.ReactElement | nu
 				{
 					type: command.type,
 					status: "failed",
-					message: `${t("flowAssistant.commandFailed", { type: command.type, ns: "flow" })}: ${errorMessage}`,
+					message: `${t("flowAssistant.commandFailed", {
+						type: command.type,
+						ns: "flow",
+					})}: ${errorMessage}`,
 				},
 			])
 

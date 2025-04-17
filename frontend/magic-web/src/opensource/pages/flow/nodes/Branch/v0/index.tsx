@@ -5,7 +5,10 @@ import { nanoid } from "nanoid"
 import { useCurrentNode } from "@dtyq/magic-flow/MagicFlow/nodes/common/context/CurrentNode/useCurrentNode"
 import type { ConditionInstance } from "@dtyq/magic-flow/MagicConditionEdit/index"
 import { set } from "lodash-es"
-import { useFlow } from "@dtyq/magic-flow/MagicFlow/context/FlowContext/useFlow"
+import {
+	useFlowEdges,
+	useNodeConfigActions,
+} from "@dtyq/magic-flow/MagicFlow/context/FlowContext/useFlow"
 import usePrevious from "@/opensource/pages/flow/common/hooks/usePrevious"
 import styles from "./index.module.less"
 import BranchItem from "./components/BranchItem"
@@ -14,7 +17,8 @@ import "./index.less"
 
 export default function Branch() {
 	const { currentNode } = useCurrentNode()
-	const { notifyNodeChange, edges, deleteEdges } = useFlow()
+	const { edges, deleteEdges } = useFlowEdges()
+	const { notifyNodeChange } = useNodeConfigActions()
 	const [branchList, setBranchList] = useState(
 		addBranchTypeIfWithout(currentNode?.params?.branches),
 	)

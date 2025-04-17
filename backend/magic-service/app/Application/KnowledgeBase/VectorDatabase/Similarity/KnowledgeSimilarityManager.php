@@ -81,30 +81,38 @@ class KnowledgeSimilarityManager
 
     public function destroyByMetadataFilter(KnowledgeBaseDataIsolation $dataIsolation, KnowledgeBaseEntity $knowledgeBaseEntity, KnowledgeSimilarityFilter $filter): void
     {
-        // 从向量库中先获取数据
-        $points = $knowledgeBaseEntity->getVectorDBDriver()->queryPoints(
-            $knowledgeBaseEntity->getCollectionName(),
-            $filter->getLimit(),
-            $filter->getMetadataFilter(),
-        );
-        $pointIds = [];
-        foreach ($points as $point) {
-            $fragment = KnowledgeBaseFragmentEntity::createByPointInfo($point, $knowledgeBaseEntity->getCode());
-            $pointIds[] = $fragment->getPointId();
-        }
-
-        Db::transaction(function () use ($dataIsolation, $knowledgeBaseEntity, $filter, $pointIds) {
-            $fragmentDomainService = di(KnowledgeBaseFragmentDomainService::class);
-            $fragmentDomainService->batchDestroyByPointIds(
-                $dataIsolation,
-                $knowledgeBaseEntity,
-                $pointIds
-            );
-            // 还需要删除相同 point_id 的内容，因为目前允许重复
-            $knowledgeBaseEntity->getVectorDBDriver()->removeByFilter(
+        $max = 10;
+        $filter->setLimit(1000);
+        while ($max) {
+            --$max;
+            // 从向量库中先获取数据
+            $points = $knowledgeBaseEntity->getVectorDBDriver()->queryPoints(
                 $knowledgeBaseEntity->getCollectionName(),
+                $filter->getLimit(),
                 $filter->getMetadataFilter(),
             );
-        });
+            $pointIds = [];
+            foreach ($points as $point) {
+                $fragment = KnowledgeBaseFragmentEntity::createByPointInfo($point, $knowledgeBaseEntity->getCode());
+                $pointIds[] = $fragment->getPointId();
+            }
+            if (empty($pointIds)) {
+                break;
+            }
+
+            Db::transaction(function () use ($dataIsolation, $knowledgeBaseEntity, $filter, $pointIds) {
+                $fragmentDomainService = di(KnowledgeBaseFragmentDomainService::class);
+                $fragmentDomainService->batchDestroyByPointIds(
+                    $dataIsolation,
+                    $knowledgeBaseEntity,
+                    $pointIds
+                );
+                // 还需要删除相同 point_id 的内容，因为目前允许重复
+                $knowledgeBaseEntity->getVectorDBDriver()->removeByFilter(
+                    $knowledgeBaseEntity->getCollectionName(),
+                    $filter->getMetadataFilter(),
+                );
+            });
+        }
     }
 }

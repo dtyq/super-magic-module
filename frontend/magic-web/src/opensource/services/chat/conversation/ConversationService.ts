@@ -29,7 +29,6 @@ import { ChatApi } from "@/apis"
 import { User } from "@/types/user"
 import { userStore } from "@/opensource/models/user"
 import LastConversationService from "./LastConversationService"
-import { Bot } from "@/types/bot"
 
 /**
  * 会话服务
@@ -149,6 +148,7 @@ class ConversationService {
 		})
 
 		this.deleteConversation(conversationId)
+		conversationStore.setCurrentConversation(undefined)
 	}
 
 	/**
@@ -187,6 +187,11 @@ class ConversationService {
 			ConversationBotDataService.clearBotInfo()
 			// 清除Agent信息
 			ConversationTaskService.clearAgentInfo()
+
+			// 获取会话用户/群组信息
+			if (!conversation.isGroupConversation) {
+				userInfoService.fetchUserInfos([conversation.receive_id], 2)
+			}
 
 			// 如果是AI会话
 			if (conversation.isAiConversation) {
@@ -360,9 +365,7 @@ class ConversationService {
 				}
 
 				// 重新拉取一遍用户信息和群聊信息, 保证数据最新
-				requestIdleCallback(() => {
-					this.refreshConversationReceiveData()
-				})
+				this.refreshConversationReceiveData()
 			},
 		)
 	}

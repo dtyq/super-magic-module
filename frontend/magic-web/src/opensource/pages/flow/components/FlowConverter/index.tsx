@@ -1,12 +1,13 @@
+// @ts-nocheck
 import React, { useState } from "react"
-import { Button, Card, Input, Select, message, Spin, Space, Typography, Tabs } from "@feb/kk-design"
+import { Button, Card, Input, Select, message, Spin, Space, Typography, Tabs } from "antd"
 import { IconArrowRight } from "@tabler/icons-react"
 import {
 	convertYAMLToJSON,
 	convertJSONToYAML,
 	convertJSONStringToYAML,
 	convertYAMLToJSONString,
-} from "../../api/flowConverter"
+} from "../../utils/api/flowConverter"
 import styles from "./index.module.less"
 
 const { TextArea } = Input
@@ -194,7 +195,7 @@ const FlowConverter: React.FC = () => {
 							将Flow格式的工作流YAML转换为JSON格式。
 							<ul>
 								<li>在源文件区域粘贴YAML格式的内容，或者上传YAML文件</li>
-								<li>点击"转换"按钮执行转换</li>
+								<li>点击&quot;转换&quot;按钮执行转换</li>
 								<li>转换完成后，可以下载结果或复制结果</li>
 							</ul>
 						</Text>
@@ -204,7 +205,7 @@ const FlowConverter: React.FC = () => {
 							将Flow JSON格式转换为YAML格式。
 							<ul>
 								<li>在源文件区域粘贴JSON格式的内容，或者上传JSON文件</li>
-								<li>点击"转换"按钮执行转换</li>
+								<li>点击&quot;转换&quot;按钮执行转换</li>
 								<li>转换完成后，可以下载结果或复制结果</li>
 							</ul>
 						</Text>

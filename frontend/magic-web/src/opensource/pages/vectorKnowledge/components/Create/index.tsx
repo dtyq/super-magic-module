@@ -72,7 +72,7 @@ export default function VectorKnowledgeCreate() {
 
 	// 是否允许提交
 	const [allowSubmit, setAllowSubmit] = useState(false)
-	// 创建成功的知识库
+	// 创建成功的知识库详情
 	const [createdKnowledge, setCreatedKnowledge] = useState<CreatedKnowledge>()
 
 	/** 初始化表单值 */
@@ -164,7 +164,7 @@ export default function VectorKnowledgeCreate() {
 	const handleBack = useMemoizedFn(() => {
 		navigate(
 			replaceRouteParams(RoutePath.Flows, {
-				type: FlowRouteType.Knowledge,
+				type: FlowRouteType.VectorKnowledge,
 			}),
 		)
 	})

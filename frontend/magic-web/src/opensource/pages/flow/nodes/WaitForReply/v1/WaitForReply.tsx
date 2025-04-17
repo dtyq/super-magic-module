@@ -7,7 +7,7 @@ import MagicInput from "@dtyq/magic-flow/common/BaseUI/Input"
 import { useMemo } from "react"
 import { cloneDeep, set } from "lodash-es"
 import { useMemoizedFn } from "ahooks"
-import { useFlow } from "@dtyq/magic-flow/MagicFlow/context/FlowContext/useFlow"
+import { useNodeConfigActions } from "@dtyq/magic-flow/MagicFlow/context/FlowContext/useFlow"
 import { useTranslation } from "react-i18next"
 import Common from "../../Start/v0/components/Common"
 import styles from "./WaitForReply.module.less"
@@ -19,7 +19,7 @@ export default function WaitForReplyV1() {
 	const [form] = Form.useForm()
 	const { currentNode } = useCurrentNode()
 
-	const { updateNodeConfig } = useFlow()
+	const { updateNodeConfig } = useNodeConfigActions()
 
 	const initialValues = useMemo(() => {
 		return {

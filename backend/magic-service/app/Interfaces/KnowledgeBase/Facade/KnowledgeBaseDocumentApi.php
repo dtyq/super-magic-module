@@ -22,9 +22,10 @@ class KnowledgeBaseDocumentApi extends AbstractKnowledgeBaseApi
     /**
      * 创建文档.
      */
-    public function createDocument()
+    public function create(string $knowledgeBaseCode)
     {
         $dto = CreateDocumentRequestDTO::fromRequest($this->request);
+        $dto->setKnowledgeBaseCode($knowledgeBaseCode);
         $userAuthorization = $this->getAuthorization();
 
         $entity = KnowledgeBaseDocumentAssembler::createDTOToEntity($dto, $userAuthorization);
@@ -35,9 +36,11 @@ class KnowledgeBaseDocumentApi extends AbstractKnowledgeBaseApi
     /**
      * 更新文档.
      */
-    public function updateDocument()
+    public function update(string $knowledgeBaseCode, string $code)
     {
         $dto = UpdateDocumentRequestDTO::fromRequest($this->request);
+        $dto->setKnowledgeBaseCode($knowledgeBaseCode);
+        $dto->setCode($code);
         $userAuthorization = $this->getAuthorization();
 
         $entity = KnowledgeBaseDocumentAssembler::updateDTOToEntity($dto, $userAuthorization);
@@ -48,17 +51,15 @@ class KnowledgeBaseDocumentApi extends AbstractKnowledgeBaseApi
     /**
      * 获取文档列表.
      */
-    public function getDocumentList()
+    public function queries(string $knowledgeBaseCode)
     {
         $dto = DocumentQueryRequestDTO::fromRequest($this->request);
-        $query = new KnowledgeBaseDocumentQuery();
+        $query = new KnowledgeBaseDocumentQuery($this->request->all());
 
         // 设置查询条件
         $query->setOrder(['updated_at' => 'desc']);
-        $query->setKnowledgeBaseCode($dto->getKnowledgeBaseCode());
-        $query->setName($dto->name);
+        $query->setKnowledgeBaseCode($knowledgeBaseCode);
         $query->setDocType($dto->getDocType());
-        $query->setEnabled($dto->enabled);
         $query->setSyncStatus($dto->getSyncStatus());
 
         $page = new Page($dto->getPage(), $dto->getPageSize());
@@ -74,7 +75,7 @@ class KnowledgeBaseDocumentApi extends AbstractKnowledgeBaseApi
     /**
      * 获取文档详情.
      */
-    public function getDocumentDetail(string $knowledgeBaseCode, string $code)
+    public function show(string $knowledgeBaseCode, string $code)
     {
         $entity = $this->knowledgeBaseDocumentAppService->show($this->getAuthorization(), $knowledgeBaseCode, $code);
         return KnowledgeBaseDocumentAssembler::entityToDTO($entity)->toArray();
@@ -83,7 +84,7 @@ class KnowledgeBaseDocumentApi extends AbstractKnowledgeBaseApi
     /**
      * 删除文档.
      */
-    public function destroyDocument(string $knowledgeBaseCode, string $code)
+    public function destroy(string $knowledgeBaseCode, string $code)
     {
         $this->knowledgeBaseDocumentAppService->destroy($this->getAuthorization(), $knowledgeBaseCode, $code);
     }

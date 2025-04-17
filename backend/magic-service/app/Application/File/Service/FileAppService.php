@@ -38,7 +38,7 @@ class FileAppService extends AbstractAppService
         $dataIsolation = $this->createFlowDataIsolation($authorization);
         $data = $this->fileDomainService->getSimpleUploadTemporaryCredential(
             $dataIsolation->getCurrentOrganizationCode(),
-            $storage
+            StorageBucketType::from($storage),
         );
         // 如果是本地驱动，那么增加一个临时 key
         if ($data['platform'] === AdapterName::LOCAL) {
@@ -175,6 +175,16 @@ class FileAppService extends AbstractAppService
 
         // 删除文件记录
         return $this->defaultFileDomainService->deleteByKey($fileKey, $organizationCode);
+    }
+
+    public function getStsTemporaryCredential(Authenticatable $authorization, string $storage, string $dir = '', int $expires = 7200): array
+    {
+        return $this->fileDomainService->getStsTemporaryCredential(
+            $this->getOrganizationCode($authorization),
+            StorageBucketType::from($storage),
+            $dir,
+            $expires
+        );
     }
 
     protected function getOrganizationCode(Authenticatable $authorization): string

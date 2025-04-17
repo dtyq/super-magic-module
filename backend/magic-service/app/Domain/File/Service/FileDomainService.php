@@ -34,16 +34,6 @@ readonly class FileDomainService
         return $list;
     }
 
-    public function getDefaultIconPaths(): array
-    {
-        return $this->cloudFileRepository->getDefaultIconPaths();
-    }
-
-    public function getDefaultIconDir(): string
-    {
-        return $this->cloudFileRepository->getDefaultIconDir();
-    }
-
     public function getLink(string $organizationCode, string $filePath, ?StorageBucketType $bucketType = null): ?FileLink
     {
         return $this->cloudFileRepository->getLinks($organizationCode, [$filePath], $bucketType)[$filePath] ?? null;
@@ -59,7 +49,7 @@ readonly class FileDomainService
         $this->cloudFileRepository->upload($organizationCode, $uploadFile, $storage);
     }
 
-    public function getSimpleUploadTemporaryCredential(string $organizationCode, string $storage = 'private'): array
+    public function getSimpleUploadTemporaryCredential(string $organizationCode, StorageBucketType $storage = StorageBucketType::Private): array
     {
         return $this->cloudFileRepository->getSimpleUploadTemporaryCredential($organizationCode, $storage);
     }
@@ -83,6 +73,20 @@ readonly class FileDomainService
     public function getMetas(array $paths, string $organizationCode): array
     {
         return $this->cloudFileRepository->getMetas($paths, $organizationCode);
+    }
+
+    /**
+     * 开启 sts 模式.
+     * 获取临时凭证给前端使用.
+     * @todo 安全问题，dir 没有校验，没有组织隔离
+     */
+    public function getStsTemporaryCredential(
+        string $organizationCode,
+        StorageBucketType $bucketType = StorageBucketType::Private,
+        string $dir = '',
+        int $expires = 7200
+    ) {
+        return $this->cloudFileRepository->getStsTemporaryCredential($organizationCode, $bucketType, $dir, $expires);
     }
 
     public function exist(array $metas, string $key): bool

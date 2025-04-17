@@ -71,6 +71,22 @@ class MagicChatFileRepository implements MagicChatFileRepositoryInterface
     }
 
     /**
+     * 通过file_key查找文件.
+     */
+    public function getChatFileByFileKey(string $fileKey): ?MagicChatFileEntity
+    {
+        $file = $this->magicChatFileModel::query()
+            ->where('file_key', $fileKey)
+            ->first();
+
+        if (empty($file)) {
+            return null;
+        }
+
+        return new MagicChatFileEntity($file->toArray());
+    }
+
+    /**
      * 更新文件信息.
      */
     public function updateFile(MagicChatFileEntity $fileEntity): void

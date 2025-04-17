@@ -1,4 +1,4 @@
-import { useFlow } from "@/MagicFlow/context/FlowContext/useFlow"
+import { useFlowNodes } from "@/MagicFlow/context/FlowContext/useFlow"
 import { copyToClipboard } from "@/MagicFlow/utils"
 import { message } from "antd"
 import { IconX } from "@tabler/icons-react"
@@ -32,7 +32,7 @@ export default function NodeTestingHeader() {
 
 	const bodyRef = useRef<HTMLDivElement | null>(null)
 
-	const { selectedNodeId } = useFlow()
+	const { selectedNodeId } = useFlowNodes()
 
 	const { currentNode } = useCurrentNode()
 

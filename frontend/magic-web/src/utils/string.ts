@@ -112,6 +112,8 @@ export const formatRelativeTime = (lang?: string) => {
 	const currentDay = dayjs().format("YYYY-MM-DD")
 
 	return (time: number | Date | dayjs.Dayjs | null | undefined) => {
+		if (!time) return ""
+
 		if (isNumber(time)) {
 			time *= 1000
 		} else if (typeof time === "string") {
