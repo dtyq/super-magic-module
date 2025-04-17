@@ -422,6 +422,7 @@ class MagicChatMessageAppService extends MagicSeqAppService
             // 根据会话类型,生成seq
             switch ($receiveConversationType) {
                 case ConversationType::Ai:
+                case ConversationType::User:
                     try {
                         # ai 可能参与私聊/群聊等场景,读取记忆时,需要读取自己会话窗口下的消息.
                         $receiveSeqEntity = $this->magicChatDomainService->generateReceiveSequenceByChatMessage($senderSeqEntity, $senderMessageEntity, $magicSeqStatus);
@@ -441,12 +442,6 @@ class MagicChatMessageAppService extends MagicSeqAppService
                             Json::encode($errMsg)
                         ));
                     }
-                    break;
-                case ConversationType::User:
-                    $receiveSeqEntity = $this->magicChatDomainService->generateReceiveSequenceByChatMessage($senderSeqEntity, $senderMessageEntity, $magicSeqStatus);
-                    // 避免 seq 表承载太多功能,加太多索引,因此将话题的消息单独写入到 topic_messages 表中
-                    $this->magicChatDomainService->createTopicMessage($receiveSeqEntity);
-                    $this->pushReceiveChatSequence($senderMessageEntity, $receiveSeqEntity);
                     break;
                 case ConversationType::Group:
                     $seqListCreateDTO = $this->magicChatDomainService->generateGroupReceiveSequence($senderSeqEntity, $senderMessageEntity, $magicSeqStatus);

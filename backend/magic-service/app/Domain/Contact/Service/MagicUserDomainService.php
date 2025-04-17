@@ -303,6 +303,26 @@ class MagicUserDomainService extends AbstractContactDomainService
         return $this->userRepository->getUserByAccountsInMagic($magicIds);
     }
 
+    /**
+     * 根据用户ID获取用户手机号.
+     */
+    public function getUserPhoneByUserId(string $userId): ?string
+    {
+        // 先获取用户信息
+        $user = $this->userRepository->getUserById($userId);
+        if ($user === null) {
+            return null;
+        }
+
+        // 通过 magic_id 获取账号信息
+        $account = $this->accountRepository->getAccountInfoByMagicId($user->getMagicId());
+        if ($account === null) {
+            return null;
+        }
+
+        return $account->getPhone();
+    }
+
     protected function setUserIdsByAiCodes(FriendQueryDTO $friendQueryDTO, DataIsolation $dataIsolation): array
     {
         $userIdToFlowCodeMaps = [];

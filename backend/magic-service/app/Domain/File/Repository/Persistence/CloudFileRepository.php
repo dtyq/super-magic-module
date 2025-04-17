@@ -141,6 +141,22 @@ class CloudFileRepository implements CloudFileRepositoryInterface
         return $filesystem->getUploadTemporaryCredential($credentialPolicy, $this->getOptions($organizationCode));
     }
 
+    public function getStsTemporaryCredential(
+        string $organizationCode,
+        StorageBucketType $bucketType = StorageBucketType::Private,
+        string $dir = '',
+        int $expires = 7200
+    ): array {
+        $dir = $dir ? sprintf('%s/%s', md5($bucketType->value), ltrim($dir, '/')) : md5($bucketType->value);
+        $credentialPolicy = new CredentialPolicy([
+            'sts' => true,
+            'role_session_name' => 'magic',
+            'dir' => $dir,
+            'expires' => $expires,
+        ]);
+        return $this->cloudFile->get($bucketType->value)->getUploadTemporaryCredential($credentialPolicy, $this->getOptions($organizationCode));
+    }
+
     /**
      * @return array<string, FilePreSignedUrl>
      */
@@ -160,8 +176,7 @@ class CloudFileRepository implements CloudFileRepositoryInterface
         $defaultIconPath = BASE_PATH . '/storage/files/' . $localPath;
         $files = glob($defaultIconPath . '/*.png');
         return array_map(static function ($file) use ($localPath, $appId) {
-            $file = str_replace(BASE_PATH . '/storage/files/', '', $file);
-            return str_replace($localPath, self::DEFAULT_ICON_ORGANIZATION_CODE . '/' . $appId . '/default', $file);
+            return str_replace([BASE_PATH . '/storage/files/', $localPath], ['', self::DEFAULT_ICON_ORGANIZATION_CODE . '/' . $appId . '/default'], $file);
         }, $files);
     }
 
