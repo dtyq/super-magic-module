@@ -22,7 +22,7 @@ use function Hyperf\Config\config;
 class ServiceProviderConfigRepository extends AbstractModelRepository
 {
     /**
-     * 根据组织获取厂商.
+     * 根据组织获取服务商.
      * @return ServiceProviderConfigEntity[]
      */
     public function getByOrganizationCode(string $organizationCode): array

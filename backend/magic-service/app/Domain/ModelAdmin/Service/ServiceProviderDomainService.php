@@ -53,7 +53,7 @@ class ServiceProviderDomainService
     }
 
     /**
-     * 新增厂商(超级管理员用的).
+     * 新增服务商(超级管理员用的).
      */
     public function addServiceProvider(ServiceProviderEntity $serviceProviderEntity, array $organizationCodes): ServiceProviderEntity
     {
@@ -67,12 +67,12 @@ class ServiceProviderDomainService
 
             // 如果是文生图，才需要同步
             if ($serviceProviderEntity->getCategory() === ServiceProviderCategory::VLM->value) {
-                // 给所有组织添加厂商，同步category字段
+                // 给所有组织添加服务商，同步category字段
                 $this->serviceProviderConfigRepository->addServiceProviderConfigs($serviceProviderEntity->getId(), $organizationCodes, $status);
             }
             Db::commit();
         } catch (Exception $e) {
-            $this->logger->error('添加厂商失败' . $e->getMessage());
+            $this->logger->error('添加服务商失败' . $e->getMessage());
             Db::rollBack();
             ExceptionBuilder::throw(ServiceProviderErrorCode::SystemError, __('service_provider.add_provider_failed'));
         }
@@ -80,7 +80,7 @@ class ServiceProviderDomainService
     }
 
     /**
-     * 获取所有厂商.
+     * 获取所有服务商.
      * @return ServiceProviderEntity[]
      */
     public function getAllServiceProvider(int $page, int $pageSize): array
@@ -89,7 +89,7 @@ class ServiceProviderDomainService
     }
 
     /**
-     * 根据id获取厂商以及厂商下的模型.
+     * 根据id获取服务商以及服务商下的模型.
      */
     public function getServiceProviderById(int $id): ?ServiceProviderDTO
     {
@@ -100,7 +100,7 @@ class ServiceProviderDomainService
 
     public function getServiceProviderConfigByServiceProviderModel(ServiceProviderModelsEntity $serviceProviderModelsEntity): ?ServiceProviderConfigEntity
     {
-        // 获取厂商配置
+        // 获取服务商配置
         $serviceProviderConfigEntity = $this->serviceProviderConfigRepository->getById($serviceProviderModelsEntity->getServiceProviderConfigId());
         if (! $serviceProviderConfigEntity) {
             ExceptionBuilder::throw(ServiceProviderErrorCode::ServiceProviderConfigError);
@@ -185,7 +185,7 @@ class ServiceProviderDomainService
     }
 
     /**
-     * 根据组织获取厂商.
+     * 根据组织获取服务商.
      * @return ServiceProviderConfigDTO[]
      */
     public function getServiceProviderConfigs(string $organization, ?ServiceProviderCategory $serviceProviderCategory = null): array
@@ -210,7 +210,7 @@ class ServiceProviderDomainService
     }
 
     /**
-     * 获取厂商配置信息.
+     * 获取服务商配置信息.
      */
     public function getServiceProviderConfigDetail(string $serviceProviderConfigId, string $organizationCode): ServiceProviderConfigDTO
     {
@@ -342,7 +342,7 @@ class ServiceProviderDomainService
 
     /**
      * 刷新模型列表
-     * 根据当前的厂商进行.
+     * 根据当前的服务商进行.
      */
     public function refreshModels(string $serviceProviderConfigId, string $organizationCode): array
     {

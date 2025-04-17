@@ -28,7 +28,7 @@ class ServiceProviderApi extends AbstractApi
     #[Inject]
     protected ServiceProviderAppService $serviceProviderAppService;
 
-    // 获取厂商
+    // 获取服务商
     public function getServiceProviders(RequestInterface $request)
     {
         $this->isInWhiteListForOrgization();
@@ -39,7 +39,7 @@ class ServiceProviderApi extends AbstractApi
         return $this->serviceProviderAppService->getServiceProviders($authenticatable, $serviceProviderCategory);
     }
 
-    // 获取厂商详细信息
+    // 获取服务商详细信息
     public function getServiceProviderConfig(RequestInterface $request, ?string $serviceProviderConfigId = null)
     {
         $serviceProviderConfigId = $serviceProviderConfigId ?? $request->input('service_provider_config_id') ?? '';
@@ -50,7 +50,7 @@ class ServiceProviderApi extends AbstractApi
         return $this->serviceProviderAppService->getServiceProviderConfig($serviceProviderConfigId, $authenticatable->getOrganizationCode());
     }
 
-    // 更新厂商
+    // 更新服务商
     public function updateServiceProviderConfig(RequestInterface $request)
     {
         $this->isInWhiteListForOrgization();

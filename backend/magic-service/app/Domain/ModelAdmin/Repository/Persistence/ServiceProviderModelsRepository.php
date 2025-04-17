@@ -24,7 +24,7 @@ use Hyperf\DbConnection\Db;
 class ServiceProviderModelsRepository extends AbstractModelRepository
 {
     /**
-     * 根据厂商id查询所有模型.
+     * 根据服务商id查询所有模型.
      * @return ServiceProviderModelsEntity[]
      */
     public function getModelsByServiceProviderId(int $serviceProviderId): array
@@ -77,7 +77,7 @@ class ServiceProviderModelsRepository extends AbstractModelRepository
         $this->queryThenDeleteAndDispatch($query);
     }
 
-    // 根据厂商id和模型id改变模型的状态
+    // 根据服务商id和模型id改变模型的状态
     #[Transactional]
     public function changeModelStatus(int $serviceProviderId, int $modelId, int $status): void
     {

@@ -41,7 +41,7 @@ class ServiceProviderAppService
     }
 
     /**
-     * 根据组织获取厂商.
+     * 根据组织获取服务商.
      * @return ServiceProviderConfigDTO[]
      */
     public function getServiceProviders(MagicUserAuthorization $authenticatable, ?ServiceProviderCategory $serviceProviderCategory): array
@@ -90,7 +90,7 @@ class ServiceProviderAppService
         return $serviceProviderConfigDTOs;
     }
 
-    // 获取厂商详细信息
+    // 获取服务商详细信息
     public function getServiceProviderConfig(string $serviceProviderConfigId, string $organizationCode): ServiceProviderConfigDTO
     {
         $serviceProviderConfigDTO = $this->serviceProviderDomainService->getServiceProviderConfigDetail($serviceProviderConfigId, $organizationCode);
@@ -104,7 +104,7 @@ class ServiceProviderAppService
         return $serviceProviderConfigDTO;
     }
 
-    // 添加厂商
+    // 添加服务商
     public function addServiceProvider(ServiceProviderEntity $serviceProviderEntity): ServiceProviderEntity
     {
         $organizationCodes = $this->organizationEnvDomainService->getAllOrganizationCodes();
