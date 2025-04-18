@@ -58,7 +58,7 @@ enum ImageGenerateModelType: string
      */
     public static function getVolcengineModes(): array
     {
-        return ['Volcengine', 'high_aes_general_v21_L', 'byteedit_v2.0'];
+        return ['Volcengine', 'high_aes_general_v21_L', 'byteedit_v2.0', 'high_aes_general_v30l_zt2i'];
     }
 
     public static function getMiracleVisionModes(): array

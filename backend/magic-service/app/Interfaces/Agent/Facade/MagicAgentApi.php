@@ -153,7 +153,7 @@ class MagicAgentApi extends AbstractApi
     {
         /** @var MagicUserAuthorization $authenticatable */
         $authenticatable = $this->getAuthorization();
-        $agentVersionId = $agentVersionId ?? $request->input('agent_version_id');
+        $agentVersionId = $agentVersionId ?? $request->input('bot_version_id');
         $magicAgentVO = $this->magicAgentAppService->getAgentVersionByIdForUser($agentVersionId, $authenticatable);
         $magicFlowDTO = MagicFlowAssembler::createMagicFlowDTO($magicAgentVO->getMagicFlowEntity());
         return $this->magicAgentAssembler::createAgentV1Response($magicAgentVO, $magicFlowDTO);
@@ -345,11 +345,12 @@ class MagicAgentApi extends AbstractApi
         return SystemInstructType::getTypeOptions();
     }
 
-    public function saveInstruct(RequestInterface $request, string $agentId)
+    public function saveInstruct(RequestInterface $request, ?string $agentId = null)
     {
         /** @var MagicUserAuthorization $authenticatable */
         $authenticatable = $this->getAuthorization();
         $instructs = $request->input('instructs');
+        $agentId = $agentId ?? $request->input('bot_id');
         return $this->magicAgentAppService->saveInstruct($authenticatable, $agentId, $instructs);
     }
 }
