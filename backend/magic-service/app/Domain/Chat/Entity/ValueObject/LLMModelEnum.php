@@ -15,9 +15,6 @@ enum LLMModelEnum: string
     case GPT_4O_GLOBAL = 'gpt-4o-global';
     case GPT_4O = 'gpt-4o';
     case GPT_41 = 'gpt-4.1';
-
-    // 待移除，global是服务商的专属标识
-    case GPT_4O_MINI_GLOBAL = 'gpt-4o-mini-global';
     case DEEPSEEK_R1 = 'DeepSeek-R1';
     case DEEPSEEK_V3 = 'deepseek-v3';
 }
