@@ -117,7 +117,6 @@ MARKDOWN;
             $knowledgeSimilarity->setQuestion($question);
             $knowledgeSimilarity->setLimit($limit);
             $knowledgeSimilarity->setScore($score);
-            var_dump($knowledgeSimilarity);
 
             $dataIsolation = $executionData->getDataIsolation();
             $knowledgeBaseDataIsolation = KnowledgeBaseDataIsolation::createByBaseDataIsolation($dataIsolation);
