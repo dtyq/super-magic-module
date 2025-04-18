@@ -714,6 +714,7 @@ class ServiceProviderDomainService
         $serviceProviderResponse->setServiceProviderConfig($serviceProviderConfigEntity->getConfig());
         $serviceProviderResponse->setServiceProviderType($serviceProviderType);
         $serviceProviderResponse->setServiceProviderModelsEntity($serviceProviderModelEntity);
+        $serviceProviderResponse->setServiceProviderCode($serviceProviderEntity->getProviderCode());
 
         return $serviceProviderResponse;
     }

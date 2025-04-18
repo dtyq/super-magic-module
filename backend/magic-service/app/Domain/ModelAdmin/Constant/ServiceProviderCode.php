@@ -46,7 +46,7 @@ enum ServiceProviderCode: string
                 'api_key' => $config->getApiKey(),
                 'api_base' => $config->getUrl(),
                 'api_version' => $config->getApiVersion(),
-                'deployment_name' => $config->getDeploymentName(),
+                'deployment_name' => $name,
             ],
             self::AWSBedrock => [
                 'access_key' => $config->getAk(),
