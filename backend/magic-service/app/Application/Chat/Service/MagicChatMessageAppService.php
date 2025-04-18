@@ -127,6 +127,17 @@ class MagicChatMessageAppService extends MagicSeqAppService
         return $this->magicChatDomainService->pullByPageToken($dataIsolation, $params, $pageSize);
     }
 
+    /**
+     * 返回最大消息的倒数 n 条序列.
+     * @return ClientSequenceResponse[]
+     */
+    public function pullByAppMessageId(MagicUserAuthorization $userAuthorization, string $appMessageId, string $pageToken): array
+    {
+        $dataIsolation = $this->createDataIsolation($userAuthorization);
+        $pageSize = 200;
+        return $this->magicChatDomainService->pullByAppMessageId($dataIsolation, $appMessageId, $pageToken, $pageSize);
+    }
+
     public function pullRecentMessage(MagicUserAuthorization $userAuthorization, MessagesQueryDTO $messagesQueryDTO): array
     {
         $dataIsolation = $this->createDataIsolation($userAuthorization);

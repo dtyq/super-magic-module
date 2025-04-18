@@ -36,6 +36,8 @@ Router::addGroup('/api/v1/im', static function () {
         Router::get('/page', [MagicChatHttpApi::class, 'pullByPageToken']);
         // 消息接收人列表
         Router::get('/{messageId}/recipients', [MagicChatHttpApi::class, 'getMessageReceiveList']);
+        // 根据app_message_id 拉取消息
+        Router::post('/app-message-ids/{appMessageId}/queries', [MagicChatHttpApi::class, 'pullByAppMessageId']);
     });
 
     // 文件
