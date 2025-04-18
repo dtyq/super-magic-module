@@ -13,6 +13,8 @@ class AgentInfoDTO extends AbstractDTO
 {
     public string $botId;
 
+    public string $agentId;
+
     public string $flowCode;
 
     public int $userOperation;
