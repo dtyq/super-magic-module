@@ -305,6 +305,17 @@ class ServiceProviderModelsEntity extends AbstractEntity
         return $this->visibleOrganizations;
     }
 
+    public function setVisibleOrganizations(null|array|string $visibleOrganizations): void
+    {
+        if (is_string($visibleOrganizations)) {
+            $visibleOrganizations = Json::decode($visibleOrganizations);
+        }
+        if (is_null($visibleOrganizations)) {
+            $visibleOrganizations = [];
+        }
+        $this->visibleOrganizations = $visibleOrganizations;
+    }
+
     public function setModelParentId(int $modelParentId): void
     {
         $this->modelParentId = $modelParentId;

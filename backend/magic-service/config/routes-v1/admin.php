@@ -4,7 +4,6 @@ declare(strict_types=1);
 /**
  * Copyright (c) The Magic , Distributed under the software license
  */
-use App\Infrastructure\Util\Middleware\RequestContextMiddleware;
 use App\Interfaces\Admin\Facade\Agent\AdminAgentApi;
 use App\Interfaces\Admin\Facade\Agent\AgentGlobalSettingsApi;
 use App\Interfaces\ModelAdmin\Facade\ServiceProviderApi;

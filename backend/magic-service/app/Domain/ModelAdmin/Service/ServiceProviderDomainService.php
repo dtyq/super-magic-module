@@ -1057,7 +1057,7 @@ class ServiceProviderDomainService
     /**
      * 根据可见组织过滤模型.
      *
-     * @param $serviceProviderModels ServiceProviderModelsEntity[] 服务提供商模型数组
+     * @param $serviceProviderModels ServiceProviderModelsDTO[] 服务提供商模型数组
      * @param string $currentOrganizationCode 当前组织代码
      * @return array 过滤后的模型数组
      */
