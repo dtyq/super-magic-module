@@ -104,7 +104,6 @@ mkdir $TMP_DIR;
     cp -a "${SERVICE_DIR}"/* .
     cp -a "${SERVICE_DIR}"/.gitignore ./
     cp -R "${SERVICE_DIR}"/.github ./
-    cp -R "${SERVICE_DIR}"/.gitlab ./
     cp -R "${SERVICE_DIR}"/.php-cs-fixer.php ./
     cp -R "${SERVICE_DIR}"/.dockerignore ./
     cp -a "${SCRIPT_DIR}"/magic-service/Dockerfile.github ./
