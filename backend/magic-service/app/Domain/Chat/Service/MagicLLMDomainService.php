@@ -10,7 +10,6 @@ namespace App\Domain\Chat\Service;
 use App\Domain\Chat\DTO\AISearch\Request\MagicChatAggregateSearchReqDTO;
 use App\Domain\Chat\Entity\ValueObject\AISearchCommonQueryVo;
 use App\Domain\Chat\Entity\ValueObject\BingSearchMarketCode;
-use App\Domain\Chat\Entity\ValueObject\LLMModelEnum;
 use App\Domain\Chat\Entity\ValueObject\SearchEngineType;
 use App\Domain\Flow\Entity\MagicFlowAIModelEntity;
 use App\Domain\Flow\Entity\ValueObject\FlowDataIsolation;
@@ -707,7 +706,7 @@ class MagicLLMDomainService
      * 让大模型虚空拆解子问题，对热梗/实时拆解的会不好。
      * @return string[]
      */
-    public function generateSearchKeywordsByUserInput(MagicChatAggregateSearchReqDTO $dto): array
+    public function generateSearchKeywordsByUserInput(MagicChatAggregateSearchReqDTO $dto, string $modelName): array
     {
         $userInputKeyword = $dto->getUserMessage();
         $magicChatMessageHistory = $dto->getMagicChatMessageHistory();
@@ -716,7 +715,7 @@ class MagicLLMDomainService
             ->setSearchEngine(SearchEngineType::Bing)
             ->setFilterSearchContexts(false)
             ->setGenerateSearchKeywords(false)
-            ->setModel(LLMModelEnum::GPT_4O_GLOBAL->value)
+            ->setModel($modelName)
             ->setLanguage($dto->getLanguage())
             ->setUserId($dto->getUserId())
             ->setOrganizationCode($dto->getOrganizationCode());

@@ -23,7 +23,7 @@ class AISearchCommonQueryVo
 
     public ?string $conversationId = null;
 
-    public ?string $model = LLMModelEnum::GPT_4O_GLOBAL->value;
+    public ?string $model = null;
 
     public SearchEngineType $searchEngine = SearchEngineType::Bing;
 
