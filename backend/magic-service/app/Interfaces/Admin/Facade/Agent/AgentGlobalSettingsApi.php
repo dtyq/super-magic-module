@@ -7,7 +7,7 @@ declare(strict_types=1);
 
 namespace App\Interfaces\Admin\Facade\Agent;
 
-use App\Application\Admin\Service\AdminAgentAppService;
+use App\Application\Admin\Agent\Service\AdminAgentAppService;
 use App\Interfaces\Admin\DTO\Request\EditAgentGlobalSettingsRequestDTO;
 use App\Interfaces\Authorization\Web\MagicUserAuthorization;
 use Dtyq\ApiResponse\Annotation\ApiResponse;
