@@ -124,7 +124,6 @@ class MagicAgentAppService extends AbstractAppService
     public function saveAgent(Authenticatable $authorization, MagicAgentDTO $magicAgentDTO): MagicAgentEntity
     {
         $magicAgentEntity = $magicAgentDTO->toEntity();
-
         $magicAgentEntity->setAgentAvatar(FileAssembler::formatPath($magicAgentEntity->getAgentAvatar()));
         if (empty($magicAgentEntity->getId())) {
             $magicFlowEntity = new MagicFlowEntity();

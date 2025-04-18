@@ -115,7 +115,7 @@ class ServiceProviderRepository extends AbstractModelRepository
         return $serviceProviderEntity;
     }
 
-    public function deleteById(int $id)
+    public function deleteById(int $id): void
     {
         $this->serviceProviderModel::query()->where('id', $id)->delete();
     }

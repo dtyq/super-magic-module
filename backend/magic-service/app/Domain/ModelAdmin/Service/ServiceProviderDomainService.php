@@ -1170,7 +1170,7 @@ class ServiceProviderDomainService
 
             // 获取服务商信息
             $serviceProviderId = $serviceProviderConfigEntity->getServiceProviderId();
-            $serviceProviderEntity = $this->serviceProviderRepository->getById($serviceProviderId);
+            $serviceProviderEntity = $this->serviceProviderRepository->findById($serviceProviderId);
 
             if (! $serviceProviderEntity) {
                 continue;
