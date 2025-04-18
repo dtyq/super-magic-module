@@ -9,6 +9,7 @@ namespace App\Application\Chat\Service;
 
 use App\Application\ModelGateway\Mapper\ModelGatewayMapper;
 use App\Application\ModelGateway\Service\LLMAppService;
+use App\Application\ModelGateway\Service\ModelConfigAppService;
 use App\Domain\Chat\DTO\ConversationListQueryDTO;
 use App\Domain\Chat\DTO\Message\ChatMessage\AbstractAttachmentMessage;
 use App\Domain\Chat\DTO\Message\MessageInterface;
@@ -875,7 +876,7 @@ PROMPT;
     ): string {
         $orgCode = $authorization->getOrganizationCode();
         $dataIsolation = $this->createDataIsolation($authorization);
-        $chatModelName = $this->modelConfigDomainService->getChatModelTypeByFallbackChain($orgCode, LLMModelEnum::GPT_41->value);
+        $chatModelName = di(ModelConfigAppService::class)->getChatModelTypeByFallbackChain($orgCode, LLMModelEnum::GPT_41->value);
 
         # 开始请求大模型
         $modelGatewayMapper = di(ModelGatewayMapper::class);

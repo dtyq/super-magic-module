@@ -7,6 +7,7 @@ declare(strict_types=1);
 
 namespace App\Application\Chat\Service;
 
+use App\Application\ModelGateway\Service\ModelConfigAppService;
 use App\Domain\Chat\DTO\AISearch\Request\MagicChatAggregateSearchReqDTO;
 use App\Domain\Chat\DTO\AISearch\Response\MagicAggregateSearchSummaryDTO;
 use App\Domain\Chat\DTO\Message\ChatMessage\AggregateAISearchCardMessage;
@@ -28,7 +29,6 @@ use App\Domain\Chat\Service\MagicConversationDomainService;
 use App\Domain\Chat\Service\MagicLLMDomainService;
 use App\Domain\Contact\Entity\MagicUserEntity;
 use App\Domain\Contact\Service\MagicUserDomainService;
-use App\Domain\ModelGateway\Service\ModelConfigDomainService;
 use App\ErrorCode\ChatErrorCode;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Infrastructure\Util\Context\CoContext;
@@ -64,8 +64,7 @@ class MagicChatAISearchAppService extends AbstractAppService
         protected readonly MagicConversationDomainService $magicConversationDomainService,
         protected readonly MagicUserDomainService $magicUserDomainService,
         protected readonly MagicChatDomainService $magicChatDomainService,
-        protected readonly Redis $redis,
-        protected readonly ModelConfigDomainService $modelConfigDomainService,
+        protected readonly Redis $redis
     ) {
         $this->logger = di()->get(LoggerFactory::class)->get(get_class($this));
     }
@@ -911,6 +910,6 @@ class MagicChatAISearchAppService extends AbstractAppService
 
     private function getModelName(string $orgCode): string
     {
-        return $this->modelConfigDomainService->getChatModelTypeByFallbackChain($orgCode, LLMModelEnum::GPT_41->value);
+        return di(ModelConfigAppService::class)->getChatModelTypeByFallbackChain($orgCode, LLMModelEnum::GPT_41->value);
     }
 }
