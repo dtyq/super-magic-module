@@ -9,16 +9,16 @@ namespace App\Domain\Admin\Entity\ValueObject\Extra;
 
 class DefaultFriendExtra extends AbstractSettingExtra
 {
-    protected array $selectedAgentRootIds = [];
+    protected array $selectedAgentIds = [];
 
-    public function getSelectedAgentRootIds(): array
+    public function getSelectedAgentIds(): array
     {
-        return $this->selectedAgentRootIds;
+        return $this->selectedAgentIds;
     }
 
-    public function setSelectedAgentRootIds(array $selectedAgentRootIds): self
+    public function setSelectedAgentIds(array $selectedAgentIds): self
     {
-        $this->selectedAgentRootIds = $selectedAgentRootIds;
+        $this->selectedAgentIds = $selectedAgentIds;
         return $this;
     }
 }

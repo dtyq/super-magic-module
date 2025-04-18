@@ -11,20 +11,20 @@ use App\Infrastructure\Core\AbstractValueObject;
 
 class AgentItem extends AbstractValueObject
 {
-    public string $rootId;
+    public string $agentId;
 
     public string $name;
 
     public string $avatar;
 
-    public function getRootId(): string
+    public function getAgentId(): string
     {
-        return $this->rootId;
+        return $this->agentId;
     }
 
-    public function setRootId(string $rootId): AgentItem
+    public function setAgentId(string $agentId): AgentItem
     {
-        $this->rootId = $rootId;
+        $this->agentId = $agentId;
         return $this;
     }
 

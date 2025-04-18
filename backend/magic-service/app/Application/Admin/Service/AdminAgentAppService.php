@@ -141,7 +141,7 @@ class AdminAgentAppService extends AbstractKernelAppService
             /** @var ?FileLink $avatar */
             $avatar = $fileLinks[$agent->getAgentAvatar()] ?? null;
             $item = new AgentItemDTO();
-            $item->setRootId($agent->getRootId());
+            $item->setAgentId($agent->getAgentId());
             $item->setName($agent->getAgentName());
             $item->setAvatar($avatar?->getUrl() ?? '');
             $result[] = $item;
@@ -152,7 +152,7 @@ class AdminAgentAppService extends AbstractKernelAppService
         return new GetPublishedAgentsResponseDTO([
             'items' => $result,
             'has_more' => $hasMore,
-            'page_token' => $lastAgent->getRootId(),
+            'page_token' => $lastAgent->getAgentId(),
         ]);
     }
 
@@ -192,6 +192,6 @@ class AdminAgentAppService extends AbstractKernelAppService
         $settings = $this->globalSettingsDomainService->getSettingsByType(AdminGlobalSettingsType::DEFAULT_FRIEND, $dataIsolation);
         /** @var ?DefaultFriendExtra $extra */
         $extra = $settings->getExtra();
-        return $extra ? $extra->getSelectedAgentRootIds() : [];
+        return $extra ? $extra->getSelectedAgentIds() : [];
     }
 }

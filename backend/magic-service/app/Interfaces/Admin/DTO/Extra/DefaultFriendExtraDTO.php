@@ -9,16 +9,16 @@ namespace App\Interfaces\Admin\DTO\Extra;
 
 class DefaultFriendExtraDTO extends AbstractSettingExtraDTO
 {
-    public array $selectedAgentRootIds = [];
+    public array $selectedAgentIds = [];
 
-    public function getSelectedAgentRootIds(): array
+    public function getSelectedAgentIds(): array
     {
-        return $this->selectedAgentRootIds;
+        return $this->selectedAgentIds;
     }
 
-    public function setSelectedAgentRootIds(array $selectedAgentRootIds): self
+    public function setSelectedAgentIds(array $selectedAgentIds): self
     {
-        $this->selectedAgentRootIds = $selectedAgentRootIds;
+        $this->selectedAgentIds = $selectedAgentIds;
         return $this;
     }
 }
