@@ -27,4 +27,3 @@ build/
 coverage/
 /odin_models.json
 composer.lock
-.gitlab
