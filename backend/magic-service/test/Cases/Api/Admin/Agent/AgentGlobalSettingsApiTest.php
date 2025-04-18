@@ -30,7 +30,7 @@ class AgentGlobalSettingsApiTest extends BaseTest
                 'type' => AdminGlobalSettingsType::DEFAULT_FRIEND->value,
                 'status' => AdminGlobalSettingsStatus::ENABLED->value,
                 'extra' => [
-                    'selected_agent_root_ids' => ['test-id-1', 'test-id-2'],
+                    'selected_agent_ids' => ['test-id-1', 'test-id-2'],
                 ],
             ],
             AdminGlobalSettingsName::getByType(AdminGlobalSettingsType::ASSISTANT_CREATE) => [

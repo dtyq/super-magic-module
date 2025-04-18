@@ -29,12 +29,12 @@ class ThirdPartyPublishExtraDetailAppenderStrategy implements ExtraDetailAppende
 
     public function appendSelectedAgentsInfo(ThirdPartyPublishExtraDTO $extraDTO, ?MagicUserAuthorization $userAuthorization): self
     {
-        $agentRootIds = array_column($extraDTO->getSelectedAgents(), 'root_id');
+        $agentRootIds = array_column($extraDTO->getSelectedAgents(), 'agent_id');
         $agentEntities = $this->getMagicAgentAppService()->getAgentsForAdmin($agentRootIds, $userAuthorization);
         /** @var array<int, MagicAgentEntity> $agentEntities */
         $agentEntities = array_column($agentEntities, null, 'id');
         foreach ($extraDTO->getSelectedAgents() as $selectedAgent) {
-            $agentEntity = $agentEntities[(int) $selectedAgent->getRootId()] ?? null;
+            $agentEntity = $agentEntities[(int) $selectedAgent->getAgentId()] ?? null;
             $selectedAgent->setName($agentEntity?->getAgentName())
                 ->setAvatar($agentEntity?->getAgentAvatar());
         }
