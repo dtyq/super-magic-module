@@ -618,21 +618,25 @@ class MagicChatAISearchAppService extends AbstractAppService
     {
         // 生成思维导图和PPT
         $extraContentParallel = new Parallel(3);
-        $extraContentParallel->add(function () use ($summarize, $dto) {
+        $modelInterface = $this->getChatModel($dto->getOrganizationCode());
+        $extraContentParallel->add(function () use ($summarize, $dto, $modelInterface) {
             // odin 会修改 vo 对象中的值，避免污染，复制再传入
             CoContext::setRequestId($dto->getRequestId());
             // 思维导图
             $mindMapQueryVo = $this->getSearchVOByAggregateSearchDTO($dto, $summarize);
+            $mindMapQueryVo->setModel($modelInterface);
             $mindMap = $this->generateAndSendMindMap($dto, $mindMapQueryVo);
             // ppt
             $pptQueryVo = $this->getSearchVOByAggregateSearchDTO($dto, $summarize);
+            $pptQueryVo->setModel($modelInterface);
             $this->generateAndSendPPT($dto, $pptQueryVo, $mindMap);
         });
 
         // 生成事件
-        $extraContentParallel->add(function () use ($dto, $noRepeatSearchContexts, $summarize) {
+        $extraContentParallel->add(function () use ($dto, $noRepeatSearchContexts, $summarize, $modelInterface) {
             CoContext::setRequestId($dto->getRequestId());
             $eventQueryVo = $this->getSearchVOByAggregateSearchDTO($dto, $summarize);
+            $eventQueryVo->setModel($modelInterface);
             $this->generateAndSendEvent($dto, $eventQueryVo, $noRepeatSearchContexts);
         });
 
