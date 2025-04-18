@@ -9,29 +9,33 @@ namespace App\Infrastructure\ExternalAPI\ImageGenerateAPI\Request;
 
 class ImageGenerateRequest
 {
-    private string $width;
+    protected string $width;
 
-    private string $height;
+    protected string $height;
 
-    private string $prompt;
+    protected string $prompt;
 
-    private string $negativePrompt;
+    protected string $negativePrompt;
 
-    private string $defaultNegativePrompt = '--no nsfw, nude, blurry, watermark, identifying mark, low resolution, mutated, lack of hierarchy';
+    protected string $defaultNegativePrompt = '--no nsfw, nude, blurry, watermark, identifying mark, low resolution, mutated, lack of hierarchy';
 
     // 对mj无效
-    private int $generateNum = 1;
+    protected int $generateNum = 1;
+
+    protected string $model;
 
     public function __construct(
         string $width = '',
         string $height = '',
         string $prompt = '',
-        string $negativePrompt = ''
+        string $negativePrompt = '',
+        string $model = '',
     ) {
         $this->width = $width;
         $this->height = $height;
         $this->prompt = $prompt;
         $this->negativePrompt = $negativePrompt;
+        $this->model = $model;
     }
 
     public function getWidth(): string
@@ -87,5 +91,15 @@ class ImageGenerateRequest
     public function getGenerateNum(): int
     {
         return $this->generateNum;
+    }
+
+    public function getModel(): string
+    {
+        return $this->model;
+    }
+
+    public function setModel(string $model): void
+    {
+        $this->model = $model;
     }
 }
