@@ -18,12 +18,13 @@ class AdminGlobalSettingsRepository implements AdminGlobalSettingsRepositoryInte
 {
     public function getSettingsByTypeAndOrganization(AdminGlobalSettingsType $type, string $organization): ?AdminGlobalSettingsEntity
     {
-        $model = AdminGlobalSettingsModel::query()
+        $query = AdminGlobalSettingsModel::query()
             ->where('type', $type->value)
             ->where('organization', $organization)
-            ->first();
+            ->limit(1);
 
-        return $model ? new AdminGlobalSettingsEntity($model->toArray()) : null;
+        $model = Db::select($query->toSql(), $query->getBindings())[0] ?? [];
+        return $model ? new AdminGlobalSettingsEntity($model) : null;
     }
 
     public function updateSettings(AdminGlobalSettingsEntity $entity): AdminGlobalSettingsEntity

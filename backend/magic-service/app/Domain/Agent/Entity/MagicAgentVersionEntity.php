@@ -377,21 +377,25 @@ class MagicAgentVersionEntity extends AbstractEntity
     public function setRootId(int|string $agentId): void
     {
         $this->rootId = (string) $agentId;
+        $this->agentId = (string) $agentId;
     }
 
     public function setRobotName(string $agentName): void
     {
         $this->robotName = $agentName;
+        $this->agentName = $agentName;
     }
 
     public function setRobotAvatar(string $agentAvatar): void
     {
         $this->robotAvatar = $agentAvatar;
+        $this->agentAvatar = $agentAvatar;
     }
 
     public function setRobotDescription(string $agentDescription): void
     {
         $this->robotDescription = $agentDescription;
+        $this->agentDescription = $agentDescription;
     }
 
     public function getRootId(): string

@@ -11,7 +11,7 @@ use App\Infrastructure\Core\AbstractDTO;
 
 class AgentItemDTO extends AbstractDTO
 {
-    public string $rootId;
+    public string $agentId;
 
     public ?string $name;
 
@@ -20,18 +20,18 @@ class AgentItemDTO extends AbstractDTO
     public function __construct(null|array|string $data = null)
     {
         // 兼容前端传参
-        is_string($data) && $data = ['root_id' => $data];
+        is_string($data) && $data = ['agent_id' => $data];
         parent::__construct($data);
     }
 
-    public function getRootId(): string
+    public function getAgentId(): string
     {
-        return $this->rootId;
+        return $this->agentId;
     }
 
-    public function setRootId(string $rootId): self
+    public function setAgentId(string $agentId): self
     {
-        $this->rootId = $rootId;
+        $this->agentId = $agentId;
         return $this;
     }
 
