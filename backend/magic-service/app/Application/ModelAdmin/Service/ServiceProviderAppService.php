@@ -27,6 +27,7 @@ use App\Domain\ModelGateway\Entity\Dto\CompletionDTO;
 use App\Domain\OrganizationEnvironment\Service\MagicOrganizationEnvDomainService;
 use App\ErrorCode\ServiceProviderErrorCode;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
+use App\Infrastructure\Util\Locker\Excpetion\LockException;
 use App\Interfaces\Authorization\Web\MagicUserAuthorization;
 use Exception;
 use Hyperf\Odin\Api\Response\ChatCompletionResponse;
@@ -43,6 +44,7 @@ class ServiceProviderAppService
     /**
      * 根据组织获取服务商.
      * @return ServiceProviderConfigDTO[]
+     * @throws LockException
      */
     public function getServiceProviders(MagicUserAuthorization $authenticatable, ?ServiceProviderCategory $serviceProviderCategory): array
     {
@@ -123,7 +125,7 @@ class ServiceProviderAppService
         return $serviceProviderModelsDTO;
     }
 
-    public function updateModelStatus(string $modelId, int $status, string $organizationCode)
+    public function updateModelStatus(string $modelId, int $status, string $organizationCode): void
     {
         $this->serviceProviderDomainService->updateModelStatus($modelId, Status::from($status), $organizationCode);
     }
@@ -133,12 +135,9 @@ class ServiceProviderAppService
         return $this->serviceProviderDomainService->updateServiceProviderConfig($serviceProviderConfigEntity);
     }
 
-    // 刷新模型列表 (组织用的)
-    public function refreshModels(mixed $serviceProviderConfigId, string $organizationCode)
-    {
-        $this->serviceProviderDomainService->refreshModels($serviceProviderConfigId, $organizationCode);
-    }
-
+    /**
+     * @throws Exception
+     */
     public function connectivityTest(string $serviceProviderConfigId, string $modelVersion, string $modelId, MagicUserAuthorization $authorization): ConnectResponse
     {
         $model = $this->serviceProviderDomainService->getModelById($modelId);
@@ -152,6 +151,9 @@ class ServiceProviderAppService
         };
     }
 
+    /**
+     * @throws Exception
+     */
     public function deleteModel(string $modelId, string $organizationCode): void
     {
         // 查询模型不是 llm 则报错
@@ -179,45 +181,9 @@ class ServiceProviderAppService
         return $this->serviceProviderDomainService->listOriginalModels($authorization->getOrganizationCode());
     }
 
-    public function addOriginalModel(string $modelId)
+    public function addOriginalModel(string $modelId): void
     {
         $this->serviceProviderDomainService->addOriginalModel($modelId);
-    }
-
-    public function deleteOriginalModel(string $modelId)
-    {
-        $this->serviceProviderDomainService->deleteOriginalModel($modelId);
-    }
-
-    public function deleteModelForAdmin(MagicUserAuthorization $authorization, string $modelId)
-    {
-        $this->serviceProviderDomainService->deleteModel($modelId, $authorization->getOrganizationCode());
-    }
-
-    public function saveModelToServiceProviderForAdmin(ServiceProviderModelsEntity $serviceProviderModelsEntity): ServiceProviderModelsDTO
-    {
-        $serviceProviderModelsEntity = $this->serviceProviderDomainService->saveModelsToServiceProviderForAdmin($serviceProviderModelsEntity);
-        $serviceProviderModelsDTO = new ServiceProviderModelsDTO($serviceProviderModelsEntity->toArray());
-
-        // 处理图标
-        $this->processModelIcon($serviceProviderModelsDTO, $serviceProviderModelsEntity->getOrganizationCode());
-
-        return $serviceProviderModelsDTO;
-    }
-
-    public function deleteServiceProviderForAdmin(string $serviceProviderConfigId, string $organizationCode)
-    {
-        $this->serviceProviderDomainService->deleteServiceProviderForAdmin($serviceProviderConfigId, $organizationCode);
-    }
-
-    public function updateServiceProvider(ServiceProviderEntity $serviceProviderEntity, string $organizationCode): ServiceProviderEntity
-    {
-        return $this->serviceProviderDomainService->updateServiceProvider($serviceProviderEntity, $organizationCode);
-    }
-
-    public function addModelId(string $modelId): ServiceProviderOriginalModelsEntity
-    {
-        return $this->serviceProviderDomainService->addModelId($modelId);
     }
 
     public function addServiceProviderForOrganization(ServiceProviderConfigDTO $serviceProviderConfigDTO, MagicUserAuthorization $authorization): ServiceProviderConfigDTO

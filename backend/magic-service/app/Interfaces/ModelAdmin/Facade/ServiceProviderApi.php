@@ -19,6 +19,7 @@ use App\ErrorCode\UserErrorCode;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Interfaces\Authorization\Web\MagicUserAuthorization;
 use Dtyq\ApiResponse\Annotation\ApiResponse;
+use Exception;
 use Hyperf\Di\Annotation\Inject;
 use Hyperf\HttpServer\Contract\RequestInterface;
 
@@ -95,7 +96,10 @@ class ServiceProviderApi extends AbstractApi
         return $this->serviceProviderAppService->saveModelToServiceProvider($serviceProviderModelsEntity);
     }
 
-    // 连通性测试
+    /**
+     * 连通性测试.
+     * @throws Exception
+     */
     public function connectivityTest(RequestInterface $request)
     {
         $this->isInWhiteListForOrgization();
@@ -108,6 +112,10 @@ class ServiceProviderApi extends AbstractApi
     }
 
     // 删除模型
+
+    /**
+     * @throws Exception
+     */
     public function deleteModel(RequestInterface $request, ?string $modelId = null)
     {
         $this->isInWhiteListForOrgization();

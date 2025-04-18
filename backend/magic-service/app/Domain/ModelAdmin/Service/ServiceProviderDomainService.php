@@ -30,6 +30,7 @@ use App\Domain\ModelAdmin\Repository\Persistence\ServiceProviderRepository;
 use App\Domain\ModelAdmin\Service\Provider\ServiceProviderFactory;
 use App\ErrorCode\ServiceProviderErrorCode;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
+use App\Infrastructure\Util\Locker\Excpetion\LockException;
 use App\Infrastructure\Util\Locker\RedisLocker;
 use App\Interfaces\Kernel\Assembler\FileAssembler;
 use Exception;
@@ -341,20 +342,6 @@ class ServiceProviderDomainService
     }
 
     /**
-     * 刷新模型列表
-     * 根据当前的服务商进行.
-     */
-    public function refreshModels(string $serviceProviderConfigId, string $organizationCode): array
-    {
-        $serviceProviderConfigDetail = $this->getServiceProviderConfigDetail($serviceProviderConfigId, $organizationCode);
-        if (! $serviceProviderConfigDetail->getIsModelsEnable()) {
-            ExceptionBuilder::throw(ServiceProviderErrorCode::SystemError, __('service_provider.provider_no_model_list'));
-        }
-
-        return [];
-    }
-
-    /**
      * 根据组织和服务商类型获取模型列表.
      * @param string $organizationCode 组织编码
      * @param ?ServiceProviderCategory $serviceProviderCategory 服务商类型
@@ -460,6 +447,7 @@ class ServiceProviderDomainService
      * 初始化组织的服务商信息
      * 当新加入一个组织后，初始化该组织的服务商和模型配置.
      * @return ServiceProviderConfigDTO[] 初始化后的服务商配置列表
+     * @throws LockException
      */
     public function initOrganizationServiceProviders(string $organizationCode, ?ServiceProviderCategory $serviceProviderCategory = null): array
     {
@@ -612,8 +600,9 @@ class ServiceProviderDomainService
 
     /**
      * 连通性测试.
+     * @throws Exception
      */
-    public function connectivityTest(string $serviceProviderConfigId, string $modelVersion, string $organizationCode)
+    public function connectivityTest(string $serviceProviderConfigId, string $modelVersion, string $organizationCode): Provider\ConnectResponse
     {
         $serviceProviderConfigDTO = $this->getServiceProviderConfigDetail($serviceProviderConfigId, $organizationCode);
         $serviceProviderConfig = $serviceProviderConfigDTO->getConfig();
@@ -624,29 +613,7 @@ class ServiceProviderDomainService
         return $provider->connectivityTestByModel($serviceProviderConfig, $modelVersion);
     }
 
-    public function syncModelsToServiceProvider(ServiceProviderModelsEntity $serviceProviderModelsEntity)
-    {
-        // 验证模型实体
-        $serviceProviderModelsEntity->valid();
-
-        // 获取服务提供商配置
-        $serviceProviderConfigEntities = $this->serviceProviderConfigRepository->getsByServiceProviderId($serviceProviderModelsEntity->getServiceProviderConfigId());
-
-        if (empty($serviceProviderConfigEntities)) {
-            ExceptionBuilder::throw(ServiceProviderErrorCode::ServiceProviderNotFound);
-        }
-
-        $modelArray = $serviceProviderModelsEntity->toArray();
-        // 为每个组织添加模型
-        foreach ($serviceProviderConfigEntities as $serviceProviderConfigEntity) {
-            $organizationCode = $serviceProviderConfigEntity->getOrganizationCode();
-
-            $modelEntity = new ServiceProviderModelsEntity($modelArray);
-            $modelEntity->setOrganizationCode($organizationCode);
-        }
-    }
-
-    public function addOriginalModel(string $modelId)
+    public function addOriginalModel(string $modelId): void
     {
         if ($this->serviceProviderOriginalModelsRepository->exist($modelId)) {
             ExceptionBuilder::throw(ServiceProviderErrorCode::InvalidParameter, __('service_provider.original_model_already_exists'));
@@ -657,7 +624,7 @@ class ServiceProviderDomainService
         $this->serviceProviderOriginalModelsRepository->insert($serviceProviderOriginalModelsEntity);
     }
 
-    public function deleteOriginalModel(string $modelId)
+    public function deleteOriginalModel(string $modelId): void
     {
         $this->serviceProviderOriginalModelsRepository->deleteByModelId($modelId);
     }
@@ -669,7 +636,7 @@ class ServiceProviderDomainService
      * @param string $modelVersion 模型版本
      * @param string $modelId 模型ID
      * @param string $organizationCode 组织编码
-     * @return ServiceProviderResponse 服务商配置响应
+     * @return ?ServiceProviderResponse 服务商配置响应
      * @throws Exception
      */
     public function getServiceProviderConfig(
@@ -813,7 +780,7 @@ class ServiceProviderDomainService
         return $activeModels;
     }
 
-    public function deleteServiceProviderForAdmin(string $serviceProviderConfigId, string $organizationCode)
+    public function deleteServiceProviderForAdmin(string $serviceProviderConfigId, string $organizationCode): void
     {
         Db::beginTransaction();
         try {
@@ -1101,12 +1068,12 @@ class ServiceProviderDomainService
         return $prefix . $maskedMiddle . $suffix;
     }
 
-    private function syncUpdateModelsStatusByVLM(string $getModelVersion, Status $status)
+    private function syncUpdateModelsStatusByVLM(string $getModelVersion, Status $status): void
     {
         $this->serviceProviderModelsRepository->syncUpdateModelsStatusByVLM($getModelVersion, $status);
     }
 
-    private function syncUpdateModelsStatusByLLM(int $modelId, Status $status)
+    private function syncUpdateModelsStatusByLLM(int $modelId, Status $status): void
     {
         $this->serviceProviderModelsRepository->syncUpdateModelsStatusByLLM($modelId, $status);
     }
