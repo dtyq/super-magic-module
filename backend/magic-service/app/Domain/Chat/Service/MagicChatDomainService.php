@@ -100,6 +100,22 @@ class MagicChatDomainService extends AbstractDomainService
     }
 
     /**
+     * 根据 app_message_id 拉取消息.
+     * @return ClientSequenceResponse[]
+     */
+    public function pullByAppMessageId(DataIsolation $dataIsolation, string $appMessageId, string $pageToken, int $pageSize): array
+    {
+        $clientSeqList = $this->magicSeqRepository->getAccountSeqListByAppMessageId($dataIsolation, $appMessageId, $pageToken, $pageSize);
+        $data = [];
+        foreach ($clientSeqList as $clientSeq) {
+            $data[$clientSeq->getSeq()->getSeqId()] = $clientSeq->toArray();
+        }
+        $hasMore = count($clientSeqList) === $pageSize;
+        $pageToken = (string) array_key_first($data);
+        return PageListAssembler::pageByElasticSearch(array_values($data), $pageToken, $hasMore);
+    }
+
+    /**
      * 返回最大消息的倒数 n 条序列.
      * @return ClientSequenceResponse[]
      */

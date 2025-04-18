@@ -118,6 +118,25 @@ class MagicChatSeqRepository implements MagicChatSeqRepositoryInterface
         return $this->getClientSequencesResponse($seqInfos);
     }
 
+    /**
+     * 根据 app_message_id 拉取消息.
+     * @return ClientSequenceResponse[]
+     */
+    public function getAccountSeqListByAppMessageId(DataIsolation $dataIsolation, string $appMessageId, string $pageToken, int $pageSize): array
+    {
+        $query = $this->magicSeq::query()
+            ->where('object_type', $dataIsolation->getUserType())
+            ->where('object_id', $dataIsolation->getCurrentMagicId())
+            ->where('app_message_id', $appMessageId)
+            ->when(! empty($pageToken), function ($query) use ($pageToken) {
+                $query->where('seq_id', '>', $pageToken);
+            })
+            ->orderBy('seq_id')
+            ->limit($pageSize);
+        $seqInfos = Db::select($query->toSql(), $query->getBindings());
+        return $this->getClientSequencesResponse($seqInfos);
+    }
+
     public function getSeqByMessageId(string $messageId): ?MagicSeqEntity
     {
         $seqInfo = $this->getSeq($messageId);

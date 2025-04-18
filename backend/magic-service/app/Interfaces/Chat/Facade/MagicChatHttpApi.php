@@ -74,6 +74,18 @@ class MagicChatHttpApi extends AbstractApi
         return $this->magicChatMessageAppService->pullByPageToken($authorization, $params);
     }
 
+    public function pullByAppMessageId(RequestInterface $request, string $appMessageId): array
+    {
+        $params = $request->all();
+        $rules = [
+            'page_token' => 'string', // 私聊的本地最大 seq_id
+        ];
+        $params = $this->checkParams($params, $rules);
+        $this->logger->info('pullMessageByAppMessageId:' . $appMessageId);
+        $authorization = $this->getAuthorization();
+        return $this->magicChatMessageAppService->pullByAppMessageId($authorization, $appMessageId, $params['page_token']);
+    }
+
     /**
      * 拉取用户的最近一段时间收件消息.
      * @throws Throwable

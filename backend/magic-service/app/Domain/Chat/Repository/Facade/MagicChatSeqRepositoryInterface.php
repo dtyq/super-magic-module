@@ -35,6 +35,12 @@ interface MagicChatSeqRepositoryInterface
     public function getAccountSeqListByMagicId(DataIsolation $dataIsolation, int $userLocalMaxSeqId, int $limit): array;
 
     /**
+     * 根据 app_message_id 拉取消息.
+     * @return ClientSequenceResponse[]
+     */
+    public function getAccountSeqListByAppMessageId(DataIsolation $dataIsolation, string $appMessageId, string $pageToken, int $pageSize): array;
+
+    /**
      * 返回最大消息的倒数 n 条序列.
      * @return ClientSequenceResponse[]
      */
