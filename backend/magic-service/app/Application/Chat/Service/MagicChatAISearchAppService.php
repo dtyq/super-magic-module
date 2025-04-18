@@ -7,6 +7,7 @@ declare(strict_types=1);
 
 namespace App\Application\Chat\Service;
 
+use App\Application\ModelGateway\Mapper\ModelGatewayMapper;
 use App\Application\ModelGateway\Service\ModelConfigAppService;
 use App\Domain\Chat\DTO\AISearch\Request\MagicChatAggregateSearchReqDTO;
 use App\Domain\Chat\DTO\AISearch\Response\MagicAggregateSearchSummaryDTO;
@@ -42,6 +43,7 @@ use Hyperf\Coroutine\Parallel;
 use Hyperf\Engine\Channel;
 use Hyperf\Logger\LoggerFactory;
 use Hyperf\Odin\Api\Response\ChatCompletionChoice;
+use Hyperf\Odin\Contract\Model\ModelInterface;
 use Hyperf\Odin\Memory\MessageHistory;
 use Hyperf\Odin\Message\AssistantMessage;
 use Hyperf\Redis\Redis;
@@ -332,7 +334,7 @@ class MagicChatAISearchAppService extends AbstractAppService
     ])]
     public function searchUserQuestion(MagicChatAggregateSearchReqDTO $dto): array
     {
-        $modelName = $this->getModelName($dto->getOrganizationCode());
+        $modelInterface = $this->getChatModel($dto->getOrganizationCode());
         $start = microtime(true);
         $llmConversationId = (string) IdGenerator::getSnowId();
         $llmHistoryMessage = MagicChatAggregateSearchReqDTO::generateLLMHistory($dto->getMagicChatMessageHistory(), $llmConversationId);
@@ -343,12 +345,12 @@ class MagicChatAISearchAppService extends AbstractAppService
             ->setGenerateSearchKeywords(true)
             ->setMessageHistory($llmHistoryMessage)
             ->setConversationId($llmConversationId)
-            ->setModel($modelName)
             ->setLanguage($dto->getLanguage())
             ->setUserId($dto->getUserId())
-            ->setOrganizationCode($dto->getOrganizationCode());
+            ->setOrganizationCode($dto->getOrganizationCode())
+            ->setModel($modelInterface);
         // 根据用户的上下文，拆解子问题。需要理解用户想问什么，再去拆搜索关键词。
-        $searchKeywords = $this->magicLLMDomainService->generateSearchKeywordsByUserInput($dto, $modelName);
+        $searchKeywords = $this->magicLLMDomainService->generateSearchKeywordsByUserInput($dto, $modelInterface);
         $queryVo->setSearchKeywords($searchKeywords);
         $searchResult = $this->magicLLMDomainService->getSearchResults($queryVo);
         $this->logger->info(sprintf(
@@ -432,11 +434,11 @@ class MagicChatAISearchAppService extends AbstractAppService
         if (! empty($allSearchContexts)) {
             // 清洗搜索结果中的重复项
             $searchKeywords = array_column($associateQuestions, 'title');
-            $modelName = $this->getModelName($dto->getOrganizationCode());
+            $modelInterface = $this->getChatModel($dto->getOrganizationCode());
             $queryVo = (new AISearchCommonQueryVo())
                 ->setSearchKeywords($searchKeywords)
                 ->setUserMessage($dto->getUserMessage())
-                ->setModel($modelName)
+                ->setModel($modelInterface)
                 ->setConversationId((string) IdGenerator::getSnowId())
                 ->setMessageHistory(new MessageHistory())
                 ->setSearchContexts($allSearchContexts)
@@ -543,7 +545,8 @@ class MagicChatAISearchAppService extends AbstractAppService
             ->setOrganizationCode($dto->getOrganizationCode());
         // 深度搜索的总结使用 deepseek-r1 模型
         if ($dto->getSearchDeepLevel() == SearchDeepLevel::DEEP) {
-            $queryVo->setModel(LLMModelEnum::DEEPSEEK_R1->value);
+            $modelInterface = $this->getChatModel($dto->getOrganizationCode(), LLMModelEnum::DEEPSEEK_R1->value);
+            $queryVo->setModel($modelInterface);
         }
         $summarizeCompletionResponse = $this->magicLLMDomainService->summarize($queryVo);
         // 流式响应
@@ -797,7 +800,7 @@ class MagicChatAISearchAppService extends AbstractAppService
         }
         $llmConversationId = (string) IdGenerator::getSnowId();
         $llmHistoryMessage = MagicChatAggregateSearchReqDTO::generateLLMHistory($dto->getMagicChatMessageHistory(), $llmConversationId);
-        $modelName = $this->getModelName($dto->getOrganizationCode());
+        $modelInterface = $this->getChatModel($dto->getOrganizationCode());
         return (new AISearchCommonQueryVo())
             ->setUserMessage($searchKeyword)
             ->setSearchEngine($dto->getSearchEngine())
@@ -805,7 +808,7 @@ class MagicChatAISearchAppService extends AbstractAppService
             ->setGenerateSearchKeywords(false)
             ->setMessageHistory($llmHistoryMessage)
             ->setConversationId($llmConversationId)
-            ->setModel($modelName)
+            ->setModel($modelInterface)
             ->setSearchContexts($searchContexts)
             ->setUserId($dto->getUserId())
             ->setOrganizationCode($dto->getOrganizationCode());
@@ -908,8 +911,11 @@ class MagicChatAISearchAppService extends AbstractAppService
         return di(MagicChatMessageAppService::class);
     }
 
-    private function getModelName(string $orgCode): string
+    private function getChatModel(string $orgCode, string $modelName = LLMModelEnum::GPT_41->value): ModelInterface
     {
-        return di(ModelConfigAppService::class)->getChatModelTypeByFallbackChain($orgCode, LLMModelEnum::GPT_41->value);
+        // 通过降级链获取模型名称
+        $modelName = di(ModelConfigAppService::class)->getChatModelTypeByFallbackChain($orgCode, $modelName);
+        // 获取模型代理
+        return di(ModelGatewayMapper::class)->getChatModelProxy($modelName, $orgCode);
     }
 }
