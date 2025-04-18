@@ -11,6 +11,7 @@ use App\Application\ModelGateway\Service\LLMAppService;
 use App\Domain\File\Service\FileDomainService;
 use App\Domain\ModelAdmin\Constant\ModelType;
 use App\Domain\ModelAdmin\Constant\ServiceProviderCategory;
+use App\Domain\ModelAdmin\Constant\ServiceProviderCode;
 use App\Domain\ModelAdmin\Constant\ServiceProviderType;
 use App\Domain\ModelAdmin\Constant\Status;
 use App\Domain\ModelAdmin\Entity\ServiceProviderConfigEntity;
@@ -26,6 +27,7 @@ use App\Domain\ModelGateway\Entity\Dto\CompletionDTO;
 use App\Domain\OrganizationEnvironment\Service\MagicOrganizationEnvDomainService;
 use App\ErrorCode\ServiceProviderErrorCode;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
+use App\Infrastructure\Util\Locker\Excpetion\LockException;
 use App\Interfaces\Authorization\Web\MagicUserAuthorization;
 use Exception;
 use Hyperf\Odin\Api\Response\ChatCompletionResponse;
@@ -40,8 +42,9 @@ class ServiceProviderAppService
     }
 
     /**
-     * 根据组织获取厂商.
+     * 根据组织获取服务商.
      * @return ServiceProviderConfigDTO[]
+     * @throws LockException
      */
     public function getServiceProviders(MagicUserAuthorization $authenticatable, ?ServiceProviderCategory $serviceProviderCategory): array
     {
@@ -49,7 +52,6 @@ class ServiceProviderAppService
 
         // 获取服务商配置
         $serviceProviderConfigDTOS = $this->serviceProviderDomainService->getServiceProviderConfigs($organizationCode, $serviceProviderCategory);
-
         // 如果获取的服务商列表为空，则初始化该类别的服务商
         if (empty($serviceProviderConfigDTOS)) {
             $serviceProviderConfigDTOS = $this->serviceProviderDomainService->initOrganizationServiceProviders($organizationCode, $serviceProviderCategory);
@@ -58,6 +60,13 @@ class ServiceProviderAppService
         // 处理图标
         $this->processServiceProviderConfigIcons($serviceProviderConfigDTOS, $organizationCode);
 
+        $officeOrganization = config('service_provider.office_organization');
+        if ($authenticatable->getOrganizationCode() === $officeOrganization) {
+            $serviceProviderConfigDTOS = array_filter($serviceProviderConfigDTOS, function ($serviceProviderConfigDTO) {
+                return ServiceProviderCode::from($serviceProviderConfigDTO->getProviderCode()) !== ServiceProviderCode::Official;
+            });
+            $serviceProviderConfigDTOS = array_values($serviceProviderConfigDTOS);
+        }
         return $serviceProviderConfigDTOS;
     }
 
@@ -83,7 +92,7 @@ class ServiceProviderAppService
         return $serviceProviderConfigDTOs;
     }
 
-    // 获取厂商详细信息
+    // 获取服务商详细信息
     public function getServiceProviderConfig(string $serviceProviderConfigId, string $organizationCode): ServiceProviderConfigDTO
     {
         $serviceProviderConfigDTO = $this->serviceProviderDomainService->getServiceProviderConfigDetail($serviceProviderConfigId, $organizationCode);
@@ -97,7 +106,7 @@ class ServiceProviderAppService
         return $serviceProviderConfigDTO;
     }
 
-    // 添加厂商
+    // 添加服务商
     public function addServiceProvider(ServiceProviderEntity $serviceProviderEntity): ServiceProviderEntity
     {
         $organizationCodes = $this->organizationEnvDomainService->getAllOrganizationCodes();
@@ -116,7 +125,7 @@ class ServiceProviderAppService
         return $serviceProviderModelsDTO;
     }
 
-    public function updateModelStatus(string $modelId, int $status, string $organizationCode)
+    public function updateModelStatus(string $modelId, int $status, string $organizationCode): void
     {
         $this->serviceProviderDomainService->updateModelStatus($modelId, Status::from($status), $organizationCode);
     }
@@ -126,12 +135,9 @@ class ServiceProviderAppService
         return $this->serviceProviderDomainService->updateServiceProviderConfig($serviceProviderConfigEntity);
     }
 
-    // 刷新模型列表 (组织用的)
-    public function refreshModels(mixed $serviceProviderConfigId, string $organizationCode)
-    {
-        $this->serviceProviderDomainService->refreshModels($serviceProviderConfigId, $organizationCode);
-    }
-
+    /**
+     * @throws Exception
+     */
     public function connectivityTest(string $serviceProviderConfigId, string $modelVersion, string $modelId, MagicUserAuthorization $authorization): ConnectResponse
     {
         $model = $this->serviceProviderDomainService->getModelById($modelId);
@@ -145,6 +151,9 @@ class ServiceProviderAppService
         };
     }
 
+    /**
+     * @throws Exception
+     */
     public function deleteModel(string $modelId, string $organizationCode): void
     {
         // 查询模型不是 llm 则报错
@@ -172,55 +181,9 @@ class ServiceProviderAppService
         return $this->serviceProviderDomainService->listOriginalModels($authorization->getOrganizationCode());
     }
 
-    /**
-     * 初始化组织的服务商信息
-     * 当新加入一个组织后，初始化该组织的服务商和模型配置.
-     * @return ServiceProviderConfigDTO[] 初始化后的服务商配置列表
-     */
-    public function initOrganizationServiceProviders(string $organizationCode, ?ServiceProviderCategory $serviceProviderCategory = null): array
-    {
-        return $this->serviceProviderDomainService->initOrganizationServiceProviders($organizationCode, $serviceProviderCategory);
-    }
-
-    public function addOriginalModel(string $modelId)
+    public function addOriginalModel(string $modelId): void
     {
         $this->serviceProviderDomainService->addOriginalModel($modelId);
-    }
-
-    public function deleteOriginalModel(string $modelId)
-    {
-        $this->serviceProviderDomainService->deleteOriginalModel($modelId);
-    }
-
-    public function deleteModelForAdmin(MagicUserAuthorization $authorization, string $modelId)
-    {
-        $this->serviceProviderDomainService->deleteModel($modelId, $authorization->getOrganizationCode());
-    }
-
-    public function saveModelToServiceProviderForAdmin(ServiceProviderModelsEntity $serviceProviderModelsEntity): ServiceProviderModelsDTO
-    {
-        $serviceProviderModelsEntity = $this->serviceProviderDomainService->saveModelsToServiceProviderForAdmin($serviceProviderModelsEntity);
-        $serviceProviderModelsDTO = new ServiceProviderModelsDTO($serviceProviderModelsEntity->toArray());
-
-        // 处理图标
-        $this->processModelIcon($serviceProviderModelsDTO, $serviceProviderModelsEntity->getOrganizationCode());
-
-        return $serviceProviderModelsDTO;
-    }
-
-    public function deleteServiceProviderForAdmin(string $serviceProviderConfigId, string $organizationCode)
-    {
-        $this->serviceProviderDomainService->deleteServiceProviderForAdmin($serviceProviderConfigId, $organizationCode);
-    }
-
-    public function updateServiceProvider(ServiceProviderEntity $serviceProviderEntity, string $organizationCode): ServiceProviderEntity
-    {
-        return $this->serviceProviderDomainService->updateServiceProvider($serviceProviderEntity, $organizationCode);
-    }
-
-    public function addModelId(string $modelId): ServiceProviderOriginalModelsEntity
-    {
-        return $this->serviceProviderDomainService->addModelId($modelId);
     }
 
     public function addServiceProviderForOrganization(ServiceProviderConfigDTO $serviceProviderConfigDTO, MagicUserAuthorization $authorization): ServiceProviderConfigDTO
@@ -263,6 +226,18 @@ class ServiceProviderAppService
         $this->processServiceProviderEntityListIcons($serviceProviders, $organizationCode);
 
         return $serviceProviders;
+    }
+
+    /**
+     * 对服务商配置中的敏感信息进行脱敏处理.
+     */
+    public function maskSensitiveConfigInfo(ServiceProviderConfigDTO $serviceProviderConfigDTO): void
+    {
+        $config = $serviceProviderConfigDTO->getConfig();
+        // 对敏感字段进行脱敏
+        $config->setAk($this->serviceProviderDomainService->maskString($config->getAk()));
+        $config->setSk($this->serviceProviderDomainService->maskString($config->getSk()));
+        $config->setApiKey($this->serviceProviderDomainService->maskString($config->getApiKey()));
     }
 
     /**
@@ -317,37 +292,6 @@ class ServiceProviderAppService
         }
         $connectResponse->setStatus(true);
         return $connectResponse;
-    }
-
-    /**
-     * 对服务商配置中的敏感信息进行脱敏处理.
-     */
-    private function maskSensitiveConfigInfo(ServiceProviderConfigDTO $serviceProviderConfigDTO): void
-    {
-        $config = $serviceProviderConfigDTO->getConfig();
-
-        // 脱敏处理函数
-        $maskString = function (string $str): string {
-            if (empty($str)) {
-                return '';
-            }
-            $length = mb_strlen($str);
-            if ($length <= 6) {
-                return str_repeat('*', $length);
-            }
-
-            // 保留前三位和后三位，中间用与原字符数量相同的星号代替
-            $prefix = mb_substr($str, 0, 3);
-            $suffix = mb_substr($str, -3, 3);
-            $middleLength = $length - 6; // 减去前三位和后三位
-            $maskedMiddle = str_repeat('*', $middleLength);
-            return $prefix . $maskedMiddle . $suffix;
-        };
-
-        // 对敏感字段进行脱敏
-        $config->setAk($maskString($config->getAk()));
-        $config->setSk($maskString($config->getSk()));
-        $config->setApiKey($maskString($config->getApiKey()));
     }
 
     /**

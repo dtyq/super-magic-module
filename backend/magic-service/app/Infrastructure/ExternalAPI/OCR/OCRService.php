@@ -38,7 +38,7 @@ readonly class OCRService
         $ocrClient = $this->clientFactory->getClient($type);
         try {
             $result = retry(1, function () use ($ocrClient, $url) {
-                // 如果还有其他厂商，这里可以故障转移
+                // 如果还有其他服务商，这里可以故障转移
                 return $this->get($url, $ocrClient);
             }, 1000);
         } catch (Throwable $throwable) {

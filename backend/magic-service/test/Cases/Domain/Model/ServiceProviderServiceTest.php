@@ -37,37 +37,9 @@ class ServiceProviderServiceTest extends BaseTest
         $aiVendorDomainService->addServiceProvider($aiVendorEntity, ['DT001']);
         // 校验是否保存成功
         $this->assertNotNull($aiVendorEntity->getId());
-        // 校验其他组织是否添加成功该厂商
+        // 校验其他组织是否添加成功该服务商
         $aiVendorConfigDTO = $aiVendorDomainService->getServiceProviderConfigDetail((string) $aiVendorEntity->getId(), 'DT001');
         $this->assertNotNull($aiVendorConfigDTO);
-    }
-
-    public function testUpdateSeriveProvider()
-    {
-        $updateName = '测试修改接口-';
-        $aiVendorDomainService = $this->getServiceProviderService();
-        $aiVendorEntities = $aiVendorDomainService->getAllServiceProvider(1, 1);
-        if (count($aiVendorEntities) === 0) {
-            return;
-        }
-        $aiVendorEntity = $aiVendorEntities[0];
-        $newName = $updateName . $aiVendorEntity->getName();
-        $aiVendorEntity->setName($newName);
-        $aiVendorDomainService->updateServiceProviderById($aiVendorEntity);
-        $this->assertEquals($newName, $aiVendorEntity->getName());
-    }
-
-    public function testDeleteServicePropvider()
-    {
-        $aiVendorDomainService = $this->getServiceProviderService();
-        $aiVendorEntities = $aiVendorDomainService->getAllServiceProvider(1, 1);
-        if (count($aiVendorEntities) === 0) {
-            return;
-        }
-        $id = $aiVendorEntities[0]->getId();
-        $aiVendorDomainService->deleteServiceProviderById($id);
-        $aiVendorEntity = $aiVendorDomainService->getServiceProviderById($id);
-        $this->assertNull($aiVendorEntity);
     }
 
     public function testGetServiceProvider()
@@ -79,7 +51,7 @@ class ServiceProviderServiceTest extends BaseTest
         $this->assertNotNull($aiVendorEntity->getId());
     }
 
-    // 厂商添加模型
+    // 服务商添加模型
     public function testAddModelToServiceProvider()
     {
         $aiVendorDomainService = $this->getServiceProviderService();
@@ -97,7 +69,7 @@ class ServiceProviderServiceTest extends BaseTest
         $this->assertNotNull($aiModelEntity->getId());
     }
 
-    // 当前组织获取厂商
+    // 当前组织获取服务商
     public function testGetServiceProviderByOrganizationCode()
     {
         $org = 'DT001';
@@ -106,7 +78,7 @@ class ServiceProviderServiceTest extends BaseTest
         var_dump($vendorsByOrganization);
     }
 
-    // 获取厂商详细信息
+    // 获取服务商详细信息
     public function testGetServiceProviderDetail()
     {
         $id = '751040621307113472';
@@ -116,7 +88,7 @@ class ServiceProviderServiceTest extends BaseTest
         var_dump($aiVendorConfigDTO);
     }
 
-    // 保存厂商配置
+    // 保存服务商配置
     public function testSaveServiceProviderConfig()
     {
         $id = 751172167703973888;

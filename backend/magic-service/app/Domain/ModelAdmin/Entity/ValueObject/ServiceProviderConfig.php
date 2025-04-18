@@ -25,6 +25,8 @@ class ServiceProviderConfig extends AbstractEntity
 
     protected string $deploymentName = '';
 
+    protected string $region = '';
+
     public function getApiVersion(): string
     {
         return $this->apiVersion;
@@ -93,5 +95,15 @@ class ServiceProviderConfig extends AbstractEntity
     public function setProxyUrl(string $proxyUrl): void
     {
         $this->proxyUrl = $proxyUrl;
+    }
+
+    public function getRegion(): string
+    {
+        return $this->region;
+    }
+
+    public function setRegion(string $region): void
+    {
+        $this->region = $region;
     }
 }
