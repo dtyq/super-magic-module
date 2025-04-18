@@ -32,46 +32,43 @@ class Message extends AbstractEntity
 
     public function __construct(array $data)
     {
-        $messageType = $data['type'];
-        $this->appMessageId = $data['app_message_id'] ?? '';
-        $this->sendTime = $data['send_time'] ?? time();
-        $this->topicId = $data['topic_id'] ?? '';
-        $this->type = $messageType;
+        parent::__construct($data);
+        $messageType = $this->getType();
         if ($data[$messageType] instanceof MessageInterface) {
             $this->magicMessage = $data[$messageType];
         } else {
-            $this->magicMessage = MessageAssembler::getMessageStructByArray($this->type, $data[$messageType]);
+            $this->magicMessage = MessageAssembler::getMessageStructByArray($messageType, $data[$messageType]);
         }
     }
 
     public function getAppMessageId(): string
     {
-        return $this->appMessageId;
+        return $this->appMessageId ?? '';
     }
 
-    public function setAppMessageId(string $appMessageId): void
+    public function setAppMessageId(?string $appMessageId): void
     {
-        $this->appMessageId = $appMessageId;
+        $this->appMessageId = $appMessageId ?? '';
     }
 
     public function getSendTime(): int
     {
-        return $this->sendTime;
+        return $this->sendTime ?? time();
     }
 
-    public function setSendTime(int $sendTime): void
+    public function setSendTime(?int $sendTime): void
     {
-        $this->sendTime = $sendTime;
+        $this->sendTime = $sendTime ?? time();
     }
 
     public function getTopicId(): string
     {
-        return $this->topicId;
+        return $this->topicId ?? '';
     }
 
-    public function setTopicId(string $topicId): void
+    public function setTopicId(?string $topicId): void
     {
-        $this->topicId = $topicId;
+        $this->topicId = $topicId ?? '';
     }
 
     public function getType(): string

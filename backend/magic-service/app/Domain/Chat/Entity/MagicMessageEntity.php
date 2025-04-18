@@ -63,6 +63,8 @@ class MagicMessageEntity extends AbstractEntity
 
     protected MessageInterface $content;
 
+    protected ?string $currentVersionId;
+
     public function __construct(?array $data = [])
     {
         if (! empty($data['content'])) {
@@ -81,6 +83,19 @@ class MagicMessageEntity extends AbstractEntity
             $data['message_type'] = $emptyMessage->getMessageTypeEnum();
         }
         parent::__construct($data);
+    }
+
+    public function getCurrentVersionId(): ?string
+    {
+        return $this->currentVersionId ?? null;
+    }
+
+    public function setCurrentVersionId(null|int|string $currentVersionId): static
+    {
+        if (is_numeric($currentVersionId)) {
+            $this->currentVersionId = (string) $currentVersionId;
+        }
+        return $this;
     }
 
     public function getId(): string

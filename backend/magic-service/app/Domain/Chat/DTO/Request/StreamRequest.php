@@ -18,16 +18,7 @@ class StreamRequest extends AbstractRequest
 
     public function __construct(array $data)
     {
-        if ($data['context'] instanceof MagicContext) {
-            $this->context = $data['context'];
-        } else {
-            $this->context = new MagicContext($data['context']);
-        }
-        if ($data['data'] instanceof ChatRequestData) {
-            $this->data = $data['data'];
-        } else {
-            $this->data = new ChatRequestData($data['data']);
-        }
+        parent::__construct($data);
     }
 
     public function getContext(): MagicContext
@@ -35,9 +26,13 @@ class StreamRequest extends AbstractRequest
         return $this->context;
     }
 
-    public function setContext(MagicContext $context): void
+    public function setContext(array|MagicContext $context): void
     {
-        $this->context = $context;
+        if ($context instanceof MagicContext) {
+            $this->context = $context;
+        } else {
+            $this->context = new MagicContext($context);
+        }
     }
 
     public function getData(): ChatRequestData
@@ -45,8 +40,12 @@ class StreamRequest extends AbstractRequest
         return $this->data;
     }
 
-    public function setData(ChatRequestData $data): void
+    public function setData(array|ChatRequestData $data): void
     {
-        $this->data = $data;
+        if ($data instanceof ChatRequestData) {
+            $this->data = $data;
+        } else {
+            $this->data = new ChatRequestData($data);
+        }
     }
 }

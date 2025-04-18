@@ -59,6 +59,10 @@ class UserCallAgentFailSubscriber implements ListenerInterface
             $seqDTO->setSeqType($messageInterface->getMessageTypeEnum());
             // 原样输出扩展参数
             $seqDTO->setExtra($seqEntity->getExtra());
+
+            // 原样输出扩展参数,但是要排除 编辑消息选项
+            $seqExtra = $seqEntity->getExtra()?->getExtraCanCopyData();
+            $seqDTO->setExtra($seqExtra);
             di(MagicChatMessageAppService::class)->aiSendMessage($seqDTO, $appMessageId, doNotParseReferMessageId: true);
         } catch (Throwable $throwable) {
             $logger = ApplicationContext::getContainer()->get(LoggerFactory::class)->get(get_class($this));

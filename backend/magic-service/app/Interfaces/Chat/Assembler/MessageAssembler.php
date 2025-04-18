@@ -104,9 +104,6 @@ class MessageAssembler
         return new MagicMessageEntity($message);
     }
 
-    /**
-     * 根据 protobuf 的消息结构,获取对应的消息对象.
-     */
     public static function getChatMessageDTOByRequest(
         ChatRequest $chatRequest,
         MagicConversationEntity $conversationEntity,

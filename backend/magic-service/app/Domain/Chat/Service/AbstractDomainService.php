@@ -25,6 +25,7 @@ use App\Domain\Chat\Entity\ValueObject\MessageType\ControlMessageType;
 use App\Domain\Chat\Event\Seq\SeqCreatedEvent;
 use App\Domain\Chat\Repository\Facade\MagicChatConversationRepositoryInterface;
 use App\Domain\Chat\Repository\Facade\MagicChatFileRepositoryInterface;
+use App\Domain\Chat\Repository\Facade\MagicChatMessageVersionsRepositoryInterface;
 use App\Domain\Chat\Repository\Facade\MagicChatSeqRepositoryInterface;
 use App\Domain\Chat\Repository\Facade\MagicChatTopicRepositoryInterface;
 use App\Domain\Chat\Repository\Facade\MagicContactIdMappingRepositoryInterface;
@@ -94,49 +95,13 @@ abstract class AbstractDomainService
         protected readonly LockerInterface $locker,
         protected readonly EnvironmentRepositoryInterface $magicEnvironmentsRepository,
         protected readonly MagicFlowAIModelRepositoryInterface $magicFlowAIModelRepository,
-        protected readonly CloudFileRepositoryInterface $cloudFileRepository
+        protected readonly CloudFileRepositoryInterface $cloudFileRepository,
+        protected readonly MagicChatMessageVersionsRepositoryInterface $magicChatMessageVersionsRepository,
     ) {
         try {
             $this->logger = ApplicationContext::getContainer()->get(LoggerFactory::class)->get(get_class($this));
         } catch (Throwable) {
         }
-    }
-
-    /**
-     * 接收客户端产生的消息,,生成magicMsgId
-     * 可能是创建会话,编辑自己昵称等的控制消息.
-     */
-    public function createMagicMessageByAppClient(MagicMessageEntity $messageDTO, MagicConversationEntity $senderConversationEntity): MagicMessageEntity
-    {
-        // 由于数据库设计有问题，会话表没有记录 user 的 type，因此这里需要查询一遍发件方用户信息
-        // todo 会话表应该记录 user 的 type
-        $senderUserEntity = $this->magicUserRepository->getUserById($senderConversationEntity->getUserId());
-        if ($senderUserEntity === null) {
-            ExceptionBuilder::throw(UserErrorCode::USER_NOT_EXIST);
-        }
-        $magicMsgId = $messageDTO->getMagicMessageId();
-        $magicMsgId = empty($magicMsgId) ? IdGenerator::getUniqueId32() : $magicMsgId;
-        $time = date('Y-m-d H:i:s');
-        $id = (string) IdGenerator::getSnowId();
-        // 一条消息会出现在两个人的会话窗口里(群聊时出现在几千人的会话窗口id里),所以直接不存了,需要会话窗口id时再根据收件人/发件人id去 magic_user_conversation 取
-        $messageData = [
-            'id' => $id,
-            'sender_id' => $senderUserEntity->getUserId(),
-            'sender_type' => $senderUserEntity->getUserType()->value,
-            'sender_organization_code' => $senderUserEntity->getOrganizationCode(),
-            'receive_id' => $senderConversationEntity->getReceiveId(),
-            'receive_type' => $senderConversationEntity->getReceiveType()->value,
-            'receive_organization_code' => $senderConversationEntity->getReceiveOrganizationCode(),
-            'app_message_id' => $messageDTO->getAppMessageId(),
-            'magic_message_id' => $magicMsgId,
-            'message_type' => $messageDTO->getMessageType()->getName(),
-            'content' => Json::encode($messageDTO->getContent()->toArray(), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
-            'send_time' => $messageDTO->getSendTime() ?: $time,
-            'created_at' => $time,
-            'updated_at' => $time,
-        ];
-        $this->magicMessageRepository->createMessage($messageData);
-        return MessageAssembler::getMessageEntity($messageData);
     }
 
     /**
@@ -492,6 +457,10 @@ abstract class AbstractDomainService
             $topicId = $seqEntity->getExtra()?->getTopicId();
         }
         if (empty($topicId)) {
+            return null;
+        }
+        // 如果是编辑消息，不写入
+        if (! empty($seqEntity->getExtra()?->getEditMessageOptions()?->getMagicMessageId())) {
             return null;
         }
         // 检查话题是否存在

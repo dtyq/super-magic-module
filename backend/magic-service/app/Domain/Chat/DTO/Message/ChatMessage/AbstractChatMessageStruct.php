@@ -8,7 +8,9 @@ declare(strict_types=1);
 namespace App\Domain\Chat\DTO\Message\ChatMessage;
 
 use App\Domain\Chat\DTO\Message\MagicMessageStruct;
+use App\Domain\Chat\DTO\Message\Trait\EditMessageOptionsTrait;
 
 abstract class AbstractChatMessageStruct extends MagicMessageStruct
 {
+    use EditMessageOptionsTrait;
 }

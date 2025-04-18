@@ -14,7 +14,7 @@ use App\Domain\Chat\Entity\ValueObject\MessageType\ControlMessageType;
 use Hyperf\Codec\Json;
 
 /**
- * 暂时用于替换 protobuf 的 Message 类型.
+ * 聊天和控制消息的基类.
  */
 abstract class MagicMessageStruct extends AbstractEntity implements MessageInterface
 {

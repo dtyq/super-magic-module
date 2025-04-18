@@ -18,8 +18,7 @@ class ControlRequest extends AbstractRequest
 
     public function __construct(array $data)
     {
-        $this->context = new MagicContext($data['context']);
-        $this->data = new ControlRequestData($data['data']);
+        parent::__construct($data);
     }
 
     public function getContext(): MagicContext
@@ -27,9 +26,13 @@ class ControlRequest extends AbstractRequest
         return $this->context;
     }
 
-    public function setContext(MagicContext $context): void
+    public function setContext(array|MagicContext $context): void
     {
-        $this->context = $context;
+        if ($context instanceof MagicContext) {
+            $this->context = $context;
+        } else {
+            $this->context = new MagicContext($context);
+        }
     }
 
     public function getData(): ControlRequestData
@@ -37,8 +40,12 @@ class ControlRequest extends AbstractRequest
         return $this->data;
     }
 
-    public function setData(ControlRequestData $data): void
+    public function setData(array|ControlRequestData $data): void
     {
-        $this->data = $data;
+        if ($data instanceof ControlRequestData) {
+            $this->data = $data;
+        } else {
+            $this->data = new ControlRequestData($data);
+        }
     }
 }

@@ -104,6 +104,9 @@ mkdir $TMP_DIR;
     cp -a "${SERVICE_DIR}"/* .
     cp -a "${SERVICE_DIR}"/.gitignore ./
     cp -R "${SERVICE_DIR}"/.github ./
+    cp -R "${SERVICE_DIR}"/.gitlab ./
+    cp -R "${SERVICE_DIR}"/.php-cs-fixer.php ./
+    cp -R "${SERVICE_DIR}"/.dockerignore ./
     cp -a "${SCRIPT_DIR}"/magic-service/Dockerfile.github ./
     # 判断是否是GitHub才执行这一步
     if [[ $IS_GITHUB == true ]]; then
@@ -121,11 +124,13 @@ mkdir $TMP_DIR;
     # 根据不同情况推送代码
     if [[ $USE_BRANCH == true ]]; then
         echo "Pushing to branch ${TARGET_BRANCH}"
+        git push origin --delete $TARGET_BRANCH || true
         git push origin $TARGET_BRANCH
     else
         if [[ $(git log --pretty="%d" -n 1 | grep tag --count) -eq 0 ]]; then
             echo "Releasing magic-service"
             git tag $VERSION
+            git push origin --delete $TARGET_BRANCH || true
             git push origin $TARGET_BRANCH
             git push origin --tags
         fi
