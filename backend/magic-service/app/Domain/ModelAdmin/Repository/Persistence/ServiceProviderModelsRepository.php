@@ -89,24 +89,7 @@ class ServiceProviderModelsRepository extends AbstractModelRepository
         $this->handleModelsChangeAndDispatch([$modelId]);
     }
 
-    /**
-     * @return ServiceProviderModelsEntity[]
-     */
-    public function getByIds(array $modelIds): array
-    {
-        return $this->getModelsByIds($modelIds);
-    }
-
-    /**
-     * @return ServiceProviderModelsEntity[]
-     */
-    public function getByProviderId(int $serviceProviderId): array
-    {
-        $query = $this->serviceProviderModelsModel::query()->where('service_provider_config_id', $serviceProviderId);
-        return $this->executeQueryAndToEntities($query);
-    }
-
-    public function deleteByModelIdAndOrganizationCode(string $modelId, string $organizationCode)
+    public function deleteByModelIdAndOrganizationCode(string $modelId, string $organizationCode): void
     {
         $query = $this->serviceProviderModelsModel::query()
             ->where('id', $modelId)
@@ -128,7 +111,7 @@ class ServiceProviderModelsRepository extends AbstractModelRepository
     }
 
     #[Transactional]
-    public function updateModelStatus(string $id, string $organizationCode, Status $status)
+    public function updateModelStatus(string $id, string $organizationCode, Status $status): void
     {
         $this->serviceProviderModelsModel::query()
             ->where('id', $id)
@@ -269,22 +252,6 @@ class ServiceProviderModelsRepository extends AbstractModelRepository
     }
 
     /**
-     * @param $serviceProviderConfigIds int[]
-     */
-    public function deleteByServiceProviderConfigIdsAndModelVersion(array $serviceProviderConfigIds, string $modelVersion)
-    {
-        if (empty($serviceProviderConfigIds)) {
-            return;
-        }
-
-        $query = $this->serviceProviderModelsModel::query()
-            ->whereIn('service_provider_config_id', $serviceProviderConfigIds)
-            ->where('model_version', $modelVersion);
-
-        $this->queryThenDeleteAndDispatch($query);
-    }
-
-    /**
      * 批量保存模型数据.
      * @param ServiceProviderModelsEntity[] $modelEntities 模型实体数组
      */
@@ -366,7 +333,7 @@ class ServiceProviderModelsRepository extends AbstractModelRepository
         return $this->executeQueryAndToEntities($query);
     }
 
-    public function syncUpdateModelsStatusExcludeSelfByVLM(string $modelVersion, Status $status)
+    public function syncUpdateModelsStatusExcludeSelfByVLM(string $modelVersion, Status $status): void
     {
         $this->serviceProviderModelsModel::query()
             ->where('model_version', $modelVersion)
@@ -375,7 +342,7 @@ class ServiceProviderModelsRepository extends AbstractModelRepository
             ->update(['status' => $status->value]);
     }
 
-    public function syncUpdateModelsStatusByVLM(string $modelVersion, Status $status)
+    public function syncUpdateModelsStatusByVLM(string $modelVersion, Status $status): void
     {
         $this->serviceProviderModelsModel::query()
             ->where('model_version', $modelVersion)
@@ -413,7 +380,7 @@ class ServiceProviderModelsRepository extends AbstractModelRepository
     /**
      * @param $modelParentIds string[]
      */
-    public function deleteByModelParentIdForOffice(array $modelParentIds)
+    public function deleteByModelParentIdForOffice(array $modelParentIds): void
     {
         $modelParentIds = array_filter($modelParentIds, function ($value) {
             return $value !== 0;
@@ -424,7 +391,7 @@ class ServiceProviderModelsRepository extends AbstractModelRepository
         $this->serviceProviderModelsModel::query()->whereIn('model_parent_id', $modelParentIds)->where('is_office', true)->delete();
     }
 
-    public function batchUpdateModelsAndOffice(?int $modelParentId, array $entityArray, bool $isOffice)
+    public function batchUpdateModelsAndOffice(?int $modelParentId, array $entityArray, bool $isOffice): void
     {
         unset($entityArray['id'], $entityArray['organization_code'], $entityArray['service_provider_config_id'], $entityArray['status']);
 
