@@ -342,6 +342,7 @@ class MagicUserContactAppService extends AbstractAppService
                 $userDetailDTO->setAgentInfo(
                     new AgentInfoDTO([
                         'bot_id' => (string) $agentId,
+                        'agent_id' => (string) $agentId,
                         'flow_code' => $userDetailDTO->getAiCode(),
                         'user_operation' => ($agentPermissions[$agentId] ?? Operation::None)->value,
                     ])
