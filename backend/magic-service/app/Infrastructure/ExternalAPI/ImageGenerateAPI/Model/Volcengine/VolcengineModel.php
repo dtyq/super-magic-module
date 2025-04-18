@@ -40,10 +40,6 @@ class VolcengineModel implements ImageGenerate
 
     private VolcengineAPI $api;
 
-    private string $textToImageModelVersion = 'general_v2.1_L';
-
-    private string $textToImageReqScheduleConf = 'general_v20_9B_pe';
-
     public function __construct()
     {
         $ak = \Hyperf\Config\config('image_generate.volcengine.ak');
@@ -68,8 +64,6 @@ class VolcengineModel implements ImageGenerate
             'width' => $imageGenerateRequest->getWidth(),
             'height' => $imageGenerateRequest->getHeight(),
             'req_key' => $imageGenerateRequest->getModel(),
-            'textToImageModelVersion' => $this->textToImageModelVersion,
-            'textToImageReqScheduleConf' => $this->textToImageReqScheduleConf,
         ]);
 
         // 使用 Parallel 并行处理
@@ -201,9 +195,6 @@ class VolcengineModel implements ImageGenerate
                 }
                 $body['image_urls'] = $request->getReferenceImage();
             } else {
-                // 文生图配置
-                $body['model_version'] = $this->textToImageModelVersion;
-                $body['req_schedule_conf'] = $this->textToImageReqScheduleConf;
                 $body['width'] = $width;
                 $body['height'] = $height;
                 $body['use_sr'] = $request->getUseSr();

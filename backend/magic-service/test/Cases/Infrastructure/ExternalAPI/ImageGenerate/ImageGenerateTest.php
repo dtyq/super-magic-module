@@ -82,7 +82,7 @@ class ImageGenerateTest extends BaseTest
         $MjModelRequest = new MidjourneyModelRequest();
         $MjModelRequest->setPrompt('摄影作品，真人写真风格，一个画着万圣节装扮的女人手里拿着一个南瓜灯，该设计冷色调与暖色调结合，冷色调与暖色调过渡自然，色调柔和，电影感，电影海报，高级感，16k，超详细，UHD');
         $MjModelRequest->setGenerateNum(1);
-        $MjModelRequest->setMode('relax');
+        $MjModelRequest->setModel('relax');
         $MjModel = new MidjourneyModel();
         $result = $MjModel->generateImage($MjModelRequest);
         var_dump($result);
