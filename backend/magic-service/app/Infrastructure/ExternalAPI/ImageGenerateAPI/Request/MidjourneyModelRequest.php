@@ -10,12 +10,9 @@ namespace App\Infrastructure\ExternalAPI\ImageGenerateAPI\Request;
 class MidjourneyModelRequest extends ImageGenerateRequest
 {
     // 生成的图片数量(没有用，但是必须要带)
-    private int $generateNum = 5;
 
     // 比例
     private string $ratio = '1:1';
-
-    private string $mode = 'fast';
 
     public function getGenerateNum(): int
     {
@@ -35,15 +32,5 @@ class MidjourneyModelRequest extends ImageGenerateRequest
     public function setRatio(string $ratio): void
     {
         $this->ratio = $ratio;
-    }
-
-    public function setMode(string $mode): void
-    {
-        $this->mode = $mode;
-    }
-
-    public function getMode(): string
-    {
-        return $this->mode;
     }
 }

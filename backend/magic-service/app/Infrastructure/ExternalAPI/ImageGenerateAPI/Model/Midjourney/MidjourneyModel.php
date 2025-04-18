@@ -66,13 +66,13 @@ class MidjourneyModel extends AbstractDingTalkAlert implements ImageGenerate
             'prompt' => $prompt,
             'ratio' => $imageGenerateRequest->getRatio(),
             'negativePrompt' => $imageGenerateRequest->getNegativePrompt(),
-            'mode' => $imageGenerateRequest->getMode(),
+            'mode' => $imageGenerateRequest->getModel(),
         ]);
 
         try {
             $this->checkPrompt($prompt);
 
-            $jobId = $this->submitAsyncTask($prompt, $imageGenerateRequest->getMode());
+            $jobId = $this->submitAsyncTask($prompt, $imageGenerateRequest->getModel());
 
             $response = $this->pollTaskResult($jobId);
 

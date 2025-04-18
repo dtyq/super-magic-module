@@ -147,7 +147,7 @@ class FluxModel extends AbstractDingTalkAlert implements ImageGenerate
     {
         $prompt = $imageGenerateRequest->getPrompt();
         $size = $imageGenerateRequest->getWidth() . 'x' . $imageGenerateRequest->getHeight();
-        $mode = $imageGenerateRequest->getMode();
+        $mode = $imageGenerateRequest->getModel();
         // 记录请求开始
         $this->logger->info('Flux文生图：开始生图', [
             'prompt' => $prompt,
@@ -156,7 +156,7 @@ class FluxModel extends AbstractDingTalkAlert implements ImageGenerate
         ]);
 
         try {
-            $result = $this->api->submitTask($prompt, $size, $mode ?? 'flux1-dev');
+            $result = $this->api->submitTask($prompt, $size, $mode);
 
             if ($result['status'] !== 'SUCCESS') {
                 $this->logger->warning('Flux文生图：生成请求失败', ['message' => $result['message'] ?? '未知错误']);

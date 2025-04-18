@@ -64,6 +64,7 @@ class ImageGenerateFactory
         );
         isset($data['generate_num']) && $request->setGenerateNum($data['generate_num']);
         $request->setUseSr((bool) $data['use_sr']);
+        $request->setModel($data['model']);
         $request->setReferenceImage($data['reference_images']);
         return $request;
     }
@@ -73,7 +74,7 @@ class ImageGenerateFactory
         $model = $data['model'];
         $mode = strtolower(explode('-', $model, limit: 2)[1] ?? 'fast');
         $request = new MidjourneyModelRequest($data['width'], $data['height'], $data['user_prompt'], $data['negative_prompt']);
-        $request->setMode($mode);
+        $request->setModel($mode);
         $request->setRatio($data['ratio']);
         isset($data['generate_num']) && $request->setGenerateNum($data['generate_num']);
         return $request;
@@ -101,7 +102,7 @@ class ImageGenerateFactory
         }
 
         $request = new FluxModelRequest((string) $width, (string) $height, $data['user_prompt'], $data['negative_prompt']);
-        $request->setMode($model);
+        $request->setModel($model);
         isset($data['generate_num']) && $request->setGenerateNum($data['generate_num']);
         $request->setWidth((string) $width);
         $request->setHeight((string) $height);
