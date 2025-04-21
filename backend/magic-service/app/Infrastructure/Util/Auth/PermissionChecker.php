@@ -8,6 +8,7 @@ declare(strict_types=1);
 namespace App\Infrastructure\Util\Auth;
 
 use App\Application\Kernel\SuperPermissionEnum;
+use App\Infrastructure\Util\Auth\Permission\PermissionInterface;
 
 class PermissionChecker
 {
@@ -54,5 +55,11 @@ class PermissionChecker
         // 判断是否特定权限
         $permissionKey = $permission->value;
         return isset($permissions[$permissionKey]) && in_array($mobile, $permissions[$permissionKey]);
+    }
+
+    public static function isSuperAdmin(string $organizationCode, string $mobile): bool
+    {
+        $permission = di(PermissionInterface::class);
+        return $permission->isSuperAdmin($organizationCode, $mobile);
     }
 }
