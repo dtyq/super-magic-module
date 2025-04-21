@@ -5,12 +5,12 @@ declare(strict_types=1);
  * Copyright (c) The Magic , Distributed under the software license
  */
 
-namespace App\Application\Admin\Service\Extra\Factory;
+namespace App\Application\Admin\Agent\Service\Extra\Factory;
 
-use App\Application\Admin\Service\Extra\Strategy\AssistantCreateExtraDetailAppenderStrategy;
-use App\Application\Admin\Service\Extra\Strategy\DefaultFriendExtraDetailAppenderStrategy;
-use App\Application\Admin\Service\Extra\Strategy\ExtraDetailAppenderStrategyInterface;
-use App\Application\Admin\Service\Extra\Strategy\ThirdPartyPublishExtraDetailAppenderStrategy;
+use App\Application\Admin\Agent\Service\Extra\Strategy\AssistantCreateExtraDetailAppenderStrategy;
+use App\Application\Admin\Agent\Service\Extra\Strategy\DefaultFriendExtraDetailAppenderStrategy;
+use App\Application\Admin\Agent\Service\Extra\Strategy\ExtraDetailAppenderStrategyInterface;
+use App\Application\Admin\Agent\Service\Extra\Strategy\ThirdPartyPublishExtraDetailAppenderStrategy;
 use App\Interfaces\Admin\DTO\Extra\AssistantCreateExtraDTO;
 use App\Interfaces\Admin\DTO\Extra\DefaultFriendExtraDTO;
 use App\Interfaces\Admin\DTO\Extra\SettingExtraDTOInterface;

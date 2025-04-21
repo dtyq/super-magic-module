@@ -5,7 +5,7 @@ declare(strict_types=1);
  * Copyright (c) The Magic , Distributed under the software license
  */
 
-namespace App\Application\Admin\Service\Extra\Strategy;
+namespace App\Application\Admin\Agent\Service\Extra\Strategy;
 
 use App\Application\Chat\Service\MagicDepartmentAppService;
 use App\Application\Chat\Service\MagicUserContactAppService;
