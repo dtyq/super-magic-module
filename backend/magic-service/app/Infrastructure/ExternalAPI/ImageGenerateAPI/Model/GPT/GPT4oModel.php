@@ -7,6 +7,7 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\ExternalAPI\ImageGenerateAPI\Model\GPT;
 
+use App\Domain\ModelAdmin\Entity\ValueObject\ServiceProviderConfig;
 use App\ErrorCode\ImageGenerateErrorCode;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Infrastructure\ExternalAPI\ImageGenerateAPI\ImageGenerate;
@@ -38,12 +39,10 @@ class GPT4oModel extends AbstractDingTalkAlert implements ImageGenerate
 
     protected GPTAPI $api;
 
-    public function __construct()
+    public function __construct(ServiceProviderConfig $serviceProviderConfig)
     {
         parent::__construct();
-        $apiKey = \Hyperf\Config\config('image_generate.gpt4o.api_key');
-        $baseUrl = \Hyperf\Config\config('image_generate.gpt4o.host');
-        $this->api = new GPTAPI($apiKey, $baseUrl);
+        $this->api = new GPTAPI($serviceProviderConfig->getApiKey());
         $this->balanceThreshold = 100;
     }
 
