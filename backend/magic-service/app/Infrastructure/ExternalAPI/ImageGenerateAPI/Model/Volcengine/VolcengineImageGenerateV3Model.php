@@ -11,15 +11,12 @@ use App\Domain\ModelAdmin\Entity\ValueObject\ServiceProviderConfig;
 use App\ErrorCode\ImageGenerateErrorCode;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Infrastructure\ExternalAPI\ImageGenerateAPI\ImageGenerate;
-use App\Infrastructure\ExternalAPI\ImageGenerateAPI\ImageGenerateModelType;
 use App\Infrastructure\ExternalAPI\ImageGenerateAPI\ImageGenerateType;
 use App\Infrastructure\ExternalAPI\ImageGenerateAPI\Request\ImageGenerateRequest;
 use App\Infrastructure\ExternalAPI\ImageGenerateAPI\Request\VolcengineModelRequest;
 use App\Infrastructure\ExternalAPI\ImageGenerateAPI\Response\ImageGenerateResponse;
 use Exception;
 use Hyperf\Di\Annotation\Inject;
-use Hyperf\RateLimit\Annotation\RateLimit;
-use Hyperf\Retry\Annotation\Retry;
 use Psr\Log\LoggerInterface;
 
 class VolcengineImageGenerateV3Model implements ImageGenerate
@@ -155,11 +152,6 @@ class VolcengineImageGenerateV3Model implements ImageGenerate
         // TODO: Implement setApiKey() method.
     }
 
-    #[Retry(
-        maxAttempts: self::GENERATE_RETRY_COUNT,
-        base: self::GENERATE_RETRY_TIME
-    )]
-    #[RateLimit(create: 1, consume: 2, capacity: 0, key: ImageGenerate::IMAGE_GENERATE_KEY_PREFIX . ImageGenerate::IMAGE_GENERATE_SUBMIT_KEY_PREFIX . ImageGenerateModelType::VolcengineImageGenerateV3->value, waitTimeout: 60)]
     private function submitAsyncTask(VolcengineModelRequest $request): string
     {
         $prompt = $request->getPrompt();
@@ -221,11 +213,6 @@ class VolcengineImageGenerateV3Model implements ImageGenerate
         }
     }
 
-    #[RateLimit(create: 4, consume: 1, capacity: 0, key: ImageGenerate::IMAGE_GENERATE_KEY_PREFIX . self::IMAGE_GENERATE_POLL_KEY_PREFIX . ImageGenerateModelType::VolcengineImageGenerateV3->value, waitTimeout: 60)]
-    #[Retry(
-        maxAttempts: self::GENERATE_RETRY_COUNT,
-        base: self::GENERATE_RETRY_TIME
-    )]
     private function pollTaskResult(string $taskId, string $model): array
     {
         $reqKey = $model;
