@@ -9,6 +9,7 @@ namespace App\Application\Chat\Service;
 
 use App\Domain\Agent\Entity\MagicAgentEntity;
 use App\Domain\Agent\Service\MagicAgentDomainService;
+use App\Domain\Chat\Service\MagicConversationDomainService;
 use App\Domain\Contact\Entity\ValueObject\DataIsolation;
 use App\Domain\Contact\Service\MagicUserDomainService;
 use App\Domain\File\Service\FileDomainService;
@@ -20,9 +21,10 @@ use Qbhy\HyperfAuth\Authenticatable;
 class MagicAgentAppService extends AbstractAppService
 {
     public function __construct(
-        private readonly MagicUserDomainService $userDomainService,
-        private readonly MagicAgentDomainService $magicAgentDomainService,
-        private readonly FileDomainService $fileDomainService,
+        protected readonly MagicUserDomainService $userDomainService,
+        protected readonly MagicAgentDomainService $magicAgentDomainService,
+        protected readonly FileDomainService $fileDomainService,
+        protected readonly MagicConversationDomainService $magicConversationDomainService,
     ) {
     }
 
