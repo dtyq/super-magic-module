@@ -7,6 +7,7 @@ declare(strict_types=1);
 
 namespace App\Domain\Chat\Service;
 
+use App\Application\Chat\Service\SpecialAgentService;
 use App\Domain\Chat\DTO\Agent\SenderExtraDTO;
 use App\Domain\Chat\DTO\Message\ControlMessage\AddFriendMessage;
 use App\Domain\Chat\DTO\Request\Common\ControlRequestData;
@@ -17,6 +18,8 @@ use App\Domain\Chat\Entity\ValueObject\MagicMessageStatus;
 use App\Domain\Chat\Entity\ValueObject\MessageType\ChatMessageType;
 use App\Domain\Chat\Entity\ValueObject\MessageType\ControlMessageType;
 use App\Domain\Chat\Entity\ValueObject\SocketEventType;
+use App\Domain\Chat\Entity\ValueObject\SpecialAICode;
+use App\Domain\Chat\Event\Agent\SpecialAgentEvent;
 use App\Domain\Chat\Event\Agent\UserCallAgentEvent;
 use App\Domain\Chat\Event\Agent\UserCallAgentFailEvent;
 use App\Domain\Contact\Entity\AccountEntity;
@@ -30,7 +33,8 @@ use App\Infrastructure\Util\IdGenerator\IdGenerator;
 use App\Interfaces\Authorization\Web\MagicUserAuthorization;
 use App\Interfaces\Chat\Assembler\SeqAssembler;
 use Hyperf\Codec\Json;
-use Hyperf\Engine\Coroutine;
+use Hyperf\Context\ApplicationContext;
+use Hyperf\Coroutine\Coroutine;
 use RuntimeException;
 use Throwable;
 
@@ -159,9 +163,13 @@ class MagicSeqDomainService extends AbstractDomainService
                 try {
                     # ai 发送已读回执
                     $this->aiSendReadStatusChangeReceipt($selfSeqEntity, $userEntity);
-                    # 调用 flow
-                    // todo 可以做 优化flow响应成功率: 同步等待flow执行,细致判断,对于本seq_id,上次flow的响应是否超时,如果是,直接丢弃,不再发给flow
-                    $this->userCallFlow($aiAccountEntity, $userEntity, $senderUserEntity, $selfSeqEntity);
+                    if (SpecialAICode::isValid($aiAccountEntity->getAiCode())) {
+                        $this->pushAgentMessage(SpecialAICode::from($aiAccountEntity->getAiCode()), $aiAccountEntity, $userEntity, $senderUserEntity, $selfSeqEntity, $messageEntity);
+                    } else {
+                        # 调用 flow
+                        // todo 可以做 优化flow响应成功率: 同步等待flow执行,细致判断,对于本seq_id,上次flow的响应是否超时,如果是,直接丢弃,不再发给flow
+                        $this->userCallFlow($aiAccountEntity, $userEntity, $senderUserEntity, $selfSeqEntity);
+                    }
                 } catch (Throwable $throwable) {
                     $this->logger->error('UserCallAgentEventError', [
                         'message' => $throwable->getMessage(),
@@ -277,6 +285,29 @@ class MagicSeqDomainService extends AbstractDomainService
         $messageDTO->setUpdatedAt($time);
         $messageDTO->setDeletedAt(null);
         return $messageDTO;
+    }
+
+    private function pushAgentMessage(SpecialAICode $aiCode, AccountEntity $agentAccountEntity, MagicUserEntity $agentUserEntity, MagicUserEntity $senderUserEntity, MagicSeqEntity $seqEntity, MagicMessageEntity $messageEntity): void
+    {
+        // 创建事件对象
+        $event = new SpecialAgentEvent(
+            $agentAccountEntity,
+            $agentUserEntity,
+            $senderUserEntity,
+            $seqEntity,
+            $messageEntity
+        );
+
+        // 通过依赖注入获取服务
+        $specialAgentService = ApplicationContext::getContainer()->get(SpecialAgentService::class);
+
+        // 处理事件，传入 aiCode，使用 value 属性获取字符串值
+        $result = $specialAgentService->handleSpecialAgentEvent($event, $aiCode->value);
+
+        // 如果失败，记录警告日志
+        if (! $result) {
+            $this->logger->warning('Failed to process agent message: ' . $aiCode->value);
+        }
     }
 
     /**
