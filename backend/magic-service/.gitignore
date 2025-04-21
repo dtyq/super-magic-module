@@ -4,6 +4,7 @@
 *.patch
 .idea/
 .git/
+.cursor/
 runtime/
 vendor/
 .phpintel/
