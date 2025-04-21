@@ -17,19 +17,26 @@ type SubGroupProps = {
 }
 
 // 单独提取渲染项组件，并使用memo优化它
-const SubGroupItem = React.memo(({ node, index, renderItem }: { 
-	node: NodeWidget, 
-	index: number, 
-	renderItem: (n: NodeWidget, i: number) => ReactNode 
-}) => {
-	return <>{renderItem(node, index)}</>;
-}, (prevProps, nextProps) => {
-	// 只比较关键属性，避免不必要的渲染
-	return (
-		prevProps.node.schema.id === nextProps.node.schema.id &&
-		prevProps.index === nextProps.index
-	);
-});
+const SubGroupItem = React.memo(
+	({
+		node,
+		index,
+		renderItem,
+	}: {
+		node: NodeWidget
+		index: number
+		renderItem: (n: NodeWidget, i: number) => ReactNode
+	}) => {
+		return <>{renderItem(node, index)}</>
+	},
+	(prevProps, nextProps) => {
+		// 只比较关键属性，避免不必要的渲染
+		return (
+			prevProps.node.schema.id === nextProps.node.schema.id &&
+			prevProps.index === nextProps.index
+		)
+	},
+)
 
 function SubGroup({ subGroup, getGroupNodeList, materialFn }: SubGroupProps) {
 	const { AvatarComponent } = useAvatar({
@@ -38,12 +45,12 @@ function SubGroup({ subGroup, getGroupNodeList, materialFn }: SubGroupProps) {
 		avatar: subGroup.avatar,
 		showIcon: true,
 	})
-	
+
 	// 追踪子面板的展开状态
-	const [activeKey, setActiveKey] = useState<string | undefined>(undefined);
-	const [isRendered, setIsRendered] = useState(false);
+	const [activeKey, setActiveKey] = useState<string | undefined>(undefined)
+	const [isRendered, setIsRendered] = useState(false)
 	// 缓存节点列表，避免每次展开都重新获取
-	const [cachedNodeList, setCachedNodeList] = useState<NodeWidget[]>([]);
+	const [cachedNodeList, setCachedNodeList] = useState<NodeWidget[]>([])
 
 	const SubGroupHeader = useMemo(() => {
 		return (
@@ -64,42 +71,52 @@ function SubGroup({ subGroup, getGroupNodeList, materialFn }: SubGroupProps) {
 	}, [AvatarComponent, subGroup.groupName, subGroup.desc])
 
 	// 优化：使用useCallback包装renderItem以避免不必要的重新创建
-	const renderItem = useCallback((n: NodeWidget, i: number) => {
-		return materialFn(n, {
-			key: i,
-			showIcon: false,
-			inGroup: true,
-		})
-	}, [materialFn])
+	const renderItem = useCallback(
+		(n: NodeWidget, i: number) => {
+			return materialFn(n, {
+				key: i,
+				showIcon: false,
+				inGroup: true,
+			})
+		},
+		[materialFn],
+	)
 
 	// 处理折叠面板变更
-	const handleCollapseChange = useCallback((key: string | string[]) => {
-		const isActive = key && (Array.isArray(key) ? key.includes(subGroup.groupName!) : key === subGroup.groupName);
-		setActiveKey(isActive ? subGroup.groupName : undefined);
-		
-		// 如果是首次展开，则标记为已渲染并加载节点数据
-		if (isActive && !isRendered) {
-			setIsRendered(true);
-			const nodeTypes = (subGroup as NodeGroup)?.nodeTypes || [];
-			setCachedNodeList(getGroupNodeList(nodeTypes));
-		}
-	}, [subGroup.groupName, isRendered, getGroupNodeList, subGroup]);
+	const handleCollapseChange = useCallback(
+		(key: string | string[]) => {
+			const isActive =
+				key &&
+				(Array.isArray(key)
+					? key.includes(subGroup.groupName!)
+					: key === subGroup.groupName)
+			setActiveKey(isActive ? subGroup.groupName : undefined)
+
+			// 如果是首次展开，则标记为已渲染并加载节点数据
+			if (isActive && !isRendered) {
+				setIsRendered(true)
+				const nodeTypes = (subGroup as NodeGroup)?.nodeTypes || []
+				setCachedNodeList(getGroupNodeList(nodeTypes))
+			}
+		},
+		[subGroup.groupName, isRendered, getGroupNodeList, subGroup],
+	)
 
 	// 渲染子项列表，只有在面板展开且已加载数据时才渲染
 	const renderedItems = useMemo(() => {
 		if (!isRendered || cachedNodeList.length === 0) {
-			return null;
+			return null
 		}
-		
+
 		return cachedNodeList.map((node, index) => (
-			<SubGroupItem 
+			<SubGroupItem
 				key={`${subGroup.groupName}-item-${index}-${node.schema?.id || index}`}
-				node={node} 
-				index={index} 
-				renderItem={renderItem} 
+				node={node}
+				index={index}
+				renderItem={renderItem}
 			/>
-		));
-	}, [isRendered, cachedNodeList, renderItem, subGroup.groupName]);
+		))
+	}, [isRendered, cachedNodeList, renderItem, subGroup.groupName])
 
 	return (
 		<div className={clsx(styles.subGroup, `${prefix}sub-group`)}>
@@ -123,5 +140,5 @@ export default React.memo(SubGroup, (prevProps, nextProps) => {
 		prevProps.subGroup.groupName === nextProps.subGroup.groupName &&
 		prevProps.materialFn === nextProps.materialFn &&
 		prevProps.getGroupNodeList === nextProps.getGroupNodeList
-	);
-});
+	)
+})

@@ -113,6 +113,38 @@ class MagicChatFileDomainService extends AbstractDomainService
     }
 
     /**
+     * 保存或更新文件
+     * 如果file_key已存在，则更新文件信息
+     * 如果file_key不存在，则创建新文件.
+     *
+     * @param MagicChatFileEntity $fileEntity 文件实体
+     * @param DataIsolation $dataIsolation 数据隔离
+     * @return MagicChatFileEntity 保存或更新后的文件实体
+     */
+    public function saveOrUpdateByFileKey(MagicChatFileEntity $fileEntity, DataIsolation $dataIsolation): MagicChatFileEntity
+    {
+        // 通过file_key查找文件是否存在
+        $existingFile = $this->magicFileRepository->getChatFileByFileKey($fileEntity->getFileKey());
+
+        // 如果文件存在，更新文件信息
+        if ($existingFile) {
+            $fileEntity->setFileId($existingFile->getFileId());
+            $this->updateFile($fileEntity);
+            return $fileEntity;
+        }
+
+        // 如果文件不存在，创建新文件
+        $time = date('Y-m-d H:i:s');
+        $fileEntity->setUserId($dataIsolation->getCurrentUserId());
+        $fileEntity->setOrganizationCode($dataIsolation->getCurrentOrganizationCode());
+        $fileEntity->setCreatedAt($time);
+        $fileEntity->setUpdatedAt($time);
+        $fileEntity->setMagicMessageId('');
+
+        return $this->magicFileRepository->uploadFile($fileEntity);
+    }
+
+    /**
      * 判断用户的消息中的附件是不是他自己上传的.
      * @param ChatAttachment[] $attachments
      * @return ChatAttachment[]

@@ -4,10 +4,10 @@
 import React, { createContext, useEffect, useImperativeHandle, useMemo, useState } from "react"
 import { ErrorBoundary } from "react-error-boundary"
 import { useTranslation } from "react-i18next"
-import { message } from "antd"
+import { ConfigProvider, message } from "antd"
 import "antd/dist/reset.css"
 import { reaction } from "mobx"
-import { observer } from "@/common/compat/mobx-compat"
+import { observer } from "mobx-react"
 import { ExpressionSource } from "@/MagicExpressionWidget/types"
 import { DataSourceOption } from "@/common/BaseUI/DropdownRenderer/Reference"
 import ErrorContent from "@/common/BaseUI/ErrorComponent/ErrorComponent"
@@ -22,6 +22,7 @@ import { Common } from "./types/Common"
 import Schema, { CustomFieldsConfig, CustomOptions } from "./types/Schema"
 import SchemaDescription from "./types/SchemaDescription"
 import { genRootField } from "./utils/helpers"
+import { CLASSNAME_PREFIX } from "@/common/constants"
 
 /**
  * @title JsonSchemaEditor
@@ -307,33 +308,35 @@ const JsonSchemaObserverEditor = observer(
 						return <ErrorContent />
 					}}
 				>
-					<div>
-						<GlobalStyle />
-						<GlobalProvider
-							allowOperation={allowOperation}
-							allowAdd={allowAdd}
-							showAdd={showAdd}
-							disableFields={disableFields}
-							relativeAppendPosition={relativeAppendPosition}
-							innerExpressionSourceMap={innerExpressionSourceMap}
-							allowSourceInjectBySelf={allowSourceInjectBySelf}
-							contextExpressionSource={contextExpressionSource}
-							uniqueFormId={uniqueFormId}
-							displayColumns={displayColumns}
-							showOperation={showOperation}
-							columnNames={mergedColumnNames}
-							customFieldsConfig={customFieldsConfig}
-							onlyExpression={onlyExpression}
-							showImport={showImport}
-							showTopRow={showTopRow}
-						>
-							<ExportFieldsProvider defaultExportFields={contextVal.schema}>
-								<SchemaMobxContext.Provider value={contextVal}>
-									<Editor {...props} />
-								</SchemaMobxContext.Provider>
-							</ExportFieldsProvider>
-						</GlobalProvider>
-					</div>
+					<ConfigProvider prefixCls={CLASSNAME_PREFIX}>
+						<div>
+							<GlobalStyle />
+							<GlobalProvider
+								allowOperation={allowOperation}
+								allowAdd={allowAdd}
+								showAdd={showAdd}
+								disableFields={disableFields}
+								relativeAppendPosition={relativeAppendPosition}
+								innerExpressionSourceMap={innerExpressionSourceMap}
+								allowSourceInjectBySelf={allowSourceInjectBySelf}
+								contextExpressionSource={contextExpressionSource}
+								uniqueFormId={uniqueFormId}
+								displayColumns={displayColumns}
+								showOperation={showOperation}
+								columnNames={mergedColumnNames}
+								customFieldsConfig={customFieldsConfig}
+								onlyExpression={onlyExpression}
+								showImport={showImport}
+								showTopRow={showTopRow}
+							>
+								<ExportFieldsProvider defaultExportFields={contextVal.schema}>
+									<SchemaMobxContext.Provider value={contextVal}>
+										<Editor {...props} />
+									</SchemaMobxContext.Provider>
+								</ExportFieldsProvider>
+							</GlobalProvider>
+						</div>
+					</ConfigProvider>
 				</ErrorBoundary>
 			)
 		},

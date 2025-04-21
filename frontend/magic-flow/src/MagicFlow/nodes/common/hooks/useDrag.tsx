@@ -3,7 +3,7 @@
  */
 import { useFlowInteraction } from "@/MagicFlow/components/FlowDesign/context/FlowInteraction/useFlowInteraction"
 import { useExternal } from "@/MagicFlow/context/ExternalContext/useExternal"
-import { useFlow } from "@/MagicFlow/context/FlowContext/useFlow"
+import { useFlowNodes, useNodeConfig } from "@/MagicFlow/context/FlowContext/useFlow"
 import { judgeIsLoopBody } from "@/MagicFlow/utils"
 import { getSubNodePosition } from "@/MagicFlow/utils/reactflowUtils"
 import { useMemoizedFn } from "ahooks"
@@ -15,7 +15,8 @@ type UseDrag = {
 }
 
 export default function useDrag({ id }: UseDrag) {
-	const { setSelectedNodeId, nodeConfig } = useFlow()
+	const { setSelectedNodeId } = useFlowNodes()
+	const { nodeConfig } = useNodeConfig()
 	const { paramsName } = useExternal()
 	const { onAddItem } = useFlowInteraction()
 	const { screenToFlowPosition } = useReactFlow()

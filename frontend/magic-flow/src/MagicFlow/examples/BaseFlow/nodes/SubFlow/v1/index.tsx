@@ -1,4 +1,4 @@
-import { useFlow } from "@/MagicFlow/context/FlowContext/useFlow"
+import { useNodeConfigActions } from "@/MagicFlow/context/FlowContext/useFlow"
 import { useCurrentNode } from "@/MagicFlow/nodes/common/context/CurrentNode/useCurrentNode"
 import { ShowColumns } from "@/MagicJsonSchemaEditor/constants"
 import Schema from "@/MagicJsonSchemaEditor/types/Schema"
@@ -19,7 +19,7 @@ export default function SubFlowV1() {
 	const [form] = Form.useForm()
 	const { currentNode } = useCurrentNode()
 	const [input, setInput] = useState<Schema>()
-	const { updateNodeConfig } = useFlow()
+	const { updateNodeConfig } = useNodeConfigActions()
 
 	const { expressionDataSource } = usePrevious()
 

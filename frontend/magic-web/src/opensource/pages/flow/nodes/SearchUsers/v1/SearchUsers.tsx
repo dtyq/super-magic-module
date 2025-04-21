@@ -8,7 +8,7 @@ import { useMemo } from "react"
 import { useCurrentNode } from "@dtyq/magic-flow/MagicFlow/nodes/common/context/CurrentNode/useCurrentNode"
 import { useMemoizedFn } from "ahooks"
 import { cloneDeep, set } from "lodash-es"
-import { useFlow } from "@dtyq/magic-flow/MagicFlow/context/FlowContext/useFlow"
+import { useNodeConfigActions } from "@dtyq/magic-flow/MagicFlow/context/FlowContext/useFlow"
 import usePrevious from "@/opensource/pages/flow/common/hooks/usePrevious"
 import useCurrentNodeUpdate from "@/opensource/pages/flow/common/hooks/useCurrentNodeUpdate"
 import NodeOutputWrap from "@/opensource/pages/flow/components/NodeOutputWrap/NodeOutputWrap"
@@ -26,7 +26,7 @@ export default function SearchUsersV1() {
 	const [form] = Form.useForm()
 	const { currentNode } = useCurrentNode()
 	const { FilterTypeSelector } = useFilters()
-	const { updateNodeConfig } = useFlow()
+	const { updateNodeConfig } = useNodeConfigActions()
 	const { removeFormListItem } = useFormListRemove()
 
 	const { expressionDataSource } = usePrevious()

@@ -4,95 +4,51 @@ import styles from "./index.module.less"
 // import useMaterialPanel from "./hooks/useMaterialPanel"
 import { prefix } from "@/MagicFlow/constants"
 import { useExternal } from "@/MagicFlow/context/ExternalContext/useExternal"
-import SearchInput from "@/common/BaseUI/DropdownRenderer/SearchInput"
-import TSIcon from "@/common/BaseUI/TSIcon"
-import { Radio } from "antd"
 import clsx from "clsx"
-import i18next from "i18next"
-import MaterialItem from "./components/PanelMaterial/MaterialItem"
 import { TabObject } from "./constants"
 import { PanelProvider } from "./context/PanelContext/Provider"
 import useMaterialPanel from "./hooks/useMaterialPanel"
 import useMaterialSearch from "./hooks/useMaterialSearch"
 import useTab from "./hooks/useTab"
+import StickyButton from "./components/sections/StickyButton"
+import PanelHeader from "./components/sections/PanelHeader"
+import SearchBar from "./components/sections/SearchBar"
+import MaterialContent from "./components/sections/MaterialContent"
+import { useMemo } from "react"
 
 export const MaterialPanelWidth = 330
 
-export default function FlowMaterialPanel() {
+function FlowMaterialPanel() {
 	const { tabContents, tabList, tab } = useTab()
-
 	const { keyword, onSearchChange, agentType, setAgentType } = useMaterialSearch({ tab })
-
 	const { show, setShow, stickyButtonStyle } = useMaterialPanel()
-
 	const { materialHeader } = useExternal()
+
+	// 使用useMemo缓存Panel Provider的value，避免不必要的重新渲染
+	const providerValue = useMemo(() => {
+		return { agentType, setAgentType }
+	}, [agentType, setAgentType])
+
+	// 使用useMemo缓存样式对象，避免每次渲染创建新对象
+	const panelStyle = useMemo(() => {
+		return { width: show ? "280px" : 0 }
+	}, [show])
 
 	return (
 		<PanelProvider agentType={agentType} setAgentType={setAgentType}>
-			<TSIcon
-				type={show ? "ts-arrow-left" : "ts-arrow-right"}
-				className={clsx(styles.stickyBtn, "stickyBtn")}
-				onClick={() => setShow(!show)}
-				style={stickyButtonStyle}
-			/>
+			<StickyButton show={show} setShow={setShow} stickyButtonStyle={stickyButtonStyle} />
 			<div
 				className={clsx(styles.flowMaterialPanel, `${prefix}flow-material-panel`)}
-				style={{
-					width: show ? "280px" : 0,
-                    display: show ? "block" : "none",
-				}}
+				style={panelStyle}
 			>
-				{materialHeader ? (
-					materialHeader
-				) : (
-					<Radio.Group defaultValue={TabObject.Material} buttonStyle="solid">
-						{tabList.map((tabItem, i) => {
-							return (
-								<Radio.Button
-									className={clsx(styles.tabItem, `${prefix}tab-item`, {
-										[styles.active]: tab === tabItem.value,
-										active: tab === tabItem.value,
-									})}
-									onClick={tabItem.onClick}
-									key={i}
-									value={tabItem.value}
-								>
-									{tabItem.label}
-								</Radio.Button>
-							)
-						})}
-					</Radio.Group>
-				)}
+				<PanelHeader materialHeader={materialHeader} tabList={tabList} tab={tab} />
 
-				<div className={clsx(styles.search, `${prefix}search`)}>
-					<SearchInput
-						placeholder={i18next.t("common.search", { ns: "magicFlow" })}
-						value={keyword}
-						onChange={onSearchChange}
-					/>
-				</div>
+				<SearchBar keyword={keyword} onSearchChange={onSearchChange} />
 
-				<div className={clsx(styles.materials, `${prefix}materials`)}>
-					{tabContents.map(([DynamicContent, showContent], index) => {
-						return (
-							<div
-								key={`materials-panel-item-${index}`}
-								style={{ display: `${showContent ? "block" : "none"}` }}
-								className={clsx(styles.blockItem, `${prefix}block-item`)}
-							>
-								{/* @ts-ignore */}
-								<DynamicContent
-									currentTab={tab}
-									keyword={keyword}
-									MaterialItemFn={(dynamicProps: any) => (
-										<MaterialItem {...dynamicProps} />
-									)}
-								/>
-							</div>
-						)
-					})}
-				</div>
+				<MaterialContent tabContents={tabContents} tab={tab} keyword={keyword} />
 			</div>
 		</PanelProvider>
 	)
 }
+
+export default React.memo(FlowMaterialPanel)

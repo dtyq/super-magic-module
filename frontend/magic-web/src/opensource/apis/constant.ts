@@ -243,6 +243,8 @@ export const enum RequestUrl {
 	callAgent = "/api/chat",
 	/** Api Key 调用工具或流程  */
 	callToolOrFlow = "/api/param-call",
+	/** 获取节点模板 */
+	getNodeTemplate = "/api/v1/flows/node-template",
 
 	/** 发布流程版本 */
 	publishFlow = "/api/v1/flows/${flowId}/version/publish",
@@ -272,6 +274,8 @@ export const enum RequestUrl {
 	getKnowledgeDocumentList = "/api/v1/knowledge-bases/${code}/documents/queries",
 	/** 添加知识库的文档 */
 	addKnowledgeDocument = "/api/v1/knowledge-bases/${code}/documents",
+	/** 更新知识库的文档 */
+	updateKnowledgeDocument = "/api/v1/knowledge-bases/${knowledge_code}/documents/${document_code}",
 	/** 删除知识库的文档 */
 	deleteKnowledgeDocument = "/api/v1/knowledge-bases/${knowledge_code}/documents/${document_code}",
 	/** 创建片段 */

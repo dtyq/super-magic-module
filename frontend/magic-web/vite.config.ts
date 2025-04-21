@@ -76,6 +76,8 @@ export default defineConfig({
 			{
 				find: "@dtyq/magic-flow",
 				replacement: join(__dirname, "node_modules/@dtyq/magic-flow/dist"),
+                // 同步开发magic-flow时需要开启
+                // replacement: join(__dirname, "../magic-flow/dist"),
 			},
 		],
 	},

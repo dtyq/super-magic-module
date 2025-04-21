@@ -11,3 +11,6 @@ export enum ComponentType {
 	/** api组件 */
 	Api = "api",
 }
+
+
+export const CLASSNAME_PREFIX = "magic"

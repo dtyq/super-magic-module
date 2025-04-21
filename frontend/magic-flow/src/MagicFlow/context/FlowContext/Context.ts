@@ -1,117 +1,124 @@
-import { DebouncedFunc } from "lodash"
 import { MagicFlow } from "@/MagicFlow/types/flow"
 import React from "react"
-import { Edge, ReactFlowInstance } from "reactflow"
+import { Edge } from "reactflow"
 import { EventEmitter } from "ahooks/lib/useEventEmitter"
 
-export type FlowCtx = React.PropsWithChildren<{
-	// 流程数据
+// 拆分为多个专用的Context类型
+// 流程数据相关
+export type FlowDataCtx = {
     flow: MagicFlow.Flow | null
+    description: string
+    debuggerMode: boolean
+    updateFlow: (this: any, flowConfig: any) => void
+}
+
+// 边相关
+export type FlowEdgesCtx = {
     edges: Edge[]
-	onEdgesChange: (this: any, changes: any) => void
-	onConnect: (this: any, connection: any) => void
-	setEdges: React.Dispatch<React.SetStateAction<Edge[]>>
-	updateFlow: (this: any, flowConfig: any) => void
-	
-	// 节点配置
-    nodeConfig: Record<string, MagicFlow.Node>
-    setNodeConfig: React.Dispatch<React.SetStateAction<Record<string, MagicFlow.Node>>>
-    updateNodeConfig: (node: MagicFlow.Node, originalNode?: MagicFlow.Node) => void
-    
-    // 节点操作
-    addNode: (newNode: MagicFlow.Node | MagicFlow.Node[], newEdges?: Edge[]) => void
-    deleteNodes: (ids: string[]) => void
+    onEdgesChange: (this: any, changes: any) => void
+    onConnect: (this: any, connection: any) => void
+    setEdges: React.Dispatch<React.SetStateAction<Edge[]>>
+    selectedEdgeId: string | null
+    setSelectedEdgeId: React.Dispatch<React.SetStateAction<string | null>>
+    updateNextNodeIdsByDeleteEdge: (connection: Edge) => void
+    updateNextNodeIdsByConnect: (newEdge: Edge) => void
     deleteEdges: (edgesToDelete: Edge[]) => void
-    updateNodesPosition: DebouncedFunc<(nodeIds: any, positionMap: any) => void>
-    
-    // 节点选择
-    selectedNodeId: string | null
-    setSelectedNodeId: React.Dispatch<React.SetStateAction<string | null>>
-	
-	triggerNode: MagicFlow.Node | null
-	selectedEdgeId: string | null
-	setSelectedEdgeId: React.Dispatch<React.SetStateAction<string | null>>
-	updateNextNodeIdsByDeleteEdge: (connection: Edge) => void
-	updateNextNodeIdsByConnect: (newEdge: Edge) => void
-	description: string
-	flowInstance: React.MutableRefObject<any>
-	debuggerMode: boolean
-	
-	// 节点索引
-    getNewNodeIndex: () => number
-	
-	showMaterialPanel: boolean,
-	setShowMaterialPanel: React.Dispatch<React.SetStateAction<boolean>>
-	flowDesignListener: EventEmitter<MagicFlow.FlowEventListener>
-	
-	// 节点变更通知
-    notifyNodeChange?: () => void
-}>  
+}
 
-export const FlowContext = React.createContext({
-	// 当前流程详情
-	flow: null,
-
-	// 流程数据
-	edges: [] as Edge[],
-	onEdgesChange: () => {},
-	onConnect: () => {},
-	setEdges: () => {},
-
-	// 更新流程
-	updateFlow: () => {},
-	
+// 新增NodeConfigContext，用于管理节点配置数据
+export type NodeConfigCtx = {
 	// 节点配置
-    nodeConfig: {} as Record<string, MagicFlow.Node>,
-    setNodeConfig: () => {},
-    updateNodeConfig: () => {},
-    
-    // 节点操作
-    addNode: () => Promise.resolve(),
-    deleteNodes: () => {},
+	nodeConfig: Record<string, any>
+}
+
+export const NodeConfigContext = React.createContext({
+	nodeConfig: {},
+} as NodeConfigCtx)
+
+// 新增NodeConfigActionsContext存放所有操作方法
+export type NodeConfigActionsCtx = {
+	// 设置节点配置
+	setNodeConfig: React.Dispatch<React.SetStateAction<Record<string, any>>>
+	// 更新节点配置
+	updateNodeConfig: (node: MagicFlow.Node, originalNode?: MagicFlow.Node) => void
+	// 通知节点变化
+	notifyNodeChange: (nodeId?: string) => void
+}
+
+export const NodeConfigActionsContext = React.createContext({
+	setNodeConfig: () => {},
+	updateNodeConfig: () => {},
+	notifyNodeChange: () => {},
+} as NodeConfigActionsCtx)
+
+// 节点配置相关
+export type FlowNodesCtx = {
+    addNode: (node: MagicFlow.Node | MagicFlow.Node[], meta?: any) => void
+    deleteNodes: (nodeIds: string[]) => void
+    updateNodesPosition: (nodeId: string[], position: Record<string,{ x: number; y: number }>) => void
+    selectedNodeId: string
+    setSelectedNodeId: React.Dispatch<React.SetStateAction<string>>
+    triggerNode: MagicFlow.Node
+    getNewNodeIndex: () => number
+}
+
+// UI状态相关
+export type FlowUICtx = {
+    flowInstance: React.MutableRefObject<any>
+    showMaterialPanel: boolean
+    setShowMaterialPanel: React.Dispatch<React.SetStateAction<boolean>>
+    flowDesignListener: EventEmitter<MagicFlow.FlowEventListener>
+}
+
+// 原始完整的Context类型
+export type FlowCtx = React.PropsWithChildren<
+    FlowDataCtx &
+        FlowEdgesCtx &
+        FlowNodesCtx &
+        FlowUICtx &
+        NodeConfigCtx &
+        NodeConfigActionsCtx
+>  
+
+// 创建分离的Context
+export const FlowDataContext = React.createContext<FlowDataCtx>({
+    flow: null,
+    description: "",
+    debuggerMode: false,
+    updateFlow: () => {},
+})
+
+export const FlowEdgesContext = React.createContext<FlowEdgesCtx>({
+    edges: [] as Edge[],
+    onEdgesChange: () => {},
+    onConnect: () => {},
+    setEdges: () => {},
+    selectedEdgeId: null,
+    setSelectedEdgeId: () => {},
+    updateNextNodeIdsByDeleteEdge: () => {},
+    updateNextNodeIdsByConnect: () => {},
     deleteEdges: () => {},
-    updateNodesPosition: (() => {}) as any,
-    
-    // 节点选择
-    selectedNodeId: null as string | null,
-    setSelectedNodeId: () => {},
+})
 
-	// 触发节点
+export const FlowNodesContext = React.createContext({
+	addNode: () => {},
+	deleteNodes: () => {},
+	updateNodesPosition: () => {},
+	selectedNodeId: "",
+	setSelectedNodeId: () => {},
 	triggerNode: null,
+	getNewNodeIndex: () => 0,
+} as FlowNodesCtx)
 
-	// 当前选中id
-	selectedEdgeId: null,
-	setSelectedEdgeId: () => {},
+export const FlowUIContext = React.createContext<FlowUICtx>({
+    flowInstance: null as any,
+    showMaterialPanel: true,
+    setShowMaterialPanel: () => {},
+    flowDesignListener: {
+        emit: () => {},
+        useSubscription: () => {}
+    } as any,
+})
 
-	// 删除分支时nextNodeIds的更新函数
-	updateNextNodeIdsByDeleteEdge: () => {},
-
-	// 新增边时nextNodes的更新函数
-	updateNextNodeIdsByConnect: () => {},
-
-	// computed的流程描述信息
-	description: "",
-
-	// 画布实例
-	flowInstance: null as any,
-
-	// 是否处于调试模式
-	debuggerMode: false,
-	
-	// 获取当前新节点的序号
-    getNewNodeIndex: () => 0,
-
-	// 是否显示物料面板
-	showMaterialPanel: true,
-	setShowMaterialPanel: () => {},
-
-	// 流程事件监听器
-	flowDesignListener: {
-		emit: () => {},
-		useSubscription: () => {}
-	} as any,
-	
-	// 通知更新函数（没有走updateNodeConfig触发更新时需要使用）
-    notifyNodeChange: () => {},
-
-} as FlowCtx)
+// 为了兼容性保留原始的FlowContext
+export const FlowContext = React.createContext({} as FlowCtx)

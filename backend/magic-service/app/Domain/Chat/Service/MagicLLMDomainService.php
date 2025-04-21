@@ -10,7 +10,6 @@ namespace App\Domain\Chat\Service;
 use App\Domain\Chat\DTO\AISearch\Request\MagicChatAggregateSearchReqDTO;
 use App\Domain\Chat\Entity\ValueObject\AISearchCommonQueryVo;
 use App\Domain\Chat\Entity\ValueObject\BingSearchMarketCode;
-use App\Domain\Chat\Entity\ValueObject\LLMModelEnum;
 use App\Domain\Chat\Entity\ValueObject\SearchEngineType;
 use App\Domain\Flow\Entity\MagicFlowAIModelEntity;
 use App\Domain\Flow\Entity\ValueObject\FlowDataIsolation;
@@ -35,6 +34,7 @@ use Hyperf\Coroutine\Parallel;
 use Hyperf\Logger\LoggerFactory;
 use Hyperf\Odin\Api\Response\ChatCompletionResponse;
 use Hyperf\Odin\Api\Response\ToolCall;
+use Hyperf\Odin\Contract\Model\ModelInterface;
 use Hyperf\Odin\Memory\MessageHistory;
 use Hyperf\Odin\Message\AssistantMessage;
 use Hyperf\Odin\Message\SystemMessage;
@@ -707,7 +707,7 @@ class MagicLLMDomainService
      * 让大模型虚空拆解子问题，对热梗/实时拆解的会不好。
      * @return string[]
      */
-    public function generateSearchKeywordsByUserInput(MagicChatAggregateSearchReqDTO $dto): array
+    public function generateSearchKeywordsByUserInput(MagicChatAggregateSearchReqDTO $dto, ModelInterface $modelInterface): array
     {
         $userInputKeyword = $dto->getUserMessage();
         $magicChatMessageHistory = $dto->getMagicChatMessageHistory();
@@ -716,7 +716,7 @@ class MagicLLMDomainService
             ->setSearchEngine(SearchEngineType::Bing)
             ->setFilterSearchContexts(false)
             ->setGenerateSearchKeywords(false)
-            ->setModel(LLMModelEnum::GPT_4O_GLOBAL->value)
+            ->setModel($modelInterface)
             ->setLanguage($dto->getLanguage())
             ->setUserId($dto->getUserId())
             ->setOrganizationCode($dto->getOrganizationCode());
@@ -931,7 +931,7 @@ class MagicLLMDomainService
             $relatedQuestionsResponse = $this->llmChat(
                 systemPrompt: $systemPrompt,
                 query: $userMessage,
-                modelName: $model,
+                modelInterface: $model,
                 tools: $tools,
                 messageHistory: $messageHistory,
                 conversationId: $conversationId,
@@ -1076,20 +1076,19 @@ class MagicLLMDomainService
     private function llmChat(
         string $systemPrompt,
         string $query,
-        string $modelName,
+        ModelInterface $modelInterface,
         ?array $tools = [],
         ?MessageHistory $messageHistory = null,
         ?string $conversationId = null,
         array $businessParams = [],
     ): ChatCompletionResponse {
         $conversationId = $conversationId ?? uniqid('agent_', true);
-        $model = $this->getModelEntity($modelName)->createModel();
         $tools = empty($tools) ? [] : $tools;
         $messageHistory = $messageHistory ?? new MessageHistory();
         $memoryManager = $messageHistory->getMemoryManager($conversationId);
         $memoryManager->addSystemMessage(new SystemMessage($systemPrompt));
         $agent = AgentFactory::create(
-            model: $model,
+            model: $modelInterface,
             memoryManager: $memoryManager,
             tools: $tools,
             temperature: 0.1,
@@ -1104,20 +1103,18 @@ class MagicLLMDomainService
     private function llmChatStreamed(
         string $systemPrompt,
         string $query,
-        string $modelName,
+        ModelInterface $modelInterface,
         ?MessageHistory $messageHistory = null,
         ?string $conversationId = null,
         array $businessParams = [],
     ): Generator {
         $conversationId = $conversationId ?? uniqid('agent_', true);
-        // 加载 model
-        $model = $this->getModelEntity($modelName)->createModel();
         $messageHistory = $messageHistory ?? new MessageHistory();
         $memoryManager = $messageHistory->getMemoryManager($conversationId);
         $memoryManager->addSystemMessage(new SystemMessage($systemPrompt));
 
         $agent = AgentFactory::create(
-            model: $model,
+            model: $modelInterface,
             memoryManager: $memoryManager,
             temperature: 0.6,
             businessParams: $businessParams,

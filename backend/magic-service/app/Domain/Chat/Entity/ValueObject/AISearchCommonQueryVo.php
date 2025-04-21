@@ -7,6 +7,7 @@ declare(strict_types=1);
 
 namespace App\Domain\Chat\Entity\ValueObject;
 
+use Hyperf\Odin\Contract\Model\ModelInterface;
 use Hyperf\Odin\Memory\MessageHistory;
 
 class AISearchCommonQueryVo
@@ -23,7 +24,7 @@ class AISearchCommonQueryVo
 
     public ?string $conversationId = null;
 
-    public ?string $model = LLMModelEnum::GPT_4O_GLOBAL->value;
+    public ?ModelInterface $model = null;
 
     public SearchEngineType $searchEngine = SearchEngineType::Bing;
 
@@ -125,12 +126,12 @@ class AISearchCommonQueryVo
         return $this;
     }
 
-    public function getModel(): ?string
+    public function getModel(): ModelInterface
     {
         return $this->model;
     }
 
-    public function setModel(?string $model): self
+    public function setModel(?ModelInterface $model): self
     {
         $this->model = $model;
         return $this;

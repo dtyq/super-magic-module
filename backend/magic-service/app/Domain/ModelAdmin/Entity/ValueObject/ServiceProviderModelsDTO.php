@@ -39,6 +39,8 @@ class ServiceProviderModelsDTO extends AbstractEntity
 
     protected array $translate = [];
 
+    protected array $visibleOrganizations = [];
+
     public function isActive(): bool
     {
         return $this->status === 1;
@@ -185,5 +187,15 @@ class ServiceProviderModelsDTO extends AbstractEntity
     public function setTranslate(array $translate): void
     {
         $this->translate = $translate;
+    }
+
+    public function getVisibleOrganizations(): array
+    {
+        return $this->visibleOrganizations;
+    }
+
+    public function setVisibleOrganizations(array $visibleOrganizations): void
+    {
+        $this->visibleOrganizations = $visibleOrganizations;
     }
 }

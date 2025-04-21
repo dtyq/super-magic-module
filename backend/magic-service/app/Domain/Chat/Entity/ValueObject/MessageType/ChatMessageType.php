@@ -66,6 +66,9 @@ enum ChatMessageType: string
     // 图片转高清
     case ImageConvertHighCard = 'image_convert_high_card';
 
+    // 通用 agent 消息
+    case SuperAgentCard = 'general_agent_card';
+
     public function getName(): string
     {
         return $this->value;

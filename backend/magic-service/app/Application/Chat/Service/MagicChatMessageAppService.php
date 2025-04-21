@@ -9,6 +9,7 @@ namespace App\Application\Chat\Service;
 
 use App\Application\ModelGateway\Mapper\ModelGatewayMapper;
 use App\Application\ModelGateway\Service\LLMAppService;
+use App\Application\ModelGateway\Service\ModelConfigAppService;
 use App\Domain\Chat\DTO\ConversationListQueryDTO;
 use App\Domain\Chat\DTO\Message\ChatMessage\AbstractAttachmentMessage;
 use App\Domain\Chat\DTO\Message\MessageInterface;
@@ -27,6 +28,7 @@ use App\Domain\Chat\Entity\MagicMessageEntity;
 use App\Domain\Chat\Entity\MagicSeqEntity;
 use App\Domain\Chat\Entity\ValueObject\ConversationStatus;
 use App\Domain\Chat\Entity\ValueObject\ConversationType;
+use App\Domain\Chat\Entity\ValueObject\LLMModelEnum;
 use App\Domain\Chat\Entity\ValueObject\MagicMessageStatus;
 use App\Domain\Chat\Entity\ValueObject\MessageType\ChatMessageType;
 use App\Domain\Chat\Entity\ValueObject\MessageType\ControlMessageType;
@@ -40,6 +42,7 @@ use App\Domain\Contact\Entity\ValueObject\DataIsolation;
 use App\Domain\Contact\Entity\ValueObject\UserType;
 use App\Domain\Contact\Service\MagicUserDomainService;
 use App\Domain\File\Service\FileDomainService;
+use App\Domain\ModelGateway\Service\ModelConfigDomainService;
 use App\ErrorCode\ChatErrorCode;
 use App\ErrorCode\UserErrorCode;
 use App\Infrastructure\Core\Constants\Order;
@@ -90,6 +93,7 @@ class MagicChatMessageAppService extends MagicSeqAppService
         protected Redis $redis,
         protected LockerInterface $locker,
         protected readonly LLMAppService $llmAppService,
+        protected readonly ModelConfigDomainService $modelConfigDomainService,
     ) {
         try {
             $this->logger = ApplicationContext::getContainer()->get(LoggerFactory::class)->get(get_class($this));
@@ -170,6 +174,11 @@ class MagicChatMessageAppService extends MagicSeqAppService
         $topicId = $chatRequest->getData()->getMessage()->getTopicId();
         $seqExtra = new SeqExtra();
         $seqExtra->setMagicEnvId($userAuthorization->getMagicEnvId());
+        // 是否是编辑消息
+        $editMessageOptions = $chatRequest->getData()->getEditMessageOptions();
+        if ($editMessageOptions !== null) {
+            $seqExtra->setEditMessageOptions($editMessageOptions);
+        }
         // seq 的扩展信息. 如果需要检索话题的消息,请查询 topic_messages 表
         $topicId && $seqExtra->setTopicId($topicId);
         $seqDTO->setExtra($seqExtra);
@@ -433,6 +442,7 @@ class MagicChatMessageAppService extends MagicSeqAppService
             // 根据会话类型,生成seq
             switch ($receiveConversationType) {
                 case ConversationType::Ai:
+                case ConversationType::User:
                     try {
                         # ai 可能参与私聊/群聊等场景,读取记忆时,需要读取自己会话窗口下的消息.
                         $receiveSeqEntity = $this->magicChatDomainService->generateReceiveSequenceByChatMessage($senderSeqEntity, $senderMessageEntity, $magicSeqStatus);
@@ -452,12 +462,6 @@ class MagicChatMessageAppService extends MagicSeqAppService
                             Json::encode($errMsg)
                         ));
                     }
-                    break;
-                case ConversationType::User:
-                    $receiveSeqEntity = $this->magicChatDomainService->generateReceiveSequenceByChatMessage($senderSeqEntity, $senderMessageEntity, $magicSeqStatus);
-                    // 避免 seq 表承载太多功能,加太多索引,因此将话题的消息单独写入到 topic_messages 表中
-                    $this->magicChatDomainService->createTopicMessage($receiveSeqEntity);
-                    $this->pushReceiveChatSequence($senderMessageEntity, $receiveSeqEntity);
                     break;
                 case ConversationType::Group:
                     $seqListCreateDTO = $this->magicChatDomainService->generateGroupReceiveSequence($senderSeqEntity, $senderMessageEntity, $magicSeqStatus);
@@ -870,12 +874,13 @@ PROMPT;
         string $conversationId,
         string $topicId = ''
     ): string {
+        $orgCode = $authorization->getOrganizationCode();
         $dataIsolation = $this->createDataIsolation($authorization);
-        $chatModelName = $this->getOrganizationChatModel($authorization->getOrganizationCode());
+        $chatModelName = di(ModelConfigAppService::class)->getChatModelTypeByFallbackChain($orgCode, LLMModelEnum::GPT_41->value);
 
         # 开始请求大模型
         $modelGatewayMapper = di(ModelGatewayMapper::class);
-        $model = $modelGatewayMapper->getChatModelProxy($chatModelName, $authorization->getOrganizationCode());
+        $model = $modelGatewayMapper->getChatModelProxy($chatModelName, $orgCode);
         $memoryManager = $messageHistory->getMemoryManager($conversationId);
         $agent = AgentFactory::create(
             model: $model,
@@ -897,36 +902,6 @@ PROMPT;
         }
 
         return $choiceContent;
-    }
-
-    private function getOrganizationChatModel(string $orgCode): string
-    {
-        // 从组织可用的模型列表中随便选一个可以聊天的模型
-        $odinModels = di(ModelGatewayMapper::class)->getChatModels($orgCode) ?? [];
-        $chatModelsName = array_keys($odinModels);
-        if (empty($chatModelsName)) {
-            return '';
-        }
-        // 避免随机到太差的模型，预定义几个
-        $priorityChatModelsName = config('magic-api.model_fallback_chain.chat');
-
-        // 将可用模型转为哈希表，实现O(1)时间复杂度的查找
-        $availableModels = array_flip($chatModelsName);
-
-        // 按优先级顺序遍历预定义模型
-        $chatModelName = null;
-        foreach ($priorityChatModelsName as $modelName) {
-            if (isset($availableModels[$modelName])) {
-                $chatModelName = $modelName;
-                break;
-            }
-        }
-
-        // 后备方案：如果没有匹配任何优先模型，使用第一个可用模型
-        if (! isset($chatModelName) && isset($chatModelsName[0])) {
-            $chatModelName = $chatModelsName[0];
-        }
-        return $chatModelName;
     }
 
     private function getMessageTextContent(MessageInterface $message): string

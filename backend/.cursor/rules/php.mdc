@@ -1,0 +1,753 @@
+---
+description: PHP 8.0 和 Hyperf 框架开发规范
+globs: "*.php"
+alwaysApply: false
+---
+---
+description: PHP 8.0 和 Hyperf 框架开发规范
+globs: "*.php"
+alwaysApply: false
+---
+
+# PHP 8.0 与 Hyperf 开发规范
+
+## 概述
+
+本文档提供了基于 PHP 8.0 和 Hyperf 框架的开发规范和最佳实践。规范分为强制、推荐和参考三个级别，开发人员必须遵循强制规范，并尽量采纳推荐规范。
+
+## PHP 8.0 新特性应用
+
+### 【强制】使用命名参数提高代码可读性
+
+```php
+// 推荐
+setcookie(
+    name: "PHPSESSID",
+    value: $sessionId,
+    httponly: true
+);
+
+// 不推荐
+setcookie("PHPSESSID", $sessionId, 0, "", "", false, true);
+```
+
+### 【强制】使用构造器属性提升简化代码
+
+```php
+// 推荐
+class User
+{
+    public function __construct(
+        private string $name,
+        private int $age,
+        private ?string $email = null
+    ) {}
+}
+
+// 不推荐
+class User
+{
+    private string $name;
+    private int $age;
+    private ?string $email;
+    
+    public function __construct(string $name, int $age, ?string $email = null)
+    {
+        $this->name = $name;
+        $this->age = $age;
+        $this->email = $email;
+    }
+}
+```
+
+### 【强制】使用联合类型声明增强类型安全
+
+```php
+function process(string|int $id): int|float
+{
+    // 处理逻辑
+}
+```
+
+### 【推荐】使用 match 表达式替代 switch 语句
+
+```php
+// 推荐
+$result = match ($status) {
+    200, 201 => '成功',
+    400 => '请求错误',
+    500 => '服务器错误',
+    default => '未知状态',
+};
+
+// 不推荐
+switch ($status) {
+    case 200:
+    case 201:
+        $result = '成功';
+        break;
+    case 400:
+        $result = '请求错误';
+        break;
+    case 500:
+        $result = '服务器错误';
+        break;
+    default:
+        $result = '未知状态';
+        break;
+}
+```
+
+### 【推荐】使用空值合并运算符简化条件判断
+
+```php
+// 推荐
+$username = $request->input('username') ?? 'guest';
+
+// 不推荐
+$username = isset($request->input('username')) ? $request->input('username') : 'guest';
+```
+
+### 【推荐】使用属性（Attributes）替代注解
+
+```php
+// 推荐
+#[Route('/api/users', methods: ['GET'])]
+public function index()
+{
+    // 方法实现
+}
+
+// 不推荐
+/**
+ * @Route("/api/users", methods={"GET"})
+ */
+public function index()
+{
+    // 方法实现
+}
+```
+
+## 基本编码规范
+
+### 【强制】严格遵循 PSR-12 编码规范
+
+- 使用 `<?php` 或 `<?=` 标签
+- 文件必须使用不带 BOM 的 UTF-8 编码
+- 每行不应超过 120 个字符
+- 缩进使用 4 个空格，不使用 Tab
+- 类的开始花括号必须在类名之后另起一行
+- 方法的开始花括号必须在方法名之后另起一行
+- 所有属性和方法必须声明可见性（public、protected 或 private）
+
+### 【强制】必须使用强类型声明
+
+每个 PHP 文件必须在文件顶部添加：
+
+```php
+<?php
+
+declare(strict_types=1);
+
+// 文件内容
+```
+
+### 【强制】命名规范
+
+#### 类命名
+
+- 类名必须使用大驼峰式命名法（UpperCamelCase）
+- 接口名必须以 `Interface` 结尾
+- 抽象类使用 `Abstract` 或 `Base` 前缀
+- 特性（Trait）使用 `Trait` 后缀
+- 异常类使用 `Exception` 后缀
+
+```php
+class UserService {}
+interface UserRepositoryInterface {}
+abstract class AbstractUser {}
+trait LoggableTrait {}
+class InvalidArgumentException {}
+```
+
+#### 方法命名
+
+- 方法名必须使用小驼峰式命名法（lowerCamelCase）
+- 方法名通常是动词或动词短语
+
+```php
+public function getUserInfo(): array
+public function saveUserData(array $data): bool
+```
+
+#### 属性命名
+
+- 属性名必须使用小驼峰式命名法（lowerCamelCase）
+- 私有属性可以使用下划线前缀，但不是必须的
+
+```php
+private string $userName;
+private int $_userId; // 可接受但不推荐
+```
+
+#### 常量命名
+
+- 常量必须全部大写，单词间用下划线分隔
+
+```php
+const MAX_RETRY_COUNT = 3;
+const API_BASE_URL = 'https://api.example.com';
+```
+
+## Hyperf 框架规范
+
+### 【强制】依赖注入
+
+- 使用构造函数注入依赖
+- 优先使用接口类型提示
+- 使用 `#[Inject]` 属性注入依赖
+- 避免服务循环依赖
+
+```php
+use Hyperf\Di\Annotation\Inject;
+
+class UserService
+{
+    #[Inject]
+    private UserRepositoryInterface $userRepository;
+    
+    // 或者使用构造函数注入
+    public function __construct(
+        private UserRepositoryInterface $userRepository
+    ) {}
+}
+```
+
+### 【强制】配置管理
+
+- 配置文件必须放在 `config` 目录下
+- 环境相关配置必须使用 `.env` 文件
+- 敏感信息不应该硬编码在配置文件中
+- 使用 `Hyperf\Config\Config` 获取配置
+
+```php
+// 获取配置
+$config = $container->get(Hyperf\Contract\ConfigInterface::class);
+$value = $config->get('app.name', 'default');
+```
+
+### 【强制】异常处理
+
+- 自定义异常必须继承自 `Hyperf\Server\Exception\ServerException`
+- 业务异常必须包含错误码和错误信息
+- 使用全局异常处理器统一处理异常
+- 不要在业务代码中使用 try-catch 捕获可预见的业务异常
+
+```php
+use Hyperf\Server\Exception\ServerException;
+
+class BusinessException extends ServerException
+{
+    public function __construct(int $code, string $message, \Throwable $previous = null)
+    {
+        parent::__construct($message, $code, $previous);
+    }
+}
+```
+
+### 【强制】日志规范
+
+- 使用 `Hyperf\Logger\LoggerFactory` 创建日志实例
+- 合理使用日志级别
+- 日志内容必须包含足够的上下文信息
+
+```php
+use Hyperf\Logger\LoggerFactory;
+
+public function __construct(LoggerFactory $loggerFactory)
+{
+    $this->logger = $loggerFactory->get('user');
+}
+
+// 记录日志
+$this->logger->info('用户登录成功', ['user_id' => $userId]);
+```
+
+### 【强制】中间件使用
+
+- 中间件必须实现 `Hyperf\Contract\MiddlewareInterface` 接口
+- 中间件必须放在 `app/Middleware` 目录下
+- 全局中间件必须在 `config/autoload/middlewares.php` 中注册
+
+```php
+use Hyperf\Contract\MiddlewareInterface;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\RequestHandlerInterface;
+
+class AuthMiddleware implements MiddlewareInterface
+{
+    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
+    {
+        // 前置处理
+        
+        $response = $handler->handle($request);
+        
+        // 后置处理
+        
+        return $response;
+    }
+}
+```
+
+### 【强制】控制器规范
+
+- 控制器必须放在 `app/Controller` 目录下
+- 控制器方法必须返回 `Psr\Http\Message\ResponseInterface` 实例
+- 控制器方法应该尽量简洁，主要负责参数验证和调用服务
+
+```php
+use Hyperf\HttpServer\Contract\RequestInterface;
+use Hyperf\HttpServer\Contract\ResponseInterface;
+
+class UserController
+{
+    public function index(RequestInterface $request, ResponseInterface $response)
+    {
+        $users = $this->userService->getUsers();
+        return $response->json($users);
+    }
+}
+```
+
+## DDD 实践规范
+
+### 【强制】领域层规范
+
+- 实体必须是充血模型
+- 值对象必须是不可变的
+- 领域服务处理跨实体的业务逻辑
+- 领域事件表达业务事件
+- 聚合根维护业务一致性
+
+```php
+namespace App\Domain\User\Entity;
+
+use PhpAccessor\Attribute\Data;
+
+#[Data]
+class UserEntity
+{
+    public function __construct(
+        public ?string $id = null,
+        public string $name = '',
+        public string $email = '',
+        public array $roles = []
+    ) {}
+    
+    // 业务方法
+    public function hasRole(string $role): bool
+    {
+        return in_array($role, $this->roles);
+    }
+    
+    public function addRole(string $role): void
+    {
+        if (!$this->hasRole($role)) {
+            $this->roles[] = $role;
+        }
+    }
+}
+```
+
+### 【强制】应用层规范
+
+- 应用服务编排领域对象
+- 事务边界在应用服务层
+- 不包含业务规则
+- 负责协调领域对象
+
+```php
+namespace App\Application\User;
+
+class UserApplicationService
+{
+    public function __construct(
+        private UserRepositoryInterface $userRepository,
+        private UserDomainService $userDomainService
+    ) {}
+    
+    public function registerUser(RegisterUserDTO $dto): UserDTO
+    {
+        // 创建实体
+        $user = new UserEntity(
+            name: $dto->name,
+            email: $dto->email
+        );
+        
+        // 调用领域服务
+        $this->userDomainService->validateUser($user);
+        
+        // 持久化
+        $this->userRepository->save($user);
+        
+        // 返回 DTO
+        return new UserDTO(
+            id: $user->id,
+            name: $user->name,
+            email: $user->email
+        );
+    }
+}
+```
+
+### 【强制】基础设施层规范
+
+- 实现领域层定义的接口
+- 提供技术细节实现
+- 处理外部系统集成
+- 提供基础技术服务
+
+```php
+namespace App\Infrastructure\Repository;
+
+use App\Domain\User\Entity\UserEntity;
+use App\Domain\User\Repository\UserRepositoryInterface;
+use App\Infrastructure\Repository\Po\UserPo;
+
+class UserRepository implements UserRepositoryInterface
+{
+    public function __construct(
+        private UserPoFactory $factory
+    ) {}
+    
+    public function findById(string $id): ?UserEntity
+    {
+        $po = UserPo::query()->find($id);
+        if (!$po) {
+            return null;
+        }
+        
+        return $this->factory->poToEntity($po);
+    }
+    
+    public function save(UserEntity $user): void
+    {
+        $po = $this->factory->entityToPo($user);
+        $po->save();
+        
+        // 更新实体 ID
+        if (!$user->id) {
+            $user->id = $po->id;
+        }
+    }
+}
+```
+
+## 性能优化
+
+### 【强制】协程使用规范
+
+- 不要在协程中使用全局变量
+- 使用协程上下文存储请求级别的数据
+- 避免在协程中使用阻塞 IO 操作
+- 合理控制协程数量
+
+```php
+use Hyperf\Context\Context;
+
+// 存储数据到协程上下文
+Context::set('user_id', $userId);
+
+// 从协程上下文获取数据
+$userId = Context::get('user_id');
+```
+
+### 【强制】连接池优化
+
+- 合理配置连接池大小
+- 使用连接池管理数据库、Redis 等连接
+- 及时释放连接资源
+
+```php
+// 配置连接池
+return [
+    'default' => [
+        'min_connections' => 10,
+        'max_connections' => 100,
+        'connect_timeout' => 10.0,
+        'wait_timeout' => 3.0,
+        'heartbeat' => -1,
+        'max_idle_time' => 60.0,
+    ],
+];
+```
+
+### 【推荐】缓存使用规范
+
+- 合理使用缓存减少数据库查询
+- 设置合适的缓存过期时间
+- 使用缓存标签管理相关缓存
+- 防止缓存雪崩和缓存穿透
+
+```php
+use Hyperf\Cache\Annotation\Cacheable;
+
+class UserService
+{
+    #[Cacheable(prefix: "user", ttl: 3600, listener: "user-update")]
+    public function getUser(string $id): array
+    {
+        // 从数据库获取用户
+    }
+}
+```
+
+### 【推荐】异步任务处理
+
+- 使用异步任务处理耗时操作
+- 使用消息队列实现系统解耦
+- 实现任务重试机制
+
+```php
+use Hyperf\AsyncQueue\Annotation\AsyncQueueMessage;
+
+class UserService
+{
+    #[AsyncQueueMessage]
+    public function sendWelcomeEmail(string $email): void
+    {
+        // 发送欢迎邮件
+    }
+}
+```
+
+## 测试规范
+
+### 【强制】单元测试
+
+- 使用 PHPUnit 编写单元测试
+- 测试类必须放在 `test/Unit` 目录下
+- 测试方法必须以 `test` 开头
+- 每个测试方法只测试一个功能点
+
+```php
+use PHPUnit\Framework\TestCase;
+
+class UserServiceTest extends TestCase
+{
+    public function testGetUserById(): void
+    {
+        // 测试代码
+    }
+}
+```
+
+### 【推荐】集成测试
+
+- 集成测试必须放在 `test/Cases` 目录下
+- 使用 `Hyperf\Testing\Client` 模拟 HTTP 请求
+- 测试真实的数据库交互
+
+```php
+use Hyperf\Testing\Client;
+use PHPUnit\Framework\TestCase;
+
+class UserControllerTest extends TestCase
+{
+    protected Client $client;
+    
+    protected function setUp(): void
+    {
+        $this->client = make(Client::class);
+    }
+    
+    public function testGetUsers(): void
+    {
+        $response = $this->client->get('/api/users');
+        $this->assertSame(200, $response->getStatusCode());
+        // 更多断言
+    }
+}
+```
+
+## 安全规范
+
+### 【强制】输入验证
+
+- 所有用户输入必须经过验证
+- 使用 `Hyperf\Validation` 组件进行数据验证
+- 验证规则应该尽可能严格
+
+```php
+use Hyperf\Validation\Contract\ValidatorFactoryInterface;
+
+public function store(RequestInterface $request, ValidatorFactoryInterface $validatorFactory)
+{
+    $validator = $validatorFactory->make(
+        $request->all(),
+        [
+            'name' => 'required|string|max:50',
+            'email' => 'required|email|unique:users',
+            'password' => 'required|string|min:8',
+        ]
+    );
+    
+    if ($validator->fails()) {
+        // 处理验证失败
+    }
+    
+    // 处理验证通过的数据
+}
+```
+
+### 【强制】SQL 注入防护
+
+- 使用参数化查询或 ORM
+- 不要直接拼接 SQL 语句
+- 使用 `Hyperf\Database\Query\Builder` 构建查询
+
+```php
+// 推荐
+$users = User::query()
+    ->where('status', 'active')
+    ->where('age', '>', 18)
+    ->get();
+
+// 不推荐
+$status = 'active';
+$age = 18;
+$users = DB::select("SELECT * FROM users WHERE status = '{$status}' AND age > {$age}");
+```
+
+### 【强制】XSS 防护
+
+- 输出时进行 HTML 转义
+- 使用 `htmlspecialchars` 函数处理用户输入
+- 前端使用模板引擎自动转义
+
+```php
+// 安全输出
+echo htmlspecialchars($userInput, ENT_QUOTES, 'UTF-8');
+```
+
+### 【强制】CSRF 防护
+
+- 使用 CSRF Token 保护表单提交
+- 在中间件中验证 CSRF Token
+- 对于 API 请求，使用其他认证机制（如 JWT）
+
+```php
+// 在表单中添加 CSRF Token
+<form method="POST" action="/profile">
+    <input type="hidden" name="_token" value="<?php echo csrf_token(); ?>">
+    <!-- 表单字段 -->
+</form>
+```
+
+## 文档规范
+
+### 【强制】API 文档
+
+- 使用 Swagger/OpenAPI 记录 API 接口
+- 文档必须包含请求参数、响应格式和错误码
+- 保持文档与代码的同步更新
+
+```php
+use OpenApi\Annotations as OA;
+
+/**
+ * @OA\Get(
+ *     path="/api/users",
+ *     summary="获取用户列表",
+ *     @OA\Response(
+ *         response=200,
+ *         description="成功获取用户列表"
+ *     )
+ * )
+ */
+public function index()
+{
+    // 方法实现
+}
+```
+
+### 【强制】代码注释
+
+- 类必须有类级别的文档注释
+- 方法必须有方法级别的文档注释
+- 复杂逻辑必须有行级注释
+- 注释应该解释"为什么"而不仅仅是"是什么"
+
+```php
+/**
+ * 用户服务类
+ * 
+ * 负责处理用户相关的业务逻辑
+ */
+class UserService
+{
+    /**
+     * 获取用户信息
+     * 
+     * @param string $id 用户ID
+     * @return array 用户信息
+     * @throws UserNotFoundException 当用户不存在时抛出
+     */
+    public function getUserById(string $id): array
+    {
+        // 方法实现
+    }
+}
+```
+
+## 部署规范
+
+### 【强制】容器化部署
+
+- 使用 Docker 容器化部署
+- 配置文件外部化
+- 使用环境变量管理敏感配置
+- 实现健康检查接口
+
+```dockerfile
+FROM hyperf/hyperf:8.0-alpine-v3.16-swoole
+WORKDIR /app
+COPY . /app
+RUN composer install --no-dev -o && php bin/hyperf.php
+
+EXPOSE 9501
+ENTRYPOINT ["php", "/app/bin/hyperf.php", "start"]
+```
+
+### 【推荐】CI/CD 流程
+
+- 使用 GitLab CI 或 GitHub Actions 实现自动化部署
+- 部署前运行单元测试和代码质量检查
+- 实现自动化回滚机制
+- 保留部署历史记录
+
+```yaml
+# .github/workflows/deploy.yml
+name: Deploy
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.0'
+      - name: Install dependencies
+        run: composer install --no-dev
+      - name: Run tests
+        run: composer test
+      - name: Deploy
+        run: ./deploy.sh
+```

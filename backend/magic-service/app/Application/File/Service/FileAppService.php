@@ -177,6 +177,16 @@ class FileAppService extends AbstractAppService
         return $this->defaultFileDomainService->deleteByKey($fileKey, $organizationCode);
     }
 
+    public function getStsTemporaryCredential(Authenticatable $authorization, string $storage, string $dir = '', int $expires = 7200): array
+    {
+        return $this->fileDomainService->getStsTemporaryCredential(
+            $this->getOrganizationCode($authorization),
+            StorageBucketType::from($storage),
+            $dir,
+            $expires
+        );
+    }
+
     protected function getOrganizationCode(Authenticatable $authorization): string
     {
         if (method_exists($authorization, 'getOrganizationCode')) {

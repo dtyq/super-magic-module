@@ -1,4 +1,4 @@
-import { useFlow } from "@dtyq/magic-flow/MagicFlow/context/FlowContext/useFlow"
+import { useNodeConfigActions } from "@dtyq/magic-flow/MagicFlow/context/FlowContext/useFlow"
 import { InnerHandleType } from "@dtyq/magic-flow/MagicFlow/nodes"
 import CustomHandle from "@dtyq/magic-flow/MagicFlow/nodes/common/Handle/Source"
 import { useCurrentNode } from "@dtyq/magic-flow/MagicFlow/nodes/common/context/CurrentNode/useCurrentNode"
@@ -24,7 +24,7 @@ export default function LoopV0() {
 
 	const { expressionDataSource } = usePrevious()
 
-	const { notifyNodeChange } = useFlow()
+	const { notifyNodeChange } = useNodeConfigActions()
 
 	const onValuesChange = useMemoizedFn((changeValues) => {
 		if (!currentNode) return

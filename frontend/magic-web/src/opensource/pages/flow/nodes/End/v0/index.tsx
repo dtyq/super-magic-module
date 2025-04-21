@@ -2,9 +2,11 @@ import { Form } from "antd"
 import { useForm } from "antd/lib/form/Form"
 import { useMemo } from "react"
 import { useMemoizedFn } from "ahooks"
-import { useFlow } from "@dtyq/magic-flow/MagicFlow/context/FlowContext/useFlow"
+import {
+	useNodeConfigActions,
+} from "@dtyq/magic-flow/MagicFlow/context/FlowContext/useFlow"
 import { useCurrentNode } from "@dtyq/magic-flow/MagicFlow/nodes/common/context/CurrentNode/useCurrentNode"
-import { set, cloneDeep } from "lodash-es"
+import { set } from "lodash-es"
 import MagicJsonSchemaEditor from "@dtyq/magic-flow/MagicJsonSchemaEditor"
 import { ShowColumns } from "@dtyq/magic-flow/MagicJsonSchemaEditor/constants"
 import { FormItemType } from "@dtyq/magic-flow/MagicExpressionWidget/types"
@@ -16,26 +18,23 @@ import { v0Template } from "./template"
 
 export default function End() {
 	const [form] = useForm()
-	const { nodeConfig, updateNodeConfig } = useFlow()
+	const { updateNodeConfig } = useNodeConfigActions()
 
 	const { currentNode } = useCurrentNode()
 
 	const { expressionDataSource } = usePrevious()
 
 	const onValuesChange = useMemoizedFn((changeValues) => {
-		if (!currentNode || !nodeConfig || !nodeConfig[currentNode?.node_id]) return
-		const currentNodeConfig = nodeConfig[currentNode?.node_id]
-
 		Object.entries(changeValues).forEach(([changeKey, changeValue]) => {
 			if (changeKey === "output") {
-				set(currentNodeConfig, ["output", "form", "structure"], changeValue as Schema)
+				set(currentNode, ["output", "form", "structure"], changeValue as Schema)
 				return
 			}
-			set(currentNodeConfig, ["params", changeKey], changeValue)
+			set(currentNode, ["params", changeKey], changeValue)
 		})
 
 		updateNodeConfig({
-			...currentNodeConfig,
+			...currentNode,
 		})
 	})
 

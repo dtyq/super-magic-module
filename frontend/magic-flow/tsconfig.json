@@ -3,8 +3,7 @@
 	"compilerOptions": {
 		"baseUrl": ".",
 		"paths": {
-			"@/*": ["src/*"],
-			"mobx-react": ["./src/common/compat/mobx-compat"]
+			"@/*": ["src/*"]
 		},
 		"target": "es5",
 		"lib": ["dom", "dom.iterable", "esnext"],

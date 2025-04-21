@@ -19,6 +19,7 @@ use App\Domain\Chat\Entity\Items\ReceiveList;
 use App\Domain\Chat\Entity\Items\SeqExtra;
 use App\Domain\Chat\Entity\MagicConversationEntity;
 use App\Domain\Chat\Entity\MagicMessageEntity;
+use App\Domain\Chat\Entity\MagicMessageVersionEntity;
 use App\Domain\Chat\Entity\MagicSeqEntity;
 use App\Domain\Chat\Entity\MagicTopicEntity;
 use App\Domain\Chat\Entity\ValueObject\ConversationStatus;
@@ -35,6 +36,7 @@ use App\ErrorCode\ChatErrorCode;
 use App\ErrorCode\UserErrorCode;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Infrastructure\Util\IdGenerator\IdGenerator;
+use App\Interfaces\Chat\Assembler\MessageAssembler;
 use App\Interfaces\Chat\Assembler\PageListAssembler;
 use App\Interfaces\Chat\Assembler\SeqAssembler;
 use Hyperf\Codec\Json;
@@ -766,6 +768,33 @@ class MagicChatDomainService extends AbstractDomainService
         }
     }
 
+    public function editMessage(MagicMessageEntity $messageEntity, MagicMessageEntity $oldMessageEntity): MagicMessageVersionEntity
+    {
+        Db::beginTransaction();
+        try {
+            // 如果这是消息的第一个版本，需要把以前的消息 copy 一份到 message_version 表中，方便审计
+            if (empty($oldMessageEntity->getCurrentVersionId())) {
+                $messageVersionEntity = (new MagicMessageVersionEntity())
+                    ->setMagicMessageId($oldMessageEntity->getMagicMessageId())
+                    ->setMessageContent(Json::encode($oldMessageEntity->getContent()->toArray()));
+                // 先把第一个版本的消息存入 message_version 表
+                $this->magicChatMessageVersionsRepository->createMessageVersion($messageVersionEntity);
+            }
+            // 写入当前版本的消息
+            $messageVersionEntity = (new MagicMessageVersionEntity())
+                ->setMagicMessageId($messageEntity->getMagicMessageId())
+                ->setMessageContent(Json::encode($messageEntity->getContent()->toArray()));
+            $messageVersionEntity = $this->magicChatMessageVersionsRepository->createMessageVersion($messageVersionEntity);
+            // 更新消息的当前版本
+            $this->magicMessageRepository->updateMessageContentAndVersionId($messageEntity, $messageVersionEntity);
+            Db::commit();
+        } catch (Throwable $exception) {
+            Db::rollBack();
+            throw $exception;
+        }
+        return $messageVersionEntity;
+    }
+
     /**
      * 批量获取会话详情.
      * @param array $conversationIds 会话ID数组
@@ -787,6 +816,43 @@ class MagicChatDomainService extends AbstractDomainService
         }
 
         return $result;
+    }
+
+    /**
+     * 接收客户端产生的消息,,生成magicMsgId
+     * 可能是创建会话,编辑自己昵称等的控制消息.
+     */
+    public function createMagicMessageByAppClient(MagicMessageEntity $messageDTO, MagicConversationEntity $senderConversationEntity): MagicMessageEntity
+    {
+        // 由于数据库设计有问题，会话表没有记录 user 的 type，因此这里需要查询一遍发件方用户信息
+        // todo 会话表应该记录 user 的 type
+        $senderUserEntity = $this->magicUserRepository->getUserById($senderConversationEntity->getUserId());
+        if ($senderUserEntity === null) {
+            ExceptionBuilder::throw(UserErrorCode::USER_NOT_EXIST);
+        }
+        $magicMsgId = $messageDTO->getMagicMessageId();
+        $magicMsgId = empty($magicMsgId) ? IdGenerator::getUniqueId32() : $magicMsgId;
+        $time = date('Y-m-d H:i:s');
+        $id = (string) IdGenerator::getSnowId();
+        // 一条消息会出现在两个人的会话窗口里(群聊时出现在几千人的会话窗口id里),所以直接不存了,需要会话窗口id时再根据收件人/发件人id去 magic_user_conversation 取
+        $messageData = [
+            'id' => $id,
+            'sender_id' => $senderUserEntity->getUserId(),
+            'sender_type' => $senderUserEntity->getUserType()->value,
+            'sender_organization_code' => $senderUserEntity->getOrganizationCode(),
+            'receive_id' => $senderConversationEntity->getReceiveId(),
+            'receive_type' => $senderConversationEntity->getReceiveType()->value,
+            'receive_organization_code' => $senderConversationEntity->getReceiveOrganizationCode(),
+            'app_message_id' => $messageDTO->getAppMessageId(),
+            'magic_message_id' => $magicMsgId,
+            'message_type' => $messageDTO->getMessageType()->getName(),
+            'content' => Json::encode($messageDTO->getContent()->toArray(), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+            'send_time' => $messageDTO->getSendTime() ?: $time,
+            'created_at' => $time,
+            'updated_at' => $time,
+        ];
+        $this->magicMessageRepository->createMessage($messageData);
+        return MessageAssembler::getMessageEntity($messageData);
     }
 
     /**
@@ -861,16 +927,25 @@ class MagicChatDomainService extends AbstractDomainService
 
     private function handlerReceiveExtra(MagicSeqEntity $senderSeqEntity, MagicConversationEntity $receiveConversationEntity): ?SeqExtra
     {
-        // 处理话题
-        $senderTopicId = $senderSeqEntity->getExtra()?->getTopicId();
-        if (empty($senderTopicId)) {
+        $senderSeqExtra = $senderSeqEntity->getExtra();
+        if ($senderSeqExtra === null) {
             return null;
         }
+        $receiveSeqExtra = new SeqExtra();
+        // 处理编辑消息
+        $editOptions = $senderSeqExtra->getEditMessageOptions();
+        if ($editOptions !== null) {
+            $receiveSeqExtra->setEditMessageOptions($editOptions);
+        }
+        // 处理话题
+        $senderTopicId = $senderSeqExtra->getTopicId();
+        if (empty($senderTopicId)) {
+            return $receiveSeqExtra;
+        }
         // 收发双发的话题id一致,但是话题所属会话id不同
-        $seqExtra = new SeqExtra();
-        $seqExtra->setTopicId($senderTopicId);
+        $receiveSeqExtra->setTopicId($senderTopicId);
         // 发件方所在的环境id
-        $seqExtra->setMagicEnvId($senderSeqEntity->getExtra()?->getMagicEnvId());
+        $receiveSeqExtra->setMagicEnvId($senderSeqEntity->getExtra()?->getMagicEnvId());
         // 判断收件方的话题 id是否存在
         $topicDTO = new MagicTopicEntity();
         $topicDTO->setConversationId($receiveConversationEntity->getId());
@@ -883,7 +958,7 @@ class MagicChatDomainService extends AbstractDomainService
             // 为收件方创建话题
             $this->magicChatTopicRepository->createTopic($topicDTO);
         }
-        return $seqExtra;
+        return $receiveSeqExtra;
     }
 
     /**

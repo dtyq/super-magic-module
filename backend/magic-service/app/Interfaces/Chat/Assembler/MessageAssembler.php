@@ -17,6 +17,7 @@ use App\Domain\Chat\DTO\Message\ChatMessage\MarkdownMessage;
 use App\Domain\Chat\DTO\Message\ChatMessage\RecordingSummaryMessage;
 use App\Domain\Chat\DTO\Message\ChatMessage\RecordingSummaryStreamMessage;
 use App\Domain\Chat\DTO\Message\ChatMessage\RichTextMessage;
+use App\Domain\Chat\DTO\Message\ChatMessage\SuperAgentMessageInterface;
 use App\Domain\Chat\DTO\Message\ChatMessage\TextMessage;
 use App\Domain\Chat\DTO\Message\ChatMessage\VideosMessage;
 use App\Domain\Chat\DTO\Message\ChatMessage\VoicesMessage;
@@ -103,9 +104,6 @@ class MessageAssembler
         return new MagicMessageEntity($message);
     }
 
-    /**
-     * 根据 protobuf 的消息结构,获取对应的消息对象.
-     */
     public static function getChatMessageDTOByRequest(
         ChatRequest $chatRequest,
         MagicConversationEntity $conversationEntity,
@@ -205,6 +203,7 @@ class MessageAssembler
             ChatMessageType::Video => new VideosMessage($messageStructArray),
             ChatMessageType::Voice => new VoicesMessage($messageStructArray),
             ChatMessageType::RecordingSummary => new RecordingSummaryMessage($messageStructArray),
+            ChatMessageType::SuperAgentCard => make(SuperAgentMessageInterface::class, $messageStructArray),
             default => ExceptionBuilder::throw(ChatErrorCode::MESSAGE_TYPE_ERROR),
         };
     }

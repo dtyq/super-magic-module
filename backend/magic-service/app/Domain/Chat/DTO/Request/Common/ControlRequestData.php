@@ -19,23 +19,17 @@ class ControlRequestData extends AbstractEntity
 
     public function __construct(array $data)
     {
-        if ($data['message'] instanceof Message) {
-            $this->message = $data['message'];
-        } else {
-            $this->message = new Message($data['message']);
-        }
-        $this->requestId = $data['request_id'] ?? '';
-        $this->referMessageId = $data['refer_message_id'] ?? '';
+        parent::__construct($data);
     }
 
     public function getReferMessageId(): string
     {
-        return $this->referMessageId;
+        return $this->referMessageId ?? '';
     }
 
-    public function setReferMessageId(string $referMessageId): void
+    public function setReferMessageId(?string $referMessageId): void
     {
-        $this->referMessageId = $referMessageId;
+        $this->referMessageId = $referMessageId ?? '';
     }
 
     public function getMessage(): Message
@@ -43,18 +37,22 @@ class ControlRequestData extends AbstractEntity
         return $this->message;
     }
 
-    public function setMessage(Message $message): void
+    public function setMessage(array|Message $message): void
     {
-        $this->message = $message;
+        if ($message instanceof Message) {
+            $this->message = $message;
+        } else {
+            $this->message = new Message($message);
+        }
     }
 
     public function getRequestId(): string
     {
-        return $this->requestId;
+        return $this->requestId ?? '';
     }
 
-    public function setRequestId(string $requestId): void
+    public function setRequestId(?string $requestId): void
     {
-        $this->requestId = $requestId;
+        $this->requestId = $requestId ?? '';
     }
 }

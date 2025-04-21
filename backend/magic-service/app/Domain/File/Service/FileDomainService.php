@@ -75,6 +75,20 @@ readonly class FileDomainService
         return $this->cloudFileRepository->getMetas($paths, $organizationCode);
     }
 
+    /**
+     * 开启 sts 模式.
+     * 获取临时凭证给前端使用.
+     * @todo 安全问题，dir 没有校验，没有组织隔离
+     */
+    public function getStsTemporaryCredential(
+        string $organizationCode,
+        StorageBucketType $bucketType = StorageBucketType::Private,
+        string $dir = '',
+        int $expires = 7200
+    ) {
+        return $this->cloudFileRepository->getStsTemporaryCredential($organizationCode, $bucketType, $dir, $expires);
+    }
+
     public function exist(array $metas, string $key): bool
     {
         foreach ($metas as $meta) {

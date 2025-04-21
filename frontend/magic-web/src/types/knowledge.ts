@@ -149,6 +149,14 @@ export namespace Knowledge {
 		}
 	}
 
+	/** 更新知识库的文档 */
+	export interface UpdateKnowledgeDocumentParams {
+		knowledge_code: string
+		document_code: string
+		name: string
+		enabled: boolean
+	}
+
 	/** 删除知识库的文档 */
 	export interface DeleteKnowledgeDocumentParams {
 		knowledge_code: string

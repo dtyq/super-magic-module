@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 /* eslint-disable no-underscore-dangle */
 /* eslint-disable no-console */
 /* eslint-disable no-restricted-syntax */
@@ -6,8 +7,7 @@ import { useState, useRef, useEffect } from "react"
 import { Input, Button, Card, List, message as antdMessage } from "antd"
 import { useTranslation } from "react-i18next"
 import { useMemoizedFn } from "ahooks"
-import type { MagicFlow } from "@dtyq/magic-flow/MagicFlow/types/flow"
-import { IconSend, IconX } from "@tabler/icons-react"
+import { IconSend, IconX, IconBan } from "@tabler/icons-react"
 import { Resizable } from "re-resizable"
 import { FlowConverter } from "../../utils/flowConverter"
 import { useStyles } from "./styles"
@@ -19,8 +19,8 @@ import useFlowOperations from "./useFlowOperations"
 import useTestFunctions from "./useTestFunctions"
 import { useConfirmOperations } from "./hooks/useConfirmOperations"
 import { useSendAgentMessage } from "./hooks/useSendAgentMessage"
-import { useGlobalLanguage } from "@/opensource/models/config/hooks"
-import { FlowService } from "@/opensource/services/flow"
+import { MagicFlow } from "@dtyq/magic-flow/MagicFlow/types/flow"
+import { FlowApi } from "@/apis"
 
 // MD5生成函数
 function generateMD5(input: string): string {
@@ -157,7 +157,6 @@ export default function FlowAssistant({
 	saveDraft,
 }: FlowAssistantProps) {
 	const { t } = useTranslation()
-	const language = useGlobalLanguage(false)
 	const { styles } = useStyles()
 	const [messages, setMessages] = useState<Message[]>([
 		{
@@ -194,8 +193,6 @@ export default function FlowAssistant({
 	const positionRef = useRef(getSavedPosition())
 	// 新增：命令收集状态
 	const [isCollectingCommand, setIsCollectingCommand] = useState(false)
-	// 新增：跟踪是否已发送过流程数据
-	const [hasSentFlowData, setHasSentFlowData] = useState(false)
 
 	// 使用新的消息发送钩子
 	const { sendAgentMessage } = useSendAgentMessage()
@@ -204,7 +201,7 @@ export default function FlowAssistant({
 	const flowOperations = useFlowOperations({
 		flowInteractionRef,
 		saveDraft,
-		flowService: FlowService,
+		flowService: FlowApi,
 	})
 
 	// 创建获取流程数据的函数
@@ -588,7 +585,7 @@ export default function FlowAssistant({
 	// 处理流处理错误
 	const handleStreamError = useMemoizedFn((errorMessage: string) => {
 		if (!processingMessageId) return
-
+		setIsProcessing(false)
 		setMessages((prev) =>
 			prev.map((msg) =>
 				msg.id === processingMessageId
@@ -629,6 +626,154 @@ export default function FlowAssistant({
 		setProcessingMessageId(null)
 	})
 
+	// 添加：处理重试失败消息
+	const handleRetry = useMemoizedFn(async (messageId: string) => {
+		// 找到对应的错误消息
+		const errorMessage = messages.find(
+			(msg) => msg.id === messageId && msg.status === "error" && msg.role === "assistant",
+		)
+
+		if (!errorMessage) return
+
+		// 找到错误消息之前的最近用户消息
+		const errorIndex = messages.findIndex((msg) => msg.id === messageId)
+		if (errorIndex <= 0) return
+
+		let userMessageIndex = errorIndex - 1
+		while (userMessageIndex >= 0) {
+			if (messages[userMessageIndex].role === "user") {
+				break
+			}
+			userMessageIndex--
+		}
+
+		if (userMessageIndex < 0) return
+
+		const userMessage = messages[userMessageIndex]
+
+		// 如果当前正在处理其他消息，先不进行重试
+		if (isProcessing) {
+			antdMessage.info(t("flowAssistant.waitForProcessing", { ns: "flow" }))
+			return
+		}
+
+		// 移除错误消息
+		setMessages((prev) => prev.filter((msg) => msg.id !== messageId))
+
+		// 创建新的助手消息
+		const newAssistantMessageId = Date.now().toString()
+		const loadingAssistantMessage: Message = {
+			id: newAssistantMessageId,
+			role: "assistant",
+			content: "",
+			status: "loading",
+		}
+
+		// 添加新的助手消息
+		setMessages((prev) => [...prev, loadingAssistantMessage])
+		setForceScroll(true)
+		setProcessingMessageId(newAssistantMessageId)
+		setIsProcessing(true)
+
+		try {
+			// 使用封装的发送消息函数，重新发送原始用户消息
+			const result = await sendAgentMessage(userMessage.content, {
+				conversationId: conversationId || "temp-conversation",
+				includeFlowData: false, // 重试时不需要再次发送流程数据
+			})
+
+			if (result.isError) {
+				// 更新助手消息显示错误
+				setMessages((prev) =>
+					prev.map((msg) =>
+						msg.id === newAssistantMessageId
+							? {
+									...msg,
+									content: result.errorMessage || "未知错误",
+									status: "error",
+							  }
+							: msg,
+					),
+				)
+				setIsProcessing(false)
+				return
+			}
+
+			// 设置流处理响应
+			if (result.stream) {
+				setStreamResponse(result.stream)
+			} else {
+				// 非流式响应处理
+				setMessages((prev) =>
+					prev.map((msg) =>
+						msg.id === newAssistantMessageId
+							? {
+									...msg,
+									content: result.contentStr || "服务器未返回内容",
+									status: "done",
+							  }
+							: msg,
+					),
+				)
+				setIsProcessing(false)
+			}
+		} catch (error) {
+			console.error("Error retrying message:", error)
+			const errorMessage = error instanceof Error ? error.message : String(error)
+
+			// 更新助手消息为错误状态
+			setMessages((prev) =>
+				prev.map((msg) =>
+					msg.id === newAssistantMessageId
+						? {
+								...msg,
+								content: `${t("flowAssistant.error", {
+									ns: "flow",
+								})}: ${errorMessage}`,
+								status: "error",
+						  }
+						: msg,
+				),
+			)
+
+			antdMessage.error(t("flowAssistant.retryError", { ns: "flow" }))
+			setIsProcessing(false)
+		}
+	})
+
+	// 新增：处理中断流连接的方法
+	const handleAbortStream = useMemoizedFn(() => {
+		// 如果有正在处理的流，中断它
+		if (streamResponse) {
+			console.log("主动中断SSE流连接")
+
+			// 重置相关状态
+			setStreamResponse(null)
+			setIsProcessing(false)
+
+			// 如果有正在处理的消息，更新其状态为中断
+			if (processingMessageId) {
+				setMessages((prev) =>
+					prev.map((msg) =>
+						msg.id === processingMessageId
+							? {
+									...msg,
+									content: msg.content + "\n\n[用户中断了响应]",
+									status: "done",
+							  }
+							: msg,
+					),
+				)
+				setProcessingMessageId(null)
+			}
+
+			// 显示中断提示
+			antdMessage.info(
+				t("flowAssistant.messageStopped", { ns: "flow", defaultValue: "已停止响应" }),
+			)
+		}
+	})
+
 	// 发送消息到AI助手 - 使用新的封装函数
 	const sendMessage = useMemoizedFn(async () => {
 		if (!inputValue.trim() || isProcessing) return
@@ -666,14 +811,9 @@ export default function FlowAssistant({
 			// 使用封装的发送消息函数
 			const result = await sendAgentMessage(userMessage, {
 				conversationId: conversationId || "temp-conversation",
-				includeFlowData: !hasSentFlowData, // 仅在第一次发送时包含流程数据
+				includeFlowData: true, // 仅在第一次发送时包含流程数据
 				getFetchFlowData: getFlowData,
 			})
-
-			// 如果是第一次发送，标记已发送流程数据
-			if (!hasSentFlowData) {
-				setHasSentFlowData(true)
-			}
 
 			// 处理错误情况
 			if (result.isError) {
@@ -845,6 +985,7 @@ export default function FlowAssistant({
 									{...item}
 									onConfirm={handleConfirmOperation}
 									onCancel={handleCancelOperation}
+									onRetry={handleRetry}
 								/>
 							</List.Item>
 						)}
@@ -868,13 +1009,21 @@ export default function FlowAssistant({
 							}
 						}}
 					/>
-					<Button
-						type="primary"
-						icon={<IconSend size={16} />}
-						onClick={sendMessage}
-						loading={isProcessing}
-						disabled={!inputValue.trim()}
-					/>
+					{isProcessing ? (
+						<Button
+							type="primary"
+							danger
+							icon={<IconBan size={16} />}
+							onClick={handleAbortStream}
+						/>
+					) : (
+						<Button
+							type="primary"
+							icon={<IconSend size={16} />}
+							onClick={sendMessage}
+							disabled={!inputValue.trim()}
+						/>
+					)}
 				</div>
 			</Card>
 		</Resizable>

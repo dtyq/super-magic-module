@@ -27,8 +27,8 @@ import { generateNodeVersionSchema } from "./utils/version"
 import magicFlowEnJson from "@/common/locales/en_US/magicFlow.json"
 import magicFlowZhJson from "@/common/locales/zh_CN/magicFlow.json"
 
-const { init, instance } = createI18nNext("en_US")
-init().catch(console.error)
+// const { init, instance } = createI18nNext("en_US")
+// init().catch(console.error)
 
 // 确保只初始化一次i18next
 if (!i18next.isInitialized) {
@@ -57,8 +57,8 @@ if (!i18next.isInitialized) {
 		})
 }
 
-// 导出i18next实例，让下游组件可以导入使用
-export { i18next }
+// // 导出i18next实例，让下游组件可以导入使用
+// export { i18next }
 
 installAllNodes()
 export default function BaseFlow() {
@@ -126,61 +126,61 @@ export default function BaseFlow() {
 	}, [])
 
 	return (
-		<AppearanceProvider i18nInstance={instance}>
-			<NodeMapProvider nodeMap={nodeSchemaMap}>
-				{/* @ts-ignore */}
-				<MaterialSourceProvider subFlow={subFlow} tools={tools}>
-					<NodeChangeListenerProvider customListener={nodeChangeEventListener}>
-						<ExtraNodeConfigProvider
-							// nodeStyleMap={{
-							// 	[customNodeType.Start]: {
-							// 		width: "900px",
-							// 	},
-							// }}
-							customNodeRenderConfig={{
-								[customNodeType.Start]: {
-									hiddenDesc: true,
-								},
-							}}
+		// <AppearanceProvider i18nInstance={instance}>
+		<NodeMapProvider nodeMap={nodeSchemaMap}>
+			{/* @ts-ignore */}
+			<MaterialSourceProvider subFlow={subFlow} tools={tools}>
+				<NodeChangeListenerProvider customListener={nodeChangeEventListener}>
+					<ExtraNodeConfigProvider
+						// nodeStyleMap={{
+						// 	[customNodeType.Start]: {
+						// 		width: "900px",
+						// 	},
+						// }}
+						customNodeRenderConfig={{
+							[customNodeType.Start]: {
+								hiddenDesc: true,
+							},
+						}}
+					>
+						<NodeTestingProvider
+							nowTestingNodeIds={nowTestingNodeIds}
+							testingNodeIds={testingNodeIds}
+							testingResultMap={testingResultMap}
+							position={false}
 						>
-							<NodeTestingProvider
-								nowTestingNodeIds={nowTestingNodeIds}
-								testingNodeIds={testingNodeIds}
-								testingResultMap={testingResultMap}
-								position={false}
-							>
-								<MagicFlow
-									ref={flowInstance}
-									header={flowHeader}
-									// @ts-ignore
-									flow={serverFlow}
-									nodeToolbar={{
-										list: toolbars,
-									}}
-									customParamsName={{
-										params: "params",
-										nodeType: "node_type",
-									}}
-									layoutOnMount={true}
-									allowDebug
-									omitNodeKeys={[
-										"data",
-										"expandParent",
-										"extent",
-										"parentId",
-										"deletable",
-										"position",
-										"step",
-										"zIndex",
-										"type",
-									]}
-									showExtraFlowInfo={false}
-								/>
-							</NodeTestingProvider>
-						</ExtraNodeConfigProvider>
-					</NodeChangeListenerProvider>
-				</MaterialSourceProvider>
-			</NodeMapProvider>
-		</AppearanceProvider>
+							<MagicFlow
+								ref={flowInstance}
+								header={flowHeader}
+								// @ts-ignore
+								flow={serverFlow}
+								nodeToolbar={{
+									list: toolbars,
+								}}
+								customParamsName={{
+									params: "params",
+									nodeType: "node_type",
+								}}
+								layoutOnMount={true}
+								allowDebug
+								omitNodeKeys={[
+									"data",
+									"expandParent",
+									"extent",
+									"parentId",
+									"deletable",
+									"position",
+									"step",
+									"zIndex",
+									"type",
+								]}
+								showExtraFlowInfo={false}
+							/>
+						</NodeTestingProvider>
+					</ExtraNodeConfigProvider>
+				</NodeChangeListenerProvider>
+			</MaterialSourceProvider>
+		</NodeMapProvider>
+		// </AppearanceProvider>
 	)
 }

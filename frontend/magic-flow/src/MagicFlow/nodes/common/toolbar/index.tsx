@@ -1,6 +1,6 @@
 import { useFlowInteraction } from "@/MagicFlow/components/FlowDesign/context/FlowInteraction/useFlowInteraction"
 import { useExternal } from "@/MagicFlow/context/ExternalContext/useExternal"
-import { useFlow } from "@/MagicFlow/context/FlowContext/useFlow"
+import { useFlow, useFlowNodes } from "@/MagicFlow/context/FlowContext/useFlow"
 import { IconUploadError } from "@douyinfe/semi-icons"
 import { Button, Popconfirm, Tooltip } from "antd"
 import { IconCopy, IconTrash } from "@tabler/icons-react"
@@ -21,7 +21,7 @@ type ToolbarComponentProps = {
 export default function ToolbarComponent({ id, showCopy = true }: ToolbarComponentProps) {
 	const { t } = useTranslation()
 	const { pasteNode, deleteNode } = useToolbar()
-	const { selectedNodeId } = useFlow()
+	const { selectedNodeId } = useFlowNodes()
 	const { nodeToolbar } = useExternal()
 
 	const { setShowSelectionTools } = useFlowInteraction()

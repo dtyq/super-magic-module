@@ -6,9 +6,9 @@ import { useTranslation } from 'react-i18next'
 import resolveToString from '@/common/utils/template'
 import { getAllPredecessors } from '@/MagicFlow/utils/reactflowUtils'
 import { checkIsInGroup } from '@/MagicFlow/utils'
-import { useNodes } from '@/MagicFlow/context/NodesContext/useNodes'
-import { useFlow } from '@/MagicFlow/context/FlowContext/useFlow'
+import { useFlowEdges, useNodeConfig, useNodeConfigActions } from '@/MagicFlow/context/FlowContext/useFlow'
 import { useExternal } from '@/MagicFlow/context/ExternalContext/useExternal'
+import { useReactFlow } from 'reactflow'
 
 type DebugProps = {
 	id: string
@@ -22,8 +22,10 @@ export default function useDebug({ id }: DebugProps) {
 
 	const { allowDebug } = useExternal()
 
-	const { nodeConfig, updateNodeConfig, edges } = useFlow()
-	const { nodes } = useNodes()
+	const { edges } = useFlowEdges()
+    const { nodeConfig } = useNodeConfig()
+    const { updateNodeConfig } = useNodeConfigActions()
+    const { getNodes } = useReactFlow()
     
 	const currentNode = useMemo(() => {
 		return nodeConfig[id]
@@ -31,6 +33,7 @@ export default function useDebug({ id }: DebugProps) {
 
 	const checkHasPreNodeInDebug = useMemoizedFn(() => {
 		if(!currentNode) return false
+        const nodes = getNodes()
 		let predecessors = getAllPredecessors(currentNode, nodes, edges)
 		
 		// 如果是循环体内的节点，可引用的数据源为当前节点的上文节点+循环体的上文节点
@@ -45,6 +48,7 @@ export default function useDebug({ id }: DebugProps) {
 	})
 
 	useEffect(() => {
+        const nodes = getNodes()
 		// 通过节点是否已经挂载尺寸属性，判断是否reactflow渲染完毕
 		if(!nodes?.[0]?.width) return
 		const hasPreNodeDebug = checkHasPreNodeInDebug()
@@ -54,7 +58,7 @@ export default function useDebug({ id }: DebugProps) {
 			// 当前节点是否处于debug模式
 			setIsDebug(!!currentNode?.debug)
 		}
-	}, [nodeConfig, nodes, edges])
+	}, [nodeConfig, edges])
 
 
 	const onDebugChange = useMemoizedFn((debug: boolean) => {

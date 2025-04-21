@@ -11,6 +11,8 @@ use App\Domain\ModelAdmin\Constant\ServiceProviderCategory;
 use App\Domain\ModelAdmin\Constant\ServiceProviderType;
 use App\Domain\ModelAdmin\Entity\ServiceProviderEntity;
 use App\Domain\ModelAdmin\Factory\ServiceProviderEntityFactory;
+use App\ErrorCode\ServiceProviderErrorCode;
+use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Infrastructure\Util\IdGenerator\IdGenerator;
 use Hyperf\Codec\Json;
 use Hyperf\DbConnection\Db;
@@ -18,6 +20,15 @@ use Hyperf\DbConnection\Db;
 class ServiceProviderRepository extends AbstractModelRepository
 {
     public function getById(int $id): ?ServiceProviderEntity
+    {
+        $model = $this->serviceProviderModel::query()->where('id', $id)->first();
+        if (! $model) {
+            ExceptionBuilder::throw(ServiceProviderErrorCode::ServiceProviderNotFound);
+        }
+        return ServiceProviderEntityFactory::toEntity($model->toArray());
+    }
+
+    public function findById(int $id): ?ServiceProviderEntity
     {
         $model = $this->serviceProviderModel::query()->where('id', $id)->first();
         if (! $model) {
@@ -104,7 +115,7 @@ class ServiceProviderRepository extends AbstractModelRepository
         return $serviceProviderEntity;
     }
 
-    public function deleteById(int $id)
+    public function deleteById(int $id): void
     {
         $this->serviceProviderModel::query()->where('id', $id)->delete();
     }
@@ -126,7 +137,7 @@ class ServiceProviderRepository extends AbstractModelRepository
         if ($serviceProviderCategory) {
             $query->where('category', $serviceProviderCategory->value);
         }
-        $query->where('type', ServiceProviderType::OFFICIAL->value);
+        $query->where('provider_type', ServiceProviderType::OFFICIAL->value);
         $result = Db::select($query->toSql(), $query->getBindings());
         if (empty($result)) {
             return null;
@@ -148,5 +159,15 @@ class ServiceProviderRepository extends AbstractModelRepository
 
         $result = Db::select($query->toSql(), $query->getBindings());
         return ServiceProviderEntityFactory::toEntities($result);
+    }
+
+    public function getOffice(ServiceProviderCategory $LLM, ServiceProviderType $OFFICIAL): ServiceProviderEntity
+    {
+        $model = $this->serviceProviderModel::query()->where('category', $LLM->value)
+            ->where('provider_type', $OFFICIAL->value)->first();
+        if (! $model) {
+            ExceptionBuilder::throw(ServiceProviderErrorCode::ServiceProviderNotFound);
+        }
+        return ServiceProviderEntityFactory::toEntity($model->toArray());
     }
 }

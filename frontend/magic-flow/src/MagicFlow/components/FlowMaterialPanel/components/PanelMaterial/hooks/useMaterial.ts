@@ -1,6 +1,5 @@
 import { getExecuteNodeList } from "@/MagicFlow/constants"
-import { useFlow } from "@/MagicFlow/context/FlowContext/useFlow"
-import { useMagicFlow } from "@/MagicFlow/context/MagicFlowContext/useMagicFlow"
+import { useFlowData } from "@/MagicFlow/context/FlowContext/useFlow"
 import { BaseNodeType } from "@/MagicFlow/register/node"
 import { getNodeGroups } from "@/MagicFlow/utils"
 import { useMemoizedFn } from "ahooks"
@@ -12,18 +11,15 @@ type MaterialProps = {
 }
 
 export default function useMaterial ({ keyword }: MaterialProps) {
+    // 缓存nodeList的结果，避免每次渲染时都创建新的引用
+    const nodeList = getExecuteNodeList()
 
-	// 暂时由前端写死
-	const nodeList = getExecuteNodeList()
-
-	const { displayMaterialTypes } = useMagicFlow()
-
-    const { flow } = useFlow()
+    const { flow } = useFlowData()
 
 	// 动态的节点列表
 	const dynamicNodeList = useMemo(() => {
-		return nodeList.filter(n => displayMaterialTypes.includes(n?.schema?.id) && n.schema.label.includes(keyword))
-	}, [nodeList, displayMaterialTypes])
+		return nodeList.filter(n => n.schema.label.includes(keyword))
+	}, [keyword, nodeList])
 
 	// 获取分组节点列表
 	const getGroupNodeList = useMemoizedFn((nodeTypes: BaseNodeType[]) => {
@@ -55,5 +51,4 @@ export default function useMaterial ({ keyword }: MaterialProps) {
 		getGroupNodeList,
 		filterNodeGroups
 	}
-
 }

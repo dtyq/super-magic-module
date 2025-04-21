@@ -30,12 +30,12 @@ use App\Domain\ModelAdmin\Repository\Persistence\ServiceProviderRepository;
 use App\Domain\ModelAdmin\Service\Provider\ServiceProviderFactory;
 use App\ErrorCode\ServiceProviderErrorCode;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
-use App\Infrastructure\ExternalAPI\ImageGenerateAPI\ImageGenerateModelType;
+use App\Infrastructure\Util\Locker\Excpetion\LockException;
+use App\Infrastructure\Util\Locker\RedisLocker;
 use App\Interfaces\Kernel\Assembler\FileAssembler;
 use Exception;
 use Hyperf\Contract\TranslatorInterface;
 use Hyperf\DbConnection\Db;
-use JetBrains\PhpStorm\Deprecated;
 use Psr\Log\LoggerInterface;
 
 use function Hyperf\Translation\__;
@@ -49,11 +49,12 @@ class ServiceProviderDomainService
         protected ServiceProviderOriginalModelsRepository $serviceProviderOriginalModelsRepository,
         protected TranslatorInterface $translator,
         protected LoggerInterface $logger,
+        protected RedisLocker $redisLocker,
     ) {
     }
 
     /**
-     * 新增厂商(超级管理员用的).
+     * 新增服务商(超级管理员用的).
      */
     public function addServiceProvider(ServiceProviderEntity $serviceProviderEntity, array $organizationCodes): ServiceProviderEntity
     {
@@ -67,12 +68,12 @@ class ServiceProviderDomainService
 
             // 如果是文生图，才需要同步
             if ($serviceProviderEntity->getCategory() === ServiceProviderCategory::VLM->value) {
-                // 给所有组织添加厂商，同步category字段
+                // 给所有组织添加服务商，同步category字段
                 $this->serviceProviderConfigRepository->addServiceProviderConfigs($serviceProviderEntity->getId(), $organizationCodes, $status);
             }
             Db::commit();
         } catch (Exception $e) {
-            $this->logger->error('添加厂商失败' . $e->getMessage());
+            $this->logger->error('添加服务商失败' . $e->getMessage());
             Db::rollBack();
             ExceptionBuilder::throw(ServiceProviderErrorCode::SystemError, __('service_provider.add_provider_failed'));
         }
@@ -80,17 +81,7 @@ class ServiceProviderDomainService
     }
 
     /**
-     * 根据id修改厂商.(超级管理员用的).
-     */
-    public function updateServiceProviderById(ServiceProviderEntity $serviceProviderEntity): ServiceProviderEntity
-    {
-        $this->serviceProviderRepository->updateById($serviceProviderEntity);
-
-        return $serviceProviderEntity;
-    }
-
-    /**
-     * 获取所有厂商.
+     * 获取所有服务商.
      * @return ServiceProviderEntity[]
      */
     public function getAllServiceProvider(int $page, int $pageSize): array
@@ -99,52 +90,18 @@ class ServiceProviderDomainService
     }
 
     /**
-     * 删除厂商(超级管理员用的).
-     */
-    public function deleteServiceProviderById(int $id)
-    {
-        Db::beginTransaction();
-        try {
-            $this->serviceProviderRepository->deleteById($id);
-            $this->serviceProviderConfigRepository->deleteByServiceProviderId($id);
-            // todo xhy 删除模型
-        } catch (Exception $e) {
-            $this->logger->error('删除厂商失败' . $e->getMessage());
-            Db::rollBack();
-            ExceptionBuilder::throw(ServiceProviderErrorCode::SystemError, __('service_provider.delete_provider_failed'));
-        }
-    }
-
-    /**
-     * 根据id获取厂商以及厂商下的模型(超级管理员用的).
+     * 根据id获取服务商以及服务商下的模型.
      */
     public function getServiceProviderById(int $id): ?ServiceProviderDTO
     {
         $serviceProviderEntity = $this->serviceProviderRepository->getById($id);
-
-        if ($serviceProviderEntity === null) {
-            ExceptionBuilder::throw(ServiceProviderErrorCode::ServiceProviderNotFound);
-        }
         $models = $this->serviceProviderModelsRepository->getModelsByServiceProviderId($serviceProviderEntity->getId());
         return ServiceProviderEntityFactory::toDTO($serviceProviderEntity, $models);
     }
 
-    /**
-     * 根据id获取厂商.
-     */
-    public function getServiceProviderEntityById(int $id): ?ServiceProviderEntity
-    {
-        $serviceProviderEntity = $this->serviceProviderRepository->getById($id);
-
-        if ($serviceProviderEntity === null) {
-            ExceptionBuilder::throw(ServiceProviderErrorCode::ServiceProviderNotFound);
-        }
-        return $serviceProviderEntity;
-    }
-
     public function getServiceProviderConfigByServiceProviderModel(ServiceProviderModelsEntity $serviceProviderModelsEntity): ?ServiceProviderConfigEntity
     {
-        // 获取厂商配置
+        // 获取服务商配置
         $serviceProviderConfigEntity = $this->serviceProviderConfigRepository->getById($serviceProviderModelsEntity->getServiceProviderConfigId());
         if (! $serviceProviderConfigEntity) {
             ExceptionBuilder::throw(ServiceProviderErrorCode::ServiceProviderConfigError);
@@ -158,13 +115,6 @@ class ServiceProviderDomainService
         return $serviceProviderConfigEntity;
     }
 
-    public function addModelToServiceProviderByOrg(ServiceProviderModelsEntity $serviceProviderModelsEntity): ServiceProviderModelsEntity
-    {
-        $serviceProviderModelsEntity->valid();
-
-        return $serviceProviderModelsEntity;
-    }
-
     /**
      * 给 llm 服务商添加模型，组织自行添加.
      */
@@ -172,34 +122,42 @@ class ServiceProviderDomainService
     {
         $serviceProviderModelsEntity->valid();
 
+        $organizationCode = $serviceProviderModelsEntity->getOrganizationCode();
         $serviceProviderConfigEntity = $this->serviceProviderConfigRepository->getByIdAndOrganizationCode(
             (string) $serviceProviderModelsEntity->getServiceProviderConfigId(),
-            $serviceProviderModelsEntity->getOrganizationCode()
+            $organizationCode
         );
 
-        $serviceProviderEntity = $this->serviceProviderRepository->getById($serviceProviderConfigEntity->getServiceProviderId());
-
-        if (! $serviceProviderEntity) {
-            ExceptionBuilder::throw(ServiceProviderErrorCode::ServiceProviderNotFound);
+        if ($serviceProviderModelsEntity->getId()) {
+            // 设置一下model_parent_id,不需要前端传入
+            $serviceProviderModelsEntity->setModelParentId($this->serviceProviderModelsRepository->getById((string) $serviceProviderModelsEntity->getId())->getModelParentId());
         }
+
+        $serviceProviderEntity = $this->serviceProviderRepository->getById($serviceProviderConfigEntity->getServiceProviderId());
         $serviceProviderModelsEntity->setIcon(FileAssembler::formatPath($serviceProviderModelsEntity->getIcon()));
 
         $serviceProviderModelsEntity->setCategory($serviceProviderEntity->getCategory());
         $serviceProviderModelsEntity->valid();
 
         // 校验model_id
-        if (! $this->serviceProviderOriginalModelsRepository->exist($serviceProviderModelsEntity->getModelId())) {
+
+        if (ServiceProviderCategory::from($serviceProviderEntity->getCategory()) === ServiceProviderCategory::LLM && ! $this->serviceProviderOriginalModelsRepository->exist($serviceProviderModelsEntity->getModelId())) {
             ExceptionBuilder::throw(ServiceProviderErrorCode::InvalidParameter, '模型id不存在');
         }
 
-        // 是否是官方服务商
-        $isOfficialProvider = ServiceProviderType::from($serviceProviderEntity->getProviderType()) === ServiceProviderType::OFFICIAL;
-
-        if ($isOfficialProvider || ServiceProviderCategory::from($serviceProviderEntity->getCategory()) === ServiceProviderCategory::VLM) {
-            ExceptionBuilder::throw(ServiceProviderErrorCode::InvalidParameter);
+        // 当前组织是官方组织
+        if ($this->isOfficial($organizationCode)) {
+            // 同步其他组织
+            $this->syncSaveModelsToOtherServiceProvider($serviceProviderModelsEntity);
+        } else {
+            // 非官方组织不可添加官方模型以及文生图模型
+            $isOfficialProvider = ServiceProviderType::from($serviceProviderEntity->getProviderType()) === ServiceProviderType::OFFICIAL;
+            // 只能给大模型服务商添加模型
+            if ($isOfficialProvider || ServiceProviderCategory::from($serviceProviderEntity->getCategory()) === ServiceProviderCategory::VLM) {
+                ExceptionBuilder::throw(ServiceProviderErrorCode::InvalidParameter);
+            }
+            $this->serviceProviderModelsRepository->saveModels($serviceProviderModelsEntity);
         }
-        $this->serviceProviderModelsRepository->saveModels($serviceProviderModelsEntity);
-
         return $serviceProviderModelsEntity;
     }
 
@@ -221,10 +179,6 @@ class ServiceProviderDomainService
             ExceptionBuilder::throw(ServiceProviderErrorCode::InvalidParameter, '模型id不存在');
         }
 
-        if (! $serviceProviderEntity) {
-            ExceptionBuilder::throw(ServiceProviderErrorCode::ServiceProviderNotFound);
-        }
-
         $serviceProviderModelsEntity->setCategory($serviceProviderEntity->getCategory());
         $serviceProviderModelsEntity->valid();
         $this->handleNonOfficialProviderModel($serviceProviderModelsEntity, $serviceProviderEntity);
@@ -232,13 +186,12 @@ class ServiceProviderDomainService
     }
 
     /**
-     * 根据组织获取厂商.
+     * 根据组织获取服务商.
      * @return ServiceProviderConfigDTO[]
      */
     public function getServiceProviderConfigs(string $organization, ?ServiceProviderCategory $serviceProviderCategory = null): array
     {
         $serviceProviderConfigEntities = $this->serviceProviderConfigRepository->getByOrganizationCode($organization);
-
         // 获取id
         $ids = array_column($serviceProviderConfigEntities, 'service_provider_id');
         $serviceProviderEntities = $this->serviceProviderRepository->getByIds($ids);
@@ -258,14 +211,14 @@ class ServiceProviderDomainService
     }
 
     /**
-     * 获取厂商配置信息.
+     * 获取服务商配置信息.
      */
     public function getServiceProviderConfigDetail(string $serviceProviderConfigId, string $organizationCode): ServiceProviderConfigDTO
     {
         $serviceProviderConfigEntity = $this->serviceProviderConfigRepository->getByIdAndOrganizationCode($serviceProviderConfigId, $organizationCode);
         $serviceProviderEntities = $this->serviceProviderRepository->getByIds([$serviceProviderConfigEntity->getServiceProviderId()]);
 
-        // 可能这个厂商官方下架了
+        // 可能这个服务商官方下架了
         if (empty($serviceProviderEntities)) {
             ExceptionBuilder::throw(ServiceProviderErrorCode::ServiceProviderNotFound);
         }
@@ -291,7 +244,7 @@ class ServiceProviderDomainService
     }
 
     /**
-     * 保存厂商配置信息.
+     * 保存服务商配置信息.
      */
     public function updateServiceProviderConfig(ServiceProviderConfigEntity $serviceProviderConfigEntity): ServiceProviderConfigEntity
     {
@@ -299,11 +252,6 @@ class ServiceProviderDomainService
 
         // 不可修改官方服务商
         $serviceProviderEntity = $this->serviceProviderRepository->getById($serviceProviderConfigEntityObject->getServiceProviderId());
-
-        if (! $serviceProviderEntity) {
-            ExceptionBuilder::throw(ServiceProviderErrorCode::ServiceProviderNotFound);
-        }
-
         if (ServiceProviderType::from($serviceProviderEntity->getProviderType()) === ServiceProviderType::OFFICIAL) {
             ExceptionBuilder::throw(ServiceProviderErrorCode::SystemError, '官方服务商不可修改');
         }
@@ -320,131 +268,98 @@ class ServiceProviderDomainService
         $serviceProviderConfigEntity->setServiceProviderId($serviceProviderConfigEntityObject->getServiceProviderId());
 
         // 只有大模型服务商并且是非官方的类型才能修改别名
-        if (ServiceProviderCategory::from($serviceProviderEntity->getCategory()) === ServiceProviderCategory::VLM) {
+        $serviceProviderCategory = ServiceProviderCategory::from($serviceProviderEntity->getCategory());
+        if ($serviceProviderCategory === ServiceProviderCategory::VLM) {
             $serviceProviderConfigEntity->setAlias('');
         }
 
+        // 检查是否修改了服务商状态
+        $statusChanged = $serviceProviderConfigEntityObject->getStatus() !== $serviceProviderConfigEntity->getStatus();
+        $originalStatus = Status::from($serviceProviderConfigEntityObject->getStatus());
+        $newStatus = Status::from($serviceProviderConfigEntity->getStatus());
+
         $this->serviceProviderConfigRepository->save($serviceProviderConfigEntity);
+
+        // 尝试同步其他组织的模型状态
+        // 修改服务商状态如果是官方组织修改的，则还需要同步修改其他组织下的magic服务商下对应模型的状态
+
+        $isOfficeOrganization = $this->isOfficial($serviceProviderConfigEntity->getOrganizationCode());
+
+        if ($isOfficeOrganization && $statusChanged) {
+            // 获取当前服务商下的所有模型
+            $currentModels = $this->serviceProviderModelsRepository->getModelsByServiceProviderConfigId($serviceProviderConfigEntity->getId());
+
+            if ($newStatus === Status::DISABLE) {
+                foreach ($currentModels as $model) {
+                    // 使用排除自身的方法
+                    // 大模型服务商和文生图服务商分开处理，文生图模型没有 model_parent_id ，因为官方组织无法添加
+                    if ($serviceProviderCategory === ServiceProviderCategory::VLM) {
+                        $this->serviceProviderModelsRepository->syncUpdateModelsStatusExcludeSelfByVLM($model->getModelVersion(), Status::DISABLE);
+                    } elseif ($serviceProviderCategory === ServiceProviderCategory::LLM) {
+                        $this->serviceProviderModelsRepository->syncUpdateModelsStatusExcludeSelfByLLM($model->getId(), Status::DISABLE);
+                    }
+                }
+            } elseif ($newStatus === Status::ACTIVE && $originalStatus === Status::DISABLE) {
+                foreach ($currentModels as $model) {
+                    // 获取当前模型状态并使用排除自身的方法
+                    $modelStatus = Status::from($model->getStatus());
+                    if ($serviceProviderCategory == ServiceProviderCategory::VLM) {
+                        $this->serviceProviderModelsRepository->syncUpdateModelsStatusExcludeSelfByVLM($model->getModelVersion(), $modelStatus);
+                    } elseif ($serviceProviderCategory == ServiceProviderCategory::LLM) {
+                        $this->serviceProviderModelsRepository->syncUpdateModelsStatusExcludeSelfByLLM($model->getId(), $modelStatus);
+                    }
+                }
+            }
+        }
+
         return $serviceProviderConfigEntity;
     }
 
     /**
      * 修改可用的模型状态
      */
-    public function updateModelStatus(string $modelId, Status $status, string $organizationCode)
+    public function updateModelStatus(string $modelId, Status $status, string $organizationCode): void
     {
+        // 根据模型id获取服务商
+        $serviceProviderModelsEntity = $this->getModelById($modelId);
+        $serviceProviderConfigId = $serviceProviderModelsEntity->getServiceProviderConfigId();
+        $serviceProviderConfigDetail = $this->getServiceProviderConfigDetail((string) $serviceProviderConfigId, $organizationCode);
+        $serviceProviderDTO = $this->getServiceProviderById((int) $serviceProviderConfigDetail->getServiceProviderId());
+        if ($this->isOfficial($organizationCode)) {
+            // 如果服务商状态为false，则其他模型为false
+            $newStatus = $status;
+            if ($serviceProviderConfigDetail->getStatus() === Status::DISABLE->value) {
+                $newStatus = Status::DISABLE;
+            }
+            $serviceProviderCategory = ServiceProviderCategory::from($serviceProviderDTO->getCategory());
+            if ($serviceProviderCategory === ServiceProviderCategory::VLM) {
+                $this->syncUpdateModelsStatusByVLM($serviceProviderModelsEntity->getModelVersion(), $newStatus);
+            } elseif ($serviceProviderCategory === ServiceProviderCategory::LLM) {
+                $this->syncUpdateModelsStatusByLLM((int) $serviceProviderModelsEntity->getId(), $newStatus);
+            }
+        }
         $this->serviceProviderModelsRepository->updateModelStatus($modelId, $organizationCode, $status);
     }
 
     /**
-     * 刷新模型列表
-     * 根据当前的厂商进行.
-     */
-    public function refreshModels(string $serviceProviderConfigId, string $organizationCode): array
-    {
-        $serviceProviderConfigDetail = $this->getServiceProviderConfigDetail($serviceProviderConfigId, $organizationCode);
-        if (! $serviceProviderConfigDetail->getIsModelsEnable()) {
-            ExceptionBuilder::throw(ServiceProviderErrorCode::SystemError, __('service_provider.provider_no_model_list'));
-        }
-
-        return [];
-    }
-
-    /**
-     * 刷新模型列表的接口，因需求的调整，该功能废弃，但不排除未来要用到，这个接口破坏性大，防止调用，注释掉代码
-     */
-    #[Deprecated]
-    public function refreshModelsForAdmin(string $serviceProviderId)
-    {
-        //        $serviceProviderEntity = $this->serviceProviderRepository->getById((int)$serviceProviderId);
-        //        if (!$serviceProviderEntity) {
-        //            ExceptionBuilder::throw(ServiceProviderErrorCode::ServiceProviderNotFound);
-        //        }
-        //        $serviceProviderCode = ServiceProviderCode::from($serviceProviderEntity->getProviderCode());
-        //        $models = ServiceProviderFactory::get($serviceProviderCode)->getModels($serviceProviderEntity);
-        //
-        //        // 对比 modelVersion 转为map
-        //        $modelVersionMap = [];
-        //        foreach ($models as $model) {
-        //            $modelVersionMap[$model->getModelVersion()] = $model;
-        //        }
-        //
-        //        // 获取该服务商下的所有模型
-        //        $serviceProviderModelsEntities = $this->serviceProviderModelsRepository->getByProviderId($serviceProviderEntity->getId());
-        //
-        //        $serviceProviderModelsMap = [];
-        //        foreach ($serviceProviderModelsEntities as $serviceProviderModelsEntity) {
-        //            $serviceProviderModelsMap[$serviceProviderModelsEntity->getModelVersion()] = $serviceProviderModelsEntity;
-        //        }
-        //
-        //        // 新增模型： $models 中有， $serviceProviderModelsEntities 没有的
-        //        $addModels = [];
-        //        foreach ($models as $model) {
-        //            if (!isset($serviceProviderModelsMap[$model->getModelVersion()])) {
-        //                $addModels[] = $model;
-        //            }
-        //        }
-        //
-        //        // 删除模型： $models 中没有，$serviceProviderModelsEntities 中有的
-        //        $deleteModels = [];
-        //        foreach ($serviceProviderModelsEntities as $serviceProviderModelsEntity) {
-        //            if (!isset($modelVersionMap[$serviceProviderModelsEntity->getModelVersion()])) {
-        //                $deleteModels[] = $serviceProviderModelsEntity;
-        //            }
-        //        }
-        //        // 新增模型
-        //        $this->addModelsToServiceProvider($addModels, (int)$serviceProviderId);
-        //        // 删除模型
-        //        $this->deleteModelsToServiceProvider($deleteModels);
-    }
-
-    /**
-     * 是否激活并且返回服务商以及模型信息.
-     */
-    public function isActivatedAndReturnServiceProviderAndModelConfig(string $modelId): ServiceProviderResponse
-    {
-        $serviceProviderModelStatusEntity = $this->serviceProviderModelsRepository->getById($modelId);
-        if (Status::from($serviceProviderModelStatusEntity->getStatus()) === Status::DISABLE) {
-            ExceptionBuilder::throw(ServiceProviderErrorCode::ModelNotActive);
-        }
-
-        $serviceProviderConfigId = $serviceProviderModelStatusEntity->getServiceProviderConfigId();
-        $serviceProviderConfigEntity = $this->serviceProviderConfigRepository->getByIdAndOrganizationCode((string) $serviceProviderConfigId, $serviceProviderModelStatusEntity->getOrganizationCode());
-        if (Status::from($serviceProviderConfigEntity->getStatus()) === Status::DISABLE) {
-            ExceptionBuilder::throw(ServiceProviderErrorCode::ServiceProviderNotActive);
-        }
-
-        // 查询模型
-        $modelEntity = $this->serviceProviderModelsRepository->getByIds([$serviceProviderModelStatusEntity->getModelId()])[0];
-
-        $serviceProviderId = $serviceProviderConfigEntity->getServiceProviderId();
-        $serviceProviderEntity = $this->serviceProviderRepository->getById($serviceProviderId);
-        $serviceProviderResponse = new ServiceProviderResponse();
-        $serviceProviderResponse->setModelConfig($modelEntity->getConfig());
-        $serviceProviderResponse->setServiceProviderConfig($serviceProviderConfigEntity->getConfig());
-        $serviceProviderResponse->setServiceProviderType(ServiceProviderType::from($serviceProviderEntity->getProviderType()));
-        return $serviceProviderResponse;
-    }
-
-    /**
-     * 根据组织和厂商类型获取模型列表.
+     * 根据组织和服务商类型获取模型列表.
      * @param string $organizationCode 组织编码
-     * @param ServiceProviderCategory $serviceProviderCategory 厂商类型
+     * @param ?ServiceProviderCategory $serviceProviderCategory 服务商类型
      * @return ServiceProviderConfigDTO[]
      */
     public function getActiveModelsByOrganizationCode(string $organizationCode, ?ServiceProviderCategory $serviceProviderCategory = null): array
     {
-        // 1. 获取组织下的所有厂商配置
+        // 1. 获取组织下的所有服务商配置
         $serviceProviderConfigs = $this->serviceProviderConfigRepository->getByOrganizationCodeAndActive($organizationCode);
         if (empty($serviceProviderConfigs)) {
             return [];
         }
 
-        // 2. 获取对应的厂商信息
+        // 2. 获取对应的服务商信息
         $serviceProviderIds = array_column($serviceProviderConfigs, 'service_provider_id');
         $serviceProviderEntities = $this->serviceProviderRepository->getByIds($serviceProviderIds);
 
-        // 按类型过滤厂商
+        // 按类型过滤服务商
         $serviceProviderMap = [];
         foreach ($serviceProviderEntities as $serviceProviderEntity) {
             if ($serviceProviderCategory === null || $serviceProviderEntity->getCategory() === $serviceProviderCategory->value) {
@@ -506,21 +421,16 @@ class ServiceProviderDomainService
         return $result;
     }
 
-    public function deleteModel(string $modelId, string $organizationCode)
+    /**
+     * @throws Exception
+     */
+    public function deleteModel(string $modelId, string $organizationCode): void
     {
-        // 如果是 llm 则只删除自己的服务商下面的模型
-        // 如果是 vlm 则所有服务商的模型都要删除 （因为该模型的添加是同步添加，删除也要同步删除）
         $serviceProviderModelsEntity = $this->serviceProviderModelsRepository->getById($modelId);
-        $serviceProviderConfigEntity = $this->serviceProviderConfigRepository->getByIdAndOrganizationCode((string) $serviceProviderModelsEntity->getServiceProviderConfigId(), $serviceProviderModelsEntity->getOrganizationCode());
-        $serviceProviderEntity = $this->serviceProviderRepository->getById($serviceProviderConfigEntity->getServiceProviderId());
-        if (ServiceProviderCategory::from($serviceProviderEntity->getCategory()) === ServiceProviderCategory::VLM || ServiceProviderType::from($serviceProviderEntity->getProviderType()) === ServiceProviderType::OFFICIAL) {
-            // 通过 service_provider_config_ids 和 model_version 进行删除
-            $serviceProviderConfigEntities = $this->serviceProviderConfigRepository->getsByServiceProviderId($serviceProviderEntity->getId());
-            $serviceProviderConfigIds = array_column($serviceProviderConfigEntities, 'id');
-            $this->serviceProviderModelsRepository->deleteByServiceProviderConfigIdsAndModelVersion($serviceProviderConfigIds, $serviceProviderModelsEntity->getModelVersion());
-        } else {
-            $this->serviceProviderModelsRepository->deleteByModelIdAndOrganizationCode($modelId, $organizationCode);
+        if ($this->isOfficial($organizationCode)) {
+            $this->syncDeleteModelsToOtherServiceProvider([$serviceProviderModelsEntity->getId()]);
         }
+        $this->serviceProviderModelsRepository->deleteByModelIdAndOrganizationCode($modelId, $organizationCode);
     }
 
     /**
@@ -537,58 +447,77 @@ class ServiceProviderDomainService
      * 初始化组织的服务商信息
      * 当新加入一个组织后，初始化该组织的服务商和模型配置.
      * @return ServiceProviderConfigDTO[] 初始化后的服务商配置列表
+     * @throws LockException
      */
     public function initOrganizationServiceProviders(string $organizationCode, ?ServiceProviderCategory $serviceProviderCategory = null): array
     {
-        $result = [];
-        Db::beginTransaction();
-        try {
-            // 获取所有服务商（如果指定了类别，则只获取该类别的服务商）
-            $serviceProviders = $this->serviceProviderRepository->getAllByCategory(1, 1000, $serviceProviderCategory);
-            if (empty($serviceProviders)) {
-                return [];
-            }
+        $lockKey = 'service_provider:init:' . $organizationCode;
+        $userId = uniqid('service_provider'); // 使用唯一ID作为锁的拥有者
 
-            // 收集需要同步模型的服务商（官方和VLM类型）
-            $officialAndVlmProviders = [];
-            $serviceProviderMap = [];
-
-            foreach ($serviceProviders as $serviceProvider) {
-                $serviceProviderMap[$serviceProvider->getId()] = $serviceProvider;
-                // 收集需要同步模型的服务商（官方和VLM类型）
-                $isOfficial = ServiceProviderType::from($serviceProvider->getProviderType()) === ServiceProviderType::OFFICIAL;
-                if ($isOfficial || ServiceProviderCategory::from($serviceProvider->getCategory()) === ServiceProviderCategory::VLM) {
-                    $officialAndVlmProviders[] = $serviceProvider->getId();
-                }
-            }
-
-            // 批量创建服务商配置
-            $configEntities = $this->batchCreateServiceProviderConfigs($serviceProviders, $organizationCode);
-
-            // 如果有官方或VLM服务商，批量同步它们的模型
-            if (! empty($officialAndVlmProviders)) {
-                $this->batchSyncServiceProviderModels($officialAndVlmProviders, $organizationCode);
-            }
-
-            // 构建返回结果
-            foreach ($configEntities as $configEntity) {
-                $serviceProviderId = $configEntity->getServiceProviderId();
-                if (isset($serviceProviderMap[$serviceProviderId])) {
-                    $result[] = $this->buildServiceProviderConfigDTO(
-                        $serviceProviderMap[$serviceProviderId],
-                        $configEntity
-                    );
-                }
-            }
-
-            Db::commit();
-        } catch (Exception $e) {
-            $this->logger->error('初始化组织服务商失败: ' . $e->getMessage());
-            Db::rollBack();
-            ExceptionBuilder::throw(ServiceProviderErrorCode::SystemError, __('service_provider.init_organization_providers_failed'));
+        // 尝试获取锁，超时时间设置为60秒
+        if (! $this->redisLocker->mutexLock($lockKey, $userId, 60)) {
+            $this->logger->warning(sprintf('获取 initOrganizationServiceProviders 锁失败, organizationCode: %s', $organizationCode));
+            // 获取锁失败，返回空结果，避免并发操作
+            return [];
         }
 
-        return $result;
+        try {
+            $this->logger->info(sprintf('获取 initOrganizationServiceProviders 锁成功, 开始执行初始化, organizationCode: %s', $organizationCode));
+
+            $result = [];
+            Db::beginTransaction();
+            try {
+                // 获取所有服务商（如果指定了类别，则只获取该类别的服务商）
+                $serviceProviders = $this->serviceProviderRepository->getAllByCategory(1, 1000, $serviceProviderCategory);
+                if (empty($serviceProviders)) {
+                    return [];
+                }
+
+                // 收集需要同步模型的服务商（官方和VLM类型）
+                $officialAndVlmProviders = [];
+                $serviceProviderMap = [];
+
+                foreach ($serviceProviders as $serviceProvider) {
+                    $serviceProviderMap[$serviceProvider->getId()] = $serviceProvider;
+                    // 收集需要同步模型的服务商（官方和VLM类型）
+                    $isOfficial = ServiceProviderType::from($serviceProvider->getProviderType()) === ServiceProviderType::OFFICIAL;
+                    if ($isOfficial || ServiceProviderCategory::from($serviceProvider->getCategory()) === ServiceProviderCategory::VLM) {
+                        $officialAndVlmProviders[] = $serviceProvider->getId();
+                    }
+                }
+
+                // 批量创建服务商配置
+                $configEntities = $this->batchCreateServiceProviderConfigs($serviceProviders, $organizationCode);
+
+                // 如果有官方或VLM服务商，批量同步它们的模型
+                if (! empty($officialAndVlmProviders)) {
+                    $this->batchSyncServiceProviderModels($officialAndVlmProviders, $organizationCode);
+                }
+
+                // 构建返回结果
+                foreach ($configEntities as $configEntity) {
+                    $serviceProviderId = $configEntity->getServiceProviderId();
+                    if (isset($serviceProviderMap[$serviceProviderId])) {
+                        $result[] = $this->buildServiceProviderConfigDTO(
+                            $serviceProviderMap[$serviceProviderId],
+                            $configEntity
+                        );
+                    }
+                }
+
+                Db::commit();
+            } catch (Exception $e) {
+                $this->logger->error('初始化组织服务商失败: ' . $e->getMessage());
+                Db::rollBack();
+                ExceptionBuilder::throw(ServiceProviderErrorCode::SystemError, __('service_provider.init_organization_providers_failed'));
+            }
+
+            return $result;
+        } finally {
+            // 确保锁被释放
+            $this->redisLocker->release($lockKey, $userId);
+            $this->logger->info(sprintf('释放 initOrganizationServiceProviders 锁, organizationCode: %s', $organizationCode));
+        }
     }
 
     /**
@@ -671,8 +600,9 @@ class ServiceProviderDomainService
 
     /**
      * 连通性测试.
+     * @throws Exception
      */
-    public function connectivityTest(string $serviceProviderConfigId, string $modelVersion, string $organizationCode)
+    public function connectivityTest(string $serviceProviderConfigId, string $modelVersion, string $organizationCode): Provider\ConnectResponse
     {
         $serviceProviderConfigDTO = $this->getServiceProviderConfigDetail($serviceProviderConfigId, $organizationCode);
         $serviceProviderConfig = $serviceProviderConfigDTO->getConfig();
@@ -683,29 +613,7 @@ class ServiceProviderDomainService
         return $provider->connectivityTestByModel($serviceProviderConfig, $modelVersion);
     }
 
-    public function syncModelsToServiceProvider(ServiceProviderModelsEntity $serviceProviderModelsEntity)
-    {
-        // 验证模型实体
-        $serviceProviderModelsEntity->valid();
-
-        // 获取服务提供商配置
-        $serviceProviderConfigEntities = $this->serviceProviderConfigRepository->getsByServiceProviderId($serviceProviderModelsEntity->getServiceProviderConfigId());
-
-        if (empty($serviceProviderConfigEntities)) {
-            ExceptionBuilder::throw(ServiceProviderErrorCode::ServiceProviderNotFound);
-        }
-
-        $modelArray = $serviceProviderModelsEntity->toArray();
-        // 为每个组织添加模型
-        foreach ($serviceProviderConfigEntities as $serviceProviderConfigEntity) {
-            $organizationCode = $serviceProviderConfigEntity->getOrganizationCode();
-
-            $modelEntity = new ServiceProviderModelsEntity($modelArray);
-            $modelEntity->setOrganizationCode($organizationCode);
-        }
-    }
-
-    public function addOriginalModel(string $modelId)
+    public function addOriginalModel(string $modelId): void
     {
         if ($this->serviceProviderOriginalModelsRepository->exist($modelId)) {
             ExceptionBuilder::throw(ServiceProviderErrorCode::InvalidParameter, __('service_provider.original_model_already_exists'));
@@ -716,7 +624,7 @@ class ServiceProviderDomainService
         $this->serviceProviderOriginalModelsRepository->insert($serviceProviderOriginalModelsEntity);
     }
 
-    public function deleteOriginalModel(string $modelId)
+    public function deleteOriginalModel(string $modelId): void
     {
         $this->serviceProviderOriginalModelsRepository->deleteByModelId($modelId);
     }
@@ -728,7 +636,8 @@ class ServiceProviderDomainService
      * @param string $modelVersion 模型版本
      * @param string $modelId 模型ID
      * @param string $organizationCode 组织编码
-     * @return ServiceProviderResponse 服务商配置响应
+     * @return ?ServiceProviderResponse 服务商配置响应
+     * @throws Exception
      */
     public function getServiceProviderConfig(
         string $modelVersion,
@@ -754,24 +663,6 @@ class ServiceProviderDomainService
                 // 从激活的模型中查找可用的服务商配置
                 return $this->findAvailableServiceProviderFromModels($models, $organizationCode);
             }
-
-            // 如果是预定义的模型类型，返回官方服务商配置
-            $allImageModels = array_merge(
-                ImageGenerateModelType::getMidjourneyModes(),
-                ImageGenerateModelType::getFluxModes(),
-                ImageGenerateModelType::getVolcengineModes(),
-            );
-
-            if (in_array($modelVersion, $allImageModels)) {
-                $this->logger->info('使用预定义模型，返回官方服务商配置', [
-                    'modelVersion' => $modelVersion,
-                    'organizationCode' => $organizationCode,
-                ]);
-                $serviceProviderResponse = new ServiceProviderResponse();
-                $serviceProviderResponse->setServiceProviderType(ServiceProviderType::OFFICIAL);
-                return $serviceProviderResponse;
-            }
-            return null;
         }
 
         // 3. 如果都没找到，抛出异常
@@ -808,10 +699,6 @@ class ServiceProviderDomainService
         // 4. 获取服务商信息
         $serviceProviderId = $serviceProviderConfigEntity->getServiceProviderId();
         $serviceProviderEntity = $this->serviceProviderRepository->getById($serviceProviderId);
-        if (! $serviceProviderEntity) {
-            ExceptionBuilder::throw(ServiceProviderErrorCode::ServiceProviderNotFound);
-        }
-
         // 5. 判断服务商类型和状态
         $serviceProviderType = ServiceProviderType::from($serviceProviderEntity->getProviderType());
         if (
@@ -830,39 +717,6 @@ class ServiceProviderDomainService
         $serviceProviderResponse->setServiceProviderCode($serviceProviderEntity->getProviderCode());
 
         return $serviceProviderResponse;
-    }
-
-    /**
-     * 根据多个ID批量获取服务商配置.
-     *
-     * @param array $ids 服务商配置ID数组
-     * @return ServiceProviderConfigEntity[] 服务商配置实体数组
-     */
-    public function getServiceProviderConfigsByIds(array $ids): array
-    {
-        if (empty($ids)) {
-            return [];
-        }
-
-        return $this->serviceProviderConfigRepository->getByIds($ids);
-    }
-
-    /**
-     * 构建服务商配置DTO.
-     * @param ServiceProviderEntity $serviceProviderEntity 服务商实体
-     * @param ServiceProviderConfigEntity $serviceProviderConfigEntity 服务商配置实体
-     * @param array $model 模型列表
-     * @return ServiceProviderConfigDTO 服务商配置DTO
-     */
-    public function buildServiceProviderConfigDTO(ServiceProviderEntity $serviceProviderEntity, ServiceProviderConfigEntity $serviceProviderConfigEntity, array $model = []): ServiceProviderConfigDTO
-    {
-        $data = array_merge($serviceProviderConfigEntity->toArray(), $serviceProviderEntity->toArray());
-
-        $serviceProviderConfigDTO = new ServiceProviderConfigDTO($data);
-        $serviceProviderConfigDTO->setModels($model);
-        $serviceProviderConfigDTO->setId($serviceProviderConfigEntity->getId());
-        $serviceProviderConfigDTO->setStatus($serviceProviderConfigEntity->getStatus());
-        return $serviceProviderConfigDTO;
     }
 
     public function getModelByIdAndOrganizationCode(string $modelId, string $organizationCode): ServiceProviderModelsEntity
@@ -927,7 +781,7 @@ class ServiceProviderDomainService
         return $activeModels;
     }
 
-    public function deleteServiceProviderForAdmin(string $serviceProviderConfigId, string $organizationCode)
+    public function deleteServiceProviderForAdmin(string $serviceProviderConfigId, string $organizationCode): void
     {
         Db::beginTransaction();
         try {
@@ -985,10 +839,6 @@ class ServiceProviderDomainService
         $serviceProviderId = (int) $serviceProviderConfigDTO->getServiceProviderId();
         // 获取服务商
         $serviceProviderEntity = $this->serviceProviderRepository->getById($serviceProviderId);
-        if (! $serviceProviderEntity) {
-            ExceptionBuilder::throw(ServiceProviderErrorCode::ServiceProviderNotFound);
-        }
-
         // 如果是官方服务商则不允许添加
         $serviceProviderType = ServiceProviderType::from($serviceProviderEntity->getProviderType());
         if ($serviceProviderType === ServiceProviderType::OFFICIAL) {
@@ -1026,10 +876,6 @@ class ServiceProviderDomainService
 
         // 查询服务商
         $serviceProviderEntity = $this->serviceProviderRepository->getById($serviceProviderConfigEntity->getServiceProviderId());
-        if (! $serviceProviderEntity) {
-            ExceptionBuilder::throw(ServiceProviderErrorCode::ServiceProviderNotFound);
-        }
-
         // 只有大模型的服务商并且是非官方的服务商才能删除
         $serviceProviderType = ServiceProviderType::from($serviceProviderEntity->getProviderType());
         if ($serviceProviderType === ServiceProviderType::OFFICIAL || ServiceProviderCategory::from($serviceProviderEntity->getCategory()) === ServiceProviderCategory::VLM) {
@@ -1042,8 +888,16 @@ class ServiceProviderDomainService
             // 删除服务商配置
             $this->serviceProviderConfigRepository->deleteById($serviceProviderConfigId);
 
-            // 删除服务商下所有的模型
-            $this->serviceProviderModelsRepository->deleteByServiceProviderConfigId($serviceProviderConfigId, $organizationCode);
+            // 如果是官方组织则要把所有模型删除
+            if ($this->isOfficial($organizationCode)) {
+                // 获取服务商下的所有模型
+                $models = $this->serviceProviderModelsRepository->getModelsByServiceProviderId((int) $serviceProviderConfigId);
+                $modelParentIds = array_column($models, 'model_parent_id');
+                $this->syncDeleteModelsToOtherServiceProvider($modelParentIds);
+            } else {
+                // 删除服务商下所有的模型
+                $this->serviceProviderModelsRepository->deleteByServiceProviderConfigId($serviceProviderConfigId, $organizationCode);
+            }
         } catch (Exception $exception) {
             Db::rollBack();
             $this->logger->error('删除服务商失败: ' . $exception->getMessage());
@@ -1087,7 +941,7 @@ class ServiceProviderDomainService
         $models = $this->serviceProviderModelsRepository->getModelsByVersionIdAndOrganization($modelId, $organizationCode);
 
         if (empty($models)) {
-            $this->logger->warning('模型未找到' . $modelId);
+            $this->logger->warning('美图模型未找到' . $modelId);
             // 如果没有找到模型，抛出异常
             ExceptionBuilder::throw(ServiceProviderErrorCode::ModelNotFound);
         }
@@ -1155,6 +1009,7 @@ class ServiceProviderDomainService
 
     /**
      * 根据模型类型获取启用模型(优先取组织的).
+     * @throws Exception
      */
     public function findSelectedActiveProviderByType(string $organizationCode, ModelType $modelType): ?ServiceProviderResponse
     {
@@ -1165,6 +1020,95 @@ class ServiceProviderDomainService
         // 再获取官方的
         $model = $this->serviceProviderModelsRepository->findActiveModelByType($modelType, env('OFFICE_ORGANIZATION', ''));
         return $model ? $this->getServiceProviderConfig($model->getModelVersion(), (string) $model->getId(), $organizationCode, false) : null;
+    }
+
+    /**
+     * 根据可见组织过滤模型.
+     *
+     * @param $serviceProviderModels ServiceProviderModelsDTO[] 服务提供商模型数组
+     * @param string $currentOrganizationCode 当前组织代码
+     * @return array 过滤后的模型数组
+     */
+    public function filterModelsByVisibleOrganizations(array $serviceProviderModels, string $currentOrganizationCode): array
+    {
+        // 如果当前是官方组织，直接返回所有模型，无需过滤
+        if ($this->isOfficial($currentOrganizationCode)) {
+            return $serviceProviderModels;
+        }
+
+        // 非官方组织需要按可见性过滤
+        return array_filter($serviceProviderModels, function ($model) use ($currentOrganizationCode) {
+            // 获取模型的可见组织列表
+            $visibleOrganizations = $model->getVisibleOrganizations();
+
+            // 如果可见组织为空，则所有组织可见
+            if (empty($visibleOrganizations)) {
+                return true;
+            }
+
+            // 如果可见组织不为空，检查当前组织是否在可见组织列表中
+            return in_array($currentOrganizationCode, $visibleOrganizations);
+        });
+    }
+
+    public function maskString(string $value): string
+    {
+        if (empty($value)) {
+            return '';
+        }
+        $length = mb_strlen($value);
+        if ($length <= 6) {
+            return str_repeat('*', $length);
+        }
+
+        // 保留前三位和后三位，中间用原字符数量相同的星号代替
+        $prefix = mb_substr($value, 0, 3);
+        $suffix = mb_substr($value, -3, 3);
+        $middleLength = $length - 6; // 减去前三位和后三位
+        $maskedMiddle = str_repeat('*', $middleLength);
+        return $prefix . $maskedMiddle . $suffix;
+    }
+
+    private function syncUpdateModelsStatusByVLM(string $getModelVersion, Status $status): void
+    {
+        $this->serviceProviderModelsRepository->syncUpdateModelsStatusByVLM($getModelVersion, $status);
+    }
+
+    private function syncUpdateModelsStatusByLLM(int $modelId, Status $status): void
+    {
+        $this->serviceProviderModelsRepository->syncUpdateModelsStatusByLLM($modelId, $status);
+    }
+
+    private function syncDeleteModelsToOtherServiceProvider(array $modelParentId): void
+    {
+        $this->serviceProviderModelsRepository->deleteByModelParentIdForOffice($modelParentId);
+    }
+
+    /**
+     * @param $models ServiceProviderModelsDTO[]
+     */
+    private function buildServiceProviderConfigDTO(ServiceProviderEntity $serviceProviderEntity, ServiceProviderConfigEntity $serviceProviderConfigEntity, array $models = []): ServiceProviderConfigDTO
+    {
+        $data = array_merge($serviceProviderConfigEntity->toArray(), $serviceProviderEntity->toArray());
+        $serviceProviderConfigDTO = new ServiceProviderConfigDTO($data);
+
+        $models = $this->filterModelsByVisibleOrganizations($models, $serviceProviderConfigEntity->getOrganizationCode());
+
+        // 如果是大模型服务商并且是官方的，过滤掉禁用的模型
+        // 如果是大模型服务商并且是官方的，过滤掉禁用的模型
+        if (ServiceProviderType::from($serviceProviderEntity->getProviderType()) === ServiceProviderType::OFFICIAL) {
+            $filteredModels = array_filter($models, function ($model) {
+                return $model->getStatus() === Status::ACTIVE->value;
+            });
+            $serviceProviderConfigDTO->setModels(array_values($filteredModels));
+        } else {
+            $serviceProviderConfigDTO->setModels($models);
+        }
+
+        $serviceProviderConfigDTO->setId($serviceProviderConfigEntity->getId());
+        $serviceProviderConfigDTO->setStatus($serviceProviderConfigEntity->getStatus());
+        $serviceProviderConfigDTO->setTranslate($serviceProviderConfigEntity->getTranslate());
+        return $serviceProviderConfigDTO;
     }
 
     /**
@@ -1227,7 +1171,7 @@ class ServiceProviderDomainService
 
             // 获取服务商信息
             $serviceProviderId = $serviceProviderConfigEntity->getServiceProviderId();
-            $serviceProviderEntity = $this->serviceProviderRepository->getById($serviceProviderId);
+            $serviceProviderEntity = $this->serviceProviderRepository->findById($serviceProviderId);
 
             if (! $serviceProviderEntity) {
                 continue;
@@ -1316,14 +1260,97 @@ class ServiceProviderDomainService
             ExceptionBuilder::throw(ServiceProviderErrorCode::ServiceProviderNotFound);
         }
         $modelArray = $serviceProviderModelsEntity->toArray();
-        $insertData = [];
+        $insertNonOfficeData = [];
+        // 服务商下面添加该模型
         foreach ($serviceProviderConfigEntities as $serviceProviderConfigEntity) {
             $providerModelsEntity = new ServiceProviderModelsEntity($modelArray);
             $providerModelsEntity->setOrganizationCode($serviceProviderConfigEntity->getOrganizationCode());
             $providerModelsEntity->setServiceProviderConfigId($serviceProviderConfigEntity->getId());
-            $insertData[] = $providerModelsEntity;
+            $providerModelsEntity->setIsOffice(false);
+            $insertNonOfficeData[] = $providerModelsEntity;
         }
 
+        // magic 服务商下面也需要添加该模型
+        $officeServiceProviderId = $this->serviceProviderRepository->getOfficial(ServiceProviderCategory::VLM)->getId();
+        $serviceProviderConfigEntities = $this->serviceProviderConfigRepository->getsByServiceProviderId(
+            $officeServiceProviderId
+        );
+        $insertOfficeData = [];
+        foreach ($serviceProviderConfigEntities as $serviceProviderConfigEntity) {
+            $providerModelsEntity = new ServiceProviderModelsEntity($modelArray);
+            $providerModelsEntity->setOrganizationCode($serviceProviderConfigEntity->getOrganizationCode());
+            $providerModelsEntity->setServiceProviderConfigId($serviceProviderConfigEntity->getId());
+            $providerModelsEntity->setIsOffice(true);
+            $insertOfficeData[] = $providerModelsEntity;
+        }
+        $insertData = array_merge($insertOfficeData, $insertNonOfficeData);
         $this->serviceProviderModelsRepository->batchInsert($insertData);
+    }
+
+    private function syncSaveModelsToOtherServiceProvider(ServiceProviderModelsEntity $serviceProviderModelsEntity): void
+    {
+        $isAdd = ! $serviceProviderModelsEntity->getId();
+
+        if ($isAdd) {
+            $serviceProviderCategory = ServiceProviderCategory::from($serviceProviderModelsEntity->getCategory());
+            // 官方组织添加模型
+            $this->serviceProviderModelsRepository->saveModels($serviceProviderModelsEntity);
+            // 获取官方服务商，并且还要筛选自己，因为自己不需要添加
+            $serviceProviderEntity = $this->serviceProviderRepository->getOffice($serviceProviderCategory, ServiceProviderType::OFFICIAL);
+            // 获取服务商配置
+            $serviceProviderConfigEntities = $this->serviceProviderConfigRepository->getsByServiceProviderId($serviceProviderEntity->getId());
+
+            // 过滤掉官方组织的配置
+            $serviceProviderConfigEntities = array_filter($serviceProviderConfigEntities, function ($configEntity) {
+                return ! $this->isOfficial($configEntity->getOrganizationCode());
+            });
+
+            $modelParentId = $serviceProviderModelsEntity->getId();
+            $modelEntities = [];
+            // 处理官方模型
+            foreach ($serviceProviderConfigEntities as $serviceProviderConfigEntity) {
+                $modelEntity = clone $serviceProviderModelsEntity;
+                $modelEntity->setServiceProviderConfigId($serviceProviderConfigEntity->getId());
+                $modelEntity->setOrganizationCode($serviceProviderConfigEntity->getOrganizationCode());
+                $modelEntity->setModelParentId($modelParentId);
+                $modelEntity->setIsOffice(true);
+                $modelEntities[] = $modelEntity;
+            }
+
+            // 如果是文生图，还要额外处理其他服务商
+            if ($serviceProviderCategory === ServiceProviderCategory::VLM) {
+                $serviceProviderId = $this->serviceProviderConfigRepository->getById($serviceProviderModelsEntity->getServiceProviderConfigId())->getServiceProviderId();
+                $serviceProviderConfigEntities = $this->serviceProviderConfigRepository->getsByServiceProviderId($serviceProviderId);
+                foreach ($serviceProviderConfigEntities as $serviceProviderConfigEntity) {
+                    // 跳过当前模型，避免重复添加
+                    if ($serviceProviderConfigEntity->getId() === $serviceProviderModelsEntity->getServiceProviderConfigId()) {
+                        continue;
+                    }
+                    $modelEntity = clone $serviceProviderModelsEntity;
+                    $modelEntity->setServiceProviderConfigId($serviceProviderConfigEntity->getId());
+                    $modelEntity->setOrganizationCode($serviceProviderConfigEntity->getOrganizationCode());
+                    $modelEntity->setModelParentId($modelParentId);
+                    $modelEntity->setIsOffice(false);
+                    $modelEntity->setStatus(Status::DISABLE->value);
+                    $modelEntities[] = $modelEntity;
+                }
+            }
+
+            $this->serviceProviderModelsRepository->batchSaveModels($modelEntities);
+        } else {
+            $modelParentId = $serviceProviderModelsEntity->getId();
+            // 修改官方的模型
+            $modelArray = $serviceProviderModelsEntity->toArray();
+            $this->serviceProviderModelsRepository->batchUpdateModelsAndOffice($modelParentId, $modelArray, true);
+            // 修改客户的模型信息
+            unset($modelArray['status']);
+            $this->serviceProviderModelsRepository->batchUpdateModelsAndOffice($modelParentId, $modelArray, false);
+        }
+    }
+
+    private function isOfficial(string $organizationCode): bool
+    {
+        $officeOrganization = config('service_provider.office_organization');
+        return $organizationCode === $officeOrganization;
     }
 }

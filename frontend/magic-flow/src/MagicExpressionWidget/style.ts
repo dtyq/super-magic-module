@@ -108,6 +108,7 @@ export const InputExpressionStyle = styled.div<{
     }
 	.editable-container {
 		width: calc(100% - 70px - 6px);
+        font-size: 14px;
         flex: 1;
 		position: relative;
 		display: flex;
@@ -158,6 +159,7 @@ export const InputExpressionStyle = styled.div<{
             text-wrap: ${p => p.mode === ExpressionMode.TextArea ? 'wrap' : 'nowrap'};
 			left: 10px;
             top: 4px;
+            line-height: 22px;
 			pointer-events: none;
 		}
 	}

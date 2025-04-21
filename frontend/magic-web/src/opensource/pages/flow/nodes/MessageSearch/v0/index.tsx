@@ -1,7 +1,7 @@
 import { Form, DatePicker } from "antd"
 import { useMemoizedFn } from "ahooks"
 import MagicInput from "@dtyq/magic-flow/common/BaseUI/Input"
-import { useFlow } from "@dtyq/magic-flow/MagicFlow/context/FlowContext/useFlow"
+import { useNodeConfigActions } from "@dtyq/magic-flow/MagicFlow/context/FlowContext/useFlow"
 import type { Moment } from "moment"
 import moment from "moment"
 import { set, get } from "lodash-es"
@@ -18,7 +18,7 @@ export default function MessageSearchV0() {
 	const { t } = useTranslation()
 	const [form] = Form.useForm()
 
-	const { updateNodeConfig } = useFlow()
+	const { updateNodeConfig } = useNodeConfigActions()
 
 	const { currentNode } = useCurrentNode()
 

@@ -2,14 +2,13 @@
  * 处理流程的鼠标事件
  */
 
-import { message } from "antd"
 import { useMemoizedFn, useUpdateEffect } from "ahooks"
-import { useFlow } from "@/MagicFlow/context/FlowContext/useFlow"
+import { useFlowEdges, useFlowNodes, useFlowUI, useNodeConfig, useNodeConfigActions } from "@/MagicFlow/context/FlowContext/useFlow"
 import { useNodes } from "@/MagicFlow/context/NodesContext/useNodes"
 import { NodeSchema } from "@/MagicFlow/register/node"
 import { generateSnowFlake } from "@/common/utils/snowflake"
 import { useEffect, useRef, useState } from "react"
-import { Edge, Node, NodeDragHandler, Position, XYPosition, getNodesBounds, getRectOfNodes, useReactFlow, useStoreApi, useUpdateNodeInternals } from "reactflow"
+import { Edge, Node, NodeDragHandler, XYPosition, useReactFlow, useStoreApi, useUpdateNodeInternals } from "reactflow"
 import _ from "lodash"
 import { useExternal } from "@/MagicFlow/context/ExternalContext/useExternal"
 import { FlowDesignerEvents, renderSkeletonRatio } from "@/MagicFlow/constants"
@@ -42,29 +41,32 @@ export enum AddPosition {
 export default function useFlowEvents ({ resetLastLayoutData, resetCanLayout, currentZoom, setShowParamsComp }: UseFlowEventProps) {
 	const store = useStoreApi()
 
-	const { 
-		edges, 
-		setEdges, 
-		onEdgesChange, 
-		onConnect, 
-		selectedEdgeId, 
-		setSelectedEdgeId, 
-		updateNextNodeIdsByDeleteEdge,
-		flow,
-		flowDesignListener,
-		nodeConfig,
+
+    const { 
 		addNode,
 		selectedNodeId,
 		setSelectedNodeId,
 		deleteNodes,
 		updateNodesPosition,
-		notifyNodeChange
-	} = useFlow()
+    } = useFlowNodes()
+
+	const { nodeConfig } = useNodeConfig()
+
+	const { notifyNodeChange } = useNodeConfigActions()
+
+	const {
+		edges,
+		setEdges,
+		setSelectedEdgeId,
+		updateNextNodeIdsByDeleteEdge,
+    } = useFlowEdges()
+
+    const {
+        flowDesignListener
+    } = useFlowUI()
 	
 	const { 
-		nodes, 
-		setNodes, 
-		onNodesChange
+		nodes
 	} = useNodes()
 
 	const updateNodeInternals = useUpdateNodeInternals();

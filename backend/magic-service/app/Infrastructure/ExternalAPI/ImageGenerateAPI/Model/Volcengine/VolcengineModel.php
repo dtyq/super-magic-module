@@ -40,16 +40,6 @@ class VolcengineModel implements ImageGenerate
 
     private VolcengineAPI $api;
 
-    // 文生图配置
-    private string $textToImageReqKey = 'high_aes_general_v21_L';
-
-    private string $textToImageModelVersion = 'general_v2.1_L';
-
-    private string $textToImageReqScheduleConf = 'general_v20_9B_pe';
-
-    // 图生图配置
-    private string $imageToImageReqKey = 'byteedit_v2.0';
-
     public function __construct()
     {
         $ak = \Hyperf\Config\config('image_generate.volcengine.ak');
@@ -73,10 +63,7 @@ class VolcengineModel implements ImageGenerate
             'negativePrompt' => $imageGenerateRequest->getNegativePrompt(),
             'width' => $imageGenerateRequest->getWidth(),
             'height' => $imageGenerateRequest->getHeight(),
-            'textToImageReqKey' => $this->textToImageReqKey,
-            'textToImageModelVersion' => $this->textToImageModelVersion,
-            'textToImageReqScheduleConf' => $this->textToImageReqScheduleConf,
-            'imageToImageReqKey' => $this->imageToImageReqKey,
+            'req_key' => $imageGenerateRequest->getModel(),
         ]);
 
         // 使用 Parallel 并行处理
@@ -89,7 +76,7 @@ class VolcengineModel implements ImageGenerate
                     // 提交任务（带重试）
                     $taskId = $this->submitAsyncTask($imageGenerateRequest, $isImageToImage);
                     // 轮询结果（带重试）
-                    $result = $this->pollTaskResult($taskId, $isImageToImage);
+                    $result = $this->pollTaskResult($taskId, $imageGenerateRequest->getModel());
 
                     return [
                         'success' => true,
@@ -198,6 +185,7 @@ class VolcengineModel implements ImageGenerate
                 'return_url' => true,
                 'prompt' => $prompt,
             ];
+            $body['req_key'] = $request->getModel();
 
             if ($isImageToImage) {
                 // 图生图配置
@@ -205,14 +193,8 @@ class VolcengineModel implements ImageGenerate
                     $this->logger->error('火山图生图：缺少源图片');
                     ExceptionBuilder::throw(ImageGenerateErrorCode::MISSING_IMAGE_DATA, 'image_generate.image_to_image_missing_source');
                 }
-
-                $body['req_key'] = $this->imageToImageReqKey;
                 $body['image_urls'] = $request->getReferenceImage();
             } else {
-                // 文生图配置
-                $body['req_key'] = $this->textToImageReqKey;
-                $body['model_version'] = $this->textToImageModelVersion;
-                $body['req_schedule_conf'] = $this->textToImageReqScheduleConf;
                 $body['width'] = $width;
                 $body['height'] = $height;
                 $body['use_sr'] = $request->getUseSr();
@@ -270,9 +252,9 @@ class VolcengineModel implements ImageGenerate
         maxAttempts: self::GENERATE_RETRY_COUNT,
         base: self::GENERATE_RETRY_TIME
     )]
-    private function pollTaskResult(string $taskId, bool $isImageToImage): array
+    private function pollTaskResult(string $taskId, string $model): array
     {
-        $reqKey = $isImageToImage ? $this->imageToImageReqKey : $this->textToImageReqKey;
+        $reqKey = $model;
         $retryCount = 0;
 
         while ($retryCount < self::MAX_RETRY_COUNT) {

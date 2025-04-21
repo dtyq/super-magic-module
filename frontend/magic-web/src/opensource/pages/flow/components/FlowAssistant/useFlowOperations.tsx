@@ -2,9 +2,10 @@ import { useRef } from "react"
 import { message as antdMessage } from "antd"
 import { useTranslation } from "react-i18next"
 import { useMemoizedFn } from "ahooks"
-import type { MagicFlow } from "@dtyq/magic-flow/MagicFlow/types/flow"
+import { MagicFlow } from "@dtyq/magic-flow/MagicFlow/types/flow"
+import { set } from "lodash-es"
+import { FlowApi } from "@/apis"
 import { getLatestNodeVersion } from "@dtyq/magic-flow/MagicFlow/utils"
-import { customNodeType } from "../../constants"
 
 interface UseFlowOperationsProps {
 	flowInteractionRef: React.MutableRefObject<any>
@@ -19,6 +20,8 @@ export default function useFlowOperations({
 }: UseFlowOperationsProps) {
 	const { t } = useTranslation()
 	const commandExecutionRef = useRef<boolean>(false)
+	// 用于存储已执行过的commandId
+	const executedCommandsRef = useRef<Set<string>>(new Set())
 
 	// 定位到节点
 	const goToNode = useMemoizedFn((nodeId: string) => {
@@ -35,33 +38,26 @@ export default function useFlowOperations({
 	})
 
 	// 添加节点
-	const addNode = useMemoizedFn((nodeData: any) => {
+	const addNode = useMemoizedFn(async (nodeType: string, nodeId: string, updateList: any[]) => {
 		if (!flowInteractionRef.current) return false
-
+		const nodeTemplate = await FlowApi.getNodeTemplate(nodeType)
+		updateList.forEach((update: any) => {
+			set(nodeTemplate, update.path, update.value)
+		})
+		nodeTemplate.id = nodeId
+		nodeTemplate.node_id = nodeId
+		nodeTemplate.node_version = getLatestNodeVersion(nodeType)
+		if (Array.isArray(nodeTemplate.meta) && nodeTemplate.meta.length === 0) {
+			nodeTemplate.meta = { position: { x: 200, y: 200 } }
+		}
 		try {
-			// 根据MagicFlowInstance的API实现添加节点
-			const node: MagicFlow.Node = {
-				id: nodeData.id || `node-${Date.now()}`,
-				node_id: nodeData.node_id || `node-${Date.now()}`,
-				node_type: nodeData.node_type || customNodeType.Start,
-				node_version: getLatestNodeVersion(nodeData.node_type),
-				params: nodeData.params || {},
-				position: nodeData.position || { x: 100, y: 100 },
-				meta: nodeData.meta || {},
-				next_nodes: nodeData.next_nodes || [],
-				step: nodeData.step || 0,
-				data: nodeData.data || {},
-				system_output: nodeData.system_output || null,
-				output: nodeData.output || null,
-			}
-
-			flowInteractionRef.current.addNode(node)
+			flowInteractionRef.current.addNode(nodeTemplate)
 
 			setTimeout(() => {
 				// 有节点，自动定位到被连线的节点
-				goToNode(node.node_id)
+				goToNode(nodeTemplate.node_id)
 			}, 200)
-			console.log("节点已添加:", nodeData)
+			console.log("节点已添加:", nodeTemplate)
 			return true
 		} catch (error) {
 			console.error("添加节点失败:", error)
@@ -71,15 +67,10 @@ export default function useFlowOperations({
 	})
 
 	// 更新节点
-	const updateNode = useMemoizedFn((nodeId: string, nodeData: any) => {
+	const updateNode = useMemoizedFn((nodeId: string, updateList: any) => {
 		if (!flowInteractionRef.current) return false
 
 		try {
-			if (nodeData.position) {
-				// 更新节点位置
-				flowInteractionRef.current.updateNodesPosition([nodeId], nodeData.position)
-			}
-
 			// 更新节点配置
 			const { nodeConfig } = flowInteractionRef.current || {}
 			const currentNode = nodeConfig[nodeId]
@@ -87,14 +78,13 @@ export default function useFlowOperations({
 			goToNode(nodeId)
 
 			if (currentNode) {
-				flowInteractionRef.current.updateNodeConfig({
-					...{ ...currentNode, ...nodeData },
-					params: { ...(currentNode.params || {}), ...(nodeData.params || {}) },
-					// 更新其他属性
+				updateList.forEach((update: any) => {
+					set(currentNode, update.path, update.value)
 				})
+				flowInteractionRef.current.updateNodeConfig({ ...currentNode })
 			}
 
-			console.log("节点已更新:", nodeId, nodeData)
+			console.log("节点已更新:", nodeId, currentNode)
 			return true
 		} catch (error) {
 			console.error("更新节点失败:", error)
@@ -199,14 +189,29 @@ export default function useFlowOperations({
 		// 避免在循环中使用await，顺序处理所有操作
 		for (let i = 0; i < operations.length; i += 1) {
 			const operation = operations[i]
+
+			// 检查是否有commandId，并且是否已执行过
+			if (operation.commandId && executedCommandsRef.current.has(operation.commandId)) {
+				console.log(
+					`操作已执行过，跳过: commandId=${operation.commandId}, type=${operation.type}`,
+				)
+				results.push({
+					type: operation.type,
+					success: true,
+					skipped: true,
+					commandId: operation.commandId,
+				})
+				continue
+			}
+
 			try {
 				let result
 				switch (operation.type) {
 					case "addNode":
-						result = addNode(operation.nodeData)
+						result = addNode(operation.nodeType, operation.nodeId, operation.updateList)
 						break
 					case "updateNode":
-						result = updateNode(operation.nodeId, operation.nodeData)
+						result = updateNode(operation.nodeId, operation.updateList)
 						break
 					case "deleteNode":
 						result = deleteNode(operation.nodeId)
@@ -234,9 +239,16 @@ export default function useFlowOperations({
 						console.warn("Unknown operation type:", operation.type)
 						result = false
 				}
+
+				// 如果执行成功且有commandId，则记录到已执行集合中
+				if (result && operation.commandId) {
+					executedCommandsRef.current.add(operation.commandId)
+				}
+
 				results.push({
 					type: operation.type,
 					success: !!result,
+					commandId: operation.commandId,
 				})
 			} catch (error) {
 				console.error(`Error executing operation ${operation.type}:`, error)
@@ -244,10 +256,17 @@ export default function useFlowOperations({
 					type: operation.type,
 					success: false,
 					error,
+					commandId: operation.commandId,
 				})
 			}
 		}
 		return results
+	})
+
+	// 重置已执行的命令记录
+	const resetExecutedCommands = useMemoizedFn(() => {
+		executedCommandsRef.current.clear()
+		console.log("已重置命令执行记录")
 	})
 
 	return {
@@ -258,6 +277,7 @@ export default function useFlowOperations({
 		disconnectNodes,
 		publishFlow,
 		executeOperations,
+		resetExecutedCommands,
 		commandExecutionRef,
 	}
 }

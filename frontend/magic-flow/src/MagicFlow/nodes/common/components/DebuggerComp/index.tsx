@@ -1,5 +1,5 @@
 import { DefaultNodeVersion } from "@/MagicFlow/constants"
-import { useFlow } from "@/MagicFlow/context/FlowContext/useFlow"
+import { useFlowData, useNodeConfig } from "@/MagicFlow/context/FlowContext/useFlow"
 import { copyToClipboard } from "@/MagicFlow/utils"
 import { message } from "antd"
 import { useMemoizedFn } from "ahooks"
@@ -15,7 +15,8 @@ type DebuggerCompProps = {
 
 export default function DebuggerComp({ id }: DebuggerCompProps) {
 	const { t } = useTranslation()
-	const { debuggerMode, nodeConfig } = useFlow()
+	const { nodeConfig } = useNodeConfig()
+	const { debuggerMode } = useFlowData()
 
 	const clickNode = useMemoizedFn(() => {
 		console.log("debug node", nodeConfig?.[id])

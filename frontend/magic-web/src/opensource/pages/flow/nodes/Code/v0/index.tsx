@@ -7,14 +7,16 @@ import { useMemoizedFn, useUpdateEffect } from "ahooks"
 import { cloneDeep, set } from "lodash-es"
 import { Form, Modal } from "antd"
 import MagicJSONSchemaEditorWrap from "@dtyq/magic-flow/common/BaseUI/MagicJsonSchemaEditorWrap"
-import { useFlow } from "@dtyq/magic-flow/MagicFlow/context/FlowContext/useFlow"
+import {
+	useFlowData,
+	useNodeConfigActions,
+} from "@dtyq/magic-flow/MagicFlow/context/FlowContext/useFlow"
 import MagicExpressionWrap from "@dtyq/magic-flow/common/BaseUI/MagicExpressionWrap"
 import { ExpressionMode } from "@dtyq/magic-flow/MagicExpressionWidget/constant"
 import { useTranslation } from "react-i18next"
 import styles from "./index.module.less"
 import usePrevious from "../../../common/hooks/usePrevious"
 import LanguageSelect from "./components/LanguageSelect/LanguageSelect"
-import { customNodeType } from "../../../constants"
 import useMode, { CodeMode } from "./hooks/useMode"
 import useCode from "./hooks/useCode"
 import { v0Template } from "./template"
@@ -24,11 +26,11 @@ export default function Code() {
 	const [form] = Form.useForm()
 	const { currentNode } = useCurrentNode()
 	const { expressionDataSource } = usePrevious()
-	const { flow } = useFlow()
+	const { flow } = useFlowData()
 
 	const [codeString, setCodeString] = useState("")
 
-	const { updateNodeConfig } = useFlow()
+	const { updateNodeConfig } = useNodeConfigActions()
 
 	const { ModeChanger } = useMode()
 

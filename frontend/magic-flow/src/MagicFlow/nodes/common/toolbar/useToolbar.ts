@@ -1,6 +1,6 @@
 
 import { useMemoizedFn } from "ahooks"
-import { useFlow } from "@/MagicFlow/context/FlowContext/useFlow"
+import { useFlowData, useFlowEdges, useFlowNodes, useNodeConfig, useNodeConfigActions } from "@/MagicFlow/context/FlowContext/useFlow"
 import { generateSnowFlake } from "@/common/utils/snowflake"
 import { useStoreApi } from "reactflow"
 import { useFlowInteraction } from "@/MagicFlow/components/FlowDesign/context/FlowInteraction/useFlowInteraction"
@@ -16,7 +16,11 @@ export const pasteTranslateSize = 20
 
 export default function useToolbar () {
 
-	const {  debuggerMode, nodeConfig, edges, updateNextNodeIdsByDeleteEdge, setEdges, setSelectedNodeId, setNodeConfig, notifyNodeChange } = useFlow()
+	const {  setSelectedNodeId } = useFlowNodes()
+    const { nodeConfig } = useNodeConfig()
+    const { setNodeConfig, notifyNodeChange } = useNodeConfigActions()
+    const {  edges, updateNextNodeIdsByDeleteEdge, setEdges } = useFlowEdges()
+    const { debuggerMode } = useFlowData()
 	const { setNodes, nodes } = useNodes()
 	const { layout } = useFlowInteraction()
 

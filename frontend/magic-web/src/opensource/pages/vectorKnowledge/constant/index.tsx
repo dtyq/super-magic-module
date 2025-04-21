@@ -14,13 +14,11 @@ export const fileTypesMap = {
 	TXT: "txt",
 	MD: "md",
 	PDF: "pdf",
-	HTML: "html",
 	XLSX: "xlsx",
 	XLS: "xls",
 	DOCX: "docx",
 	CSV: "csv",
 	XML: "xml",
-	HTM: "htm",
 }
 
 // 支持向量知识库嵌入的文件类型
@@ -31,13 +29,11 @@ export const fileTypeIconsMap = {
 	[fileTypesMap.TXT]: <IconTextFile size={24} />,
 	[fileTypesMap.MD]: <IconMarkdownFile size={24} />,
 	[fileTypesMap.PDF]: <IconPDFFile size={24} />,
-	[fileTypesMap.HTML]: <IconHtmlFile size={24} />,
 	[fileTypesMap.XLSX]: <IconExcelFile size={24} />,
 	[fileTypesMap.XLS]: <IconExcelFile size={24} />,
 	[fileTypesMap.DOCX]: <IconDocxFile size={24} />,
 	[fileTypesMap.CSV]: <IconExcelFile size={24} />,
 	[fileTypesMap.XML]: <IconXMindFile size={24} />,
-	[fileTypesMap.HTM]: <IconOtherFile size={24} />,
 }
 
 /** 文档同步状态映射 */
@@ -68,4 +64,11 @@ export enum knowledgeType {
 	UserKnowledgeDatabase = 1,
 	/** 天书知识库 */
 	TeamshareKnowledgeDatabase = 2,
+}
+
+/** 文档操作类型枚举 */
+export enum DocumentOperationType {
+	ENABLE = "enable",
+	DISABLE = "disable",
+	DELETE = "delete",
 }

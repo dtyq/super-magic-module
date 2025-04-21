@@ -1,12 +1,12 @@
 import { useExternal } from "@/MagicFlow/context/ExternalContext/useExternal"
-import { useFlow } from "@/MagicFlow/context/FlowContext/useFlow"
+import { useFlowNodes } from "@/MagicFlow/context/FlowContext/useFlow"
 import { judgeIsLoopBody } from "@/MagicFlow/utils"
 import { useMemoizedFn } from "ahooks"
 import { useState } from "react"
 import useLoopBodyClick from "./useLoopBodyClick"
 
 export default function useNodeClick() {
-	const { setSelectedNodeId } = useFlow()
+	const { setSelectedNodeId } = useFlowNodes()
 
 	const { paramsName } = useExternal()
 

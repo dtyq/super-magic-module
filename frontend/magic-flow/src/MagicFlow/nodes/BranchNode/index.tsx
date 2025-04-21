@@ -8,7 +8,7 @@ import _ from "lodash"
 import React, { useMemo } from "react"
 import { useTranslation } from "react-i18next"
 import { Handle, NodeProps, NodeToolbar, Position, useStore } from "reactflow"
-import { useFlow } from "../../context/FlowContext/useFlow"
+import { useFlowNodes, useNodeConfig } from "../../context/FlowContext/useFlow"
 import DebuggerComp from "../common/components/DebuggerComp"
 import TextEditable from "../common/components/TextEditable"
 import useBaseStyles from "../common/hooks/useBaseStyles"
@@ -24,7 +24,8 @@ function BranchNode({ data, isConnectable, id, position }: NodeProps) {
 	const { t } = useTranslation()
 	const { icon, label, desc, isStart, color, type, changeable, index: nodeIndex } = data
 
-	const { selectedNodeId, nodeConfig } = useFlow()
+	const { selectedNodeId } = useFlowNodes()
+	const { nodeConfig } = useNodeConfig()
 
 	const connectionNodeId = useStore(connectionNodeIdSelector)
 

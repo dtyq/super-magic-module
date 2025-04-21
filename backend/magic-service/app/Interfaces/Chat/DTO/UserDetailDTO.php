@@ -44,6 +44,8 @@ class UserDetailDTO extends AbstractDTO
 
     protected ?AgentInfoDTO $agentInfo = null;
 
+    protected ?AgentInfoDTO $botInfo = null;
+
     protected string $userManual;
 
     protected string $countryCode;
@@ -98,6 +100,7 @@ class UserDetailDTO extends AbstractDTO
     public function setAgentInfo(AgentInfoDTO $agentInfo): UserDetailDTO
     {
         $this->agentInfo = $agentInfo;
+        $this->botInfo = $agentInfo;
         return $this;
     }
 
