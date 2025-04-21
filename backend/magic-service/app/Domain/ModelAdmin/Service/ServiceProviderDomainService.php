@@ -853,7 +853,7 @@ class ServiceProviderDomainService
             $serviceProviderConfigEntity->setServiceProviderId($serviceProviderEntity->getId());
             $serviceProviderConfigEntity->setOrganizationCode($organizationCode);
             $serviceProviderConfigEntity->setStatus($serviceProviderConfigDTO->getStatus());
-            $serviceProviderConfigEntity->setConfig(new ServiceProviderConfig());
+            $serviceProviderConfigEntity->setConfig($serviceProviderConfigDTO->getConfig());
             $serviceProviderConfigEntity = $this->serviceProviderConfigRepository->insert($serviceProviderConfigEntity);
         } catch (Exception $exception) {
             Db::rollBack();
@@ -1159,15 +1159,17 @@ class ServiceProviderDomainService
         $officialConfig = null;
         $officialModelConfig = null;
         $officialModel = null;
-        $officialProviderCode = null;
 
         foreach ($activeModels as $model) {
             // 获取服务商配置
             $serviceProviderConfigId = $model->getServiceProviderConfigId();
-            $serviceProviderConfigEntity = $this->serviceProviderConfigRepository->getByIdAndOrganizationCode(
+            $serviceProviderConfigEntity = $this->serviceProviderConfigRepository->findByIdAndOrganizationCode(
                 (string) $serviceProviderConfigId,
                 $organizationCode
             );
+            if (! $serviceProviderConfigEntity) {
+                continue;
+            }
 
             // 获取服务商信息
             $serviceProviderId = $serviceProviderConfigEntity->getServiceProviderId();
@@ -1192,31 +1194,101 @@ class ServiceProviderDomainService
                 $serviceProviderResponse->setServiceProviderConfig($serviceProviderConfigEntity->getConfig());
                 $serviceProviderResponse->setModelConfig($model->getConfig());
                 $serviceProviderResponse->setServiceProviderModelsEntity($model);
-                $serviceProviderResponse->setServiceProviderCode($serviceProviderEntity->getProviderCode());
                 return $serviceProviderResponse;
             }
 
-            // 记录找到的官方配置，但继续查找非官方配置
-            $officialFound = true;
-            $officialProviderType = $providerType;
-            $officialConfig = $serviceProviderConfigEntity->getConfig();
-            $officialProviderCode = $serviceProviderEntity->getProviderCode();
-            $officialModelConfig = $model->getConfig();
-            $officialModel = $model;
+            // 如果是官方服务商配置，先保存，如果没有找到非官方的再使用
+            if ($providerType === ServiceProviderType::OFFICIAL) {
+                $officialFound = true;
+                $officialProviderType = $providerType;
+                $officialModelConfig = $model->getConfig();
+                $officialModel = $model;
+
+                // 文生图模型的特殊处理：获取官方组织下的模型配置
+                if (ServiceProviderCategory::from($model->getCategory()) === ServiceProviderCategory::VLM) {
+                    $officialConfig = $this->getOfficialVLMProviderConfig($model);
+                } else {
+                    // 非文生图模型使用当前模型的服务商配置
+                    $officialConfig = $serviceProviderConfigEntity->getConfig();
+                }
+            }
         }
 
-        // 如果找到了官方配置，但没有找到非官方配置，则返回官方配置
+        // 如果找到了官方配置，则返回
         if ($officialFound) {
             $serviceProviderResponse->setServiceProviderType($officialProviderType);
             $serviceProviderResponse->setServiceProviderConfig($officialConfig);
             $serviceProviderResponse->setModelConfig($officialModelConfig);
             $serviceProviderResponse->setServiceProviderModelsEntity($officialModel);
-            $serviceProviderResponse->setServiceProviderCode($officialProviderCode);
             return $serviceProviderResponse;
         }
 
-        // 如果没有找到任何可用配置，抛出异常
-        ExceptionBuilder::throw(ServiceProviderErrorCode::ServiceProviderNotActive, __('service_provider.provider_not_active'));
+        // 如果官方和非官方都没有找到激活的配置，抛出异常
+        ExceptionBuilder::throw(ServiceProviderErrorCode::ServiceProviderNotActive);
+    }
+
+    /**
+     * 获取官方组织的文生图模型服务商配置.
+     *
+     * 文生图模型因为目前不能官方组织添加，因此没有 model_parent_id，
+     * 找不到对应的 model_id 也就找不到官方服务商的配置，因此要特殊处理
+     *
+     * @param ServiceProviderModelsEntity $model 当前模型
+     * @return ServiceProviderConfig 官方组织的服务商配置
+     */
+    private function getOfficialVLMProviderConfig(ServiceProviderModelsEntity $model): ServiceProviderConfig
+    {
+        $officeOrganization = config('service_provider.office_organization');
+        $officeModels = $this->serviceProviderModelsRepository->getModelsByVersionAndOrganization(
+            $model->getModelVersion(),
+            $officeOrganization
+        );
+
+        if (empty($officeModels)) {
+            return new ServiceProviderConfig();
+        }
+
+        // 获取所有模型的服务商配置ID
+        $configIds = array_map(function ($model) {
+            return $model->getServiceProviderConfigId();
+        }, $officeModels);
+
+        // 批量获取服务商配置
+        $configEntities = [];
+        foreach ($configIds as $configId) {
+            $configEntity = $this->serviceProviderConfigRepository->getById($configId);
+            if ($configEntity) {
+                $configEntities[] = $configEntity;
+            }
+        }
+
+        $mergedConfig = new ServiceProviderConfig();
+
+        // 合并所有配置
+        foreach ($configEntities as $configEntity) {
+            $config = $configEntity->getConfig();
+            if (! $config) {
+                continue;
+            }
+
+            // 优先使用非空的配置值
+            $sk = $config->getSk();
+            if (! empty($sk)) {
+                $mergedConfig->setSk($sk);
+            }
+
+            $ak = $config->getAk();
+            if (! empty($ak)) {
+                $mergedConfig->setAk($ak);
+            }
+
+            $apiKey = $config->getApiKey();
+            if (! empty($apiKey)) {
+                $mergedConfig->setApiKey($apiKey);
+            }
+        }
+
+        return $mergedConfig;
     }
 
     /**
