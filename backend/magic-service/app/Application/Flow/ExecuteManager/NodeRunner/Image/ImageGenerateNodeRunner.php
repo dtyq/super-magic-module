@@ -14,8 +14,7 @@ use App\Domain\Flow\Entity\ValueObject\NodeParamsConfig\Image\ImageGenerateNodeP
 use App\Domain\Flow\Entity\ValueObject\NodeType;
 use App\Infrastructure\Core\Collector\ExecuteManager\Annotation\FlowNodeDefine;
 use App\Infrastructure\Core\Dag\VertexResult;
-use App\Infrastructure\ExternalAPI\ImageGenerateAPI\ImageGenerateFactory;
-use App\Infrastructure\ExternalAPI\ImageGenerateAPI\ImageGenerateModelType;
+use App\Interfaces\Authorization\Web\MagicUserAuthorization;
 
 #[FlowNodeDefine(
     type: NodeType::ImageGenerate->value,
@@ -59,11 +58,6 @@ class ImageGenerateNodeRunner extends NodeRunner
 
         $model = $paramsConfig->getModel();
         $vertexResult->addDebugLog('model', $model);
-
-        // 根据模型类型创建对应的服务
-        $imageGenerateType = ImageGenerateModelType::fromModel($model);
-        $imageGenerateService = ImageGenerateFactory::create($imageGenerateType);
-
         $data = [
             'model' => $model,
             'height' => $height,
@@ -73,12 +67,15 @@ class ImageGenerateNodeRunner extends NodeRunner
             'ratio' => $ratio,
             'use_sr' => $useSr,
             'reference_images' => $referenceImages,
+            'generate_num' => 1,
         ];
-        $imageGenerateRequest = ImageGenerateFactory::createRequestType($imageGenerateType, $data);
-        $imageGenerateRequest->setGenerateNum(4);
-        $imageGenerateResponse = $imageGenerateService->generateImage($imageGenerateRequest);
+        $flowDataIsolation = $executionData->getDataIsolation();
+        $magicUserAuthorization = new MagicUserAuthorization();
+        $magicUserAuthorization->setOrganizationCode($flowDataIsolation->getCurrentOrganizationCode());
+        $magicUserAuthorization->setId($flowDataIsolation->getCurrentUserId());
+        $images = $this->llmAppService->imageGenerate($magicUserAuthorization, $model, '', $data);
         // 流程只取一个
-        $image = $imageGenerateResponse->getData()[0];
+        $image = $images[0];
         // 这里可能是 url、base64，均记录到流程执行附件中（此时会进行上传到云服务端）。上传失败的文件会直接跳过
         $attachments = $this->recordFlowExecutionAttachments($executionData, [$image], true);
         $vertexResult->addDebugLog('attachments', array_map(fn (AbstractAttachment $attachment) => $attachment->toArray(), $attachments));

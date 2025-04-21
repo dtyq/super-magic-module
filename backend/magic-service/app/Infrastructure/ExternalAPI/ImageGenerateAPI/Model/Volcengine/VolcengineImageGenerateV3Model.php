@@ -25,7 +25,7 @@ use Hyperf\RateLimit\Annotation\RateLimit;
 use Hyperf\Retry\Annotation\Retry;
 use Psr\Log\LoggerInterface;
 
-class VolcengineModel implements ImageGenerate
+class VolcengineImageGenerateV3Model implements ImageGenerate
 {
     // 最大轮询重试次数
     private const MAX_RETRY_COUNT = 30;
@@ -33,20 +33,10 @@ class VolcengineModel implements ImageGenerate
     // 轮询重试间隔（秒）
     private const RETRY_INTERVAL = 2;
 
-    // 图生图数量限制
-    private const IMAGE_TO_IMAGE_IMAGE_COUNT = 1;
-
     #[Inject]
     protected LoggerInterface $logger;
 
     private VolcengineAPI $api;
-
-    private string $textToImageModelVersion = 'general_v2.1_L';
-
-    private string $textToImageReqScheduleConf = 'general_v20_9B_pe';
-
-    // 图生图配置
-    private string $imageToImageReqKey = 'byteedit_v2.0';
 
     public function __construct(ServiceProviderConfig $serviceProviderConfig)
     {
@@ -61,8 +51,7 @@ class VolcengineModel implements ImageGenerate
         }
 
         // 判断是图生图还是文生图
-        $isImageToImage = ! empty($imageGenerateRequest->getReferenceImage());
-        $count = $isImageToImage ? self::IMAGE_TO_IMAGE_IMAGE_COUNT : $imageGenerateRequest->getGenerateNum();
+        $count = $imageGenerateRequest->getGenerateNum();
 
         $this->logger->info('火山文生图：开始生图', [
             'prompt' => $imageGenerateRequest->getPrompt(),
@@ -70,19 +59,17 @@ class VolcengineModel implements ImageGenerate
             'width' => $imageGenerateRequest->getWidth(),
             'height' => $imageGenerateRequest->getHeight(),
             'req_key' => $imageGenerateRequest->getModel(),
-            'textToImageModelVersion' => $this->textToImageModelVersion,
-            'textToImageReqScheduleConf' => $this->textToImageReqScheduleConf,
         ]);
 
         // 使用 Parallel 并行处理
         $parallel = new Parallel();
         for ($i = 0; $i < $count; ++$i) {
             $fromCoroutineId = Coroutine::id();
-            $parallel->add(function () use ($imageGenerateRequest, $isImageToImage, $i, $fromCoroutineId) {
+            $parallel->add(function () use ($imageGenerateRequest, $i, $fromCoroutineId) {
                 CoContext::copy($fromCoroutineId);
                 try {
                     // 提交任务（带重试）
-                    $taskId = $this->submitAsyncTask($imageGenerateRequest, $isImageToImage);
+                    $taskId = $this->submitAsyncTask($imageGenerateRequest);
                     // 轮询结果（带重试）
                     $result = $this->pollTaskResult($taskId, $imageGenerateRequest->getModel());
 
@@ -181,8 +168,8 @@ class VolcengineModel implements ImageGenerate
         maxAttempts: self::GENERATE_RETRY_COUNT,
         base: self::GENERATE_RETRY_TIME
     )]
-    #[RateLimit(create: 4, consume: 1, capacity: 0, key: ImageGenerate::IMAGE_GENERATE_KEY_PREFIX . ImageGenerate::IMAGE_GENERATE_SUBMIT_KEY_PREFIX . ImageGenerateModelType::Volcengine->value, waitTimeout: 60)]
-    private function submitAsyncTask(VolcengineModelRequest $request, bool $isImageToImage): string
+    #[RateLimit(create: 1, consume: 1, capacity: 0, key: ImageGenerate::IMAGE_GENERATE_KEY_PREFIX . ImageGenerate::IMAGE_GENERATE_SUBMIT_KEY_PREFIX . ImageGenerateModelType::VolcengineImageGenerateV3->value, waitTimeout: 60)]
+    private function submitAsyncTask(VolcengineModelRequest $request): string
     {
         $prompt = $request->getPrompt();
         $width = (int) $request->getWidth();
@@ -192,21 +179,10 @@ class VolcengineModel implements ImageGenerate
             $body = [
                 'return_url' => true,
                 'prompt' => $prompt,
+                'width' => $width,
+                'height' => $height,
+                'req_key' => $request->getModel(),
             ];
-            if ($isImageToImage) {
-                // 图生图配置
-                if (empty($request->getReferenceImage())) {
-                    $this->logger->error('火山图生图：缺少源图片');
-                    ExceptionBuilder::throw(ImageGenerateErrorCode::MISSING_IMAGE_DATA, 'image_generate.image_to_image_missing_source');
-                }
-                $body['image_urls'] = $request->getReferenceImage();
-                $body['req_key'] = $this->imageToImageReqKey;
-            } else {
-                $body['req_key'] = $request->getModel();
-                $body['width'] = $width;
-                $body['height'] = $height;
-                $body['use_sr'] = $request->getUseSr();
-            }
 
             $response = $this->api->submitTask($body);
 
@@ -241,7 +217,6 @@ class VolcengineModel implements ImageGenerate
 
             $this->logger->info('火山文生图：提交任务成功', [
                 'taskId' => $taskId,
-                'isImageToImage' => $isImageToImage,
             ]);
 
             return $taskId;
@@ -255,7 +230,7 @@ class VolcengineModel implements ImageGenerate
         }
     }
 
-    #[RateLimit(create: 18, consume: 1, capacity: 0, key: ImageGenerate::IMAGE_GENERATE_KEY_PREFIX . self::IMAGE_GENERATE_POLL_KEY_PREFIX . ImageGenerateModelType::Volcengine->value, waitTimeout: 60)]
+    #[RateLimit(create: 4, consume: 1, capacity: 0, key: ImageGenerate::IMAGE_GENERATE_KEY_PREFIX . self::IMAGE_GENERATE_POLL_KEY_PREFIX . ImageGenerateModelType::VolcengineImageGenerateV3->value, waitTimeout: 60)]
     #[Retry(
         maxAttempts: self::GENERATE_RETRY_COUNT,
         base: self::GENERATE_RETRY_TIME
