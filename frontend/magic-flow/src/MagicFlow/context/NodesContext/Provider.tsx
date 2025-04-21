@@ -1,14 +1,37 @@
-import React, { useMemo } from "react"
-import { NodesContext, NodesCtx } from "./Context"
+import React from "react"
+import { NodesContext, NodesStateContext, NodesActionContext, NodesCtx } from "./Context"
 
-export const NodesProvider = ({ nodes, setNodes, onNodesChange, children }: NodesCtx) => {
-	const value = useMemo(() => {
-		return {
+export function NodesProvider({ nodes, setNodes, onNodesChange, children }: NodesCtx) {
+	// 分别创建状态和动作的Context值
+	const stateValue = React.useMemo(
+		() => ({
 			nodes,
+		}),
+		[nodes],
+	)
+
+	const actionValue = React.useMemo(
+		() => ({
 			setNodes,
 			onNodesChange,
-		}
-	}, [nodes, setNodes, onNodesChange])
+		}),
+		[setNodes, onNodesChange],
+	)
 
-	return <NodesContext.Provider value={value}>{children}</NodesContext.Provider>
+	// 为了向后兼容而创建的完整Context值
+	const contextValue = React.useMemo(
+		() => ({
+			...stateValue,
+			...actionValue,
+		}),
+		[stateValue, actionValue],
+	)
+
+	return (
+		<NodesStateContext.Provider value={stateValue}>
+			<NodesActionContext.Provider value={actionValue}>
+				<NodesContext.Provider value={contextValue}>{children}</NodesContext.Provider>
+			</NodesActionContext.Provider>
+		</NodesStateContext.Provider>
+	)
 }

@@ -15,5 +15,5 @@ export const nodeComponentVersionMap = {
     [customNodeType.LLM]: LLMComponentVersionMap,
     [customNodeType.Tools]: ToolsComponentVersionMap,
     [customNodeType.Loop]: LoopComponentVersionMap,
-    [customNodeType.If]: BranchComponentVersionMap
+    [customNodeType.If]: BranchComponentVersionMap,
 }

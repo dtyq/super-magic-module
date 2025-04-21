@@ -21,7 +21,7 @@ import DefaultImage from "@/assets/logos/agent-avatar.jpg"
 import { cx } from "antd-style"
 import { useLocation, useParams } from "react-router"
 import { useNavigate } from "@/opensource/hooks/useNavigate"
-import { customNodeType } from "./constants"
+import { customNodeType, OmitNodeKeys } from "./constants"
 import { installAllNodes } from "./utils"
 import styles from "./index.module.less"
 import TestFlowButton from "./components/TestFlowButton"
@@ -412,6 +412,14 @@ export default function BaseFlow({ extraData }: BaseFlowProps) {
 
 	const { subFlow, tools } = useMaterialSource()
 
+	const nodeStyleMap = useMemo(() => {
+		return {
+			[customNodeType.Start]: {
+				width: isMainFlow ? "480px" : "900px",
+			},
+		}
+	}, [isMainFlow])
+
 	return (
 		<FlowInstanceProvider flowInstance={flowInstance}>
 			<CommercialProvider extraData={extraData}>
@@ -420,13 +428,7 @@ export default function BaseFlow({ extraData }: BaseFlowProps) {
 					<MaterialSourceProvider subFlow={subFlow} tools={tools}>
 						{/* @ts-ignore */}
 						<NodeChangeListenerProvider customListener={nodeChangeEventListener}>
-							<ExtraNodeConfigProvider
-								nodeStyleMap={{
-									[customNodeType.Start]: {
-										width: isMainFlow ? "480px" : "900px",
-									},
-								}}
-							>
+							<ExtraNodeConfigProvider nodeStyleMap={nodeStyleMap}>
 								{/* @ts-ignore */}
 								<ConfigProvider locale={locale}>
 									<CustomFlowProvider
@@ -449,17 +451,7 @@ export default function BaseFlow({ extraData }: BaseFlowProps) {
 												allowDebug
 												// @ts-ignore
 												flowInteractionRef={flowInteractionRef}
-												omitNodeKeys={[
-													"data",
-													"expandParent",
-													"extent",
-													"parentId",
-													"deletable",
-													"position",
-													"step",
-													"zIndex",
-													"type",
-												]}
+												omitNodeKeys={OmitNodeKeys}
 											/>
 										</div>
 

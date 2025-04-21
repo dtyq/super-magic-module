@@ -1,7 +1,7 @@
-import { useExternal } from '@/MagicFlow/context/ExternalContext/useExternal'
+import { useExternalConfig } from '@/MagicFlow/context/ExternalContext/useExternal'
 import { useFlowEdges, useNodeConfig, useNodeConfigActions } from '@/MagicFlow/context/FlowContext/useFlow'
 import { useMemoizedFn } from 'ahooks'
-import { useFlowInteraction } from '../../FlowDesign/context/FlowInteraction/useFlowInteraction'
+import { useFlowInteractionActions } from '../../FlowDesign/context/FlowInteraction/useFlowInteraction'
 import { generateLoopBody, getLatestNodeVersion, getNodeSchema, handleRenderProps, judgeLoopNode, searchLoopRelationNodesAndEdges } from '@/MagicFlow/utils'
 import { WidgetValue } from '@/MagicFlow/examples/BaseFlow/common/Output'
 import { useCurrentNode } from '@/MagicFlow/nodes/common/context/CurrentNode/useCurrentNode'
@@ -24,9 +24,9 @@ export default function usePopupAction({ targetNodeId }: UsePopupActionProps) {
 
 	const { nodes, setNodes } = useNodes()
 
-	const { paramsName } = useExternal()
+	const { paramsName } = useExternalConfig()
 
-	const { resetLastLayoutData } = useFlowInteraction()
+	const { resetLastLayoutData } = useFlowInteractionActions()
 
 	const { currentNode } = useCurrentNode()
 

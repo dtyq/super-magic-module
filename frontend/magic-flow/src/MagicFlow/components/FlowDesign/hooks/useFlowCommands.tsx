@@ -13,7 +13,7 @@ import { Interactions } from "../components/InteractionSelect"
 import { MagicFlow } from "@/MagicFlow/types/flow"
 import { Edge } from "reactflow"
 import { NodeSchema } from "@/MagicFlow/register/node"
-import { useExternal } from "@/MagicFlow/context/ExternalContext/useExternal"
+import { useExternalConfig, useExternalRef } from "@/MagicFlow/context/ExternalContext/useExternal"
 import { omit } from "lodash"
 
 type UseFlowCommandProps = {
@@ -66,7 +66,8 @@ export default function useFlowCommand({
 
 	const { description, flow } = useFlowData()
 
-	const { flowInteractionRef, omitNodeKeys } = useExternal()
+	const { flowInteractionRef } = useExternalRef()
+	const { omitNodeKeys } = useExternalConfig()
 
 	const { nodes, setNodes } = useNodes()
 

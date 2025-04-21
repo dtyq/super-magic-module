@@ -2,14 +2,12 @@
 /**
  * 管理 表达式组件处于处于Textarea模式时的相关状态
  */
-
-import { useFlowInteraction } from "@/MagicFlow/components/FlowDesign/context/FlowInteraction/useFlowInteraction"
 import { DataSourceOption } from "@/common/BaseUI/DropdownRenderer/Reference"
 import { Splitor } from "@/common/BaseUI/DropdownRenderer/Reference/constants"
 import { Input, InputRef, Popover } from "antd"
 import { useMemoizedFn, useResetState, useUpdateEffect } from "ahooks"
 import _ from "lodash"
-import React, { MutableRefObject, useMemo, useRef, useState } from "react"
+import React, { MutableRefObject, useEffect, useMemo, useRef, useState } from "react"
 import {
 	ExpressionMode,
 	KeyCodeMap,
@@ -25,6 +23,7 @@ import {
 	InputExpressionValue,
 	VALUE_TYPE,
 } from "../types"
+import { FLOW_EVENTS, flowEventBus } from "@/common/BaseUI/Select/constants"
 
 interface Option {
 	value: string
@@ -70,7 +69,6 @@ export default function useTextareaMode({
 	/** 当前正在编辑的节点 */
 	const [currentNode, setCurrentNode] = useState({} as EXPRESSION_ITEM)
 	const [inputValue, setInputValue] = useState("")
-	const { nodeClick } = useFlowInteraction()
 	/** 当前Trigger的标志 */
 	const [currentTrigger, setCurrentTrigger, resetCurrentTrigger] = useResetState({
 		uniqueId: "",
@@ -157,10 +155,14 @@ export default function useTextareaMode({
 		setOpenDropdown(false)
 	})
 
-	useUpdateEffect(() => {
-		closeSelectPanel()
-	}, [nodeClick])
-
+	useEffect(() => {
+		const cleanup = flowEventBus.on(FLOW_EVENTS.NODE_SELECTED, () => {
+			closeSelectPanel()
+		})
+		return () => {
+			cleanup()
+		}
+	}, [])
 	const onPressEnter = useMemoizedFn((evt: any) => {
 		evt.stopPropagation()
 		/** 回车保存，并隐藏 */
@@ -212,7 +214,7 @@ export default function useTextareaMode({
 			<Input
 				value={inputValue}
 				onChange={(e) => setInputValue(e.target.value)}
-                // @ts-ignore
+				// @ts-ignore
 				ref={inputRefMap[id]}
 				autoFocus
 				onPressEnter={onPressEnter}

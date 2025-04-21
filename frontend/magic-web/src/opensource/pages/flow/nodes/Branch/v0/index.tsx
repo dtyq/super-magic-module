@@ -5,8 +5,10 @@ import { nanoid } from "nanoid"
 import { useCurrentNode } from "@dtyq/magic-flow/MagicFlow/nodes/common/context/CurrentNode/useCurrentNode"
 import type { ConditionInstance } from "@dtyq/magic-flow/MagicConditionEdit/index"
 import { set } from "lodash-es"
+// @ts-ignore
+import { useReactFlow } from "reactflow"
 import {
-	useFlowEdges,
+	useFlowEdgesActions,
 	useNodeConfigActions,
 } from "@dtyq/magic-flow/MagicFlow/context/FlowContext/useFlow"
 import usePrevious from "@/opensource/pages/flow/common/hooks/usePrevious"
@@ -17,7 +19,8 @@ import "./index.less"
 
 export default function Branch() {
 	const { currentNode } = useCurrentNode()
-	const { edges, deleteEdges } = useFlowEdges()
+	const { deleteEdges } = useFlowEdgesActions()
+	const { getEdges } = useReactFlow()
 	const { notifyNodeChange } = useNodeConfigActions()
 	const [branchList, setBranchList] = useState(
 		addBranchTypeIfWithout(currentNode?.params?.branches),
@@ -69,6 +72,7 @@ export default function Branch() {
 
 		const branchToDelete = branchList[branchIndex]
 		const branchId = branchToDelete.branch_id
+        const edges = getEdges()
 
 		// 1. 找到所有从该分支出发的边
 		const edgesToRemove = edges.filter(

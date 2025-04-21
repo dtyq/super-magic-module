@@ -1,5 +1,5 @@
-import { useFlowEdges, useFlowNodes, useNodeConfig } from "@/MagicFlow/context/FlowContext/useFlow"
-import { useExternal } from "@/MagicFlow/context/ExternalContext/useExternal"
+import { useFlowNodes, useNodeConfig } from "@/MagicFlow/context/FlowContext/useFlow"
+import { useExternalConfig } from "@/MagicFlow/context/ExternalContext/useExternal"
 import { useMemoizedFn } from "ahooks"
 import { useReactFlow, Edge } from "reactflow"
 import _ from "lodash"
@@ -18,9 +18,8 @@ interface UseAddItemProps {
 const useAddItem = ({ item }: UseAddItemProps) => {
   const { addNode, selectedNodeId } = useFlowNodes()
   const { nodeConfig } = useNodeConfig()
-  const { edges } = useFlowEdges()
   const reactflow = useReactFlow()
-  const { paramsName } = useExternal()
+  const { paramsName } = useExternalConfig()
 
   const onAddItem = useMemoizedFn(() => {
     // 当添加循环体的时候，实际添加的元素是多个的
@@ -60,6 +59,7 @@ const useAddItem = ({ item }: UseAddItemProps) => {
     }
 
     newNodes.push(newNode)
+    const edges = reactflow?.getEdges?.() || []
     // 如果新增的是循环，则需要多新增一个循环体和一条边
     if (judgeLoopNode(newNode[paramsName.nodeType])) {
       const { newNodes: bodyNodes, newEdges: bodyEdges } = generateLoopBody(

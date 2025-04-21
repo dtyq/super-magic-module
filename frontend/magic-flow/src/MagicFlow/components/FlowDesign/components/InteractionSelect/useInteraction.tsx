@@ -2,15 +2,12 @@
  * 用户偏好设置相关状态和行为管理
  */
 import { localStorageKeyMap } from "@/MagicFlow/constants"
-import { useMemoizedFn, useMount, useUpdateEffect } from "ahooks"
-import { useState } from "react"
+import { useMemoizedFn, useMount } from "ahooks"
+import { useEffect, useState } from "react"
 import { Interactions } from "."
+import { FLOW_EVENTS, flowEventBus } from "@/common/BaseUI/Select/constants"
 
-type InteractionProps = {
-	nodeClick: boolean
-}
-
-export default function useInteraction({ nodeClick }: InteractionProps) {
+export default function useInteraction() {
 	const [interaction, setInteraction] = useState(Interactions.TouchPad)
 
 	const [openInteractionSelect, setOpenInteractionSelect] = useState(false)
@@ -32,9 +29,22 @@ export default function useInteraction({ nodeClick }: InteractionProps) {
 		setInteraction(getInteractionMode())
 	})
 
-	useUpdateEffect(() => {
-		setOpenInteractionSelect(false)
-	}, [nodeClick])
+	// 监听外部事件以关闭下拉菜单
+	useEffect(() => {
+		// 清理函数数组
+		const cleanupFunctions = []
+
+		// 使用事件总线注册和清理事件
+		const cleanup = flowEventBus.on(FLOW_EVENTS.NODE_SELECTED, () => {
+			setOpenInteractionSelect(false)
+		})
+		cleanupFunctions.push(cleanup)
+
+		// 返回清理函数
+		return () => {
+			cleanupFunctions.forEach((cleanup) => cleanup())
+		}
+	}, [])
 
 	return {
 		interaction,
