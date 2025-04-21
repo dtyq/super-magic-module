@@ -6,4 +6,5 @@ declare(strict_types=1);
  */
 return [
     'model_aes_key' => env('SERVICE_PROVIDER_CONFIG_AES_KEY', 'Q6#iyPSq4EQU'),
+    'office_organization' => env('OFFICE_ORGANIZATION'),
 ];
