@@ -7,6 +7,7 @@ declare(strict_types=1);
 
 namespace App\Application\Chat\Service;
 
+use App\Application\ModelGateway\Service\LLMAppService;
 use App\Domain\Chat\DTO\ImageConvertHigh\Request\MagicChatImageConvertHighReqDTO;
 use App\Domain\Chat\DTO\Message\ChatMessage\AIImageCardMessage;
 use App\Domain\Chat\DTO\Message\ChatMessage\ImageConvertHighCardMessage;
@@ -22,14 +23,10 @@ use App\Domain\Chat\Service\MagicChatFileDomainService;
 use App\Domain\Chat\Service\MagicConversationDomainService;
 use App\Domain\Contact\Service\MagicUserDomainService;
 use App\Domain\File\Service\FileDomainService;
-use App\Domain\ModelAdmin\Constant\ServiceProviderType;
 use App\Domain\ModelAdmin\Service\ServiceProviderDomainService;
 use App\ErrorCode\ImageGenerateErrorCode;
 use App\Infrastructure\Core\Exception\Annotation\ErrorMessage;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
-use App\Infrastructure\ExternalAPI\ImageGenerateAPI\ImageGenerateFactory;
-use App\Infrastructure\ExternalAPI\ImageGenerateAPI\ImageGenerateModelType;
-use App\Infrastructure\ExternalAPI\ImageGenerateAPI\Model\MiracleVision\MiracleVisionModel;
 use App\Infrastructure\Util\Context\RequestContext;
 use App\Infrastructure\Util\SSRF\Exception\SSRFException;
 use App\Infrastructure\Util\SSRF\SSRFUtil;
@@ -62,6 +59,7 @@ class MagicChatImageConvertHighAppService extends AbstractAIImageAppService
         protected readonly FileDomainService $fileDomainService,
         protected readonly MagicChatFileDomainService $magicChatFileDomainService,
         protected readonly ServiceProviderDomainService $serviceProviderDomainService,
+        protected readonly LLMAppService $llmAppService,
         protected readonly Redis $redis,
         protected IdGeneratorInterface $idGenerator,
     ) {
@@ -85,20 +83,11 @@ class MagicChatImageConvertHighAppService extends AbstractAIImageAppService
 
         $url = SSRFUtil::getSafeUrl($reqDTO->getOriginImageUrl(), replaceIp: false);
         $reqDTO->setOriginImageUrl($url);
-        /**
-         * @var MiracleVisionModel $imageGenerateService
-         */
-        $imageGenerateService = ImageGenerateFactory::create(ImageGenerateModelType::MiracleVision);
-
-        // 目前只能这么取值，后续再优化
-        $miracleVisionServiceProviderConfig = $this->serviceProviderDomainService->getMiracleVisionServiceProviderConfig(ImageGenerateModelType::MiracleVisionHightModelId->value, $requestContext->getOrganizationCode());
-
-        if ($miracleVisionServiceProviderConfig->getServiceProviderType() === ServiceProviderType::NORMAL) {
-            $imageGenerateService->setApiKey($miracleVisionServiceProviderConfig->getServiceProviderConfig()->getApiKey());
-        }
-
+        $authorization = $requestContext->getUserAuthorization();
+        $dataIsolation = $this->createDataIsolation($authorization);
+        $requestContext->setDataIsolation($dataIsolation);
         try {
-            $taskId = $this->magicAIImageDomainService->imageConvertHigh($reqDTO->getOriginImageUrl(), $imageGenerateService);
+            $taskId = $this->llmAppService->imageConvertHigh($authorization, $reqDTO->getOriginImageUrl());
             $this->aiSendMessage(
                 $reqDTO->getConversationId(),
                 (string) $this->idGenerator->generate(),
@@ -118,7 +107,7 @@ class MagicChatImageConvertHighAppService extends AbstractAIImageAppService
             $response = null;
 
             while ($count-- > 0) {
-                $response = $this->magicAIImageDomainService->imageConvertHighQuery($taskId, $imageGenerateService);
+                $response = $this->llmAppService->imageConvertHighQuery($authorization, $taskId);
                 if ($response->isFinishStatus() === true) {
                     break;
                 }

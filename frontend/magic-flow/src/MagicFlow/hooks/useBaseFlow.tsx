@@ -25,6 +25,8 @@ import useMacTouch from "./useMacTouch"
 import useUndoRedo from "./useUndoRedo"
 // 1. 导入批处理hook
 import useNodeBatchProcessing from "../hooks/useNodeBatchProcessing"
+import { FLOW_EVENTS, flowEventBus } from "@/common/BaseUI/Select/constants"
+import { useDebounceFn } from "ahooks"
 
 export enum UpdateStepType {
 	// 连线
@@ -51,7 +53,7 @@ export default function useBaseFlow({ currentFlow, paramsName }: UseBaseFlowProp
 	const [flow, setFlow] = useState(null as MagicFlow.Flow | null)
 
 	// 2. 使用批处理hook
-	const { processNodesBatch, isProcessing, progress } = useNodeBatchProcessing({
+	const { processNodesBatch, isProcessing, progress, stopProcessing } = useNodeBatchProcessing({
 		batchSize: 8,
 		interval: 150,
 	})
@@ -118,7 +120,8 @@ export default function useBaseFlow({ currentFlow, paramsName }: UseBaseFlowProp
 
 	const notifyNodeChange = useMemoizedFn(() => {
 		nodeChangeEventListener.emit("NodeChange")
-		takeSnapshot(nodes, edges, nodeConfig)
+		console.log("nodeConfig", nodeConfig)
+		// takeSnapshot(nodes, edges, nodeConfig)
 	})
 
 	const onNodesChange = useMemoizedFn((changes) => {
@@ -194,16 +197,16 @@ export default function useBaseFlow({ currentFlow, paramsName }: UseBaseFlowProp
 				edges: renderEdges,
 			})
 		}
-
+		if (isProcessing) {
+			stopProcessing()
+		}
 		// 使用批处理hook处理节点
 		processNodesBatch(cacheNodes, (batchNodes) => {
 			setNodes(batchNodes)
 		})
 
 		// 边的渲染需要在节点渲染完毕之后
-		setTimeout(() => {
-			setEdges(_.cloneDeep(renderEdges))
-		}, 50)
+		setEdges(_.cloneDeep(renderEdges))
 
 		setNodeConfig(cacheConfig)
 		setFlow({
@@ -252,6 +255,32 @@ export default function useBaseFlow({ currentFlow, paramsName }: UseBaseFlowProp
 		}, 100),
 	)
 
+	// 使用防抖函数优化节点配置更新，减少频繁更新导致的性能问题
+	const { run: debouncedUpdateConfig } = useDebounceFn(
+		(node: MagicFlow.Node, previousConfig: Record<string, MagicFlow.Node>) => {
+			// 使用函数式更新，仅修改特定节点
+			setNodeConfig((prevConfig) => {
+				// 创建新的节点配置对象，但保持其他节点的引用不变
+				const updatedConfig = { ...prevConfig }
+				updatedConfig[node.id] = node
+				return updatedConfig
+			})
+
+			// 仅通知特定节点的变化
+			if (nodeChangeEventListener && nodeChangeEventListener.emit) {
+				try {
+					// 传递节点ID作为参数，这样可以实现针对性渲染
+					nodeChangeEventListener.emit("NodeChange")
+				} catch (error) {
+					// 兼容旧版本的事件发射器
+					nodeChangeEventListener.emit("NodeChange")
+					console.warn("使用了旧版本的nodeChangeEventListener，无法传递节点ID")
+				}
+			}
+		},
+		{ wait: 500 },
+	)
+
 	// 更新节点配置
 	const updateNodeConfig = useMemoizedFn(
 		(node: MagicFlow.Node, originalNode?: MagicFlow.Node) => {
@@ -275,25 +304,8 @@ export default function useBaseFlow({ currentFlow, paramsName }: UseBaseFlowProp
 				})
 			}
 
-			// 使用函数式更新，仅修改特定节点
-			setNodeConfig((prevConfig) => {
-				// 创建新的节点配置对象，但保持其他节点的引用不变
-				const updatedConfig = { ...prevConfig }
-				updatedConfig[node.id] = node
-				return updatedConfig
-			})
-
-			// 仅通知特定节点的变化
-			if (nodeChangeEventListener && nodeChangeEventListener.emit) {
-				try {
-					// 传递节点ID作为参数，这样可以实现针对性渲染
-					nodeChangeEventListener.emit("NodeChange")
-				} catch (error) {
-					// 兼容旧版本的事件发射器
-					nodeChangeEventListener.emit("NodeChange")
-					console.warn("使用了旧版本的nodeChangeEventListener，无法传递节点ID")
-				}
-			}
+			// 将更新状态和通知变化的操作交给防抖函数处理
+			debouncedUpdateConfig(node, nodeConfig)
 		},
 	)
 
@@ -451,6 +463,7 @@ export default function useBaseFlow({ currentFlow, paramsName }: UseBaseFlowProp
 				setEdges([...edges])
 			}
 			setSelectedNodeId(cloneNodes?.[0]?.id)
+			flowEventBus.emit(FLOW_EVENTS.NODE_SELECTED, cloneNodes?.[0]?.id)
 		},
 	)
 
@@ -503,6 +516,7 @@ export default function useBaseFlow({ currentFlow, paramsName }: UseBaseFlowProp
 	useUpdateEffect(() => {
 		if (selectedEdgeId) {
 			setSelectedNodeId(null)
+			flowEventBus.emit(FLOW_EVENTS.NODE_SELECTED, null)
 		}
 		const newEdges = edges.map((o) => {
 			const strokeColor = o.id === selectedEdgeId ? "#37d0ff" : "#4d53e8"
@@ -526,6 +540,7 @@ export default function useBaseFlow({ currentFlow, paramsName }: UseBaseFlowProp
 	useUpdateEffect(() => {
 		if (selectedNodeId) {
 			setSelectedEdgeId(null)
+			flowEventBus.emit(FLOW_EVENTS.EDGE_SELECTED, null)
 		}
 	}, [selectedNodeId])
 

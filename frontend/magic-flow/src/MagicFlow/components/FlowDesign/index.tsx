@@ -1,8 +1,8 @@
-import React, { useState, useMemo, memo, useCallback } from "react"
+import React, { useState, useMemo, memo } from "react"
 import styles from "./index.module.less"
 
-import { useExternal } from "@/MagicFlow/context/ExternalContext/useExternal"
-import { useFlow, useFlowEdges, useFlowUI } from "../../context/FlowContext/useFlow"
+import { useExternalConfig } from "@/MagicFlow/context/ExternalContext/useExternal"
+import { useFlowEdges, useFlowUI } from "../../context/FlowContext/useFlow"
 import { edgeModels } from "../../edges"
 import nodeModels from "../../nodes/index"
 import FlowBackground from "./components/FlowBackground"
@@ -20,20 +20,30 @@ import FlowSelectionPanel from "./components/sections/FlowSelectionPanel"
 import FlowMiniMap from "./components/sections/FlowMiniMap"
 import ReactFlowComponent from "./components/sections/ReactFlowComponent"
 
+// 为了避免子组件变化导致ReactFlowComponent重新渲染，创建一个稳定的子组件
+const StableFlowChildren = memo(
+	({ showMinMap, controlItemGroups }: { showMinMap: boolean; controlItemGroups: any }) => {
+		return (
+			<>
+				<FlowControls controlItemGroups={controlItemGroups} />
+				<FlowBackground />
+				<FlowMiniMap showMinMap={showMinMap} />
+			</>
+		)
+	},
+)
+
 // 使用memo将FlowDesign组件包装起来，避免不必要的渲染
 const FlowDesign = memo(function FlowDesign() {
 	// 使用更细粒度的hook替代全量useFlow，减少不必要的重渲染
-	const { onEdgesChange, onConnect } = useFlowEdges()
+	const { onEdgesChange, onConnect, edges } = useFlowEdges()
 	const { flowInstance } = useFlowUI()
 	const { nodes, onNodesChange } = useNodes()
-
-	// 获取edges，其他组件不依赖的数据通过专用hook获取
-	const { edges } = useFlowEdges()
 
 	// 分辨率小于15% | 全量渲染时，关闭params渲染
 	const [showParamsComp, setShowParamsComp] = useState(true)
 
-	const { nodeClick, onNodeClick, onPanelClick } = useNodeClick()
+	const { onNodeClick, onPanelClick } = useNodeClick()
 
 	const {
 		showSelectionTools,
@@ -64,9 +74,6 @@ const FlowDesign = memo(function FlowDesign() {
 		onLock,
 	} = useFlowControls({
 		setShowParamsComp,
-		nodeClick,
-		selectionNodes,
-		selectionEdges,
 		flowInstance,
 	})
 
@@ -92,7 +99,7 @@ const FlowDesign = memo(function FlowDesign() {
 	})
 
 	/** 外部传的参数优先级最高 */
-	const { onlyRenderVisibleElements: externalOnlyRenderVisibleElements } = useExternal()
+	const { onlyRenderVisibleElements: externalOnlyRenderVisibleElements } = useExternalConfig()
 
 	/** 运行错误时，定位到错误节点 */
 	useTargetToErrorNode()
@@ -121,7 +128,6 @@ const FlowDesign = memo(function FlowDesign() {
 	const interactionProviderProps = useMemo(
 		() => ({
 			isDragging,
-			nodeClick,
 			resetLastLayoutData,
 			onAddItem,
 			layout,
@@ -136,7 +142,6 @@ const FlowDesign = memo(function FlowDesign() {
 		}),
 		[
 			isDragging,
-			nodeClick,
 			resetLastLayoutData,
 			onAddItem,
 			layout,
@@ -217,15 +222,18 @@ const FlowDesign = memo(function FlowDesign() {
 		[showSelectionTools, setShowSelectionTools, selectionNodes, selectionEdges, onCopy],
 	)
 
+	// 稳定ReactFlowComponent的children引用
+	const stableChildren = useMemo(
+		() => <StableFlowChildren showMinMap={showMinMap} controlItemGroups={controlItemGroups} />,
+		[showMinMap, controlItemGroups],
+	)
+
 	return (
 		<div className={styles.flowDesign} ref={reactFlowWrapper}>
 			<FlowInteractionProvider {...interactionProviderProps}>
-				<ReactFlowComponent {...reactFlowProps}>
-					<FlowSelectionPanel {...selectionPanelProps} />
-					<FlowControls controlItemGroups={controlItemGroups} />
-					<FlowBackground />
-					<FlowMiniMap showMinMap={showMinMap} />
-				</ReactFlowComponent>
+				{/* 将FlowSelectionPanel移出ReactFlowComponent，成为兄弟组件 */}
+				<FlowSelectionPanel {...selectionPanelProps} />
+				<ReactFlowComponent {...reactFlowProps}>{stableChildren}</ReactFlowComponent>
 			</FlowInteractionProvider>
 		</div>
 	)

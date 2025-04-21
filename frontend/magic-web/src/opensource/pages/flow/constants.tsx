@@ -82,3 +82,15 @@ export const DynamicOutputNodeTypes = [
 export const KnowledgeCurrentTopic = "knowledge_user_current_topic"
 // 当前会话
 export const KnowledgeCurrentConversation = "knowledge_user_current_conversation"
+
+export const OmitNodeKeys = [
+	"data",
+	"expandParent",
+	"extent",
+	"parentId",
+	"deletable",
+	"position",
+	"step",
+	"zIndex",
+	"type",
+]

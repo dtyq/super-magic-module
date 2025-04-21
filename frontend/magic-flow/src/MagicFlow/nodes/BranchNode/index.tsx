@@ -16,6 +16,7 @@ import useEditName from "../common/hooks/useEditName"
 import usePopup from "../common/hooks/usePopup"
 import ToolbarComponent from "../common/toolbar"
 import styles from "./index.module.less"
+import useNodeSelected from "@/MagicFlow/hooks/useNodeSelected"
 
 const connectionNodeIdSelector = (state: any) => state.connectionNodeId
 
@@ -33,6 +34,8 @@ function BranchNode({ data, isConnectable, id, position }: NodeProps) {
 
 	const { isEdit, setIsEdit, onChangeName } = useEditName({ id })
 
+    const { isSelected } = useNodeSelected(id)
+
 	const HeaderRight = _.get(nodeManager.nodesMap, [type, "schema", "headerRight"], null)
 
 	const currentNode = useMemo(() => {
@@ -40,7 +43,7 @@ function BranchNode({ data, isConnectable, id, position }: NodeProps) {
 	}, [nodeConfig, id])
 
 	const { openPopup, onNodeWrapperClick, nodeName, onDropdownClick, setOpenPopup } = usePopup({
-		id,
+		isSelected,
 		currentNode,
 	})
 

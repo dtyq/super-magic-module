@@ -1,6 +1,5 @@
-import { useFlowInteraction } from "@/MagicFlow/components/FlowDesign/context/FlowInteraction/useFlowInteraction"
-import { useExternal } from "@/MagicFlow/context/ExternalContext/useExternal"
-import { useFlow, useFlowNodes } from "@/MagicFlow/context/FlowContext/useFlow"
+import { useFlowInteractionActions } from "@/MagicFlow/components/FlowDesign/context/FlowInteraction/useFlowInteraction"
+import { useFlowNodes } from "@/MagicFlow/context/FlowContext/useFlow"
 import { IconUploadError } from "@douyinfe/semi-icons"
 import { Button, Popconfirm, Tooltip } from "antd"
 import { IconCopy, IconTrash } from "@tabler/icons-react"
@@ -22,9 +21,8 @@ export default function ToolbarComponent({ id, showCopy = true }: ToolbarCompone
 	const { t } = useTranslation()
 	const { pasteNode, deleteNode } = useToolbar()
 	const { selectedNodeId } = useFlowNodes()
-	const { nodeToolbar } = useExternal()
 
-	const { setShowSelectionTools } = useFlowInteraction()
+	const { setShowSelectionTools } = useFlowInteractionActions()
 
 	const trashRef = useRef<HTMLElement>()
 
@@ -63,16 +61,6 @@ export default function ToolbarComponent({ id, showCopy = true }: ToolbarCompone
 			})
 		}
 
-		// 默认为append模式
-		if (nodeToolbar?.list?.length) {
-			if (nodeToolbar.mode === "replaceAll") {
-				// @ts-ignore
-				resultItems = nodeToolbar.list
-			} else {
-				// @ts-ignore
-				resultItems.push(...nodeToolbar.list)
-			}
-		}
 		return resultItems
 	}, [deleteNode, id, pasteNode])
 

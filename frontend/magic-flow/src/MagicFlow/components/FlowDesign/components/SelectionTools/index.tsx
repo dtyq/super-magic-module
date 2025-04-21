@@ -9,7 +9,7 @@ import i18next from "i18next"
 import React from "react"
 import { useTranslation } from "react-i18next"
 import { Edge, useKeyPress } from "reactflow"
-import { useFlowInteraction } from "../../context/FlowInteraction/useFlowInteraction"
+import { useFlowInteractionActions } from "../../context/FlowInteraction/useFlowInteraction"
 import styles from "./index.module.less"
 
 type SelectionToolsProps = {
@@ -27,7 +27,7 @@ export default function SelectionTools({
 	onCopy,
 }: SelectionToolsProps) {
 	const { t } = useTranslation()
-	const { onNodesDelete } = useFlowInteraction()
+	const { onNodesDelete } = useFlowInteractionActions()
 
 	const onDelete = useMemoizedFn(() => {
 		onNodesDelete(selectionNodes)

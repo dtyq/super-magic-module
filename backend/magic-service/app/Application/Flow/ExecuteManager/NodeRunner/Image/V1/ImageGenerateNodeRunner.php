@@ -12,16 +12,9 @@ use App\Application\Flow\ExecuteManager\ExecutionData\ExecutionData;
 use App\Application\Flow\ExecuteManager\NodeRunner\NodeRunner;
 use App\Domain\Flow\Entity\ValueObject\NodeParamsConfig\Image\V1\ImageGenerateNodeParamsConfig;
 use App\Domain\Flow\Entity\ValueObject\NodeType;
-use App\Domain\ModelAdmin\Constant\ServiceProviderType;
-use App\Domain\ModelGateway\Entity\MsgLogEntity;
-use App\Domain\ModelGateway\Entity\ValueObject\LLMDataIsolation;
 use App\Infrastructure\Core\Collector\ExecuteManager\Annotation\FlowNodeDefine;
 use App\Infrastructure\Core\Dag\VertexResult;
-use App\Infrastructure\ExternalAPI\ImageGenerateAPI\ImageGenerateFactory;
-use App\Infrastructure\ExternalAPI\ImageGenerateAPI\ImageGenerateModelType;
-use DateTime;
-
-use function Hyperf\Coroutine\defer;
+use App\Interfaces\Authorization\Web\MagicUserAuthorization;
 
 #[FlowNodeDefine(
     type: NodeType::ImageGenerate->value,
@@ -66,24 +59,7 @@ class ImageGenerateNodeRunner extends NodeRunner
         $modelId = $paramsConfig->getModelId();
         $vertexResult->addDebugLog('model_id', $modelId);
 
-        $serviceProviderResponse = $this->serviceProviderDomainService->getServiceProviderConfigByModelId($modelId, $executionData->getDataIsolation()->getCurrentOrganizationCode());
-
-        $serviceProviderModelsEntity = $serviceProviderResponse->getServiceProviderModelsEntity();
-        $modelVersion = $serviceProviderModelsEntity->getModelVersion();
-        // 根据模型类型创建对应的服务
-
-        $imageGenerateType = ImageGenerateModelType::fromModel($modelVersion);
-        $imageGenerateService = ImageGenerateFactory::create($imageGenerateType);
-
-        if ($serviceProviderResponse->getServiceProviderType() === ServiceProviderType::NORMAL) {
-            $serviceProviderConfig = $serviceProviderResponse->getServiceProviderConfig();
-            $imageGenerateService->setApiKey($serviceProviderConfig->getApiKey());
-            $imageGenerateService->setAK($serviceProviderConfig->getAk());
-            $imageGenerateService->setSK($serviceProviderConfig->getSk());
-        }
-
         $data = [
-            'model' => $modelVersion,
             'model_id' => $modelId,
             'height' => $height,
             'width' => $wide,
@@ -92,11 +68,14 @@ class ImageGenerateNodeRunner extends NodeRunner
             'ratio' => $ratio,
             'use_sr' => $useSr,
             'reference_images' => $referenceImages,
+            'generate_num' => 1,
         ];
-        $imageGenerateRequest = ImageGenerateFactory::createRequestType($imageGenerateType, $data);
-        $imageGenerateRequest->setGenerateNum(4);
-        $imageGenerateResponse = $imageGenerateService->generateImage($imageGenerateRequest);
-        $images = $imageGenerateResponse->getData();
+        $flowDataIsolation = $executionData->getDataIsolation();
+        $magicUserAuthorization = new MagicUserAuthorization();
+        $magicUserAuthorization->setOrganizationCode($flowDataIsolation->getCurrentOrganizationCode());
+        $magicUserAuthorization->setId($flowDataIsolation->getCurrentUserId());
+        $images = $this->llmAppService->imageGenerate($magicUserAuthorization, '', $modelId, $data);
+
         // 这里可能是 url、base64，均记录到流程执行附件中（此时会进行上传到云服务端）。上传失败的文件会直接跳过
         $attachments = $this->recordFlowExecutionAttachments($executionData, $images, true);
         $vertexResult->addDebugLog('attachments', array_map(fn (AbstractAttachment $attachment) => $attachment->toArray(), $attachments));
@@ -105,31 +84,5 @@ class ImageGenerateNodeRunner extends NodeRunner
         ];
         $vertexResult->setResult($result);
         $executionData->saveNodeContext($this->node->getNodeId(), $result);
-        $this->recordMessageLog($modelVersion, $executionData);
-    }
-
-    private function recordMessageLog(string $modelVersion, ExecutionData $executionData): void
-    {
-        // 记录日志
-        defer(function () use ($modelVersion, $executionData) {
-            $flowDataIsolation = $executionData->getDataIsolation();
-            $currentUserId = $flowDataIsolation->getCurrentUserId();
-            $currentOrganizationCode = $flowDataIsolation->getCurrentOrganizationCode();
-            $LLMDataIsolation = LLMDataIsolation::create($currentUserId, $currentOrganizationCode);
-
-            $nickname = $this->userDomainService->getUserById($currentUserId)->getNickname();
-            $msgLog = new MsgLogEntity();
-            $msgLog->setModel($modelVersion);
-            $msgLog->setUserId($currentUserId);
-            $msgLog->setUseAmount(0);
-            $msgLog->setUseToken(0);
-            $msgLog->setAppCode('');
-            $msgLog->setOrganizationCode($currentOrganizationCode);
-            $msgLog->setBusinessId($executionData->getFlowCode());
-            $msgLog->setSourceId('sk_flow');
-            $msgLog->setUserName($nickname);
-            $msgLog->setCreatedAt(new DateTime());
-            $this->msgLogDomainService->create($LLMDataIsolation, $msgLog);
-        });
     }
 }

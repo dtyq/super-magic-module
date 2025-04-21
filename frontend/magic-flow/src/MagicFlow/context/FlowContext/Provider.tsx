@@ -4,8 +4,17 @@ import {
 	FlowCtx,
 	FlowDataContext,
 	FlowEdgesContext,
+	FlowEdgesStateContext,
+	FlowEdgesActionsContext,
 	FlowNodesContext,
 	FlowUIContext,
+	NodeConfigActionsContext,
+	NodeConfigContext,
+	FlowNodesActionsContext,
+	FlowNodesCtx,
+	FlowNodesStateContext,
+	FlowUICtx,
+	FlowEdgesCtx,
 } from "./Context"
 
 export const FlowProvider = ({
@@ -49,35 +58,45 @@ export const FlowProvider = ({
 		}
 	}, [flow, description, debuggerMode, updateFlow])
 
-	const flowEdgesValue = useMemo(() => {
+	// 边状态值
+	const flowEdgesStateValue = useMemo(() => {
 		return {
 			edges,
+			selectedEdgeId,
+		}
+	}, [edges, selectedEdgeId])
+
+	// 边动作值
+	const flowEdgesActionsValue = useMemo(() => {
+		return {
 			onEdgesChange,
 			onConnect,
 			setEdges,
-			selectedEdgeId,
 			setSelectedEdgeId,
 			updateNextNodeIdsByDeleteEdge,
 			updateNextNodeIdsByConnect,
 			deleteEdges,
 		}
 	}, [
-		edges,
 		onEdgesChange,
 		onConnect,
 		setEdges,
-		selectedEdgeId,
 		setSelectedEdgeId,
 		updateNextNodeIdsByDeleteEdge,
 		updateNextNodeIdsByConnect,
 		deleteEdges,
 	])
 
+	// 原始边值（向后兼容）
+	const flowEdgesValue = useMemo(() => {
+		return {
+			...flowEdgesStateValue,
+			...flowEdgesActionsValue,
+		}
+	}, [flowEdgesStateValue, flowEdgesActionsValue])
+
 	const flowNodesValue = useMemo(() => {
 		return {
-			nodeConfig,
-			setNodeConfig,
-			updateNodeConfig,
 			addNode,
 			deleteNodes,
 			updateNodesPosition,
@@ -85,12 +104,8 @@ export const FlowProvider = ({
 			setSelectedNodeId,
 			triggerNode,
 			getNewNodeIndex,
-			notifyNodeChange,
 		}
 	}, [
-		nodeConfig,
-		setNodeConfig,
-		updateNodeConfig,
 		addNode,
 		deleteNodes,
 		updateNodesPosition,
@@ -98,7 +113,6 @@ export const FlowProvider = ({
 		setSelectedNodeId,
 		triggerNode,
 		getNewNodeIndex,
-		notifyNodeChange,
 	])
 
 	const flowUIValue = useMemo(() => {
@@ -110,6 +124,20 @@ export const FlowProvider = ({
 		}
 	}, [flowInstance, showMaterialPanel, setShowMaterialPanel, flowDesignListener])
 
+	const nodeConfigValue = useMemo(() => {
+		return {
+			nodeConfig,
+		}
+	}, [nodeConfig])
+
+	const nodeConfigActionsValue = useMemo(() => {
+		return {
+			setNodeConfig,
+			updateNodeConfig,
+			notifyNodeChange,
+		}
+	}, [setNodeConfig, updateNodeConfig, notifyNodeChange])
+
 	// 为了向后兼容，保留整体的FlowContext
 	const fullValue = useMemo(() => {
 		return {
@@ -117,18 +145,88 @@ export const FlowProvider = ({
 			...flowEdgesValue,
 			...flowNodesValue,
 			...flowUIValue,
+			...nodeConfigValue,
+			...nodeConfigActionsValue,
 		}
-	}, [flowDataValue, flowEdgesValue, flowNodesValue, flowUIValue])
+	}, [
+		flowDataValue,
+		flowEdgesValue,
+		flowNodesValue,
+		flowUIValue,
+		nodeConfigValue,
+		nodeConfigActionsValue,
+	])
 
 	return (
 		<FlowDataContext.Provider value={flowDataValue}>
-			<FlowEdgesContext.Provider value={flowEdgesValue}>
-				<FlowNodesContext.Provider value={flowNodesValue}>
-					<FlowUIContext.Provider value={flowUIValue}>
-						<FlowContext.Provider value={fullValue}>{children}</FlowContext.Provider>
-					</FlowUIContext.Provider>
-				</FlowNodesContext.Provider>
-			</FlowEdgesContext.Provider>
+			<FlowEdgesActionsContext.Provider value={flowEdgesActionsValue}>
+				<FlowEdgesStateContext.Provider value={flowEdgesStateValue}>
+					<FlowEdgesContext.Provider value={flowEdgesValue}>
+						<FlowNodesContext.Provider value={flowNodesValue}>
+							<FlowUIContext.Provider value={flowUIValue}>
+								<NodeConfigActionsContext.Provider value={nodeConfigActionsValue}>
+									<NodeConfigContext.Provider value={nodeConfigValue}>
+										<FlowContext.Provider value={fullValue}>
+											{children}
+										</FlowContext.Provider>
+									</NodeConfigContext.Provider>
+								</NodeConfigActionsContext.Provider>
+							</FlowUIContext.Provider>
+						</FlowNodesContext.Provider>
+					</FlowEdgesContext.Provider>
+				</FlowEdgesStateContext.Provider>
+			</FlowEdgesActionsContext.Provider>
 		</FlowDataContext.Provider>
+	)
+}
+
+
+// FlowEdgesProvider组件：针对边相关数据的专用Provider
+export const FlowEdgesProvider = ({
+	children,
+	...props
+}: React.PropsWithChildren<FlowEdgesCtx>) => {
+	// 将边相关的状态和动作分开
+	const stateValue = useMemo(() => {
+		return {
+			edges: props.edges,
+			selectedEdgeId: props.selectedEdgeId,
+		}
+	}, [props.edges, props.selectedEdgeId])
+
+	const actionsValue = useMemo(() => {
+		return {
+			onEdgesChange: props.onEdgesChange,
+			onConnect: props.onConnect,
+			setEdges: props.setEdges,
+			setSelectedEdgeId: props.setSelectedEdgeId,
+			updateNextNodeIdsByDeleteEdge: props.updateNextNodeIdsByDeleteEdge,
+			updateNextNodeIdsByConnect: props.updateNextNodeIdsByConnect,
+			deleteEdges: props.deleteEdges,
+		}
+	}, [
+		props.onEdgesChange,
+		props.onConnect,
+		props.setEdges,
+		props.setSelectedEdgeId,
+		props.updateNextNodeIdsByDeleteEdge,
+		props.updateNextNodeIdsByConnect,
+		props.deleteEdges,
+	])
+
+	// 完整的边值（向后兼容）
+	const value = useMemo(() => {
+		return {
+			...stateValue,
+			...actionsValue,
+		}
+	}, [stateValue, actionsValue])
+
+	return (
+		<FlowEdgesActionsContext.Provider value={actionsValue}>
+			<FlowEdgesStateContext.Provider value={stateValue}>
+				<FlowEdgesContext.Provider value={value}>{children}</FlowEdgesContext.Provider>
+			</FlowEdgesStateContext.Provider>
+		</FlowEdgesActionsContext.Provider>
 	)
 }

@@ -1,10 +1,10 @@
 import FlowBackground from "@/MagicFlow/components/FlowDesign/components/FlowBackground"
-import { useFlowNodes, useNodeConfig } from "@/MagicFlow/context/FlowContext/useFlow"
+import { useNodeConfig } from "@/MagicFlow/context/FlowContext/useFlow"
 import { Tooltip } from "antd"
 import { IconInfoCircle } from "@tabler/icons-react"
 import clsx from "clsx"
 import i18next from "i18next"
-import React, { useMemo } from "react"
+import React, { useEffect, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { NodeProps, NodeToolbar, Position, useStore } from "reactflow"
 import styles from "../BaseNode/index.module.less"
@@ -13,15 +13,17 @@ import DebuggerComp from "../common/components/DebuggerComp"
 import useDrag from "../common/hooks/useDrag"
 import ToolbarComponent from "../common/toolbar"
 import "./index.less"
+import { FLOW_EVENTS, flowEventBus } from "@/common/BaseUI/Select/constants"
+import useNodeSelected from "@/MagicFlow/hooks/useNodeSelected"
 
 const connectionNodeIdSelector = (state: any) => state.connectionNodeId
 
 //@ts-ignore
 export default function GroupNode({ id, data, isConnectable, position }: NodeProps) {
-	const { selectedNodeId } = useFlowNodes()
 	const { nodeConfig } = useNodeConfig()
 	const connectionNodeId = useStore(connectionNodeIdSelector)
 	const { t } = useTranslation()
+	const { isSelected } = useNodeSelected(id)
 
 	const isTarget = connectionNodeId && connectionNodeId !== id
 
@@ -42,13 +44,13 @@ export default function GroupNode({ id, data, isConnectable, position }: NodePro
 	return (
 		<div
 			className={clsx("magic-group-node", {
-				[styles.isSelected]: selectedNodeId === id,
+				[styles.isSelected]: isSelected,
 			})}
 			onDragOver={onDragOver}
 			onDragLeave={onDragLeave}
 			onDrop={onDrop}
 		>
-			{selectedNodeId === id && (
+			{isSelected && (
 				<NodeToolbar position={position || Position.Top}>
 					<ToolbarComponent id={id} showCopy={false} />
 				</NodeToolbar>
@@ -65,7 +67,7 @@ export default function GroupNode({ id, data, isConnectable, position }: NodePro
 				nodeId={id}
 				position={Position.Left}
 				isConnectable={isConnectable}
-				isSelected={selectedNodeId === id}
+				isSelected={isSelected}
 				isTarget={isTarget}
 			/>
 			<FlowBackground />

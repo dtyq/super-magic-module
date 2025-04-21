@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from "react"
 
 import { FormItemType } from "@/MagicExpressionWidget/types"
-import { useFlowInteraction } from "@/MagicFlow/components/FlowDesign/context/FlowInteraction/useFlowInteraction"
 import TSIcon from "@/common/BaseUI/TSIcon"
 import { Button, Dropdown, Input, Popover, Tooltip } from "antd"
 import { useMemoizedFn, useMount, useResetState, useUpdateEffect } from "ahooks"
@@ -11,6 +10,7 @@ import { DataSourceOption } from "../.."
 import { allMethodOptions, generateStepOptions, generateString } from "./helpers"
 import "./index.less"
 import { Wrap } from "./style"
+import { useReactFlow } from "reactflow"
 
 export type StepOption = {
 	value: string // 实际的值，如 toArray()、toJson()、toNumber()..
@@ -32,6 +32,7 @@ const Transformer = ({ source, onSelect, children }: TransformerProps) => {
 	const [values, setValues, resetValues] = useResetState([] as StepOption[])
 	const [paths, setPaths] = useState([] as StepOption[])
 	const [open, setOpen] = useState(false)
+	const currentZoom = useReactFlow().getZoom()
 
 	const breadcrumbItems = useMemo(() => {
 		if (!values.length) return []
@@ -156,8 +157,6 @@ const Transformer = ({ source, onSelect, children }: TransformerProps) => {
 			resetValues()
 		}
 	})
-
-	const { currentZoom } = useFlowInteraction()
 
 	return (
 		<Popover

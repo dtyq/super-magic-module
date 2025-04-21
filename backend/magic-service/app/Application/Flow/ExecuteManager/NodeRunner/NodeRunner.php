@@ -13,6 +13,7 @@ use App\Application\Flow\ExecuteManager\Attachment\ExternalAttachment;
 use App\Application\Flow\ExecuteManager\ExecutionData\ExecutionData;
 use App\Application\Flow\ExecuteManager\Memory\FlowMemoryManager;
 use App\Application\ModelGateway\Mapper\ModelGatewayMapper;
+use App\Application\ModelGateway\Service\LLMAppService;
 use App\Application\Permission\Service\OperationPermissionAppService;
 use App\Domain\Chat\Service\MagicChatFileDomainService;
 use App\Domain\Contact\Service\MagicUserDomainService;
@@ -66,6 +67,8 @@ abstract class NodeRunner implements NodeRunnerInterface
 
     protected ModelGatewayMapper $modelGatewayMapper;
 
+    protected LLMAppService $llmAppService;
+
     protected string $organizationCode = '';
 
     public function __construct(Node $node)
@@ -81,6 +84,7 @@ abstract class NodeRunner implements NodeRunnerInterface
         $this->msgLogDomainService = di(MsgLogDomainService::class);
         $this->userDomainService = di(MagicUserDomainService::class);
         $this->modelGatewayMapper = di(ModelGatewayMapper::class);
+        $this->llmAppService = di(LLMAppService::class);
 
         $this->node = $node;
         // 初始化运行结果

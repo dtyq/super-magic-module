@@ -1,5 +1,4 @@
-import { useFlowData, useFlowEdges, useNodeConfig } from "@/MagicFlow/context/FlowContext/useFlow"
-import { useNodes } from "@/MagicFlow/context/NodesContext/useNodes"
+import { useFlowData, useNodeConfig } from "@/MagicFlow/context/FlowContext/useFlow"
 import { checkHasNodeOutOfFlow, sortByEdges } from "@/MagicFlow/utils/reactflowUtils"
 import { Modal } from "antd"
 import { IconAlertCircleFilled, IconCircleCheckFilled } from "@tabler/icons-react"
@@ -10,23 +9,26 @@ import _ from "lodash"
 import React, { useMemo } from "react"
 import { useTranslation } from "react-i18next"
 import styles from "../index.module.less"
+import { useReactFlow } from "reactflow"
+import { MagicFlow } from "@/MagicFlow/types/flow"
 
 export default function useFlowHeader() {
 	const { t } = useTranslation()
 	const { nodeConfig } = useNodeConfig()
 	const { flow, description, debuggerMode } = useFlowData()
-	const { edges } = useFlowEdges()
-	const { nodes } = useNodes()
+	const { getNodes, getEdges } = useReactFlow()
 
 	// 返回事件
 	const back = useMemoizedFn(() => {})
 
 	const generateSubmitData = useMemoizedFn(async (enabled: boolean, isTip = true) => {
 		if (!flow) return
+		const nodes = getNodes()
+		const edges = getEdges()
 
 		let config = _.cloneDeep(flow)
 
-		const nodeIds = nodes.map((n) => n.node_id)
+		const nodeIds = nodes.map((n) => n.id)
 
 		let _nodes = Object.values(nodeConfig).filter((n) => nodeIds.includes(n.node_id))
 
@@ -56,8 +58,10 @@ export default function useFlowHeader() {
 	})
 
 	const submit = useMemoizedFn(async (status) => {
+		const nodes = getNodes()
+		const edges = getEdges()
 		/** 校验是否有节点，没有在主流程内 */
-		const existOutOfFlowNode = checkHasNodeOutOfFlow(nodes, edges)
+		const existOutOfFlowNode = checkHasNodeOutOfFlow(nodes as MagicFlow.Node[], edges)
 		if (debuggerMode) {
 			const sortedNodes = sortByEdges(Object.values(nodeConfig), edges)
 

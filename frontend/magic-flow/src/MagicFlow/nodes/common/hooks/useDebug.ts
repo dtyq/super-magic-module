@@ -6,8 +6,8 @@ import { useTranslation } from 'react-i18next'
 import resolveToString from '@/common/utils/template'
 import { getAllPredecessors } from '@/MagicFlow/utils/reactflowUtils'
 import { checkIsInGroup } from '@/MagicFlow/utils'
-import { useFlowEdges, useNodeConfig, useNodeConfigActions } from '@/MagicFlow/context/FlowContext/useFlow'
-import { useExternal } from '@/MagicFlow/context/ExternalContext/useExternal'
+import { useNodeConfig, useNodeConfigActions } from '@/MagicFlow/context/FlowContext/useFlow'
+import { useExternalConfig } from '@/MagicFlow/context/ExternalContext/useExternal'
 import { useReactFlow } from 'reactflow'
 
 type DebugProps = {
@@ -20,19 +20,20 @@ export default function useDebug({ id }: DebugProps) {
 
 	const [isDebug, setIsDebug] = useState(false)
 
-	const { allowDebug } = useExternal()
+	const { allowDebug } = useExternalConfig()
 
-	const { edges } = useFlowEdges()
     const { nodeConfig } = useNodeConfig()
     const { updateNodeConfig } = useNodeConfigActions()
-    const { getNodes } = useReactFlow()
+    const { getNodes, getEdges } = useReactFlow()
     
 	const currentNode = useMemo(() => {
 		return nodeConfig[id]
 	}, [nodeConfig, id])
 
 	const checkHasPreNodeInDebug = useMemoizedFn(() => {
+        
 		if(!currentNode) return false
+        const edges = getEdges()
         const nodes = getNodes()
 		let predecessors = getAllPredecessors(currentNode, nodes, edges)
 		
@@ -58,7 +59,7 @@ export default function useDebug({ id }: DebugProps) {
 			// 当前节点是否处于debug模式
 			setIsDebug(!!currentNode?.debug)
 		}
-	}, [nodeConfig, edges])
+	}, [nodeConfig])
 
 
 	const onDebugChange = useMemoizedFn((debug: boolean) => {

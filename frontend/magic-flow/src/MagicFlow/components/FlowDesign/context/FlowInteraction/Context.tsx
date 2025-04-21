@@ -3,41 +3,57 @@ import { MagicFlow } from "@/MagicFlow/types/flow"
 import React from "react"
 import { Edge, Node } from "reactflow"
 
-export type FlowInteractionCtx = React.PropsWithChildren<{
+// 将FlowInteractionCtx拆分为状态和动作两部分
+export type FlowInteractionStateType = {
 	isDragging: boolean
+	showParamsComp: boolean
+	showSelectionTools: boolean
+	currentZoom: number
+	selectionNodes: MagicFlow.Node[]
+	selectionEdges: Edge[]
+}
 
-	nodeClick: boolean
-
+export type FlowInteractionActionsType = {
 	resetLastLayoutData: () => void
-
 	onAddItem: (
 		event: any,
 		nodeData: NodeSchema,
 		extraConfig?: Record<string, any>,
 	) => Promise<void>
-
 	layout: () => MagicFlow.Node[]
-
-	showParamsComp: boolean
-
-	showSelectionTools: boolean
 	setShowSelectionTools: React.Dispatch<React.SetStateAction<boolean>>
-
 	onNodesDelete: (_nodes: Node[]) => void
-
-	currentZoom: number
-
 	reactFlowWrapper?: React.RefObject<HTMLDivElement>
+}
 
-	selectionNodes: MagicFlow.Node[]
-	selectionEdges: Edge[]
-}>
+export type FlowInteractionCtx = React.PropsWithChildren<
+	FlowInteractionStateType & FlowInteractionActionsType
+>
 
+// 状态Context
+export const FlowInteractionStateContext = React.createContext<FlowInteractionStateType>({
+	isDragging: false,
+	showParamsComp: true,
+	showSelectionTools: false,
+	currentZoom: 1,
+	selectionNodes: [],
+	selectionEdges: [],
+})
+
+// 动作Context
+export const FlowInteractionActionsContext = React.createContext<FlowInteractionActionsType>({
+	resetLastLayoutData: () => {},
+	onAddItem: (() => Promise.resolve()) as any,
+	layout: () => [],
+	setShowSelectionTools: () => {},
+	onNodesDelete: () => {},
+	reactFlowWrapper: undefined,
+})
+
+// 保持原有Context向后兼容
 export const FlowInteractionContext = React.createContext({
 	// 是否处于拖拽状态
 	isDragging: false,
-
-	nodeClick: false,
 
 	// 重置布局
 	resetLastLayoutData: () => {},

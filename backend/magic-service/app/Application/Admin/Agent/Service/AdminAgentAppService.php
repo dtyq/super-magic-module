@@ -5,9 +5,9 @@ declare(strict_types=1);
  * Copyright (c) The Magic , Distributed under the software license
  */
 
-namespace App\Application\Admin\Service;
+namespace App\Application\Admin\Agent\Service;
 
-use App\Application\Admin\Service\Extra\Factory\ExtraDetailAppenderFactory;
+use App\Application\Admin\Agent\Service\Extra\Factory\ExtraDetailAppenderFactory;
 use App\Application\Kernel\AbstractKernelAppService;
 use App\Domain\Admin\Entity\AdminGlobalSettingsEntity;
 use App\Domain\Admin\Entity\ValueObject\AdminGlobalSettingsName;

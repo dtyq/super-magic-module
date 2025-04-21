@@ -7,6 +7,7 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\ExternalAPI\ImageGenerateAPI\Model\Flux;
 
+use App\Domain\ModelAdmin\Entity\ValueObject\ServiceProviderConfig;
 use App\ErrorCode\ImageGenerateErrorCode;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Infrastructure\ExternalAPI\ImageGenerateAPI\ImageGenerate;
@@ -36,12 +37,10 @@ class FluxModel extends AbstractDingTalkAlert implements ImageGenerate
 
     protected FluxAPI $api;
 
-    public function __construct()
+    public function __construct(ServiceProviderConfig $serviceProviderConfig)
     {
         parent::__construct();
-        $apiKey = \Hyperf\Config\config('image_generate.flux.api_key');
-        $baseUrl = \Hyperf\Config\config('image_generate.flux.host');
-        $this->api = new FluxAPI($apiKey, $baseUrl);
+        $this->api = new FluxAPI($serviceProviderConfig->getApiKey());
         $this->balanceThreshold = 100;
     }
 

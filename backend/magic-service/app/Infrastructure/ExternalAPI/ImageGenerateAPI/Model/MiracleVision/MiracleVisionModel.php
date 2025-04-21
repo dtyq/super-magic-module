@@ -7,6 +7,7 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\ExternalAPI\ImageGenerateAPI\Model\MiracleVision;
 
+use App\Domain\ModelAdmin\Entity\ValueObject\ServiceProviderConfig;
 use App\ErrorCode\ImageGenerateErrorCode;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Infrastructure\ExternalAPI\ImageGenerateAPI\ImageGenerate;
@@ -46,11 +47,9 @@ class MiracleVisionModel implements ImageGenerate
 
     private MiracleVisionAPI $api;
 
-    public function __construct()
+    public function __construct(ServiceProviderConfig $serviceProviderConfig)
     {
-        $key = config('image_generate.miracle_vision.key');
-        $secret = config('image_generate.miracle_vision.secret');
-        $this->api = new MiracleVisionAPI($key, $secret);
+        $this->api = new MiracleVisionAPI($serviceProviderConfig->getAk(), $serviceProviderConfig->getSk());
     }
 
     public function generateImage(ImageGenerateRequest $imageGenerateRequest): ImageGenerateResponse

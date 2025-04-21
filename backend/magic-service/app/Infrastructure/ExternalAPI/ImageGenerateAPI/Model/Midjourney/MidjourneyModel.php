@@ -7,6 +7,7 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\ExternalAPI\ImageGenerateAPI\Model\Midjourney;
 
+use App\Domain\ModelAdmin\Entity\ValueObject\ServiceProviderConfig;
 use App\ErrorCode\ImageGenerateErrorCode;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Infrastructure\ExternalAPI\ImageGenerateAPI\ImageGenerate;
@@ -32,12 +33,10 @@ class MidjourneyModel extends AbstractDingTalkAlert implements ImageGenerate
 
     protected MidjourneyAPI $api;
 
-    public function __construct()
+    public function __construct(ServiceProviderConfig $serviceProviderConfig)
     {
         parent::__construct();
-        $apiKey = \Hyperf\Config\config('image_generate.midjourney.api_key', '');
-        $baseUrl = \Hyperf\Config\config('image_generate.midjourney.host', '');
-        $this->api = new MidjourneyAPI($apiKey, $baseUrl);
+        $this->api = new MidjourneyAPI($serviceProviderConfig->getApiKey());
         $this->balanceThreshold = 100;
     }
 
