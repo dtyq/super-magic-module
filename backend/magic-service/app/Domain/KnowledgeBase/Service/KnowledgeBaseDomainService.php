@@ -7,6 +7,7 @@ declare(strict_types=1);
 
 namespace App\Domain\KnowledgeBase\Service;
 
+use App\Application\ModelGateway\Mapper\ModelGatewayMapper;
 use App\Domain\Flow\Entity\ValueObject\Code;
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseEntity;
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseFragmentEntity;
@@ -63,6 +64,9 @@ readonly class KnowledgeBaseDomainService
             }
             $savingMagicFlowKnowledgeEntity->prepareForModification($magicFlowKnowledgeEntity);
         }
+
+        // 创建知识库前，先对嵌入模型进行连通性测试
+        di(ModelGatewayMapper::class)->getEmbeddingModelProxy($magicFlowKnowledgeEntity->getModel());
 
         $magicFlowKnowledgeEntity = $this->magicFlowKnowledgeRepository->save($dataIsolation, $magicFlowKnowledgeEntity);
 
