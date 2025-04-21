@@ -52,7 +52,7 @@ class KnowledgeBaseAppService extends AbstractKnowledgeAppService
 
         // 设置嵌入模型和向量数据库
         $model = $this->serviceProviderDomainService->findSelectedActiveProviderByType($dataIsolation->getCurrentOrganizationCode(), ModelType::EMBEDDING);
-        $magicFlowKnowledgeEntity->setModel($model ?? EmbeddingGenerator::defaultModel());
+        $magicFlowKnowledgeEntity->setModel($model?->getServiceProviderModelsEntity()?->getModelId() ?? EmbeddingGenerator::defaultModel());
         $magicFlowKnowledgeEntity->setVectorDB(VectorStoreDriver::default()->value);
 
         // 获取 文件
