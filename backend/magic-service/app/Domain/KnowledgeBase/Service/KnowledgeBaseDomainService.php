@@ -26,6 +26,7 @@ use App\Infrastructure\Core\ValueObject\Page;
 use Dtyq\AsyncEvent\AsyncEventUtil;
 use Hyperf\DbConnection\Annotation\Transactional;
 use Psr\SimpleCache\CacheInterface;
+use Throwable;
 
 readonly class KnowledgeBaseDomainService
 {
@@ -66,7 +67,13 @@ readonly class KnowledgeBaseDomainService
         }
 
         // 创建知识库前，先对嵌入模型进行连通性测试
-        di(ModelGatewayMapper::class)->getEmbeddingModelProxy($magicFlowKnowledgeEntity->getModel());
+        try {
+            $model = di(ModelGatewayMapper::class)->getEmbeddingModelProxy($magicFlowKnowledgeEntity->getModel());
+            $model->embedding('test');
+        } catch (Throwable $exception) {
+            $modelName = ! empty($model) ? $model->getModelName() : '';
+            ExceptionBuilder::throw(FlowErrorCode::KnowledgeValidateFailed, 'flow.model.embedding_failed', ['model_name' => $modelName]);
+        }
 
         $magicFlowKnowledgeEntity = $this->magicFlowKnowledgeRepository->save($dataIsolation, $magicFlowKnowledgeEntity);
 
