@@ -7,6 +7,7 @@ declare(strict_types=1);
 
 namespace App\Domain\Chat\Service;
 
+use App\Application\Chat\Service\SpecialAgentService;
 use App\Domain\Chat\DTO\Agent\SenderExtraDTO;
 use App\Domain\Chat\DTO\Message\ControlMessage\AddFriendMessage;
 use App\Domain\Chat\DTO\Request\Common\ControlRequestData;
@@ -17,6 +18,8 @@ use App\Domain\Chat\Entity\ValueObject\MagicMessageStatus;
 use App\Domain\Chat\Entity\ValueObject\MessageType\ChatMessageType;
 use App\Domain\Chat\Entity\ValueObject\MessageType\ControlMessageType;
 use App\Domain\Chat\Entity\ValueObject\SocketEventType;
+use App\Domain\Chat\Entity\ValueObject\SpecialAICode;
+use App\Domain\Chat\Event\Agent\SpecialAgentEvent;
 use App\Domain\Chat\Event\Agent\UserCallAgentEvent;
 use App\Domain\Chat\Event\Agent\UserCallAgentFailEvent;
 use App\Domain\Contact\Entity\AccountEntity;
