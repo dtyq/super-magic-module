@@ -168,7 +168,7 @@ class VolcengineImageGenerateV3Model implements ImageGenerate
         maxAttempts: self::GENERATE_RETRY_COUNT,
         base: self::GENERATE_RETRY_TIME
     )]
-    #[RateLimit(create: 1, consume: 1, capacity: 0, key: ImageGenerate::IMAGE_GENERATE_KEY_PREFIX . ImageGenerate::IMAGE_GENERATE_SUBMIT_KEY_PREFIX . ImageGenerateModelType::VolcengineImageGenerateV3->value, waitTimeout: 60)]
+    #[RateLimit(create: 1, consume: 2, capacity: 0, key: ImageGenerate::IMAGE_GENERATE_KEY_PREFIX . ImageGenerate::IMAGE_GENERATE_SUBMIT_KEY_PREFIX . ImageGenerateModelType::VolcengineImageGenerateV3->value, waitTimeout: 60)]
     private function submitAsyncTask(VolcengineModelRequest $request): string
     {
         $prompt = $request->getPrompt();
