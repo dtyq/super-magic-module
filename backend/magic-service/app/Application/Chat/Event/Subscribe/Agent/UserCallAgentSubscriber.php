@@ -7,10 +7,8 @@ declare(strict_types=1);
 
 namespace App\Application\Chat\Event\Subscribe\Agent;
 
-use App\Application\Chat\Event\Subscribe\Agent\Factory\AgentFactory;
-use App\Domain\Chat\Entity\ValueObject\MessageType\ControlMessageType;
+use App\Application\Chat\Service\Agent\UserCallAgentManager;
 use App\Domain\Chat\Event\Agent\UserCallAgentEvent;
-use App\Domain\Chat\Service\MagicConversationDomainService;
 use Hyperf\Event\Annotation\Listener;
 use Hyperf\Event\Contract\ListenerInterface;
 use Hyperf\Logger\LoggerFactory;
@@ -22,13 +20,13 @@ class UserCallAgentSubscriber implements ListenerInterface
 {
     protected LoggerInterface $logger;
 
-    protected ContainerInterface $container;
+    protected UserCallAgentManager $userCallAgentManager;
 
     public function __construct(
         ContainerInterface $container,
     ) {
-        $this->container = $container;
         $this->logger = $container->get(LoggerFactory::class)->get(static::class);
+        $this->userCallAgentManager = $container->get(UserCallAgentManager::class);
     }
 
     public function listen(): array
@@ -44,33 +42,8 @@ class UserCallAgentSubscriber implements ListenerInterface
         if (! $event instanceof UserCallAgentEvent) {
             return;
         }
-        $messageEntity = $event->messageEntity;
-        $seqEntity = $event->seqEntity;
-        $agentAccountEntity = $event->agentAccountEntity;
-        $agentUserEntity = $event->agentUserEntity;
-        $senderUserEntity = $event->senderUserEntity;
-        $senderAccountEntity = $event->senderAccountEntity;
 
-        $magicConversationDomainService = $this->container->get(MagicConversationDomainService::class);
-
-        // 流程开始执行前,触发开始输入事件
-        if ($seqEntity->canTriggerFlowOperateConversationStatus()) {
-            $magicConversationDomainService->agentOperateConversationStatus(
-                ControlMessageType::StartConversationInput,
-                $seqEntity->getConversationId()
-            );
-        }
-
-        // 执行流程
-        AgentFactory::make($agentAccountEntity->getAiCode())->execute($event);
-
-        // 流程执行结束，推送结束输入事件
-        // ai准备开始发消息了,结束输入状态
-        if ($seqEntity->canTriggerFlowOperateConversationStatus()) {
-            $magicConversationDomainService->agentOperateConversationStatus(
-                ControlMessageType::EndConversationInput,
-                $seqEntity->getConversationId()
-            );
-        }
+        // 委托给管理器处理
+        $this->userCallAgentManager->process($event);
     }
 }

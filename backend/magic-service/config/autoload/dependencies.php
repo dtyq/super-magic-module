@@ -4,6 +4,7 @@ declare(strict_types=1);
 /**
  * Copyright (c) The Magic , Distributed under the software license
  */
+use App\Application\Chat\Service\Agent\DefaultUserCallAgentService;
 use App\Application\Chat\Service\SessionAppService;
 use App\Application\Flow\ExecuteManager\NodeRunner\Code\CodeExecutor\PHPExecutor;
 use App\Application\Flow\ExecuteManager\NodeRunner\Code\CodeExecutor\PythonExecutor;
@@ -111,6 +112,7 @@ use App\Domain\Token\Item\MagicTokenExtra;
 use App\Domain\Token\Repository\Facade\MagicTokenExtraInterface;
 use App\Domain\Token\Repository\Facade\MagicTokenRepositoryInterface;
 use App\Domain\Token\Repository\Persistence\MagicMagicTokenRepository;
+use App\Infrastructure\Core\Contract\Agent\UserCallAgentInterface;
 use App\Infrastructure\Core\Contract\Authorization\BaseFlowOpenApiCheck;
 use App\Infrastructure\Core\Contract\Authorization\FlowOpenApiCheckInterface;
 use App\Infrastructure\Core\Contract\Flow\CodeExecutor\PHPExecutorInterface;
@@ -271,6 +273,8 @@ $dependencies = [
 
     // admin
     AdminGlobalSettingsRepositoryInterface::class => AdminGlobalSettingsRepository::class,
+
+    UserCallAgentInterface::class => DefaultUserCallAgentService::class,
 ];
 
 // 如果存在重复,优先取dependencies_priority的配置,不存在重复，就合并
