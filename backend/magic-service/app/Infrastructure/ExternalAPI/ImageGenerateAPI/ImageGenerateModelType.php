@@ -13,9 +13,10 @@ enum ImageGenerateModelType: string
 {
     case Midjourney = 'Midjourney';
     case Volcengine = 'Volcengine';
+    case VolcengineImageGenerateV3 = 'VolcengineImageGenerateV3';
     case Flux = 'Flux';
     case MiracleVision = 'MiracleVision';
-    case TTAPIGPT4o = 'TTAPI-GPT4o';
+    case TTAPIGPT4o = 'GPT4o';
 
     // 目前美图ai超清的model_id
     case MiracleVisionHightModelId = 'miracleVision_mtlab';
@@ -29,6 +30,7 @@ enum ImageGenerateModelType: string
             in_array($model, self::getMidjourneyModes()) => self::Midjourney,
             in_array($model, self::getFluxModes()) => self::Flux,
             in_array($model, self::getVolcengineModes()) => self::Volcengine,
+            in_array($model, self::getVolcengineImageGenerateV3Modes()) => self::VolcengineImageGenerateV3,
             in_array($model, self::getGPT4oModes()) => self::TTAPIGPT4o,
             default => $throw ? throw new InvalidArgumentException('Unsupported model type: ' . $model) : self::Volcengine,
         };
@@ -58,7 +60,12 @@ enum ImageGenerateModelType: string
      */
     public static function getVolcengineModes(): array
     {
-        return ['Volcengine', 'high_aes_general_v21_L', 'byteedit_v2.0', 'high_aes_general_v30l_zt2i'];
+        return ['Volcengine', 'high_aes_general_v21_L', 'byteedit_v2.0'];
+    }
+
+    public static function getVolcengineImageGenerateV3Modes(): array
+    {
+        return ['high_aes_general_v30l_zt2i'];
     }
 
     public static function getMiracleVisionModes(): array
@@ -67,7 +74,6 @@ enum ImageGenerateModelType: string
     }
 
     /**
-     * GPT4o的所有模式.
      * @return string[]
      */
     public static function getGPT4oModes(): array

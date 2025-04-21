@@ -13,7 +13,7 @@ class ServiceProviderDTO extends AbstractEntity
 {
     protected string $id;
 
-    protected string $code = '';
+    protected string $providerCode = '';
 
     protected string $name = '';
 
@@ -53,14 +53,14 @@ class ServiceProviderDTO extends AbstractEntity
         $this->id = (string) $id;
     }
 
-    public function getCode(): string
+    public function getProviderCode(): string
     {
-        return $this->code;
+        return $this->providerCode;
     }
 
-    public function setCode(string $code): void
+    public function setProviderCode(string $providerCode): void
     {
-        $this->code = $code;
+        $this->providerCode = $providerCode;
     }
 
     public function getName(): string

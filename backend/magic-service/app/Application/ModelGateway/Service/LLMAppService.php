@@ -7,6 +7,7 @@ declare(strict_types=1);
 
 namespace App\Application\ModelGateway\Service;
 
+use App\Domain\ModelAdmin\Constant\ServiceProviderType;
 use App\Domain\ModelGateway\Entity\AccessTokenEntity;
 use App\Domain\ModelGateway\Entity\Dto\AbstractRequestDTO;
 use App\Domain\ModelGateway\Entity\Dto\CompletionDTO;
@@ -20,8 +21,15 @@ use App\Infrastructure\Core\Exception\BusinessException;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Infrastructure\Core\HighAvailability\DTO\EndpointResponseDTO;
 use App\Infrastructure\Core\HighAvailability\Interface\HighAvailabilityInterface;
+use App\Infrastructure\ExternalAPI\ImageGenerateAPI\ImageGenerateFactory;
+use App\Infrastructure\ExternalAPI\ImageGenerateAPI\ImageGenerateModelType;
+use App\Infrastructure\ExternalAPI\ImageGenerateAPI\Model\MiracleVision\MiracleVisionModel;
+use App\Infrastructure\ExternalAPI\ImageGenerateAPI\Model\MiracleVision\MiracleVisionModelResponse;
+use App\Infrastructure\ExternalAPI\ImageGenerateAPI\Request\MiracleVisionModelRequest;
 use App\Infrastructure\ExternalAPI\MagicAIApi\MagicAILocalModel;
 use App\Infrastructure\Util\Context\CoContext;
+use App\Infrastructure\Util\SSRF\SSRFUtil;
+use App\Interfaces\Authorization\Web\MagicUserAuthorization;
 use App\Interfaces\ModelGateway\Assembler\EndpointAssembler;
 use DateTime;
 use Hyperf\Context\ApplicationContext;
@@ -99,6 +107,65 @@ class LLMAppService extends AbstractLLMAppService
         return $this->processRequest($proxyModelRequest, function (EmbeddingInterface $model, EmbeddingsDTO $request) {
             return $this->callEmbeddingsModel($model, $request);
         });
+    }
+
+    public function imageGenerate(MagicUserAuthorization $authorization, string $modelVersion, string $modelId, array $data)
+    {
+        $serviceProviderResponse = $this->serviceProviderDomainService->getServiceProviderConfig($modelVersion, $modelId, $authorization->getOrganizationCode());
+
+        if ($serviceProviderResponse->getServiceProviderType() === ServiceProviderType::NORMAL) {
+            $modelVersion = $serviceProviderResponse->getServiceProviderModelsEntity()->getModelVersion();
+        }
+        if (empty($modelVersion)) {
+            $modelVersion = $serviceProviderResponse->getServiceProviderModelsEntity()->getModelVersion();
+        }
+        if (! isset($data['model'])) {
+            $data['model'] = $modelVersion;
+        }
+        $imageGenerateType = ImageGenerateModelType::fromModel($modelVersion, false);
+        $imageGenerateRequest = ImageGenerateFactory::createRequestType($imageGenerateType, $data);
+        $imageGenerateRequest->setGenerateNum($data['generate_num'] ?? 4);
+        $serviceProviderConfig = $serviceProviderResponse->getServiceProviderConfig();
+
+        $imageGenerateService = ImageGenerateFactory::create($imageGenerateType, $serviceProviderConfig);
+
+        // 收集配置信息并处理敏感数据
+        $configInfo = [
+            'model' => $data['model'] ?? '',
+            'apiKey' => $this->serviceProviderDomainService->maskString($serviceProviderConfig->getApiKey()),
+            'ak' => $this->serviceProviderDomainService->maskString($serviceProviderConfig->getAk()),
+            'sk' => $this->serviceProviderDomainService->maskString($serviceProviderConfig->getSk()),
+        ];
+
+        $this->logger->info('图像生成服务配置信息', $configInfo);
+
+        $imageGenerateResponse = $imageGenerateService->generateImage($imageGenerateRequest);
+        $images = $imageGenerateResponse->getData();
+        $this->logger->info('images', $images);
+        $this->recordImageGenerateMessageLog($modelVersion, $authorization->getId(), $authorization->getOrganizationCode());
+        return $images;
+    }
+
+    public function imageConvertHigh(MagicUserAuthorization $userAuthorization, string $url): string
+    {
+        $url = SSRFUtil::getSafeUrl($url, replaceIp: false);
+        $miracleVisionServiceProviderConfig = $this->serviceProviderDomainService->getMiracleVisionServiceProviderConfig(ImageGenerateModelType::MiracleVisionHightModelId->value, $userAuthorization->getOrganizationCode());
+        /**
+         * @var MiracleVisionModel $imageGenerateService
+         */
+        $imageGenerateService = ImageGenerateFactory::create(ImageGenerateModelType::MiracleVision, $miracleVisionServiceProviderConfig->getServiceProviderConfig());
+        $this->recordImageGenerateMessageLog(ImageGenerateModelType::MiracleVisionHightModelId->value, $userAuthorization->getId(), $userAuthorization->getOrganizationCode());
+        return $imageGenerateService->imageConvertHigh(new MiracleVisionModelRequest($url));
+    }
+
+    public function imageConvertHighQuery(MagicUserAuthorization $userAuthorization, string $taskId): MiracleVisionModelResponse
+    {
+        $miracleVisionServiceProviderConfig = $this->serviceProviderDomainService->getMiracleVisionServiceProviderConfig(ImageGenerateModelType::MiracleVisionHightModelId->value, $userAuthorization->getOrganizationCode());
+        /**
+         * @var MiracleVisionModel $imageGenerateService
+         */
+        $imageGenerateService = ImageGenerateFactory::create(ImageGenerateModelType::MiracleVision, $miracleVisionServiceProviderConfig->getServiceProviderConfig());
+        return $imageGenerateService->queryTask($taskId);
     }
 
     /**
@@ -550,5 +617,30 @@ class LLMAppService extends AbstractLLMAppService
             'line' => $throwable->getLine(),
             'trace' => $throwable->getTraceAsString(),
         ]);
+    }
+
+    /**
+     * 记录文生图日志.
+     */
+    private function recordImageGenerateMessageLog(string $modelVersion, string $userId, string $organizationCode): void
+    {
+        // 记录日志
+        defer(function () use ($modelVersion, $userId, $organizationCode) {
+            $LLMDataIsolation = LLMDataIsolation::create($userId, $organizationCode);
+
+            $nickname = $this->magicUserDomainService->getUserById($userId)->getNickname();
+            $msgLog = new MsgLogEntity();
+            $msgLog->setModel($modelVersion);
+            $msgLog->setUserId($userId);
+            $msgLog->setUseAmount(0);
+            $msgLog->setUseToken(0);
+            $msgLog->setAppCode('');
+            $msgLog->setOrganizationCode($organizationCode);
+            $msgLog->setBusinessId('');
+            $msgLog->setSourceId('chat_completions');
+            $msgLog->setUserName($nickname);
+            $msgLog->setCreatedAt(new DateTime());
+            $this->msgLogDomainService->create($LLMDataIsolation, $msgLog);
+        });
     }
 }

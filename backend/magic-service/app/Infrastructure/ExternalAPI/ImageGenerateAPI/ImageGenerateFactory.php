@@ -7,12 +7,14 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\ExternalAPI\ImageGenerateAPI;
 
+use App\Domain\ModelAdmin\Entity\ValueObject\ServiceProviderConfig;
 use App\ErrorCode\ImageGenerateErrorCode;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Infrastructure\ExternalAPI\ImageGenerateAPI\Model\Flux\FluxModel;
 use App\Infrastructure\ExternalAPI\ImageGenerateAPI\Model\GPT\GPT4oModel;
 use App\Infrastructure\ExternalAPI\ImageGenerateAPI\Model\Midjourney\MidjourneyModel;
 use App\Infrastructure\ExternalAPI\ImageGenerateAPI\Model\MiracleVision\MiracleVisionModel;
+use App\Infrastructure\ExternalAPI\ImageGenerateAPI\Model\Volcengine\VolcengineImageGenerateV3Model;
 use App\Infrastructure\ExternalAPI\ImageGenerateAPI\Model\Volcengine\VolcengineModel;
 use App\Infrastructure\ExternalAPI\ImageGenerateAPI\Request\FluxModelRequest;
 use App\Infrastructure\ExternalAPI\ImageGenerateAPI\Request\GPT4oModelRequest;
@@ -23,14 +25,15 @@ use InvalidArgumentException;
 
 class ImageGenerateFactory
 {
-    public static function create(ImageGenerateModelType $imageGenerateType): ImageGenerate
+    public static function create(ImageGenerateModelType $imageGenerateType, ServiceProviderConfig $serviceProviderConfig): ImageGenerate
     {
         return match ($imageGenerateType) {
-            ImageGenerateModelType::Midjourney => new MidjourneyModel(),
-            ImageGenerateModelType::Volcengine => new VolcengineModel(),
-            ImageGenerateModelType::Flux => new FluxModel(),
-            ImageGenerateModelType::MiracleVision => new MiracleVisionModel(),
-            ImageGenerateModelType::TTAPIGPT4o => new GPT4oModel(),
+            ImageGenerateModelType::Midjourney => new MidjourneyModel($serviceProviderConfig),
+            ImageGenerateModelType::Volcengine => new VolcengineModel($serviceProviderConfig),
+            ImageGenerateModelType::VolcengineImageGenerateV3 => new VolcengineImageGenerateV3Model($serviceProviderConfig),
+            ImageGenerateModelType::Flux => new FluxModel($serviceProviderConfig),
+            ImageGenerateModelType::MiracleVision => new MiracleVisionModel($serviceProviderConfig),
+            ImageGenerateModelType::TTAPIGPT4o => new GPT4oModel($serviceProviderConfig),
             default => throw new InvalidArgumentException('not support ' . $imageGenerateType->value),
         };
     }
@@ -60,12 +63,12 @@ class ImageGenerateFactory
             (string) $data['width'],
             (string) $data['height'],
             $data['user_prompt'],
-            $data['negative_prompt']
+            $data['negative_prompt'],
         );
         isset($data['generate_num']) && $request->setGenerateNum($data['generate_num']);
         $request->setUseSr((bool) $data['use_sr']);
-        $request->setModel($data['model']);
         $request->setReferenceImage($data['reference_images']);
+        $request->setModel($data['model']);
         return $request;
     }
 
