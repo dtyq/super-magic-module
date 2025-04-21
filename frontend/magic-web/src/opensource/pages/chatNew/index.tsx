@@ -17,6 +17,7 @@ import ChatImagePreviewModal from "./components/ChatImagePreviewModal"
 import DragFileSendTip from "./components/ChatMessageList/components/DragFileSendTip"
 import AiImageStartPage from "./components/AiImageStartPage"
 import { useMemoizedFn } from "ahooks"
+import EmptyConversationFallback from "./components/EmptyFallback"
 
 const TopicExtraSection = lazy(() => import("./components/topic/ExtraSection"))
 const SettingExtraSection = lazy(() => import("./components/setting"))
@@ -106,7 +107,9 @@ const ChatNew = observer(() => {
 					<MagicSplitter.Panel min={200} defaultSize={240} max={300}>
 						<ChatSubSider />
 					</MagicSplitter.Panel>
-					<MagicSplitter.Panel />
+					<MagicSplitter.Panel>
+						<EmptyConversationFallback />
+					</MagicSplitter.Panel>
 				</MagicSplitter>
 			</Flex>
 		)

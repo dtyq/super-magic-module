@@ -1,0 +1,123 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+@rule React 组件风格指南
+@description React 组件开发规范与最佳实践
+@priority high
+@category development
+
+# React 组件风格指南
+
+## 组件类型
+
+1. **函数组件**：默认使用函数组件和 Hooks，避免使用类组件
+   ```tsx
+   export const MyComponent = ({ prop1, prop2 }: MyComponentProps) => {
+     // 组件逻辑
+     return <div>组件内容</div>;
+   };
+   ```
+
+2. **HOC 模式**：需要共享逻辑时使用高阶组件
+   ```tsx
+   export const withAuth = (Component: React.ComponentType<any>) => {
+     return (props: any) => {
+       // 认证逻辑
+       return <Component {...props} />;
+     };
+   };
+   ```
+
+3. **Compound Components**：复杂组件使用复合组件模式
+   ```tsx
+   export const Tabs = ({ children }: TabsProps) => {
+     // Tabs 逻辑
+     return <div className="tabs">{children}</div>;
+   };
+   
+   Tabs.Item = ({ children }: TabItemProps) => {
+     return <div className="tab-item">{children}</div>;
+   };
+   ```
+
+## 样式约定
+
+1. 使用 `createStyle` 创建样式（基于 ant-design 5）
+   ```tsx
+   import { createStyle } from 'antd-style';
+   
+   const useStyles = createStyle(({ token }) => ({
+     container: {
+       padding: token.padding,
+       backgroundColor: token.colorBgContainer,
+       borderRadius: token.borderRadius,
+     },
+     title: {
+       color: token.colorTextHeading,
+       fontSize: token.fontSizeHeading3,
+     },
+   }));
+   
+   export const MyComponent = () => {
+     const styles = useStyles();
+     return (
+       <div className={styles.container}>
+         <h2 className={styles.title}>标题</h2>
+       </div>
+     );
+   };
+   ```
+
+## 状态管理
+
+1. **局部状态**：使用 `useState` 或 `useReducer`
+2. **全局状态**：使用 Zustand 或 MobX
+3. **复杂表单状态**：使用 `antd` 的 `Form` 组件
+
+## Props 设计
+
+1. 明确定义 Props 类型
+   ```tsx
+   interface ButtonProps {
+     type?: 'primary' | 'default' | 'danger';
+     size?: 'small' | 'middle' | 'large';
+     onClick?: (e: React.MouseEvent) => void;
+     disabled?: boolean;
+     children: React.ReactNode;
+   }
+   ```
+
+2. 使用 Props 解构和默认值
+   ```tsx
+   export const Button = ({
+     type = 'default',
+     size = 'middle',
+     onClick,
+     disabled = false,
+     children,
+   }: ButtonProps) => {
+     // 组件实现
+   };
+   ```
+
+## 性能优化
+
+1. 使用 `useMemo` 缓存计算结果
+2. 使用 `useCallback` 缓存函数引用
+3. 使用 `React.memo` 避免不必要的重渲染
+4. 适当使用 Code Splitting 和懒加载
+
+## 错误处理
+
+1. 使用 ErrorBoundary 组件捕获渲染错误
+2. API 请求错误统一处理
+3. 使用 try-catch 处理可预期的异常
+
+## 可访问性
+
+1. 使用语义化的 HTML 标签
+2. 提供适当的 ARIA 属性
+3. 确保键盘可导航
+4. 保持适当的颜色对比度

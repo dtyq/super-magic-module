@@ -248,7 +248,8 @@ export default {
 					"img",
 					{
 						...node.attrs,
-						class: "image",
+						class: "magic-image",
+						draggable: false,
 					},
 				]
 			},

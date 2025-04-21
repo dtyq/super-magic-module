@@ -13,12 +13,10 @@ import MagicSpin from "@/opensource/components/base/MagicSpin"
 import conversationStore from "@/opensource/stores/chatNew/conversation"
 import { ChatApi } from "@/apis"
 import MagicModal from "@/opensource/components/base/MagicModal"
-import { resolveToString } from "@dtyq/es6-template-strings"
 import { Virtuoso } from "react-virtuoso"
 
 import MagicGroupAvatar from "@/opensource/components/business/MagicGroupAvatar"
 import useGroupInfo from "@/opensource/hooks/chat/useGroupInfo"
-import useGroupConversationMembers from "@/opensource/hooks/chat/useGroupConversationMembers"
 import { observer } from "mobx-react-lite"
 import ConversationService from "@/opensource/services/chat/conversation/ConversationService"
 import type { GroupConversationMember } from "@/types/chat/conversation"
@@ -32,6 +30,7 @@ import RemoveGroupMember from "./components/RemoveGroupMember"
 import useInfoService from "@/opensource/services/userInfo"
 import { userStore } from "@/opensource/models/user"
 import { computed } from "mobx"
+import groupInfoStore from "@/opensource/stores/groupInfo"
 
 const enum GroupSettingListItemId {
 	UpdateGroupName = "updateGroupName",
@@ -54,11 +53,7 @@ const GroupSetting = observer(() => {
 
 	const { currentConversation: conversation } = conversationStore
 
-	const {
-		data: members = [],
-		isLoading: loadingMembers,
-		mutate,
-	} = useGroupConversationMembers(conversation?.receive_id)
+	const members = groupInfoStore.currentGroupMembers
 
 	const { groupInfo } = useGroupInfo(conversation?.receive_id)
 
@@ -228,7 +223,7 @@ const GroupSetting = observer(() => {
 
 	const onSubmitAddMember = useMemoizedFn<(typeof ChatApi)["addGroupUsers"]>((data) => {
 		return ChatApi.addGroupUsers(data)
-			.then(() => mutate())
+			.then(() => groupInfoService.fetchGroupMembers(conversation?.receive_id ?? ""))
 			.then((members = []) =>
 				useInfoService.fetchUserInfos(members.map((item) => item.user_id) ?? [], 2),
 			)
@@ -399,7 +394,7 @@ const GroupSetting = observer(() => {
 					</div>
 				</Flex>
 			</Flex>
-			<MagicSpin spinning={loadingMembers} className={styles.memberSection}>
+			<div className={styles.memberSection}>
 				<div
 					ref={containerRef}
 					style={{ width: "100%", height: totalRows > 4 ? 210 : "auto" }}
@@ -422,7 +417,7 @@ const GroupSetting = observer(() => {
 						/>
 					)}
 				</div>
-			</MagicSpin>
+			</div>
 			<Typography.Text className={styles.title}>{t("chat.groupInfo")}</Typography.Text>
 			<MagicList
 				gap={0}

@@ -32,6 +32,7 @@ import { fileToBase64 } from "./utils"
 import { FileHandler } from "./extensions/file-handler"
 import type { FileError } from "./utils"
 import Placeholder from "./components/Placeholder"
+import { message } from "antd"
 
 // 自定义历史管理扩展，确保正确处理撤销/重做
 const CustomHistory = Extension.create({
@@ -261,13 +262,23 @@ const MagicRichEditor = memo(
 		}, [])
 
 		// 使用 useCallback 优化 onValidationError 回调函数
-		const handleValidationError = useCallback((errors: FileError[]) => {
-			errors.forEach((validationError: FileError) => {
-				console.error({
-					content: `Image validation error, reason:${validationError.reason}`,
+		const handleValidationError = useCallback(
+			(errors: FileError[]) => {
+				errors.forEach((validationError: FileError) => {
+					switch (validationError.reason) {
+						case "size":
+							message.error(t("richEditor.fileTooLarge"))
+							break
+						case "invalidBase64":
+							message.error(t("richEditor.invalidBase64"))
+							break
+						default:
+							message.error(t("richEditor.uploadFailed"))
+					}
 				})
-			})
-		}, [])
+			},
+			[t],
+		)
 
 		const extensions = useMemo(() => {
 			const list = [
@@ -303,14 +314,15 @@ const MagicRichEditor = memo(
 				Image.configure({
 					inline: true,
 					allowedMimeTypes: ["image/*"],
-					maxFileSize: 5 * 1024 * 1024,
+					maxFileSize: 15 * 1024 * 1024,
 					onImageRemoved: handleImageRemoved,
 					onValidationError: handleValidationError,
 				}),
 				FileHandler.configure({
 					allowedMimeTypes: ["image/*"],
-					maxFileSize: 5 * 1024 * 1024,
+					maxFileSize: 15 * 1024 * 1024,
 					onPaste: handlePaste,
+					onValidationError: handleValidationError,
 				}),
 				// MentionExtension.configure({
 				// 	HTMLAttributes: {

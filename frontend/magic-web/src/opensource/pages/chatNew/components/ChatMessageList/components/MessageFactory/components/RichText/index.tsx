@@ -6,6 +6,7 @@ import ChatFileService from "@/opensource/services/chat/file/ChatFileService"
 import useStyles from "./styles"
 import schemaConfig from "./schemaConfig"
 import { transformJSONContent } from "./utils"
+import { useMemoizedFn } from "ahooks"
 
 interface Props {
 	content?: Record<string, any>
@@ -25,10 +26,18 @@ const RichText = memo(
 
 		const finalSchema = useMemo(() => new Schema(schemaConfig as any), [])
 
+		const handleClickOn = useMemoizedFn((view, pos, node, nodePos, event, direct) => {
+			if (node.type.name === "image" || node.type.name === "magic-emoji") {
+				event.preventDefault()
+				// 注释掉：解决点击图片后，图片无法触发点击事件
+				// event.stopPropagation()
+				return false
+			}
+			return true
+		})
+
 		// 初始化渲染器
 		useEffect(() => {
-			if (!containerRef.current || !content || initializingRef.current) return
-
 			async function init() {
 				initializingRef.current = true
 				try {
@@ -45,7 +54,7 @@ const RichText = memo(
 							])
 							c.attrs = {
 								...c.attrs,
-								src: fileUrl[c.attrs?.file_id].url ?? "",
+								src: fileUrl[c.attrs?.file_id]?.url ?? "",
 								hidden_detail: hiddenDetail,
 							}
 						},
@@ -71,6 +80,28 @@ const RichText = memo(
 							schema: finalSchema,
 						}),
 						editable: () => false,
+						handleClickOn,
+						handleTripleClickOn: handleClickOn,
+						handleDOMEvents: {
+							mousedown: (_, event) => {
+								if (event.target instanceof HTMLImageElement) {
+									event.preventDefault()
+									// 注释掉：解决点击图片后，图片无法触发点击事件
+									// event.stopPropagation()
+									return true
+								}
+								return false
+							},
+							click: (_, event) => {
+								if (event.target instanceof HTMLImageElement) {
+									event.preventDefault()
+									// 注释掉：解决点击图片后，图片无法触发点击事件
+									// event.stopPropagation()
+									return true
+								}
+								return false
+							},
+						},
 						plugins: [],
 					})
 				} finally {
@@ -78,14 +109,16 @@ const RichText = memo(
 				}
 			}
 
-			init()
-
-			// eslint-disable-next-line consistent-return
-			return () => {
-				editorViewRef.current?.destroy()
+			if (containerRef.current && content && !initializingRef.current) {
+				init()
 			}
-			// eslint-disable-next-line react-hooks/exhaustive-deps
-		}, [])
+
+			return () => {
+				if (editorViewRef.current) {
+					editorViewRef.current.destroy()
+				}
+			}
+		}, [content, finalSchema, handleClickOn, hiddenDetail, messageId])
 
 		// // 内容更新处理
 		// useEffect(() => {

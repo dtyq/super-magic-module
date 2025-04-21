@@ -57,6 +57,7 @@ const MagicAvatar = forwardRef<HTMLSpanElement, MagicAvatarProps>(
 		const srcNode = useMemo(() => {
 			return (
 				<img
+					draggable={false}
 					src={innerSrc}
 					className={styles.avatar}
 					alt={typeof children === "string" ? children : "avatar"}

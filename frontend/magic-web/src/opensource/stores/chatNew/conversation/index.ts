@@ -222,13 +222,15 @@ class ConversationStore {
 	 */
 	updateConversationLastMessage(
 		conversationId: string,
-		message: {
-			time: number
-			seq_id: string
-			text: string
-			topic_id: string
-			type: ConversationMessageType | ControlEventMessageType
-		},
+		message:
+			| {
+					time: number
+					seq_id: string
+					text: string
+					topic_id: string
+					type: ConversationMessageType | ControlEventMessageType
+			  }
+			| undefined,
 	) {
 		const conversation = this.conversations[conversationId]
 		if (!conversation) return

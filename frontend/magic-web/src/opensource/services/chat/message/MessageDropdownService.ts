@@ -12,6 +12,7 @@ import MessageService from "@/opensource/services/chat/message/MessageService"
 import MessageReplyService from "@/opensource/services/chat/message/MessageReplyService"
 import type { ControlEventMessageType } from "@/types/chat"
 import { ChatApi } from "@/apis"
+import MessageFilePreviewService from "@/opensource/services/chat/message/MessageFilePreview"
 
 const Items = {
 	[MessageContextMenuKey.Copy]: {
@@ -64,6 +65,8 @@ function canCopy(messageType: ConversationMessageType | ControlEventMessageType)
 		ConversationMessageType.RichText,
 		ConversationMessageType.Markdown,
 		ConversationMessageType.AggregateAISearchCard,
+		ConversationMessageType.AiImage,
+		ConversationMessageType.HDImage,
 	].includes(messageType as ConversationMessageType)
 }
 
@@ -128,7 +131,7 @@ function getMessageText(message: FullMessage) {
 	}
 }
 
-function copyMessage(messageId: string) {
+function copyMessage(messageId: string, e: EventTarget | null) {
 	console.log("copyMessage", messageId)
 	const message = MessageDropdownStore.currentMessage
 
@@ -139,6 +142,12 @@ function copyMessage(messageId: string) {
 			) as HTMLElement
 			if (target) {
 				copySelection(target)
+			}
+			break
+		case ConversationMessageType.AiImage:
+		case ConversationMessageType.HDImage:
+			if (e instanceof HTMLImageElement) {
+				MessageFilePreviewService.copy(e)
 			}
 			break
 		case ConversationMessageType.Text:
@@ -181,9 +190,11 @@ function removeMessage(messageId: string) {
 	)
 }
 
-const clickFunctions: Partial<Record<MessageContextMenuKey, (messageId: string) => void>> = {
-	[MessageContextMenuKey.Copy]: (messageId: string) => {
-		copyMessage(messageId)
+const clickFunctions: Partial<
+	Record<MessageContextMenuKey, (messageId: string, e: EventTarget | null) => void>
+> = {
+	[MessageContextMenuKey.Copy]: (messageId: string, e: EventTarget | null) => {
+		copyMessage(messageId, e)
 	},
 	[MessageContextMenuKey.Reply]: (messageId: string) => {
 		replyMessage(messageId)
@@ -196,12 +207,15 @@ const clickFunctions: Partial<Record<MessageContextMenuKey, (messageId: string) 
 	},
 }
 
-const MessageDropdownService = {
+class MessageDropdownService {
+	eventTarget: EventTarget | null = null
+
 	resetMenu() {
 		MessageDropdownStore.setMenu([])
-	},
+	}
 
-	setMenu(messageId: string): void {
+	setMenu(messageId: string, e: EventTarget): void {
+		this.eventTarget = e
 		const message = MessageStore.getMessage(messageId)
 		if (!message) return
 		MessageDropdownStore.setCurrentMessageId(messageId)
@@ -236,13 +250,13 @@ const MessageDropdownService = {
 		}
 
 		MessageDropdownStore.setMenu(menu)
-	},
+	}
 
 	clickMenuItem(key: MessageContextMenuKey) {
 		if (clickFunctions[key]) {
-			clickFunctions[key]!(MessageDropdownStore.currentMessageId || "")
+			clickFunctions[key]!(MessageDropdownStore.currentMessageId || "", this.eventTarget)
 		}
-	},
+	}
 }
 
-export default MessageDropdownService
+export default new MessageDropdownService()

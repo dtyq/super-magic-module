@@ -64,6 +64,20 @@ const useStyles = createStyles(({ css, isDarkMode, prefixCls, token }) => {
 			--${prefixCls}-button-text-hover-bg: ${token.magicColorUsages.fill[0]} !important;
 			user-select: none;
 		`,
+		emptyFallback: css`
+			width: 100%;
+			height: 100%;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+		`,
+		emptyFallbackText: css`
+			color: ${token.magicColorUsages.text[3]};
+			text-align: center;
+			font-size: 14px;
+			font-weight: 400;
+			line-height: 20px;
+		`,
 	}
 })
 

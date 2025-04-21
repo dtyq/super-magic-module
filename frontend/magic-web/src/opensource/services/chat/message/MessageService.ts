@@ -43,7 +43,7 @@ import { userStore } from "@/opensource/models/user"
 import { UpdateSpec } from "dexie"
 
 const console = new Logger("MessageService", "blue")
-const BigPageSize = 30
+const BigPageSize = 10
 
 type SendData =
 	| Pick<TextConversationMessage, "type" | "text">
@@ -1180,6 +1180,26 @@ class MessageService {
 	 */
 	updateMessageId(tempId: string, messsageId: string) {
 		MessageStore.updateMessageId(tempId, messsageId)
+	}
+
+	/**
+	 * 删除话题消息
+	 * @param conversationId 会话ID
+	 * @param deleteTopicId 话题ID
+	 */
+	removeTopicMessages(conversationId: string, deleteTopicId: string) {
+		if (
+			MessageStore.conversationId === conversationId &&
+			MessageStore.topicId === deleteTopicId
+		) {
+			MessageStore.reset()
+		} else if (MessageCacheService.hasCache(conversationId, deleteTopicId)) {
+			// 删除缓存中的消息
+			MessageCacheService.removeTopicMessages(conversationId, deleteTopicId)
+		}
+
+		// 删除数据库中的消息
+		this.messageDbService.removeTopicMessages(conversationId, deleteTopicId)
 	}
 }
 

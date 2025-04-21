@@ -29,6 +29,8 @@ import { ChatApi } from "@/apis"
 import { User } from "@/types/user"
 import { userStore } from "@/opensource/models/user"
 import LastConversationService from "./LastConversationService"
+import MessageReplyService from "../message/MessageReplyService"
+import groupInfoStore from "@/opensource/stores/groupInfo"
 
 /**
  * 会话服务
@@ -198,6 +200,9 @@ class ConversationService {
 				await this.initAiConversation(conversation)
 			}
 
+			// 重置引用消息
+			MessageReplyService.reset()
+
 			// 初始化会话消息
 			this.initConversationMessages(conversation)
 
@@ -220,29 +225,30 @@ class ConversationService {
 	}
 
 	initConversationMessages(conversation: Conversation) {
-		// if (
-		// 	// 是 AI 会话，并且有话题 id
-		// 	(conversation.isAiConversation && conversation.current_topic_id) ||
-		// 	// 不是 AI 会话
-		// 	!conversation.isAiConversation
-		// ) {
 		// 当前话题
 		const messageTopicId = conversation.isAiConversation ? conversation.current_topic_id : ""
 
-		// 初始化消息列表
-		MessageService.initMessages(conversation.id, messageTopicId).then(() => {
-			const lastMessage = last(MessageStore.messages)
-			if (lastMessage) {
-				// 更新最后一条消息渲染
-				this.updateLastReceiveMessage(conversation.id, {
-					time: lastMessage.message.send_time,
-					seq_id: lastMessage.message_id,
-					type: lastMessage.message.type,
-					text: getSlicedText(lastMessage.message),
-					topic_id: lastMessage.message.topic_id ?? "",
-				})
-			}
-		})
+		// 如果 AI 会话且没有话题 id，则重置消息列表
+		if (conversation.isAiConversation && !messageTopicId) {
+			MessageService.reset()
+		} else {
+			// 初始化消息列表
+			MessageService.initMessages(conversation.id, messageTopicId).then(() => {
+				const lastMessage = last(MessageStore.messages)
+				if (lastMessage) {
+					// 更新最后一条消息渲染
+					this.updateLastReceiveMessage(conversation.id, {
+						time: lastMessage.message.send_time,
+						seq_id: lastMessage.message_id,
+						type: lastMessage.message.type,
+						text: getSlicedText(lastMessage.message),
+						topic_id: lastMessage.message.topic_id ?? "",
+					})
+				} else {
+					this.clearLastReceiveMessage(conversation.id)
+				}
+			})
+		}
 
 		// 减少未读数量
 		console.log(
@@ -255,7 +261,6 @@ class ConversationService {
 			messageTopicId,
 			conversation.topic_unread_dots.get(messageTopicId) ?? 0,
 		)
-		// }
 	}
 
 	/**
@@ -264,7 +269,11 @@ class ConversationService {
 	 */
 	initGroupConversation(conversation: Conversation) {
 		// 拉取群聊信息
-		groupInfoService.fetchGroupInfos([conversation.receive_id])
+		groupInfoService.fetchGroupInfos([conversation.receive_id]).then((res) => {
+			if (res.length) {
+				groupInfoStore.setCurrentGroup(res[0])
+			}
+		})
 		// 拉取群聊成员
 		groupInfoService.fetchGroupMembers(conversation.receive_id)
 	}
@@ -567,10 +576,43 @@ class ConversationService {
 
 			conversationStore.updateConversationCurrentTopicId(conversationId, topicId ?? "")
 
+			// 重置引用消息
+			MessageReplyService.reset()
+
 			this.initConversationMessages(conversation)
 
 			// 更新数据库
 			ConversationDbServices.updateCurrentTopicId(conversationId, topicId ?? "")
+		}
+	}
+
+	clearCurrentTopic(conversationId: string) {
+		if (!conversationId) return
+		EditorStore.setLastConversationId(conversationStore.currentConversation?.id ?? "")
+		EditorStore.setLastTopicId(conversationStore.currentConversation?.current_topic_id ?? "")
+
+		const conversation = conversationStore.conversations[conversationId]
+		if (conversation) {
+			conversationStore.updateConversationCurrentTopicId(conversationId, "")
+
+			// 减少当前话题未读数量
+			const topicUnreadDots = conversation.topic_unread_dots.get("") ?? 0
+			if (topicUnreadDots > 0) {
+				DotsService.reduceTopicUnreadDots(
+					conversation.user_organization_code,
+					conversationId,
+					"",
+					topicUnreadDots,
+				)
+			}
+
+			// 重置引用消息
+			MessageReplyService.reset()
+
+			this.initConversationMessages(conversation)
+
+			// 更新数据库
+			ConversationDbServices.updateCurrentTopicId(conversationId, "")
 		}
 	}
 
@@ -672,6 +714,18 @@ class ConversationService {
 		}
 	}
 
+	/**
+	 * 清空最后一条消息
+	 * @param conversationId 会话ID
+	 */
+	clearLastReceiveMessage(conversationId: string) {
+		if (!conversationId) return
+		conversationStore.updateConversationLastMessage(conversationId, undefined)
+		// 更新数据库
+		ConversationDbServices.updateConversation(conversationId, {
+			last_receive_message: undefined,
+		})
+	}
 	/**
 	 * 开始会话输入
 	 * @param conversation_id 会话ID
