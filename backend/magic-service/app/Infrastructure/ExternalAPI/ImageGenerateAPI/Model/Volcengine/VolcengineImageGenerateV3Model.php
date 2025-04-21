@@ -16,11 +16,8 @@ use App\Infrastructure\ExternalAPI\ImageGenerateAPI\ImageGenerateType;
 use App\Infrastructure\ExternalAPI\ImageGenerateAPI\Request\ImageGenerateRequest;
 use App\Infrastructure\ExternalAPI\ImageGenerateAPI\Request\VolcengineModelRequest;
 use App\Infrastructure\ExternalAPI\ImageGenerateAPI\Response\ImageGenerateResponse;
-use App\Infrastructure\Util\Context\CoContext;
 use Exception;
-use Hyperf\Coroutine\Parallel;
 use Hyperf\Di\Annotation\Inject;
-use Hyperf\Engine\Coroutine;
 use Hyperf\RateLimit\Annotation\RateLimit;
 use Hyperf\Retry\Annotation\Retry;
 use Psr\Log\LoggerInterface;
@@ -61,40 +58,34 @@ class VolcengineImageGenerateV3Model implements ImageGenerate
             'req_key' => $imageGenerateRequest->getModel(),
         ]);
 
-        // 使用 Parallel 并行处理
-        $parallel = new Parallel();
+        // 使用同步方式处理
+        $results = [];
         for ($i = 0; $i < $count; ++$i) {
-            $fromCoroutineId = Coroutine::id();
-            $parallel->add(function () use ($imageGenerateRequest, $i, $fromCoroutineId) {
-                CoContext::copy($fromCoroutineId);
-                try {
-                    // 提交任务（带重试）
-                    $taskId = $this->submitAsyncTask($imageGenerateRequest);
-                    // 轮询结果（带重试）
-                    $result = $this->pollTaskResult($taskId, $imageGenerateRequest->getModel());
+            try {
+                // 提交任务（带重试）
+                $taskId = $this->submitAsyncTask($imageGenerateRequest);
+                // 轮询结果（带重试）
+                $result = $this->pollTaskResult($taskId, $imageGenerateRequest->getModel());
 
-                    return [
-                        'success' => true,
-                        'data' => $result['data'],
-                        'index' => $i,
-                    ];
-                } catch (Exception $e) {
-                    $this->logger->error('火山文生图：失败', [
-                        'error' => $e->getMessage(),
-                        'index' => $i,
-                    ]);
-                    return [
-                        'success' => false,
-                        'error_code' => $e->getCode(),
-                        'error_msg' => $e->getMessage(),
-                        'index' => $i,
-                    ];
-                }
-            });
+                $results[] = [
+                    'success' => true,
+                    'data' => $result['data'],
+                    'index' => $i,
+                ];
+            } catch (Exception $e) {
+                $this->logger->error('火山文生图：失败', [
+                    'error' => $e->getMessage(),
+                    'index' => $i,
+                ]);
+                $results[] = [
+                    'success' => false,
+                    'error_code' => $e->getCode(),
+                    'error_msg' => $e->getMessage(),
+                    'index' => $i,
+                ];
+            }
         }
 
-        // 获取所有并行任务的结果
-        $results = $parallel->wait();
         $imageUrls = [];
         $errors = [];
 
