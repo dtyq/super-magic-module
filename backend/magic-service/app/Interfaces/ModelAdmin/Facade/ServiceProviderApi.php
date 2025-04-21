@@ -240,7 +240,7 @@ class ServiceProviderApi extends AbstractApi
     {
         $authentication = $this->getAuthorization();
         $phone = $this->getPhone($authentication->getId());
-        if (!PermissionChecker::isSuperAdmin($authentication->getOrganizationCode(), $phone)) {
+        if (! PermissionChecker::isSuperAdmin($authentication->getOrganizationCode(), $phone)) {
             ExceptionBuilder::throw(UserErrorCode::ORGANIZATION_NOT_AUTHORIZE);
         }
     }

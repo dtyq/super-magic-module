@@ -9,7 +9,6 @@ namespace App\Infrastructure\Util\Auth\Permission;
 
 interface PermissionInterface
 {
-
     /**
      * 判断是否超级管理员.
      *
