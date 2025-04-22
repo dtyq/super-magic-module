@@ -71,9 +71,9 @@ abstract class AbstractRequestDTO extends AbstractEntity implements ProxyModelRe
         return $this->model;
     }
 
-    public function setModel(string $model): void
+    public function setModel(int|string $model): void
     {
-        $this->model = $model;
+        $this->model = (string) $model;
     }
 
     public function getIps(): array
