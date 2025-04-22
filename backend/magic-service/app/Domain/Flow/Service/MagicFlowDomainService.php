@@ -21,6 +21,7 @@ use App\Domain\Flow\Repository\Facade\MagicFlowRepositoryInterface;
 use App\ErrorCode\FlowErrorCode;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Infrastructure\Core\ValueObject\Page;
+use DateTime;
 use Dtyq\AsyncEvent\AsyncEventUtil;
 use Dtyq\TaskScheduler\Entity\TaskScheduler;
 use Dtyq\TaskScheduler\Entity\TaskSchedulerCrontab;
@@ -73,6 +74,16 @@ class MagicFlowDomainService extends AbstractDomainService
         $savingMagicFlow->prepareForCreation();
         $savingMagicFlow->setEnabled(true);
         return $this->magicFlowRepository->save($dataIsolation, $savingMagicFlow);
+    }
+
+    public function create(FlowDataIsolation $dataIsolation, MagicFlowEntity $savingMagicFlow): MagicFlowEntity
+    {
+        $dateTime = new DateTime();
+        $savingMagicFlow->setCreatedAt($dateTime);
+        $savingMagicFlow->setUpdatedAt($dateTime);
+        $flow = $this->magicFlowRepository->save($dataIsolation, $savingMagicFlow);
+        AsyncEventUtil::dispatch(new MagicFLowSavedEvent($flow, true));
+        return $flow;
     }
 
     /**
