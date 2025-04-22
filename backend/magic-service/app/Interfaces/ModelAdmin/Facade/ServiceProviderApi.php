@@ -17,6 +17,7 @@ use App\Domain\ModelAdmin\Entity\ServiceProviderModelsEntity;
 use App\Domain\ModelAdmin\Entity\ValueObject\ServiceProviderConfigDTO;
 use App\ErrorCode\UserErrorCode;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
+use App\Infrastructure\Util\Auth\PermissionChecker;
 use App\Interfaces\Authorization\Web\MagicUserAuthorization;
 use Dtyq\ApiResponse\Annotation\ApiResponse;
 use Exception;
@@ -235,13 +236,11 @@ class ServiceProviderApi extends AbstractApi
     }
 
     // 判断当前用户是否在白名单中
-    private function isInWhiteListForOrgization()
+    private function isInWhiteListForOrgization(): void
     {
-        $authenticatable = $this->getAuthorization();
-        $phone = $this->getPhone($authenticatable->getId());
-        $whiteMap = \Hyperf\Config\config('permission.organization_whitelists');
-        /** @var MagicUserAuthorization $authenticatable */
-        if (empty($whiteMap) || ! isset($whiteMap[$authenticatable->getOrganizationCode()]) || ! in_array($phone, $whiteMap[$authenticatable->getOrganizationCode()])) {
+        $authentication = $this->getAuthorization();
+        $phone = $this->getPhone($authentication->getId());
+        if (! PermissionChecker::isSuperAdmin($authentication->getOrganizationCode(), $phone)) {
             ExceptionBuilder::throw(UserErrorCode::ORGANIZATION_NOT_AUTHORIZE);
         }
     }
