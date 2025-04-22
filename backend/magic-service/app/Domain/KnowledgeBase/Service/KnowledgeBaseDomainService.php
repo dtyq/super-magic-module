@@ -7,6 +7,7 @@ declare(strict_types=1);
 
 namespace App\Domain\KnowledgeBase\Service;
 
+use App\Application\ModelGateway\Mapper\ModelGatewayMapper;
 use App\Domain\Flow\Entity\ValueObject\Code;
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseEntity;
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseFragmentEntity;
@@ -25,6 +26,7 @@ use App\Infrastructure\Core\ValueObject\Page;
 use Dtyq\AsyncEvent\AsyncEventUtil;
 use Hyperf\DbConnection\Annotation\Transactional;
 use Psr\SimpleCache\CacheInterface;
+use Throwable;
 
 readonly class KnowledgeBaseDomainService
 {
@@ -62,6 +64,15 @@ readonly class KnowledgeBaseDomainService
                 ExceptionBuilder::throw(FlowErrorCode::KnowledgeValidateFailed, 'flow.common.not_found', ['label' => $savingMagicFlowKnowledgeEntity->getCode()]);
             }
             $savingMagicFlowKnowledgeEntity->prepareForModification($magicFlowKnowledgeEntity);
+        }
+
+        // 创建知识库前，先对嵌入模型进行连通性测试
+        try {
+            $model = di(ModelGatewayMapper::class)->getEmbeddingModelProxy($magicFlowKnowledgeEntity->getModel());
+            $model->embedding('test');
+        } catch (Throwable $exception) {
+            $modelName = ! empty($model) ? $model->getModelName() : '';
+            ExceptionBuilder::throw(FlowErrorCode::KnowledgeValidateFailed, 'flow.model.embedding_failed', ['model_name' => $modelName]);
         }
 
         $magicFlowKnowledgeEntity = $this->magicFlowKnowledgeRepository->save($dataIsolation, $magicFlowKnowledgeEntity);
