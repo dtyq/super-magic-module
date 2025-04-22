@@ -37,7 +37,7 @@ Router::addGroup('/api/v1/admin', static function () {
         Router::get('/by-category', [ServiceProviderApi::class, 'getServiceProvidersByCategory']);
         Router::get('/non-official-llm', [ServiceProviderApi::class, 'getNonOfficialLlmProviders']);
         Router::get('/office-info', [ServiceProviderApi::class, 'isCurrentOrganizationOfficial']);
-    });
+    }, ['middleware' => [RequestContextMiddleware::class]]);
 
     Router::addGroup('/globals', static function () {
         Router::addGroup('/agents', static function () {
