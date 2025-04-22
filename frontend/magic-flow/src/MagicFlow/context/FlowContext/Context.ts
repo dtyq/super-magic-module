@@ -12,18 +12,42 @@ export type FlowDataCtx = {
     updateFlow: (this: any, flowConfig: any) => void
 }
 
-// 边相关
-export type FlowEdgesCtx = {
+// 边相关状态
+export type FlowEdgesStateType = {
     edges: Edge[]
+    selectedEdgeId: string | null
+}
+
+// 边相关动作
+export type FlowEdgesActionsType = {
     onEdgesChange: (this: any, changes: any) => void
     onConnect: (this: any, connection: any) => void
     setEdges: React.Dispatch<React.SetStateAction<Edge[]>>
-    selectedEdgeId: string | null
     setSelectedEdgeId: React.Dispatch<React.SetStateAction<string | null>>
     updateNextNodeIdsByDeleteEdge: (connection: Edge) => void
     updateNextNodeIdsByConnect: (newEdge: Edge) => void
     deleteEdges: (edgesToDelete: Edge[]) => void
 }
+
+// 边相关
+export type FlowEdgesCtx = FlowEdgesStateType & FlowEdgesActionsType
+
+// 边相关状态Context
+export const FlowEdgesStateContext = React.createContext<FlowEdgesStateType>({
+    edges: [] as Edge[],
+    selectedEdgeId: null,
+})
+
+// 边相关动作Context
+export const FlowEdgesActionsContext = React.createContext<FlowEdgesActionsType>({
+    onEdgesChange: () => {},
+    onConnect: () => {},
+    setEdges: () => {},
+    setSelectedEdgeId: () => {},
+    updateNextNodeIdsByDeleteEdge: () => {},
+    updateNextNodeIdsByConnect: () => {},
+    deleteEdges: () => {},
+})
 
 // 新增NodeConfigContext，用于管理节点配置数据
 export type NodeConfigCtx = {
@@ -51,16 +75,47 @@ export const NodeConfigActionsContext = React.createContext({
 	notifyNodeChange: () => {},
 } as NodeConfigActionsCtx)
 
-// 节点配置相关
-export type FlowNodesCtx = {
+// 将FlowNodesCtx拆分为状态和动作两部分
+export type FlowNodesStateType = {
+  selectedNodeId: string
+  triggerNode: any | null
+}
+
+export type FlowNodesActionsType = {
     addNode: (node: MagicFlow.Node | MagicFlow.Node[], meta?: any) => void
     deleteNodes: (nodeIds: string[]) => void
     updateNodesPosition: (nodeId: string[], position: Record<string,{ x: number; y: number }>) => void
-    selectedNodeId: string
-    setSelectedNodeId: React.Dispatch<React.SetStateAction<string>>
-    triggerNode: MagicFlow.Node
+    setSelectedNodeId: (id: string) => void
     getNewNodeIndex: () => number
 }
+
+export type FlowNodesCtx = FlowNodesStateType & FlowNodesActionsType
+
+// 状态Context
+export const FlowNodesStateContext = React.createContext<FlowNodesStateType>({
+  selectedNodeId: "",
+  triggerNode: null,
+})
+
+// 动作Context
+export const FlowNodesActionsContext = React.createContext<FlowNodesActionsType>({
+  addNode: () => {},
+  deleteNodes: () => {},
+  updateNodesPosition: () => {},
+  setSelectedNodeId: () => {},
+  getNewNodeIndex: () => 0,
+})
+
+// 保留原有Context以向后兼容
+export const FlowNodesContext = React.createContext({
+  addNode: () => {},
+  deleteNodes: () => {},
+  updateNodesPosition: () => {},
+  selectedNodeId: "",
+  setSelectedNodeId: () => {},
+  triggerNode: null,
+  getNewNodeIndex: () => 0,
+} as FlowNodesCtx)
 
 // UI状态相关
 export type FlowUICtx = {
@@ -88,6 +143,7 @@ export const FlowDataContext = React.createContext<FlowDataCtx>({
     updateFlow: () => {},
 })
 
+// 保留原有FlowEdgesContext以向后兼容
 export const FlowEdgesContext = React.createContext<FlowEdgesCtx>({
     edges: [] as Edge[],
     onEdgesChange: () => {},
@@ -99,16 +155,6 @@ export const FlowEdgesContext = React.createContext<FlowEdgesCtx>({
     updateNextNodeIdsByConnect: () => {},
     deleteEdges: () => {},
 })
-
-export const FlowNodesContext = React.createContext({
-	addNode: () => {},
-	deleteNodes: () => {},
-	updateNodesPosition: () => {},
-	selectedNodeId: "",
-	setSelectedNodeId: () => {},
-	triggerNode: null,
-	getNewNodeIndex: () => 0,
-} as FlowNodesCtx)
 
 export const FlowUIContext = React.createContext<FlowUICtx>({
     flowInstance: null as any,

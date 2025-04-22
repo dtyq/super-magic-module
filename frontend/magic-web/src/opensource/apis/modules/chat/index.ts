@@ -35,7 +35,7 @@ import type { Bot } from "@/types/bot"
 import type { TaskListParams, UserTask, CreateTaskParams, ListData } from "@/types/chat/task"
 import type { HttpClient } from "../../core/HttpClient"
 import type { ChatWebSocket } from "../../clients/chatWebSocket"
-
+import { fetchPaddingData } from "@/utils/request"
 export const generateChatApi = (fetch: HttpClient, socket: ChatWebSocket) => ({
 	/**
 	 * 登录
@@ -587,6 +587,24 @@ export const generateChatApi = (fetch: HttpClient, socket: ChatWebSocket) => ({
 		return fetch.post<Record<string, SeqRecord<ConversationMessage>[]>>(
 			genRequestUrl(RequestUrl.batchGetConversationMessagesV2),
 			arg0,
+		)
+	},
+
+	/**
+	 * 根据应用消息ID获取消息
+	 * @param appMessageId 应用消息ID
+	 * @returns
+	 */
+	getMessagesByAppMessageId(appMessageId: string) {
+		return fetchPaddingData(
+			(params) => {
+				return fetch.post<PaginationResponse<SeqRecord<ConversationMessage>>>(
+					genRequestUrl(RequestUrl.getMessagesByAppMessageId, { appMessageId }),
+					params,
+				)
+			},
+			[],
+			"",
 		)
 	},
 

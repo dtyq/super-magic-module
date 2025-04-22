@@ -9,6 +9,7 @@ import userInfoService from "@/opensource/services/userInfo"
 
 // 导入存储状态管理
 import conversationStore from "@/opensource/stores/chatNew/conversation"
+import groupInfoStore from "@/opensource/stores/groupInfo"
 import type { ConversationMessage } from "@/types/chat/conversation_message"
 import type {
 	AddFriendSuccessMessage,
@@ -221,6 +222,15 @@ class ControlMessageApplyService {
 		// 先获取用户信息，避免用户信息未加载
 		await userInfoService.fetchUserInfos(message.message.group_users_remove.user_ids ?? [], 2)
 		MessageService.addReceivedMessage(message)
+
+		// 如果当前会话是群组，移除群组成员
+		const currentConversation = conversationStore.currentConversation
+		if (
+			currentConversation?.receive_type === MessageReceiveType.Group &&
+			currentConversation?.receive_id === message.message.group_users_remove.group_id
+		) {
+			groupInfoStore.removeGroupMembers(message.message.group_users_remove.user_ids ?? [])
+		}
 	}
 
 	/**

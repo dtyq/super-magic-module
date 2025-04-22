@@ -7,10 +7,8 @@ declare(strict_types=1);
 
 namespace App\Application\Chat\Event\Subscribe\Agent;
 
-use App\Application\Chat\Event\Subscribe\Agent\Factory\AgentFactory;
-use App\Domain\Chat\Entity\ValueObject\MessageType\ControlMessageType;
+use App\Domain\Chat\Event\Agent\AgentExecuteInterface;
 use App\Domain\Chat\Event\Agent\UserCallAgentEvent;
-use App\Domain\Chat\Service\MagicConversationDomainService;
 use Hyperf\Event\Annotation\Listener;
 use Hyperf\Event\Contract\ListenerInterface;
 use Hyperf\Logger\LoggerFactory;
@@ -40,37 +38,7 @@ class UserCallAgentSubscriber implements ListenerInterface
 
     public function process(object $event): void
     {
-        /** @var UserCallAgentEvent $event */
-        if (! $event instanceof UserCallAgentEvent) {
-            return;
-        }
-        $messageEntity = $event->messageEntity;
-        $seqEntity = $event->seqEntity;
-        $agentAccountEntity = $event->agentAccountEntity;
-        $agentUserEntity = $event->agentUserEntity;
-        $senderUserEntity = $event->senderUserEntity;
-        $senderAccountEntity = $event->senderAccountEntity;
-
-        $magicConversationDomainService = $this->container->get(MagicConversationDomainService::class);
-
-        // 流程开始执行前,触发开始输入事件
-        if ($seqEntity->canTriggerFlowOperateConversationStatus()) {
-            $magicConversationDomainService->agentOperateConversationStatus(
-                ControlMessageType::StartConversationInput,
-                $seqEntity->getConversationId()
-            );
-        }
-
-        // 执行流程
-        AgentFactory::make($agentAccountEntity->getAiCode())->execute($event);
-
-        // 流程执行结束，推送结束输入事件
-        // ai准备开始发消息了,结束输入状态
-        if ($seqEntity->canTriggerFlowOperateConversationStatus()) {
-            $magicConversationDomainService->agentOperateConversationStatus(
-                ControlMessageType::EndConversationInput,
-                $seqEntity->getConversationId()
-            );
-        }
+        /* @var UserCallAgentEvent $event */
+        di(AgentExecuteInterface::class)->agentExecEvent($event);
     }
 }

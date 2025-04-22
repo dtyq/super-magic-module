@@ -4,7 +4,7 @@ import clsx from "clsx"
 import _ from "lodash"
 import React, { useImperativeHandle, useMemo } from "react"
 import { ErrorBoundary } from "react-error-boundary"
-import { ReactFlowProvider } from "reactflow"
+import { Edge, ReactFlowProvider } from "reactflow"
 import "reactflow/dist/style.css"
 import FlowDesign from "./components/FlowDesign"
 import FlowHeader from "./components/FlowHeader"
@@ -84,6 +84,8 @@ export type MagicFlowInstance = {
 	setSelectedNodeId: (nodeId: string) => void
 	/** 获取节点配置 */
 	getNodeConfig: () => Record<string, MagicFlow.Node>
+	/** 获取节点连接 */
+	getEdges: () => Edge[]
 }
 
 // 使用memo包装内容组件，避免多余渲染
@@ -109,7 +111,7 @@ const MagicFlowComponent = React.forwardRef(
 			showHeader = true,
 			nodeToolbar,
 			materialHeader,
-			customParamsName = {},
+			customParamsName,
 			omitNodeKeys = [],
 			onlyRenderVisibleElements = true,
 			layoutOnMount = true,
@@ -122,7 +124,7 @@ const MagicFlowComponent = React.forwardRef(
 		const { windowSize } = useResize()
 
 		const paramsName = useMemo(() => {
-			return { ...defaultParamsName, ...customParamsName }
+			return { ...defaultParamsName, ...(customParamsName || {}) }
 		}, [customParamsName])
 
 		const {
@@ -186,6 +188,9 @@ const MagicFlowComponent = React.forwardRef(
 			updateNextNodeIdsByConnect,
 			updateNextNodeIdsByDeleteEdge,
 			setSelectedNodeId,
+			getEdges: () => {
+				return edges
+			},
 		}))
 
 		// 使用useMemo缓存flowProviderProps以减少重新渲染

@@ -1,5 +1,5 @@
 import { prefix } from "@/MagicFlow/constants"
-import { useExternal } from "@/MagicFlow/context/ExternalContext/useExternal"
+import { useExternalConfig } from "@/MagicFlow/context/ExternalContext/useExternal"
 import { useFlowEdges, useNodeConfig } from "@/MagicFlow/context/FlowContext/useFlow"
 import { defaultEdgeConfig } from "@/MagicFlow/edges"
 import { InnerHandleType } from "@/MagicFlow/nodes"
@@ -15,7 +15,7 @@ import clsx from "clsx"
 import _ from "lodash"
 import React from "react"
 import { Edge, useReactFlow } from "reactflow"
-import { useFlowInteraction } from "../../FlowDesign/context/FlowInteraction/useFlowInteraction"
+import { useFlowInteractionActions } from "../../FlowDesign/context/FlowInteraction/useFlowInteraction"
 import useViewport from "../../common/hooks/useViewport"
 import { useFlowPopup } from "../context/FlowPopupContext/useFlowPopup"
 import styles from "./index.module.less"
@@ -39,9 +39,9 @@ export default function PopupNode({ node, showIcon = true, inGroup }: PopupNodeP
 
 	const { closePopup } = usePopup()
 
-	const { paramsName } = useExternal()
+	const { paramsName } = useExternalConfig()
 
-	const { onAddItem, layout } = useFlowInteraction()
+	const { onAddItem, layout } = useFlowInteractionActions()
 
 	const { toggleType } = usePopupAction({ targetNodeId })
 
@@ -112,10 +112,9 @@ export default function PopupNode({ node, showIcon = true, inGroup }: PopupNodeP
 		const sourceNode = nodeConfig[source!]
 		const extraEdgeConfig = getExtraEdgeConfigBySourceNode(sourceNode)
 		if (target && source) {
-			const addedNode = nodeConfig[nodeId]
 			// 新节点的分支端点id（如果有的话）
 			const defaultBranchId = _.get(
-				addedNode,
+				node,
 				[paramsName.params, "branches", 0, "branch_id"],
 				sourceHandle,
 			)

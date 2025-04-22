@@ -15,6 +15,8 @@ import useStyles from "./style"
 import ConversationItem from "./components/ConversationItem"
 import { SegmentedKey } from "./constants"
 import { useMemoizedFn } from "ahooks"
+import conversationStore from "@/opensource/stores/chatNew/conversation"
+import EmptyFallback from "./components/EmptyFallback"
 
 const enum MessageGroupKey {
 	Pinned = "Pinned",
@@ -45,6 +47,8 @@ const ChatSubSider = observer(() => {
 		},
 	} = conversationSiderbarStore
 
+	const conversationCount = Object.keys(conversationStore.conversations).length
+
 	const options = useMemo(() => {
 		return [
 			{
@@ -68,6 +72,32 @@ const ChatSubSider = observer(() => {
 			conversationService.switchConversation(conversation)
 		}, 800),
 	)
+
+	if (conversationCount === 0) {
+		return (
+			<SubSiderContainer className={styles.container}>
+				<MagicSegmented
+					className={styles.segmented}
+					value={activeSegmentedKey}
+					options={options}
+					block
+					onChange={setActiveSegmentedKey}
+				/>
+				<Flex
+					vertical
+					gap={4}
+					align="center"
+					justify="center"
+					className={styles.emptyFallback}
+				>
+					<EmptyFallback />
+					<div className={styles.emptyFallbackText}>
+						{t("chat.subSider.emptyFallbackText")}
+					</div>
+				</Flex>
+			</SubSiderContainer>
+		)
+	}
 
 	return (
 		<SubSiderContainer className={styles.container}>

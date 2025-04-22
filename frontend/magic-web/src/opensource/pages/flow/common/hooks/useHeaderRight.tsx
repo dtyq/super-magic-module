@@ -15,7 +15,7 @@ import { useForm } from "antd/lib/form/Form"
 import { useTranslation } from "react-i18next"
 import { useCurrentNode } from "@dtyq/magic-flow/MagicFlow/nodes/common/context/CurrentNode/useCurrentNode"
 import { cloneDeep, merge, uniqBy, get, set } from "lodash-es"
-import { useFlow } from "@dtyq/magic-flow/MagicFlow/context/FlowContext/useFlow"
+import { useFlowData, useNodeConfig } from "@dtyq/magic-flow/MagicFlow/context/FlowContext/useFlow"
 import type { DataSourceOption } from "@dtyq/magic-flow/common/BaseUI/DropdownRenderer/Reference"
 import type Schema from "@dtyq/magic-flow/MagicJsonSchemaEditor/types/Schema"
 import type { ResolveRule } from "@/types/flow"
@@ -56,7 +56,8 @@ export default function useHeaderRight({ rules, extraComponent }: UseHeaderRight
 	const [form] = useForm()
 	const { t } = useTranslation()
 	const { currentNode } = useCurrentNode()
-	const { nodeConfig, debuggerMode } = useFlow()
+	const { nodeConfig } = useNodeConfig()
+	const { debuggerMode } = useFlowData()
 
 	const [open, { setTrue, setFalse }] = useBoolean(false)
 

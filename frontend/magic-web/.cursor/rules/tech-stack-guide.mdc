@@ -1,0 +1,79 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+@rule 技术栈指南
+@description 项目使用的核心技术栈与工具详解
+@priority high
+@category development
+
+# 技术栈指南
+
+## 核心技术
+
+### 前端框架
+- **React 18** - 使用最新的 React 18 特性，如并发渲染、自动批处理和 Suspense
+- **TypeScript** - 强类型支持，提高代码质量和开发体验
+
+### UI 组件库
+- **Ant Design 5** - 主要 UI 组件库，使用 v5 版本的 token 系统
+- **Ant Design Mobile** - 移动端组件库
+- **antd-style** - 样式解决方案，使用 `createStyle` API
+
+### 状态管理
+- **Zustand** - 轻量级状态管理库，用于全局状态
+- **MobX** - 用于复杂状态管理场景
+- **使用 Immer** - 配合状态管理库实现不可变数据更新
+
+### 路由
+- **React Router 6** - 客户端路由管理
+
+### 网络请求
+- **SWR** - 数据获取与缓存策略
+- 自定义请求工具封装
+
+### 工具库
+- **lodash-es** - 常用工具函数（使用 ES 模块版本）
+- **dayjs** - 日期处理
+- **ahooks** - React Hooks 工具集
+
+## 构建工具
+
+- **Vite** - 开发服务器与构建工具
+- **TypeScript** - 类型检查
+- **ESLint + Prettier** - 代码风格与质量检查
+- **Husky + lint-staged** - Git Hooks 配置
+
+## 测试框架
+
+- **Vitest** - 单元测试框架
+- **React Testing Library** - 组件测试
+- **测试约定**：
+  - 测试文件放置在 `__tests__` 目录下
+  - 测试文件命名为 `*.test.tsx`
+  - 遵循 AAA (Arrange-Act-Assert) 模式
+
+## API 规范
+
+1. API 接口定义应放在 `apis` 目录下
+2. 使用 TypeScript 类型定义请求参数和响应数据
+3. 错误处理应统一并规范化
+
+## 性能优化策略
+
+1. 组件级别
+   - 使用 React.memo 避免不必要的重渲染
+   - 使用 useMemo 和 useCallback 优化性能
+   - 使用虚拟列表处理大数据列表
+
+2. 应用级别
+   - 代码分割与懒加载
+   - 图片优化
+   - 预加载关键资源
+
+## 开发流程
+
+1. 分支策略遵循 GitFlow 或类似工作流
+2. 代码提交前必须通过 ESLint 和单元测试
+3. 提交信息遵循 Conventional Commits 规范

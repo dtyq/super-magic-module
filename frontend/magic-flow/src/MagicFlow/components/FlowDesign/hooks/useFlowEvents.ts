@@ -10,12 +10,13 @@ import { generateSnowFlake } from "@/common/utils/snowflake"
 import { useEffect, useRef, useState } from "react"
 import { Edge, Node, NodeDragHandler, XYPosition, useReactFlow, useStoreApi, useUpdateNodeInternals } from "reactflow"
 import _ from "lodash"
-import { useExternal } from "@/MagicFlow/context/ExternalContext/useExternal"
+import { useExternalConfig } from "@/MagicFlow/context/ExternalContext/useExternal"
 import { FlowDesignerEvents, renderSkeletonRatio } from "@/MagicFlow/constants"
 import useViewport from "../../common/hooks/useViewport"
 import { controlDuration } from "./useFlowControls"
 import { generateLoopBody, generateNewNode, judgeIsLoopBody, judgeLoopNode } from "@/MagicFlow/utils"
 import { MagicFlow } from "@/MagicFlow/types/flow"
+import { FLOW_EVENTS, flowEventBus } from "@/common/BaseUI/Select/constants"
 
 type UseFlowEventProps = {
     // 重置上一次布局数据
@@ -44,7 +45,7 @@ export default function useFlowEvents ({ resetLastLayoutData, resetCanLayout, cu
 
     const { 
 		addNode,
-		selectedNodeId,
+        selectedNodeId,
 		setSelectedNodeId,
 		deleteNodes,
 		updateNodesPosition,
@@ -91,12 +92,13 @@ export default function useFlowEvents ({ resetLastLayoutData, resetCanLayout, cu
 	// 是否正在拖拽
 	const [ isDragging, setIsDragging ] = useState(false)
 
-	const { paramsName } = useExternal()
+	const { paramsName } = useExternalConfig()
 
 
 	const onEdgeClick = useMemoizedFn((event, edge) => {
 		event.stopPropagation()
 		setSelectedEdgeId(edge.id)
+        flowEventBus.emit(FLOW_EVENTS.EDGE_SELECTED, edge.id)
 	})
 
 	const onNodeDragStart = useMemoizedFn((event, node) => {
@@ -104,6 +106,8 @@ export default function useFlowEvents ({ resetLastLayoutData, resetCanLayout, cu
 		setSelectedNodeId(node.id)
 		resetLastLayoutData()
 		resetCanLayout()
+
+        flowEventBus.emit(FLOW_EVENTS.NODE_SELECTED, node.id)
 	})
 
 	flowDesignListener.useSubscription((event) => {
@@ -284,6 +288,8 @@ export default function useFlowEvents ({ resetLastLayoutData, resetCanLayout, cu
 	const onReactFlowClick = useMemoizedFn(() => {
 		setSelectedNodeId(null)
 		setSelectedEdgeId(null)
+        flowEventBus.emit(FLOW_EVENTS.EDGE_SELECTED, null)
+        flowEventBus.emit(FLOW_EVENTS.NODE_SELECTED, null)
 		// states.unselectNodesAndEdges()
 	})
 

@@ -13,7 +13,6 @@ import { getDataSourceMap } from "./helpers"
 import useTextareaMode from "./hooks/useTextareaMode"
 import { EditWrapper, InputExpressionStyle } from "./style"
 
-import { useFlowInteraction } from "@/MagicFlow/components/FlowDesign/context/FlowInteraction/useFlowInteraction"
 import CascaderDropdown from "@/common/BaseUI/DropdownRenderer/Reference"
 import { multipleTypes } from "@/common/BaseUI/DropdownRenderer/Reference/hooks/useRender"
 import ErrorContent from "@/common/BaseUI/ErrorComponent/ErrorComponent"
@@ -40,6 +39,8 @@ import type {
 import { FIELDS_NAME, LabelTypeMap, VALUE_TYPE } from "./types"
 import { filterEmptyValues, filterNullValue, parseSizeToNumber, transferSpecialSign } from "./utils"
 import { CLASSNAME_PREFIX } from "@/common/constants"
+import { FLOW_EVENTS, flowEventBus } from "@/common/BaseUI/Select/constants"
+import { useReactFlow } from "reactflow"
 
 const CustomInputExpression = (props: InputExpressionProps) => {
 	const {
@@ -75,7 +76,8 @@ const CustomInputExpression = (props: InputExpressionProps) => {
 
 	const { nodeMap } = useNodeMap()
 
-	const { nodeClick, currentZoom } = useFlowInteraction()
+	const { getZoom } = useReactFlow()
+	const currentZoom = getZoom()
 	// 将maxHeight统一转换为数字
 	const parsedMaxHeight = useMemo(() => parseSizeToNumber(maxHeight), [maxHeight])
 
@@ -111,9 +113,14 @@ const CustomInputExpression = (props: InputExpressionProps) => {
 	const lastDate = useRef<InputExpressionValue>()
 	const inputRef = useRef<HTMLDivElement>(null)
 
-	useUpdateEffect(() => {
-		setOpen(false)
-	}, [nodeClick])
+	useEffect(() => {
+		const cleanup = flowEventBus.on(FLOW_EVENTS.NODE_SELECTED, () => {
+			setOpen(false)
+		})
+		return () => {
+			cleanup()
+		}
+	}, [])
 
 	const [displayOptions, setDisplayOptions] = useState([] as ExpressionSource)
 	const [showPlaceholder, setShowPlaceholder] = useState(false)

@@ -20,6 +20,7 @@ import useInfoStore from "@/opensource/stores/userInfo"
 import { useMemoizedFn } from "ahooks"
 import { getUserName } from "@/utils/modules/chat"
 import { observer } from "mobx-react-lite"
+import RevokeTip from "../RevokeTip"
 
 interface MessageItemProps {
 	message_id: string
@@ -33,6 +34,7 @@ interface MessageItemProps {
 	conversation?: any
 	className?: string
 	refer_message_id?: string
+	revoked?: boolean
 }
 
 // 头像独立，避免重复渲染
@@ -89,6 +91,7 @@ const MessageItem = memo(function MessageItem({
 	className,
 	sender_id,
 	refer_message_id,
+	revoked = false,
 }: MessageItemProps) {
 	const { fontSize } = useFontSize()
 	const isBlockMessage = message.type === ConversationMessageType.RecordingSummary
@@ -104,6 +107,11 @@ const MessageItem = memo(function MessageItem({
 
 	// 使用 useMemo 缓存头像大小
 	const avatarSize = useMemo(() => calculateRelativeSize(40, fontSize), [fontSize])
+
+	// 如果消息被撤回，显示撤回提示
+	if (revoked) {
+		return <RevokeTip key={message_id} senderUid={sender_id} />
+	}
 
 	// 使用 useMemo 缓存头像组件
 	const avatarComponent = <Avatar name={name} avatar={avatar} size={avatarSize} uid={sender_id} />

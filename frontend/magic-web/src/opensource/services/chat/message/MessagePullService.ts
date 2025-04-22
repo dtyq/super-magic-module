@@ -123,7 +123,9 @@ class MessagePullService {
 				.map((item) => item.seq)
 
 			// 合并AI搜索消息
-			conversationMessages = this.handleCombineAiSearchMessage(conversationMessages)
+			conversationMessages = await this.handleCombineAiSearchMessageByFetch(
+				conversationMessages,
+			)
 
 			// 异步写入数据库
 			requestIdleCallback(() => {
@@ -214,6 +216,79 @@ class MessagePullService {
 		}
 
 		return array
+	}
+
+	/**
+	 * 请求后端接口，合并AI搜索消息
+	 * @param conversationMessages
+	 * @returns
+	 */
+	async handleCombineAiSearchMessageByFetch(
+		conversationMessages: SeqResponse<
+			ConversationMessage | AggregateAISearchCardConversationMessage<true>
+		>[],
+	) {
+		const { conversationMessages: messages, promises } = conversationMessages.reduce(
+			(acc, item) => {
+				if (item.message.type === ConversationMessageType.AggregateAISearchCard) {
+					const appMessageId = item.message?.app_message_id
+					if (!acc.promises[appMessageId]) {
+						const index = acc.conversationMessages.length
+						acc.promises[appMessageId] = ChatApi.getMessagesByAppMessageId(
+							appMessageId,
+						).then((array) => {
+							const combinedMessage = AiSearchApplyService.combineAiSearchMessage(
+								array.reduce((prev, current) => {
+									if (
+										current.seq.message.type ===
+										ConversationMessageType.AggregateAISearchCard
+									) {
+										prev.push(
+											current.seq as SeqResponse<
+												AggregateAISearchCardConversationMessage<true>
+											>,
+										)
+									}
+									return prev
+								}, [] as SeqResponse<AggregateAISearchCardConversationMessage<true>>[]),
+							)
+
+							return {
+								index: index,
+								message: combinedMessage,
+							}
+						})
+						acc.conversationMessages.push(item as SeqResponse<ConversationMessage>)
+					}
+				} else {
+					acc.conversationMessages.push(item as SeqResponse<ConversationMessage>)
+				}
+
+				return acc
+			},
+			{
+				promises: {} as Record<
+					string,
+					Promise<{
+						message:
+							| SeqResponse<AggregateAISearchCardConversationMessage<false>>
+							| undefined
+						index: number
+					}>
+				>,
+				conversationMessages: [] as SeqResponse<ConversationMessage>[],
+			},
+		)
+
+		await Promise.all(Object.values(promises)).then((array) => {
+			array.forEach((item) => {
+				if (item) {
+					messages[item.index] = item.message!
+				}
+			})
+		})
+
+		return messages
 	}
 
 	/**

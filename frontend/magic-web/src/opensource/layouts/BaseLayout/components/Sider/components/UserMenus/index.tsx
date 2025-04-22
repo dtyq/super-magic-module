@@ -181,7 +181,7 @@ const UserMenus = observer(function UserMenus({ children }: UserMenusProps) {
 	)
 
 	// const navigateToAdmin = useMemoizedFn(() => {
-	// 	navigate(AdminRoutePath.AdminHome.replace("*", AdminRoutePath.Ai))
+	// 	openNewTab(AdminRoutePath.AdminHome.replace("*", AdminRoutePath.Ai))
 	// })
 
 	const handleMenuClick = useMemoizedFn<Exclude<MenuProps["onClick"], undefined>>(

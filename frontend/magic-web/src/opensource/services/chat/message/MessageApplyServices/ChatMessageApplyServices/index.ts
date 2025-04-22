@@ -5,6 +5,7 @@ import type {
 	ConversationMessage,
 } from "@/types/chat/conversation_message"
 import {
+	AggregateAISearchCardDataType,
 	AIImagesDataType,
 	ConversationMessageStatus,
 	ConversationMessageType,
@@ -131,6 +132,14 @@ class ChatMessageApplyService {
 			)
 		}
 
+		if (message.message.type === ConversationMessageType.AggregateAISearchCard) {
+			return (
+				(message as SeqResponse<AggregateAISearchCardConversationMessage>).message
+					.aggregate_ai_search_card?.type ===
+				AggregateAISearchCardDataType.SearchDeepLevel
+			)
+		}
+
 		return [
 			ConversationMessageType.Text,
 			ConversationMessageType.RichText,
@@ -216,39 +225,20 @@ class ChatMessageApplyService {
 
 		MessageService.addReceivedMessage(message)
 
+		// 如果是 AI 会话，并且当前没有话题 Id，自动设置上
+		if (!conversation.current_topic_id && message.message.topic_id) {
+			ConversationService.switchTopic(message.conversation_id, message.message.topic_id)
+		}
+
 		if (
 			ConversationStore.currentConversation?.id === message.conversation_id &&
-			ConversationStore.currentConversation?.current_topic_id === message.message.topic_id
+			ConversationStore.currentConversation?.current_topic_id === message.message.topic_id &&
+			conversation?.isAiConversation
 		) {
-			// 如果是 AI 会话，并且当前没有话题 Id，自动设置上
-			if (!conversation.current_topic_id) {
-				ConversationService.switchTopic(
-					message.conversation_id,
-					message.message.topic_id ?? "",
-				)
-			}
-
 			// 如果是 AI 会话，此时消息列表的数量为 2，调用智能重命名
-			if (
-				conversation?.isAiConversation &&
-				MessageStore.messages.length === 2 &&
-				!isHistoryMessage
-			) {
+			if (MessageStore.messages.length === 2 && !isHistoryMessage) {
 				// 调用智能重命名
 				chatTopicService.getAndSetMagicTopicName(message.message.topic_id ?? "")
-			}
-		} else {
-			if (conversation?.isAiConversation) {
-				// 获取当前会话-话题的消息数据
-				const { messages } = await MessageService.getMessagesByPage(
-					message.conversation_id,
-					message.message.topic_id ?? "",
-				)
-
-				if (messages.length === 2 && !isHistoryMessage) {
-					// 调用智能重命名
-					chatTopicService.getAndSetMagicTopicName(message.message.topic_id ?? "")
-				}
 			}
 		}
 

@@ -1,9 +1,10 @@
 /**
  * 定义节点的相关drag-over、drag-leave事件
  */
-import { useFlowInteraction } from "@/MagicFlow/components/FlowDesign/context/FlowInteraction/useFlowInteraction"
-import { useExternal } from "@/MagicFlow/context/ExternalContext/useExternal"
-import { useFlowNodes, useNodeConfig } from "@/MagicFlow/context/FlowContext/useFlow"
+import { FLOW_EVENTS, flowEventBus } from "@/common/BaseUI/Select/constants"
+import { useFlowInteractionActions } from "@/MagicFlow/components/FlowDesign/context/FlowInteraction/useFlowInteraction"
+import { useExternalConfig } from "@/MagicFlow/context/ExternalContext/useExternal"
+import { useNodeConfig } from "@/MagicFlow/context/FlowContext/useFlow"
 import { judgeIsLoopBody } from "@/MagicFlow/utils"
 import { getSubNodePosition } from "@/MagicFlow/utils/reactflowUtils"
 import { useMemoizedFn } from "ahooks"
@@ -15,10 +16,9 @@ type UseDrag = {
 }
 
 export default function useDrag({ id }: UseDrag) {
-	const { setSelectedNodeId } = useFlowNodes()
 	const { nodeConfig } = useNodeConfig()
-	const { paramsName } = useExternal()
-	const { onAddItem } = useFlowInteraction()
+	const { paramsName } = useExternalConfig()
+	const { onAddItem } = useFlowInteractionActions()
 	const { screenToFlowPosition } = useReactFlow()
 
 	const currentNode = useMemo(() => {
@@ -29,21 +29,25 @@ export default function useDrag({ id }: UseDrag) {
 		return judgeIsLoopBody(currentNode?.[paramsName.nodeType])
 	}, [currentNode])
 
+	const selectNode = useMemoizedFn((nodeId: string) => {
+		flowEventBus.emit(FLOW_EVENTS.NODE_SELECTED, nodeId)
+	})
+
 	const onDragOver = useMemoizedFn(() => {
 		/** 当前是节点是分组节点，则选中分组 */
 		if (isGroupType) {
-			setSelectedNodeId(id)
+			selectNode(id)
 			return
 		}
 		/** 当前节点 */
 		if (currentNode?.parentId) {
-			setSelectedNodeId(currentNode?.parentId)
+			selectNode(currentNode?.parentId)
 		}
 	})
 
 	const onDragLeave = useMemoizedFn(() => {
 		if (isGroupType || currentNode?.parentId) {
-			setSelectedNodeId(null)
+			selectNode(null)
 		}
 	})
 

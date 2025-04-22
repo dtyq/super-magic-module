@@ -121,7 +121,15 @@ export const ImageViewBlock: FC<NodeViewProps> = ({ node, selected, updateAttrib
 	// }, [file_id, messageId])
 
 	return (
-		<NodeViewWrapper ref={containerRef} className={styles.wrapper}>
+		<NodeViewWrapper
+			ref={containerRef}
+			className={styles.wrapper}
+			onMouseDown={(e: MouseEvent) => {
+				e.preventDefault()
+				e.stopPropagation()
+				return false
+			}}
+		>
 			<ImageWrapper
 				className={cx(styles.image, {
 					[styles.hiddenImage]: !imageState.imageLoaded || imageState.error,

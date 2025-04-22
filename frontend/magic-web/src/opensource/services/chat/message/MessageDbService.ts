@@ -425,6 +425,18 @@ class MessageDbService {
 			table.update(localMessageId, changes)
 		}
 	}
+
+	/**
+	 * 删除话题消息
+	 * @param conversationId 会话ID
+	 * @param deleteTopicId 话题ID
+	 */
+	async removeTopicMessages(conversationId: string, deleteTopicId: string) {
+		const table = await this.getMessageTable(conversationId)
+		if (table) {
+			table.where("message.topic_id").equals(deleteTopicId).delete()
+		}
+	}
 }
 
 export default MessageDbService

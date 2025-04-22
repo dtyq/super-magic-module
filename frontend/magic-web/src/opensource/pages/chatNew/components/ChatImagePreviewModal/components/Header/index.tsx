@@ -4,19 +4,20 @@ import { formatFileSize, formatTime } from "@/utils/string"
 import MagicButton from "@/opensource/components/base/MagicButton"
 import { IconBadgeHd, IconDownload, IconMessagePin, IconShare3 } from "@tabler/icons-react"
 import { useTranslation } from "react-i18next"
-import type {
-	ConversationMessage,
-} from "@/types/chat/conversation_message"
+import type { ConversationMessage } from "@/types/chat/conversation_message"
 import { ConversationMessageType } from "@/types/chat/conversation_message"
-import { useMemo } from "react"
+import { useEffect, useMemo, useState } from "react"
 import type { MouseEvent } from "react"
 import { IMAGE_EXTENSIONS, VIDEO_EXTENSIONS } from "@/const/file"
-import useUserInfo from "@/opensource/hooks/chat/useUserInfo"
 import { getUserName } from "@/utils/modules/chat"
-import type { FullMessage } from "@/types/chat/message"
 import type { PreviewFileInfo } from "@/opensource/services/chat/message/MessageFilePreview"
 import { useStyles } from "./styles"
-
+import { SeqResponse } from "@/types/request"
+import { FullMessage } from "@/types/chat/message"
+import userInfoService from "@/opensource/services/userInfo"
+import { StructureUserItem } from "@/types/organization"
+import { useMount } from "ahooks"
+import userInfoStore from "@/opensource/stores/userInfo"
 interface ChatImagePreviewHeader {
 	onMouseOut?: () => void
 	onMouseDown?: (event: MouseEvent<HTMLDivElement>) => void
@@ -24,7 +25,7 @@ interface ChatImagePreviewHeader {
 	onDownload?: () => void
 	onHighDefinition?: () => void
 	navigateToMessage?: () => void
-	message?: FullMessage<ConversationMessage>
+	message?: SeqResponse<ConversationMessage> | FullMessage<ConversationMessage>
 	info?: PreviewFileInfo
 	loading?: boolean
 	className?: string
@@ -47,22 +48,37 @@ function Header(props: ChatImagePreviewHeader) {
 	const { styles, cx } = useStyles()
 	const { t } = useTranslation("interface")
 
-  const username = getUserName(useUserInfo(message?.message?.sender_id).userInfo)
+	const [userInfo, setUserInfo] = useState<StructureUserItem | undefined>(undefined)
+
+	useMount(() => {
+		const userInfo = message?.message?.sender_id
+			? userInfoStore.get(message?.message?.sender_id)
+			: undefined
+		if (!userInfo) {
+			userInfoService.fetchUserInfos([message?.message?.sender_id ?? ""], 2).then((res) => {
+				setUserInfo(res[0])
+			})
+		} else {
+			setUserInfo(userInfo)
+		}
+	})
+
+	const username = getUserName(userInfo)
 
 	const title = useMemo(() => {
 		switch (true) {
 			case IMAGE_EXTENSIONS.includes(info?.ext?.ext ?? ""):
-			case message?.type === ConversationMessageType.Image:
+			case message?.message?.type === ConversationMessageType.Image:
 				return t("chat.imagePreview.senderImage", { username })
 			case VIDEO_EXTENSIONS.includes(info?.ext?.ext ?? ""):
-			case message?.type === ConversationMessageType.Video:
+			case message?.message?.type === ConversationMessageType.Video:
 				return t("chat.imagePreview.senderVideo", { username })
-			case message?.type === ConversationMessageType.Files:
+			case message?.message?.type === ConversationMessageType.Files:
 				return t("chat.imagePreview.senderFiles", { username })
 			default:
 				return t("chat.imagePreview.defaultTitle")
 		}
-	}, [info?.ext?.ext, message?.type, t, username])
+	}, [info?.ext?.ext, message?.message?.type, t, username])
 
 	const subTitle = useMemo(() => {
 		if (!message?.message?.send_time && !info?.fileSize) return ""

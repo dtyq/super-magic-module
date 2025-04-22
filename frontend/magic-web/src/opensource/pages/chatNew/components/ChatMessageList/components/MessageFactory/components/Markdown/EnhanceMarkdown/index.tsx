@@ -19,9 +19,6 @@ const EnhanceMarkdown = memo(function EnhanceMarkdown(props: MarkdownProps) {
 		enableLatex = true,
 		className,
 		isSelf,
-		rehypePlugins: rehypePluginsInProps,
-		remarkPlugins: remarkPluginsInProps,
-		components: componentsInProps,
 		isStreaming = false,
 		hiddenDetail = false,
 		...otherProps

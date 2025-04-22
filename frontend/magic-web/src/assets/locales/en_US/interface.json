@@ -456,7 +456,8 @@
 			"senderImage": "Pictures sent by {{username}}",
 			"senderVideo": "Video sent by {{username}}",
 			"transpond": "Forward",
-			"useHightImageTip": "The AI super-clear feature consumes a large amount of computational resources and has a limited number of monthly uses. Do you confirm to use it?"
+			"useHightImageTip": "The AI super-clear feature consumes a large amount of computational resources and has a limited number of monthly uses. Do you confirm to use it?",
+			"copy": "Copy"
 		},
 		"input": {
 			"calendar": "schedule",
@@ -586,7 +587,8 @@
 			"groupConversation": "Group Chat",
 			"message": "All",
 			"pinned": "Pinned",
-			"specialCardMessage": "[Special Card Message]"
+			"specialCardMessage": "[Special Card Message]",
+			"emptyFallbackText": "No conversation"
 		},
 		"task": "Task",
 		"timedTask": {
@@ -679,7 +681,9 @@
 			"related": "Further",
 			"sources": "Source"
 		},
-		"you": "You "
+		"you": "You ",
+		"emptyConversationFallbackText": "Say hello to your friends",
+		"emptyConversationFallbackButtonText": "Start a conversation"
 	},
 	"collectModal": {
 		"save": "save",
@@ -1179,7 +1183,11 @@
 		"placeholder": "Please enter content",
 		"redo": "Redo",
 		"rightAlign": "Align right",
-		"undo": "Cancel"
+		"undo": "Cancel",
+		"fileTooLarge": "File too large, please upload a file less than 15MB",
+		"invalidBase64": "Invalid file format, please upload an image file",
+		"uploadFailed": "File upload failed, please try again",
+		"pasteFailed": "Image paste failed, please try again"
 	},
 	"search": "Search",
 	"send": "Send",

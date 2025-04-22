@@ -2,22 +2,16 @@
  * 处理节点类型下拉状态和行为
  */
 
-import { useFlowInteraction } from "@/MagicFlow/components/FlowDesign/context/FlowInteraction/useFlowInteraction"
-import { useFlowNodes } from "@/MagicFlow/context/FlowContext/useFlow"
 import { MagicFlow } from "@/MagicFlow/types/flow"
 import { useMemoizedFn, useUpdateEffect } from "ahooks"
 import { useEffect, useState } from "react"
 
 type DropdownProps = {
-	id: string
 	currentNode: MagicFlow.Node
+	isSelected: boolean
 }
 
-export default function usePopup({ id, currentNode }: DropdownProps) {
-	const { selectedNodeId, setSelectedNodeId } = useFlowNodes()
-
-	const { isDragging } = useFlowInteraction()
-
+export default function usePopup({ currentNode, isSelected }: DropdownProps) {
 	const [openPopup, setOpenPopup] = useState(false)
 
 	const [nodeName, setNodeName] = useState(currentNode?.name as string)
@@ -34,15 +28,14 @@ export default function usePopup({ id, currentNode }: DropdownProps) {
 		event.preventDefault()
 		event.stopPropagation()
 
-		setSelectedNodeId(id)
 		setOpenPopup(true)
 	})
 
 	useUpdateEffect(() => {
-		if (selectedNodeId !== id || isDragging) {
+		if (!isSelected) {
 			setOpenPopup(false)
 		}
-	}, [selectedNodeId, isDragging])
+	}, [isSelected])
 
 	useEffect(() => {
 		if (currentNode?.name) {

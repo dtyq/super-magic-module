@@ -54,6 +54,9 @@ class GroupInfoSerivce {
 		).then((data) => {
 			data.forEach((item) => {
 				this.set(item.id, item)
+				if (groupInfoStore.currentGroupId === item.id) {
+					groupInfoStore.setCurrentGroup(item)
+				}
 			})
 			return data
 		})
@@ -67,6 +70,7 @@ class GroupInfoSerivce {
 				...params,
 			}),
 		).then((data) => {
+			groupInfoStore.setCurrentGroupMembers(data)
 			const userIds = data.map((item) => item.user_id)
 			return userInfoService.fetchUserInfos(userIds, 2)
 		})
@@ -91,6 +95,10 @@ class GroupInfoSerivce {
 			groupInfo.group_avatar = group_update.group_avatar
 		}
 		this.set(group_id, groupInfo)
+
+		if (groupInfoStore.currentGroupId === group_id) {
+			groupInfoStore.setCurrentGroup(groupInfo)
+		}
 	}
 }
 

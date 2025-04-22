@@ -2,7 +2,7 @@
  * 处理节点布局相关
  */
 import { fitViewRatio } from "@/MagicFlow/constants"
-import { useExternal } from "@/MagicFlow/context/ExternalContext/useExternal"
+import { useExternalConfig } from "@/MagicFlow/context/ExternalContext/useExternal"
 import {
 	useFlowEdges,
 	useNodeConfig,
@@ -46,19 +46,10 @@ const PASTE_LEFT_OFFSET = 200
 
 interface FlowLayoutProps {
 	setShowParamsComp: React.Dispatch<React.SetStateAction<boolean>>
-	nodeClick: boolean
-	selectionNodes: MagicFlow.Node[]
-	selectionEdges: Edge[]
 	flowInstance: any
 }
 
-export default function useFlowLayout({
-	setShowParamsComp,
-	nodeClick,
-	selectionNodes,
-	selectionEdges,
-	flowInstance,
-}: FlowLayoutProps) {
+export default function useFlowLayout({ setShowParamsComp, flowInstance }: FlowLayoutProps) {
 	const { t } = useTranslation()
 
 	const { setEdges, edges } = useFlowEdges()
@@ -69,7 +60,7 @@ export default function useFlowLayout({
 
 	const { zoomIn, zoomOut, fitView, getZoom, setViewport, getViewport } = useReactFlow()
 
-	const { layoutOnMount, paramsName } = useExternal()
+	const { layoutOnMount, paramsName } = useExternalConfig()
 
 	const [currentZoom, setCurrentZoom] = useState(getZoom())
 
@@ -98,7 +89,7 @@ export default function useFlowLayout({
 	})
 
 	const { interaction, onInteractionChange, openInteractionSelect, setOpenInteractionSelect } =
-		useInteraction({ nodeClick })
+		useInteraction()
 
 	const updateConfigPosition = useMemoizedFn((layoutNodes: MagicFlow.Node[]) => {
 		layoutNodes.forEach((n) => {

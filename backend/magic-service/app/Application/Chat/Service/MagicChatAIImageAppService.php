@@ -8,6 +8,7 @@ declare(strict_types=1);
 namespace App\Application\Chat\Service;
 
 use App\Application\Flow\ExecuteManager\Attachment\AbstractAttachment;
+use App\Application\ModelGateway\Service\LLMAppService;
 use App\Domain\Chat\DTO\AIImage\Request\MagicChatAIImageReqDTO;
 use App\Domain\Chat\DTO\Message\ChatMessage\AIImageCardMessage;
 use App\Domain\Chat\DTO\Message\ChatMessage\ImageConvertHighCardMessage;
@@ -26,19 +27,15 @@ use App\Domain\Contact\Service\MagicUserDomainService;
 use App\Domain\File\Service\FileDomainService;
 use App\Domain\ModelAdmin\Constant\ServiceProviderType;
 use App\Domain\ModelAdmin\Service\ServiceProviderDomainService;
-use App\Domain\ModelGateway\Entity\MsgLogEntity;
-use App\Domain\ModelGateway\Entity\ValueObject\LLMDataIsolation;
 use App\Domain\ModelGateway\Service\MsgLogDomainService;
 use App\ErrorCode\ImageGenerateErrorCode;
 use App\Infrastructure\ExternalAPI\ImageGenerateAPI\ImageGenerateFactory;
 use App\Infrastructure\ExternalAPI\ImageGenerateAPI\ImageGenerateModelType;
 use App\Infrastructure\ExternalAPI\ImageGenerateAPI\Model\MiracleVision\MiracleVisionModel;
-use App\Infrastructure\ExternalAPI\ImageGenerateAPI\Model\MiracleVision\MiracleVisionModelResponse;
 use App\Infrastructure\Util\Context\RequestContext;
 use App\Infrastructure\Util\SSRF\Exception\SSRFException;
 use App\Infrastructure\Util\SSRF\SSRFUtil;
 use App\Interfaces\Authorization\Web\MagicUserAuthorization;
-use DateTime;
 use Dtyq\CloudFile\Kernel\Struct\UploadFile;
 use Hyperf\Codec\Json;
 use Hyperf\Logger\LoggerFactory;
@@ -49,7 +46,6 @@ use Psr\Log\LoggerInterface;
 use Throwable;
 
 use function di;
-use function Hyperf\Coroutine\defer;
 use function Hyperf\Translation\__;
 use function mb_strlen;
 
@@ -68,6 +64,7 @@ class MagicChatAIImageAppService extends AbstractAIImageAppService
         protected readonly FileDomainService $fileDomainService,
         protected readonly MagicChatFileDomainService $magicChatFileDomainService,
         protected readonly ServiceProviderDomainService $serviceProviderDomainService,
+        protected readonly LLMAppService $llmAppService,
         protected readonly MsgLogDomainService $msgLogDomainService,
         protected readonly Redis $redis,
         protected IdGeneratorInterface $idGenerator,
@@ -128,38 +125,18 @@ class MagicChatAIImageAppService extends AbstractAIImageAppService
     public function imageConvertHigh(string $url, MagicUserAuthorization $authenticatable): string
     {
         $url = SSRFUtil::getSafeUrl($url, replaceIp: false);
-        /**
-         * @var MiracleVisionModel $imageGenerateService
-         */
-        $imageGenerateService = ImageGenerateFactory::create(ImageGenerateModelType::MiracleVision);
 
-        // 目前只能这么取值，后续再优化
         $miracleVisionServiceProviderConfig = $this->serviceProviderDomainService->getMiracleVisionServiceProviderConfig(ImageGenerateModelType::MiracleVisionHightModelId->value, $authenticatable->getOrganizationCode());
-
-        if ($miracleVisionServiceProviderConfig->getServiceProviderType() === ServiceProviderType::NORMAL) {
-            $imageGenerateService->setApiKey($miracleVisionServiceProviderConfig->getServiceProviderConfig()->getApiKey());
-        }
-
-        $imageConvertHigh = $this->magicAIImageDomainService->imageConvertHigh($url, $imageGenerateService);
-
-        $this->recordMessageLog(ImageGenerateModelType::MiracleVisionHightModelId->value, $authenticatable->getId(), $authenticatable->getOrganizationCode());
-        return $imageConvertHigh;
-    }
-
-    public function imageConvertHighQuery(string $taskId, string $organizationCode): MiracleVisionModelResponse
-    {
         /**
          * @var MiracleVisionModel $imageGenerateService
          */
-        $imageGenerateService = ImageGenerateFactory::create(ImageGenerateModelType::MiracleVision);
-
-        $miracleVisionServiceProviderConfig = $this->serviceProviderDomainService->getMiracleVisionServiceProviderConfig(ImageGenerateModelType::MiracleVisionHightModelId->value, $organizationCode);
+        $imageGenerateService = ImageGenerateFactory::create(ImageGenerateModelType::MiracleVision, $miracleVisionServiceProviderConfig->getServiceProviderConfig());
 
         if ($miracleVisionServiceProviderConfig->getServiceProviderType() === ServiceProviderType::NORMAL) {
             $imageGenerateService->setApiKey($miracleVisionServiceProviderConfig->getServiceProviderConfig()->getApiKey());
         }
 
-        return $this->magicAIImageDomainService->imageConvertHighQuery($taskId, $imageGenerateService);
+        return $this->magicAIImageDomainService->imageConvertHigh($url, $imageGenerateService);
     }
 
     /**
@@ -209,30 +186,11 @@ class MagicChatAIImageAppService extends AbstractAIImageAppService
     {
         $model = $generateParamsVO->getModel();
         // 根据模型类型创建对应的服务
-
         $data = $generateParamsVO->toArray();
-        $serviceProviderResponse = $this->serviceProviderDomainService->getServiceProviderConfig($model, '', $requestContext->getOrganizationCode());
-
-        if ($serviceProviderResponse->getServiceProviderType() === ServiceProviderType::NORMAL) {
-            $model = $serviceProviderResponse->getServiceProviderModelsEntity()->getModelVersion();
-        }
-
-        $imageGenerateType = ImageGenerateModelType::fromModel($model, false);
-        $imageGenerateRequest = ImageGenerateFactory::createRequestType($imageGenerateType, $data);
-        $imageGenerateService = ImageGenerateFactory::create($imageGenerateType);
-
-        if ($serviceProviderResponse->getServiceProviderType() === ServiceProviderType::NORMAL) {
-            $serviceProviderConfig = $serviceProviderResponse->getServiceProviderConfig();
-            $imageGenerateService->setApiKey($serviceProviderConfig->getApiKey());
-            $imageGenerateService->setAK($serviceProviderConfig->getAk());
-            $imageGenerateService->setSK($serviceProviderConfig->getSk());
-        }
-
-        $imageGenerateResponse = $imageGenerateService->generateImage($imageGenerateRequest);
-        $images = $imageGenerateResponse->getData();
+        $magicUserAuthorization = $requestContext->getUserAuthorization();
+        $images = $this->llmAppService->imageGenerate($magicUserAuthorization, $model, '', $data);
         $this->logger->info('images', $images);
         $images = $this->upLoadFiles($requestContext, $images);
-        $this->recordMessageLog($model, $requestContext->getUserId(), $requestContext->getOrganizationCode());
         return [
             'images' => $images,
         ];
@@ -349,28 +307,6 @@ class MagicChatAIImageAppService extends AbstractAIImageAppService
             ->setReferMessageId($referMessageId);
         // 设置话题 id
         return $this->getMagicChatMessageAppService()->aiSendMessage($seqDTO, $appMessageId, doNotParseReferMessageId: true);
-    }
-
-    private function recordMessageLog(string $modelVersion, string $userId, string $organizationCode): void
-    {
-        // 记录日志
-        defer(function () use ($modelVersion, $userId, $organizationCode) {
-            $LLMDataIsolation = LLMDataIsolation::create($userId, $organizationCode);
-
-            $nickname = $this->magicUserDomainService->getUserById($userId)->getNickname();
-            $msgLog = new MsgLogEntity();
-            $msgLog->setModel($modelVersion);
-            $msgLog->setUserId($userId);
-            $msgLog->setUseAmount(0);
-            $msgLog->setUseToken(0);
-            $msgLog->setAppCode('');
-            $msgLog->setOrganizationCode($organizationCode);
-            $msgLog->setBusinessId('');
-            $msgLog->setSourceId('chat_completions');
-            $msgLog->setUserName($nickname);
-            $msgLog->setCreatedAt(new DateTime());
-            $this->msgLogDomainService->create($LLMDataIsolation, $msgLog);
-        });
     }
 
     private function getMagicChatMessageAppService(): MagicChatMessageAppService

@@ -178,7 +178,7 @@ class Conversation {
 	 * 设置最后一条消息
 	 * @param message 最后一条消息
 	 */
-	setLastReceiveMessage(message: LastReceiveMessage) {
+	setLastReceiveMessage(message: LastReceiveMessage | undefined) {
 		this.last_receive_message = message
 	}
 

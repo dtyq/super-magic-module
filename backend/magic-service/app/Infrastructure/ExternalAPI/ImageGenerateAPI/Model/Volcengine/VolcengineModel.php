@@ -7,6 +7,7 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\ExternalAPI\ImageGenerateAPI\Model\Volcengine;
 
+use App\Domain\ModelAdmin\Entity\ValueObject\ServiceProviderConfig;
 use App\ErrorCode\ImageGenerateErrorCode;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Infrastructure\ExternalAPI\ImageGenerateAPI\ImageGenerate;
@@ -40,11 +41,16 @@ class VolcengineModel implements ImageGenerate
 
     private VolcengineAPI $api;
 
-    public function __construct()
+    private string $textToImageModelVersion = 'general_v2.1_L';
+
+    private string $textToImageReqScheduleConf = 'general_v20_9B_pe';
+
+    // 图生图配置
+    private string $imageToImageReqKey = 'byteedit_v2.0';
+
+    public function __construct(ServiceProviderConfig $serviceProviderConfig)
     {
-        $ak = \Hyperf\Config\config('image_generate.volcengine.ak');
-        $sk = \Hyperf\Config\config('image_generate.volcengine.sk');
-        $this->api = new VolcengineAPI($ak, $sk);
+        $this->api = new VolcengineAPI($serviceProviderConfig->getAk(), $serviceProviderConfig->getSk());
     }
 
     public function generateImage(ImageGenerateRequest $imageGenerateRequest): ImageGenerateResponse
@@ -64,6 +70,8 @@ class VolcengineModel implements ImageGenerate
             'width' => $imageGenerateRequest->getWidth(),
             'height' => $imageGenerateRequest->getHeight(),
             'req_key' => $imageGenerateRequest->getModel(),
+            'textToImageModelVersion' => $this->textToImageModelVersion,
+            'textToImageReqScheduleConf' => $this->textToImageReqScheduleConf,
         ]);
 
         // 使用 Parallel 并行处理
@@ -185,8 +193,6 @@ class VolcengineModel implements ImageGenerate
                 'return_url' => true,
                 'prompt' => $prompt,
             ];
-            $body['req_key'] = $request->getModel();
-
             if ($isImageToImage) {
                 // 图生图配置
                 if (empty($request->getReferenceImage())) {
@@ -194,7 +200,9 @@ class VolcengineModel implements ImageGenerate
                     ExceptionBuilder::throw(ImageGenerateErrorCode::MISSING_IMAGE_DATA, 'image_generate.image_to_image_missing_source');
                 }
                 $body['image_urls'] = $request->getReferenceImage();
+                $body['req_key'] = $this->imageToImageReqKey;
             } else {
+                $body['req_key'] = $request->getModel();
                 $body['width'] = $width;
                 $body['height'] = $height;
                 $body['use_sr'] = $request->getUseSr();
