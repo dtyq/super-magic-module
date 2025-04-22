@@ -7,6 +7,7 @@ declare(strict_types=1);
 
 namespace App\Application\Chat\Event\Subscribe\Agent;
 
+use App\Domain\Chat\Event\Agent\AgentExecuteInterface;
 use App\Domain\Chat\Event\Agent\UserCallAgentEvent;
 use Hyperf\Event\Annotation\Listener;
 use Hyperf\Event\Contract\ListenerInterface;
@@ -37,5 +38,7 @@ class UserCallAgentSubscriber implements ListenerInterface
 
     public function process(object $event): void
     {
+        /* @var UserCallAgentEvent $event */
+        di(AgentExecuteInterface::class)->agentExecEvent($event);
     }
 }
