@@ -52,6 +52,7 @@ enum ServiceProviderCode: string
                 'access_key' => $config->getAk(),
                 'secret_key' => $config->getSk(),
                 'region' => $config->getRegion(),
+                'auto_cache' => true,
             ],
             default => [
                 'api_key' => $config->getApiKey(),
