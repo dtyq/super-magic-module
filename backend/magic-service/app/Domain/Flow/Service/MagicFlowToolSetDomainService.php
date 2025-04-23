@@ -59,6 +59,14 @@ class MagicFlowToolSetDomainService extends AbstractDomainService
         return $toolSet;
     }
 
+    public function create(FlowDataIsolation $dataIsolation, MagicFlowToolSetEntity $savingMagicFLowToolSetEntity): MagicFlowToolSetEntity
+    {
+        $toolSet = $this->magicFlowToolSetRepository->save($dataIsolation, $savingMagicFLowToolSetEntity);
+        $savedEvent = new MagicFLowToolSetSavedEvent($toolSet, true);
+        AsyncEventUtil::dispatch($savedEvent);
+        return $toolSet;
+    }
+
     /**
      * @return array{total: int, list: array<MagicFlowToolSetEntity>}
      */

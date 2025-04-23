@@ -217,6 +217,11 @@ class MagicAgentDomainService
         return $instructs;
     }
 
+    public function associateFlowWithAgent(string $agentId, string $flowCode): void
+    {
+        $this->agentRepository->updateFlowCode($agentId, $flowCode);
+    }
+
     /**
      * 初始化系统交互指令.
      */
