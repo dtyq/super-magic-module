@@ -8,7 +8,6 @@ use App\Infrastructure\Util\Middleware\RequestContextMiddleware;
 use App\Interfaces\Flow\Facade\Admin\MagicFlowAIModelFlowAdminApi;
 use App\Interfaces\Flow\Facade\Admin\MagicFlowApiKeyFlowAdminApi;
 use App\Interfaces\Flow\Facade\Admin\MagicFlowDraftFlowAdminApi;
-use App\Interfaces\Flow\Facade\Admin\MagicFlowExportImportAdminApi;
 use App\Interfaces\Flow\Facade\Admin\MagicFlowFlowAdminApi;
 use App\Interfaces\Flow\Facade\Admin\MagicFlowToolSetApiFlow;
 use App\Interfaces\Flow\Facade\Admin\MagicFlowTriggerTestcaseFlowAdminApi;
@@ -63,9 +62,5 @@ Router::addGroup('/api/v1', static function () {
         Router::get('/{flowId}/api-key/{code}', [MagicFlowApiKeyFlowAdminApi::class, 'show']);
         Router::delete('/{flowId}/api-key/{code}', [MagicFlowApiKeyFlowAdminApi::class, 'destroy']);
         Router::post('/{flowId}/api-key/{code}/rebuild', [MagicFlowApiKeyFlowAdminApi::class, 'changeSecretKey']);
-
-        // 导入导出
-        Router::get('/{code}/export', [MagicFlowExportImportAdminApi::class, 'export']);
-        Router::post('/import', [MagicFlowExportImportAdminApi::class, 'import']);
     });
 }, ['middleware' => [RequestContextMiddleware::class]]);

@@ -215,6 +215,7 @@ return [
         'tool_flow_failed' => '导入工具流程 [:name] 失败：:error',
         'sub_flow_failed' => '导入子流程 [:name] 失败：:error',
         'associate_agent_failed' => '关联助理失败：:error',
+        'missing_data' => '导入流程失败：缺少助理或流程数据',
     ],
     'fields' => [
         'flow_name' => '流程名称',

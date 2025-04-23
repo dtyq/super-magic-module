@@ -7,6 +7,7 @@ declare(strict_types=1);
 
 namespace App\Application\Flow\Service;
 
+use App\Domain\Agent\Entity\MagicAgentEntity;
 use App\Domain\Agent\Service\MagicAgentDomainService;
 use App\Domain\Flow\Entity\MagicFlowEntity;
 use App\Domain\Flow\Entity\ValueObject\Code;
@@ -26,7 +27,7 @@ use DateTime;
 use Hyperf\Contract\ConfigInterface;
 use Throwable;
 
-class MagicFlowExportImportService
+class MagicFlowExportImportAppService
 {
     public function __construct(
         protected MagicFlowDomainService $magicFlowDomainService,
@@ -211,6 +212,82 @@ class MagicFlowExportImportService
         }
 
         return false; // 没有检测到循环依赖
+    }
+
+    /**
+     * 导出流程和助理信息
+     * 包含流程的所有数据以及助理的基本信息.
+     */
+    public function exportFlowWithAgent(FlowDataIsolation $dataIsolation, string $flowCode, MagicAgentEntity $agent): array
+    {
+        // 获取流程数据
+        $flowData = $this->exportFlow($dataIsolation, $flowCode);
+
+        // 添加助理信息
+        $agentData = [
+            'id' => $agent->getId(),
+            'name' => $agent->getAgentName(),
+            'description' => $agent->getAgentDescription(),
+            'flow_code' => $agent->getFlowCode(),
+            'avatar' => $agent->getAgentAvatar(),
+            // 可以根据需要添加其他助理信息
+        ];
+
+        return [
+            'agent' => $agentData,
+            'flow' => $flowData,
+            'export_time' => date('Y-m-d H:i:s'),
+            'export_version' => '1.0.0',
+        ];
+    }
+
+    /**
+     * 导入流程和助理信息
+     * 从导出的数据中创建新的流程和助理，并建立关联.
+     */
+    public function importFlowWithAgent(FlowDataIsolation $dataIsolation, array $importData): array
+    {
+        $agentData = $importData['agent'] ?? [];
+        $flowData = $importData['flow'] ?? [];
+
+        if (empty($flowData) || empty($agentData)) {
+            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'flow.import.missing_data');
+        }
+
+        // 1. 先导入流程
+        $mainFlow = $this->importFlow($dataIsolation, $flowData);
+
+        // 2. 创建新的助理并关联流程
+        $agentDomainService = di(MagicAgentDomainService::class);
+
+        $agentEntity = new MagicAgentEntity();
+        $agentEntity->setId('');
+        $agentEntity->setAgentName($agentData['name'] ?? ('导入的助理_' . date('YmdHis')));
+        $agentEntity->setAgentDescription($agentData['description'] ?? '');
+        $agentEntity->setAgentAvatar($agentData['avatar'] ?? '');
+        $agentEntity->setOrganizationCode($dataIsolation->getCurrentOrganizationCode());
+        $agentEntity->setFlowCode($mainFlow->getCode());
+        $agentEntity->setStatus(0);
+        $agentEntity->setCreatedUid($dataIsolation->getCurrentUserId());
+
+        try {
+            $savedAgent = $agentDomainService->saveAgent($agentEntity);
+
+            return [
+                'agent_id' => $savedAgent->getId(),
+                'agent_name' => $savedAgent->getAgentName(),
+                'flow_id' => $mainFlow->getCode(),
+                'flow_name' => $mainFlow->getName(),
+            ];
+        } catch (Throwable $e) {
+            // 如果创建助理失败，但流程已导入，仍返回流程信息
+            return [
+                'agent_id' => null,
+                'agent_error' => $e->getMessage(),
+                'flow_id' => $mainFlow->getCode(),
+                'flow_name' => $mainFlow->getName(),
+            ];
+        }
     }
 
     /**

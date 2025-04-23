@@ -149,6 +149,7 @@ class MagicAgentEntity extends AbstractEntity
     public function setAgentName(string $agentName): void
     {
         $this->agentName = $agentName;
+        $this->robotName = $agentName;
     }
 
     public function getAgentAvatar(): string
@@ -159,6 +160,7 @@ class MagicAgentEntity extends AbstractEntity
     public function setAgentAvatar(string $agentAvatar): void
     {
         $this->agentAvatar = $agentAvatar;
+        $this->robotAvatar = $agentAvatar;
     }
 
     public function getAgentDescription(): string
@@ -169,6 +171,7 @@ class MagicAgentEntity extends AbstractEntity
     public function setAgentDescription(string $agentDescription): void
     {
         $this->agentDescription = $agentDescription;
+        $this->robotDescription = $agentDescription;
     }
 
     public function getCreatedUid(): string

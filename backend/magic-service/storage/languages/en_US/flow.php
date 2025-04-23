@@ -199,6 +199,7 @@ return [
         'tool_flow_failed' => 'Import tool flow [:name] failed: :error',
         'sub_flow_failed' => 'Import sub flow [:name] failed: :error',
         'associate_agent_failed' => 'Associate agent failed: :error',
+        'missing_data' => 'Import flow failed: Missing agent or flow data',
     ],
     'fields' => [
         'flow_name' => 'Flow Name',
