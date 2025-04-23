@@ -62,7 +62,7 @@ class OperationPermissionApi extends AbstractPermissionApi
     public function checkOrganizationAdmin(): array
     {
         $authorization = $this->getAuthorization();
-        $isAdmin = PermissionChecker::isSuperAdmin($authorization->getOrganizationCode(), $authorization->getMobile());
+        $isAdmin = PermissionChecker::isOrganizationAdmin($authorization->getOrganizationCode(), $authorization->getMobile());
         return ['is_admin' => $isAdmin];
     }
 }

@@ -17,7 +17,7 @@ class Permission implements PermissionInterface
      *
      * @return bool 是否超级管理员
      */
-    public function isSuperAdmin(string $organizationCode, string $mobile): bool
+    public function isOrganizationAdmin(string $organizationCode, string $mobile): bool
     {
         $whiteMap = config('permission.organization_whitelists');
         if (empty($whiteMap)

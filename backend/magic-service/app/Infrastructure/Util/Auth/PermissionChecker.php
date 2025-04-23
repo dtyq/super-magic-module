@@ -57,9 +57,9 @@ class PermissionChecker
         return isset($permissions[$permissionKey]) && in_array($mobile, $permissions[$permissionKey]);
     }
 
-    public static function isSuperAdmin(string $organizationCode, string $mobile): bool
+    public static function isOrganizationAdmin(string $organizationCode, string $mobile): bool
     {
         $permission = di(PermissionInterface::class);
-        return $permission->isSuperAdmin($organizationCode, $mobile);
+        return $permission->isOrganizationAdmin($organizationCode, $mobile);
     }
 }
