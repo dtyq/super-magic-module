@@ -637,7 +637,7 @@ class LLMAppService extends AbstractLLMAppService
             $msgLog->setAppCode('');
             $msgLog->setOrganizationCode($organizationCode);
             $msgLog->setBusinessId('');
-            $msgLog->setSourceId('chat_completions');
+            $msgLog->setSourceId('image_generate');
             $msgLog->setUserName($nickname);
             $msgLog->setCreatedAt(new DateTime());
             $this->msgLogDomainService->create($LLMDataIsolation, $msgLog);

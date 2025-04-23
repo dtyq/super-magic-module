@@ -30,6 +30,7 @@ class StatisticsAppService extends AbstractLLMAppService
         'chat_completions' => '对话补全',
         'ai_search' => '深度搜索',
         'recording_summary' => '录音纪要',
+        'image_generate' => '文生图',
     ];
 
     /**

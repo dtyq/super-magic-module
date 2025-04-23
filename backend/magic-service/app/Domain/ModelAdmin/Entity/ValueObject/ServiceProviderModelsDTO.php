@@ -33,6 +33,8 @@ class ServiceProviderModelsDTO extends AbstractEntity
 
     protected int $status;
 
+    protected ?string $disabledBy = null; // 禁用来源：official-官方禁用，user-用户禁用，NULL-未禁用
+
     protected int $sort;
 
     protected string $createdAt;
@@ -40,6 +42,17 @@ class ServiceProviderModelsDTO extends AbstractEntity
     protected array $translate = [];
 
     protected array $visibleOrganizations = [];
+
+    public function getDisabledBy(): ?string
+    {
+        return $this->disabledBy;
+    }
+
+    public function setDisabledBy(?string $disabledBy): self
+    {
+        $this->disabledBy = $disabledBy;
+        return $this;
+    }
 
     public function isActive(): bool
     {

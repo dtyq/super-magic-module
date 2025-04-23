@@ -7,6 +7,7 @@ declare(strict_types=1);
 
 namespace App\Domain\ModelAdmin\Service;
 
+use App\Domain\ModelAdmin\Constant\DisabledByType;
 use App\Domain\ModelAdmin\Constant\ModelType;
 use App\Domain\ModelAdmin\Constant\OriginalModelType;
 use App\Domain\ModelAdmin\Constant\ServiceProviderCategory;
@@ -290,23 +291,29 @@ class ServiceProviderDomainService
             $currentModels = $this->serviceProviderModelsRepository->getModelsByServiceProviderConfigId($serviceProviderConfigEntity->getId());
 
             if ($newStatus === Status::DISABLE) {
+                // 设置禁用来源为official
+                $disabledBy = DisabledByType::OFFICIAL;
+
                 foreach ($currentModels as $model) {
                     // 使用排除自身的方法
                     // 大模型服务商和文生图服务商分开处理，文生图模型没有 model_parent_id ，因为官方组织无法添加
                     if ($serviceProviderCategory === ServiceProviderCategory::VLM) {
-                        $this->serviceProviderModelsRepository->syncUpdateModelsStatusExcludeSelfByVLM($model->getModelVersion(), Status::DISABLE);
+                        $this->serviceProviderModelsRepository->syncUpdateModelsStatusExcludeSelfByVLM($model->getModelVersion(), Status::DISABLE, $disabledBy);
                     } elseif ($serviceProviderCategory === ServiceProviderCategory::LLM) {
-                        $this->serviceProviderModelsRepository->syncUpdateModelsStatusExcludeSelfByLLM($model->getId(), Status::DISABLE);
+                        $this->serviceProviderModelsRepository->syncUpdateModelsStatusExcludeSelfByLLM($model->getId(), Status::DISABLE, $disabledBy);
                     }
                 }
             } elseif ($newStatus === Status::ACTIVE && $originalStatus === Status::DISABLE) {
                 foreach ($currentModels as $model) {
                     // 获取当前模型状态并使用排除自身的方法
                     $modelStatus = Status::from($model->getStatus());
+                    // 激活时，清除禁用来源
+                    $disabledBy = $modelStatus === Status::DISABLE ? null : null;
+
                     if ($serviceProviderCategory == ServiceProviderCategory::VLM) {
-                        $this->serviceProviderModelsRepository->syncUpdateModelsStatusExcludeSelfByVLM($model->getModelVersion(), $modelStatus);
+                        $this->serviceProviderModelsRepository->syncUpdateModelsStatusExcludeSelfByVLM($model->getModelVersion(), $modelStatus, $disabledBy);
                     } elseif ($serviceProviderCategory == ServiceProviderCategory::LLM) {
-                        $this->serviceProviderModelsRepository->syncUpdateModelsStatusExcludeSelfByLLM($model->getId(), $modelStatus);
+                        $this->serviceProviderModelsRepository->syncUpdateModelsStatusExcludeSelfByLLM($model->getId(), $modelStatus, $disabledBy);
                     }
                 }
             }
@@ -325,6 +332,14 @@ class ServiceProviderDomainService
         $serviceProviderConfigId = $serviceProviderModelsEntity->getServiceProviderConfigId();
         $serviceProviderConfigDetail = $this->getServiceProviderConfigDetail((string) $serviceProviderConfigId, $organizationCode);
         $serviceProviderDTO = $this->getServiceProviderById((int) $serviceProviderConfigDetail->getServiceProviderId());
+
+        // 设置禁用来源
+        $disabledBy = null;
+        if ($status === Status::DISABLE) {
+            // 官方组织禁用标记为official，其他组织禁用标记为user
+            $disabledBy = $this->isOfficial($organizationCode) ? DisabledByType::OFFICIAL : DisabledByType::USER;
+        }
+
         if ($this->isOfficial($organizationCode)) {
             // 如果服务商状态为false，则其他模型为false
             $newStatus = $status;
@@ -333,12 +348,13 @@ class ServiceProviderDomainService
             }
             $serviceProviderCategory = ServiceProviderCategory::from($serviceProviderDTO->getCategory());
             if ($serviceProviderCategory === ServiceProviderCategory::VLM) {
-                $this->syncUpdateModelsStatusByVLM($serviceProviderModelsEntity->getModelVersion(), $newStatus);
+                $this->syncUpdateModelsStatusByVLM($serviceProviderModelsEntity->getModelVersion(), $newStatus, $disabledBy);
             } elseif ($serviceProviderCategory === ServiceProviderCategory::LLM) {
-                $this->syncUpdateModelsStatusByLLM((int) $serviceProviderModelsEntity->getId(), $newStatus);
+                $this->syncUpdateModelsStatusByLLM((int) $serviceProviderModelsEntity->getId(), $newStatus, $disabledBy);
             }
         }
-        $this->serviceProviderModelsRepository->updateModelStatus($modelId, $organizationCode, $status);
+        // 更新模型状态和禁用来源
+        $this->serviceProviderModelsRepository->updateModelStatusAndDisabledBy($modelId, $organizationCode, $status, $disabledBy);
     }
 
     /**
@@ -1069,14 +1085,14 @@ class ServiceProviderDomainService
         return $prefix . $maskedMiddle . $suffix;
     }
 
-    private function syncUpdateModelsStatusByVLM(string $getModelVersion, Status $status): void
+    private function syncUpdateModelsStatusByLLM(int $modelId, Status $status, ?DisabledByType $disabledBy = null)
     {
-        $this->serviceProviderModelsRepository->syncUpdateModelsStatusByVLM($getModelVersion, $status);
+        $this->serviceProviderModelsRepository->syncUpdateModelsStatusByLLM($modelId, $status, $disabledBy);
     }
 
-    private function syncUpdateModelsStatusByLLM(int $modelId, Status $status): void
+    private function syncUpdateModelsStatusByVLM(string $getModelVersion, Status $status, ?DisabledByType $disabledBy = null)
     {
-        $this->serviceProviderModelsRepository->syncUpdateModelsStatusByLLM($modelId, $status);
+        $this->serviceProviderModelsRepository->syncUpdateModelsStatusByVLM($getModelVersion, $status, $disabledBy);
     }
 
     private function syncDeleteModelsToOtherServiceProvider(array $modelParentId): void
@@ -1094,11 +1110,13 @@ class ServiceProviderDomainService
 
         $models = $this->filterModelsByVisibleOrganizations($models, $serviceProviderConfigEntity->getOrganizationCode());
 
-        // 如果是大模型服务商并且是官方的，过滤掉禁用的模型
-        // 如果是大模型服务商并且是官方的，过滤掉禁用的模型
-        if (ServiceProviderType::from($serviceProviderEntity->getProviderType()) === ServiceProviderType::OFFICIAL) {
+        // 修改过滤逻辑
+        $isOfficial = ServiceProviderType::from($serviceProviderEntity->getProviderType()) === ServiceProviderType::OFFICIAL;
+
+        if ($isOfficial) {
             $filteredModels = array_filter($models, function ($model) {
-                return $model->getStatus() === Status::ACTIVE->value;
+                return $model->getStatus() === Status::ACTIVE->value
+                    || ($model->getStatus() === Status::DISABLE->value && $model->getDisabledBy() === DisabledByType::USER->value);
             });
             $serviceProviderConfigDTO->setModels(array_values($filteredModels));
         } else {
