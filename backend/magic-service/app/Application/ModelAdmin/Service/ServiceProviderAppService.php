@@ -89,7 +89,7 @@ class ServiceProviderAppService
         // 处理图标
         $this->processServiceProviderConfigIcons($serviceProviderConfigDTOs, $organizationCode);
 
-        return $serviceProviderConfigDTOs;
+        return array_values($serviceProviderConfigDTOs);
     }
 
     // 获取服务商详细信息
