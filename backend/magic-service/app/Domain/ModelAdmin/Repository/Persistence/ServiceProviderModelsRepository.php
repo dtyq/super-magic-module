@@ -7,6 +7,7 @@ declare(strict_types=1);
 
 namespace App\Domain\ModelAdmin\Repository\Persistence;
 
+use App\Domain\ModelAdmin\Constant\DisabledByType;
 use App\Domain\ModelAdmin\Constant\ModelType;
 use App\Domain\ModelAdmin\Constant\ServiceProviderCategory;
 use App\Domain\ModelAdmin\Constant\Status;
@@ -333,22 +334,48 @@ class ServiceProviderModelsRepository extends AbstractModelRepository
         return $this->executeQueryAndToEntities($query);
     }
 
-    public function syncUpdateModelsStatusExcludeSelfByVLM(string $modelVersion, Status $status): void
+    public function syncUpdateModelsStatusExcludeSelfByVLM(string $modelVersion, Status $status, ?DisabledByType $disabledBy = null)
     {
+        $data = ['status' => $status->value];
+
+        if ($disabledBy !== null) {
+            $data['disabled_by'] = $disabledBy->value;
+        }
+
         $this->serviceProviderModelsModel::query()
             ->where('model_version', $modelVersion)
             ->where('category', ServiceProviderCategory::VLM->value)
             ->where('is_office', true)
-            ->update(['status' => $status->value]);
+            ->update($data);
     }
 
-    public function syncUpdateModelsStatusByVLM(string $modelVersion, Status $status): void
+    public function syncUpdateModelsStatusByVLM(string $modelVersion, Status $status, ?DisabledByType $disabledBy = null)
     {
+        $data = ['status' => $status->value];
+
+        if ($disabledBy !== null) {
+            $data['disabled_by'] = $disabledBy->value;
+        }
+
         $this->serviceProviderModelsModel::query()
             ->where('model_version', $modelVersion)
             ->where('category', ServiceProviderCategory::VLM->value)
             ->where('is_office', true)
-            ->update(['status' => $status->value]);
+            ->update($data);
+    }
+
+    /**
+     * 更新模型状态和禁用来源.
+     */
+    public function updateModelStatusAndDisabledBy(string $modelId, string $organizationCode, Status $status, ?DisabledByType $disabledBy = null): void
+    {
+        $this->serviceProviderModelsModel::query()
+            ->where('id', $modelId)
+            ->where('organization_code', $organizationCode)
+            ->update([
+                'status' => $status->value,
+                'disabled_by' => $disabledBy?->value,
+            ]);
     }
 
     /**
@@ -408,11 +435,17 @@ class ServiceProviderModelsRepository extends AbstractModelRepository
      * @param int $modelId 模型ID
      * @param Status $status 要设置的状态
      */
-    public function syncUpdateModelsStatusByLLM(int $modelId, Status $status): void
+    public function syncUpdateModelsStatusByLLM(int $modelId, Status $status, ?DisabledByType $disabledBy = null): void
     {
+        $data = ['status' => $status->value];
+
+        if ($disabledBy !== null) {
+            $data['disabled_by'] = $disabledBy->value;
+        }
+
         $this->serviceProviderModelsModel::query()
             ->where('model_parent_id', $modelId)
-            ->update(['status' => $status->value]);
+            ->update($data);
     }
 
     /**
@@ -422,12 +455,18 @@ class ServiceProviderModelsRepository extends AbstractModelRepository
      * @param int $modelId 模型ID
      * @param Status $status 要设置的状态
      */
-    public function syncUpdateModelsStatusExcludeSelfByLLM(int $modelId, Status $status): void
+    public function syncUpdateModelsStatusExcludeSelfByLLM(int $modelId, Status $status, ?DisabledByType $disabledBy = null): void
     {
+        $data = ['status' => $status->value];
+
+        if ($disabledBy !== null) {
+            $data['disabled_by'] = $disabledBy->value;
+        }
+
         $this->serviceProviderModelsModel::query()
             ->where('model_parent_id', $modelId)
             ->where('id', '!=', $modelId) // 排除自身ID
-            ->update(['status' => $status->value]);
+            ->update($data);
     }
 
     /**

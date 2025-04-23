@@ -17,7 +17,7 @@ use Volc\Service\Visual;
 
 class VolceOCRClient implements OCRClientInterface
 {
-    private const int DEFAULT_TIMEOUT = 5;
+    private const int DEFAULT_TIMEOUT = 60;
 
     private LoggerInterface $logger;
 
@@ -34,7 +34,7 @@ class VolceOCRClient implements OCRClientInterface
         $client->setSecretKey(config('volce_cv.ocr_pdf.sk'));
         $client->setAPI('OCRPdf', '2021-08-23');
 
-        $formParams = ['version' => 'v3'];
+        $formParams = ['version' => 'v3', 'page_num' => 100];
         $formParams['image_url'] = $url;
         $isPdfOrImage = $this->isPdfOrImage($url);
         if (empty($isPdfOrImage)) {
@@ -51,7 +51,7 @@ class VolceOCRClient implements OCRClientInterface
         $result = Json::decode($content);
         $code = $result['code'] ?? 0; // 如果没有 'code'，则使用默认的错误代码
         if ($code !== 10000) {
-            $message = $result['message'] ?? '火山OCR遇到错误,message 不存在'; // 如果没有 'message'，则使用默认消息
+            $message = $result['Message'] ?? '火山OCR遇到错误,message 不存在'; // 如果没有 'message'，则使用默认消息
             $this->logger->error(sprintf(
                 '火山OCR遇到错误:%s,',
                 $message,
