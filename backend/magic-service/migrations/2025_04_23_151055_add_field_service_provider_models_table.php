@@ -15,7 +15,7 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('service_provider_models', function (Blueprint $table) {
-            $table->string('disabled_by', 20)->nullable()->comment('禁用来源：official-官方禁用，user-用户禁用，NULL-未禁用')->after('status');
+            $table->string('disabled_by', 20)->default('')->comment('禁用来源：OFFICIAL-官方禁用，USER-用户禁用，空字符串-未禁用')->after('status');
         });
     }
 

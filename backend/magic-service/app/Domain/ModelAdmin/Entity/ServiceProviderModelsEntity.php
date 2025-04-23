@@ -52,7 +52,7 @@ class ServiceProviderModelsEntity extends AbstractEntity
 
     protected int $isOffice = 0; // 是否为官方模型：0-否，1-是
 
-    protected ?string $disabledBy = null; // 禁用来源：official-官方禁用，user-用户禁用，NULL-未禁用
+    protected ?string $disabledBy = ''; // 禁用来源：official-官方禁用，user-用户禁用，NULL-未禁用
 
     protected string $createdAt;
 

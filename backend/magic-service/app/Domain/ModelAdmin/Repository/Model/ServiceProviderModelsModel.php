@@ -30,6 +30,7 @@ class ServiceProviderModelsModel extends Model
         'sort',
         'icon',
         'status',
+        'disabled_by',
         'translate',
         'organization_code',
         'visible_organizations',

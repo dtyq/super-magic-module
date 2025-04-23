@@ -441,6 +441,8 @@ class ServiceProviderModelsRepository extends AbstractModelRepository
 
         if ($disabledBy !== null) {
             $data['disabled_by'] = $disabledBy->value;
+        } else {
+            $data['disabled_by'] = '';
         }
 
         $this->serviceProviderModelsModel::query()
