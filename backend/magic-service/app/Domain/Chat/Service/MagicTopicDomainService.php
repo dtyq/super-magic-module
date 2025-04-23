@@ -239,7 +239,7 @@ class MagicTopicDomainService extends AbstractDomainService
 
     /**
      * agent 发送消息时获取话题 id.
-     * @param int $getType todo 0:默认话题 1:最近的话题 2:智能确定话题，暂时只支持默认话题
+     * @param int $getType todo 0:默认话题 1:最近的话题 2:智能确定话题，暂时只支持默认话题 3 新增话题
      * @throws Throwable
      */
     public function agentSendMessageGetTopicId(MagicConversationEntity $senderConversationEntity, int $getType): string
@@ -260,6 +260,10 @@ class MagicTopicDomainService extends AbstractDomainService
         $defaultTopicId = $receiverConversationEntity?->getExtra()?->getDefaultTopicId();
         $senderTopicExist = $this->checkDefaultTopicExist($senderConversationEntity);
         $receiverTopicExist = $this->checkDefaultTopicExist($receiverConversationEntity);
+        // 如果 $getType 为新增话题，则默认创建话题，而不是默认话题
+        if ($getType === 3) {
+            $defaultTopicId = '';
+        }
         // 收发双方只要有一个的默认话题不存在,就需要创建
         if (! $receiverTopicExist || ! $senderTopicExist || empty($defaultTopicId)) {
             Db::beginTransaction();
