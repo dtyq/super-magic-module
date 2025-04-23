@@ -7,8 +7,6 @@ declare(strict_types=1);
 
 namespace App\Domain\KnowledgeBase\Entity\ValueObject;
 
-use App\Domain\KnowledgeBase\Entity\ValueObject\Enum\ParentModeEnum;
-use App\Domain\KnowledgeBase\Entity\ValueObject\Enum\TextPreprocessRuleEnum;
 use App\Infrastructure\Core\AbstractDTO;
 
 class ParentChildConfigVO extends AbstractDTO
@@ -17,13 +15,13 @@ class ParentChildConfigVO extends AbstractDTO
 
     protected string $chunkSize;
 
-    protected ParentModeEnum $parentMode;
+    protected ParentMode $parentMode;
 
-    protected SegmentRuleVO $childSegmentRule;
+    protected SegmentRule $childSegmentRule;
 
-    protected SegmentRuleVO $parentSegmentRule;
+    protected SegmentRule $parentSegmentRule;
 
-    /** @var TextPreprocessRuleEnum[] */
+    /** @var TextPreprocessRule[] */
     protected array $textPreprocessRule;
 
     public function getSeparator(): string
@@ -48,41 +46,41 @@ class ParentChildConfigVO extends AbstractDTO
         return $this;
     }
 
-    public function getParentMode(): ParentModeEnum
+    public function getParentMode(): ParentMode
     {
         return $this->parentMode;
     }
 
-    public function setParentMode(ParentModeEnum $parentMode): self
+    public function setParentMode(ParentMode $parentMode): self
     {
         $this->parentMode = $parentMode;
         return $this;
     }
 
-    public function getChildSegmentRule(): SegmentRuleVO
+    public function getChildSegmentRule(): SegmentRule
     {
         return $this->childSegmentRule;
     }
 
-    public function setChildSegmentRule(SegmentRuleVO $childSegmentRule): self
+    public function setChildSegmentRule(SegmentRule $childSegmentRule): self
     {
         $this->childSegmentRule = $childSegmentRule;
         return $this;
     }
 
-    public function getParentSegmentRule(): SegmentRuleVO
+    public function getParentSegmentRule(): SegmentRule
     {
         return $this->parentSegmentRule;
     }
 
-    public function setParentSegmentRule(SegmentRuleVO $parentSegmentRule): self
+    public function setParentSegmentRule(SegmentRule $parentSegmentRule): self
     {
         $this->parentSegmentRule = $parentSegmentRule;
         return $this;
     }
 
     /**
-     * @return TextPreprocessRuleEnum[]
+     * @return TextPreprocessRule[]
      */
     public function getTextPreprocessRule(): array
     {
@@ -90,7 +88,7 @@ class ParentChildConfigVO extends AbstractDTO
     }
 
     /**
-     * @param TextPreprocessRuleEnum[] $textPreprocessRule
+     * @param TextPreprocessRule[] $textPreprocessRule
      */
     public function setTextPreprocessRule(array $textPreprocessRule): self
     {
@@ -103,10 +101,10 @@ class ParentChildConfigVO extends AbstractDTO
         $config = new self();
         $config->setSeparator($data['separator']);
         $config->setChunkSize($data['chunk_size']);
-        $config->setParentMode(ParentModeEnum::from($data['parent_mode']));
-        $config->setChildSegmentRule(SegmentRuleVO::fromArray($data['child_segment_rule']));
-        $config->setParentSegmentRule(SegmentRuleVO::fromArray($data['parent_segment_rule']));
-        $config->setTextPreprocessRule(TextPreprocessRuleEnum::fromArray($data['text_preprocess_rule']));
+        $config->setParentMode(ParentMode::from($data['parent_mode']));
+        $config->setChildSegmentRule(SegmentRule::fromArray($data['child_segment_rule']));
+        $config->setParentSegmentRule(SegmentRule::fromArray($data['parent_segment_rule']));
+        $config->setTextPreprocessRule(TextPreprocessRule::fromArray($data['text_preprocess_rule']));
         return $config;
     }
 }
