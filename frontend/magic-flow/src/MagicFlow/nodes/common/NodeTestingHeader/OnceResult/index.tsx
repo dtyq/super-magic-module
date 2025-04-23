@@ -1,4 +1,4 @@
-import { useExternal } from "@/MagicFlow/context/ExternalContext/useExternal"
+import { useExternalConfig } from "@/MagicFlow/context/ExternalContext/useExternal"
 import { NodeTestConfig } from "@/MagicFlow/context/NodeTesingContext/Context"
 import { IconCheck, IconCopy, IconMaximize } from "@tabler/icons-react"
 import clsx from "clsx"
@@ -24,7 +24,7 @@ export default function OnceResult({
 	debugLogs,
 }: OnceResultProps) {
 	const { t } = useTranslation()
-	const { allowDebug } = useExternal()
+	const { allowDebug } = useExternalConfig()
 
 	// 添加全屏模态窗口状态
 	const [fullscreenModalVisible, setFullscreenModalVisible] = React.useState(false)

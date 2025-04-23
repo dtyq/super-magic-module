@@ -257,7 +257,8 @@ class ServiceProviderAppService
         $model = $this->serviceProviderDomainService->getServiceProviderConfig('', $modelId, $authorization->getOrganizationCode());
         /* @var ChatCompletionResponse $response */
         try {
-            $model->createEmbedding();
+            $embedding = $model->createEmbedding();
+            $embedding->embedding('test');
         } catch (Exception $exception) {
             $connectResponse->setStatus(false);
             $connectResponse->setMessage($exception->getMessage());

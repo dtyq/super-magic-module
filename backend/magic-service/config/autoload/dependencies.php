@@ -4,7 +4,7 @@ declare(strict_types=1);
 /**
  * Copyright (c) The Magic , Distributed under the software license
  */
-use App\Application\Chat\Service\Agent\DefaultUserCallAgentService;
+use App\Application\Chat\Service\MagicAgentEventAppService;
 use App\Application\Chat\Service\SessionAppService;
 use App\Application\Flow\ExecuteManager\NodeRunner\Code\CodeExecutor\PHPExecutor;
 use App\Application\Flow\ExecuteManager\NodeRunner\Code\CodeExecutor\PythonExecutor;
@@ -24,6 +24,7 @@ use App\Domain\Agent\Repository\Facade\MagicBotThirdPlatformChatRepositoryInterf
 use App\Domain\Agent\Repository\Persistence\MagicBotThirdPlatformChatRepository;
 use App\Domain\Authentication\Repository\Facade\AuthenticationRepositoryInterface;
 use App\Domain\Authentication\Repository\Implement\AuthenticationRepository;
+use App\Domain\Chat\Event\Agent\AgentExecuteInterface;
 use App\Domain\Chat\Repository\Facade\MagicChatConversationRepositoryInterface;
 use App\Domain\Chat\Repository\Facade\MagicChatFileRepositoryInterface;
 use App\Domain\Chat\Repository\Facade\MagicChatMessageVersionsRepositoryInterface;
@@ -112,7 +113,6 @@ use App\Domain\Token\Item\MagicTokenExtra;
 use App\Domain\Token\Repository\Facade\MagicTokenExtraInterface;
 use App\Domain\Token\Repository\Facade\MagicTokenRepositoryInterface;
 use App\Domain\Token\Repository\Persistence\MagicMagicTokenRepository;
-use App\Infrastructure\Core\Contract\Agent\UserCallAgentInterface;
 use App\Infrastructure\Core\Contract\Authorization\BaseFlowOpenApiCheck;
 use App\Infrastructure\Core\Contract\Authorization\FlowOpenApiCheckInterface;
 use App\Infrastructure\Core\Contract\Flow\CodeExecutor\PHPExecutorInterface;
@@ -138,6 +138,8 @@ use App\Infrastructure\ExternalAPI\Sms\SmsInterface;
 use App\Infrastructure\ExternalAPI\Sms\TemplateInterface;
 use App\Infrastructure\ExternalAPI\Sms\Volcengine\Template;
 use App\Infrastructure\ExternalAPI\Sms\Volcengine\VolceApiClient;
+use App\Infrastructure\Util\Auth\Permission\Permission;
+use App\Infrastructure\Util\Auth\Permission\PermissionInterface;
 use App\Infrastructure\Util\Client\SimpleClientFactory;
 use App\Infrastructure\Util\Locker\LockerInterface;
 use App\Infrastructure\Util\Locker\RedisLocker;
@@ -261,6 +263,8 @@ $dependencies = [
 
     // token 扩展字段
     MagicTokenExtraInterface::class => MagicTokenExtra::class,
+    // 助理执行事件
+    AgentExecuteInterface::class => MagicAgentEventAppService::class,
 
     // mock-http-service
     'mock-http-service' => Server::class,
@@ -274,7 +278,8 @@ $dependencies = [
     // admin
     AdminGlobalSettingsRepositoryInterface::class => AdminGlobalSettingsRepository::class,
 
-    UserCallAgentInterface::class => DefaultUserCallAgentService::class,
+    // 权限
+    PermissionInterface::class => Permission::class,
 ];
 
 // 如果存在重复,优先取dependencies_priority的配置,不存在重复，就合并

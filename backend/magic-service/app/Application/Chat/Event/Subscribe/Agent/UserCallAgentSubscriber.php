@@ -7,7 +7,7 @@ declare(strict_types=1);
 
 namespace App\Application\Chat\Event\Subscribe\Agent;
 
-use App\Application\Chat\Service\Agent\UserCallAgentManager;
+use App\Domain\Chat\Event\Agent\AgentExecuteInterface;
 use App\Domain\Chat\Event\Agent\UserCallAgentEvent;
 use Hyperf\Event\Annotation\Listener;
 use Hyperf\Event\Contract\ListenerInterface;
@@ -20,13 +20,13 @@ class UserCallAgentSubscriber implements ListenerInterface
 {
     protected LoggerInterface $logger;
 
-    protected UserCallAgentManager $userCallAgentManager;
+    protected ContainerInterface $container;
 
     public function __construct(
         ContainerInterface $container,
     ) {
+        $this->container = $container;
         $this->logger = $container->get(LoggerFactory::class)->get(static::class);
-        $this->userCallAgentManager = $container->get(UserCallAgentManager::class);
     }
 
     public function listen(): array
@@ -38,12 +38,7 @@ class UserCallAgentSubscriber implements ListenerInterface
 
     public function process(object $event): void
     {
-        /** @var UserCallAgentEvent $event */
-        if (! $event instanceof UserCallAgentEvent) {
-            return;
-        }
-
-        // 委托给管理器处理
-        $this->userCallAgentManager->process($event);
+        /* @var UserCallAgentEvent $event */
+        di(AgentExecuteInterface::class)->agentExecEvent($event);
     }
 }

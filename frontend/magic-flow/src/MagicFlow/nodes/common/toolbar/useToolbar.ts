@@ -1,30 +1,31 @@
 
 import { useMemoizedFn } from "ahooks"
-import { useFlowData, useFlowEdges, useFlowNodes, useNodeConfig, useNodeConfigActions } from "@/MagicFlow/context/FlowContext/useFlow"
+import { useFlowData, useFlowEdges, useFlowEdgesActions, useFlowNodes, useNodeConfig, useNodeConfigActions } from "@/MagicFlow/context/FlowContext/useFlow"
 import { generateSnowFlake } from "@/common/utils/snowflake"
-import { useStoreApi } from "reactflow"
-import { useFlowInteraction } from "@/MagicFlow/components/FlowDesign/context/FlowInteraction/useFlowInteraction"
+import { useReactFlow, useStoreApi } from "reactflow"
+import { useFlowInteractionActions } from "@/MagicFlow/components/FlowDesign/context/FlowInteraction/useFlowInteraction"
 import useViewport from "@/MagicFlow/components/common/hooks/useViewport"
 import { nodeManager } from "@/MagicFlow/register/node"
-import { useExternal } from "@/MagicFlow/context/ExternalContext/useExternal"
+import { useExternalConfig } from "@/MagicFlow/context/ExternalContext/useExternal"
 import { defaultEdgeConfig } from "@/MagicFlow/edges"
 import { generatePasteNode, judgeIsLoopBody, judgeLoopNode } from "@/MagicFlow/utils"
 import _ from "lodash"
-import { useNodes } from "@/MagicFlow/context/NodesContext/useNodes"
+import { useNodesActions } from "@/MagicFlow/context/NodesContext/useNodes"
+import { FLOW_EVENTS, flowEventBus } from "@/common/BaseUI/Select/constants"
 
 export const pasteTranslateSize = 20
 
 export default function useToolbar () {
 
-	const {  setSelectedNodeId } = useFlowNodes()
     const { nodeConfig } = useNodeConfig()
     const { setNodeConfig, notifyNodeChange } = useNodeConfigActions()
-    const {  edges, updateNextNodeIdsByDeleteEdge, setEdges } = useFlowEdges()
+    const {  updateNextNodeIdsByDeleteEdge, setEdges } = useFlowEdgesActions()
     const { debuggerMode } = useFlowData()
-	const { setNodes, nodes } = useNodes()
-	const { layout } = useFlowInteraction()
+	const { setNodes } = useNodesActions()
+	const { layout } = useFlowInteractionActions()
+    const { getEdges, getNodes } = useReactFlow()
 
-	const { paramsName } = useExternal()
+	const { paramsName } = useExternalConfig()
 
 	const { updateViewPortToTargetNode } = useViewport()
 
@@ -32,6 +33,8 @@ export default function useToolbar () {
 
 	// 删除单个节点
 	const deleteNode = useMemoizedFn((id: string) => {
+        const edges = getEdges()
+        const nodes = Object.values(nodeConfig)
 		const deleteIds = _.castArray(id).reduce((acc, nId) => {
 			const n = nodeConfig[nId]
 			// @ts-ignore
@@ -83,9 +86,13 @@ export default function useToolbar () {
 		}
 	})
 
+    const selectNode = useMemoizedFn((nodeId: string) => {
+        flowEventBus.emit(FLOW_EVENTS.NODE_SELECTED, nodeId)
+    })
+
 	const pasteNode = useMemoizedFn((id) => {
 		const storeStates = store.getState()
-		const node = nodes.find(n => n.id === id)
+		const node = nodeConfig[id]
         if(!node) return
 		const config = nodeConfig[id]
 
@@ -109,9 +116,11 @@ export default function useToolbar () {
 		config?.nextNodes?.push(newId)
 		config?.next_nodes?.push(newId)
 
-		edges.push(newEdge)
-		nodes.push(_pasteNode)
-		setNodes([...nodes])
+        const edges = getEdges()
+        const nodes = getNodes()
+        setEdges([...edges, newEdge])
+        // @ts-ignore
+		setNodes([...nodes, _pasteNode])
 		nodeConfig[newId] = _pasteNode
 
 		storeStates.unselectNodesAndEdges()
@@ -120,7 +129,7 @@ export default function useToolbar () {
 			const layoutNodes = layout()
 			const currentNode = layoutNodes.find(n => n.node_id === newId)
 			updateViewPortToTargetNode(currentNode)
-			setSelectedNodeId(null)
+			selectNode(null)
 		}, 200)
 
         notifyNodeChange?.()

@@ -11,7 +11,7 @@ interface TabItem {
 }
 
 interface PanelHeaderProps {
-	materialHeader: React.ReactNode
+	materialHeader?: React.ReactNode
 	tabList: TabItem[]
 	tab: string
 }

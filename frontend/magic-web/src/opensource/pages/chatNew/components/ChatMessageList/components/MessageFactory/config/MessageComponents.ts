@@ -51,7 +51,9 @@ const messageComponents: Record<string, MessageComponent> = {
 			content.text?.reasoning_content,
 		isStreamingParser: (message: TextConversationMessage) => {
 			if (!message.text?.stream_options) return false
-			return message.text?.stream_options?.status === StreamStatus.Streaming
+			return Boolean(
+				message.text?.stream_options?.status !== StreamStatus.End && message.text?.content,
+			)
 		},
 
 		isReasoningStreamingParser: (message: TextConversationMessage) => {
@@ -76,13 +78,16 @@ const messageComponents: Record<string, MessageComponent> = {
 			content.markdown?.reasoning_content,
 		isStreamingParser: (message: MarkdownConversationMessage) => {
 			if (!message.markdown?.stream_options) return false
-			return message.markdown?.stream_options?.status === StreamStatus.Streaming
+			return Boolean(
+				message.markdown?.stream_options?.status !== StreamStatus.End &&
+					message.markdown?.content,
+			)
 		},
 		isReasoningStreamingParser: (message: MarkdownConversationMessage) => {
 			if (!message.markdown?.stream_options) return false
-			return (
+			return Boolean(
 				message.markdown?.stream_options?.status !== StreamStatus.End &&
-				!message.markdown?.content
+					!message.markdown?.content,
 			)
 		},
 		fileParser: (message: MarkdownConversationMessage) => message.markdown?.attachments,

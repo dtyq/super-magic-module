@@ -42,6 +42,7 @@ class ImageGenerateFactory
     {
         return match ($imageGenerateType) {
             ImageGenerateModelType::Volcengine => self::createVolcengineRequest($data),
+            ImageGenerateModelType::VolcengineImageGenerateV3 => self::createVolcengineRequest($data),
             ImageGenerateModelType::Midjourney => self::createMidjourneyRequest($data),
             ImageGenerateModelType::Flux => self::createFluxRequest($data),
             ImageGenerateModelType::TTAPIGPT4o => self::createGPT4oRequest($data),

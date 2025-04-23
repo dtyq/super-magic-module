@@ -9,7 +9,7 @@ import type { ExpressionSource } from "@dtyq/magic-flow/MagicExpressionWidget/ty
 import { FormItemType } from "@dtyq/magic-flow/MagicExpressionWidget/types"
 import { ShowColumns } from "@dtyq/magic-flow/MagicJsonSchemaEditor/constants"
 import { cx } from "antd-style"
-import { useFlow } from "@dtyq/magic-flow/MagicFlow/context/FlowContext/useFlow"
+import { useFlowNodes } from "@dtyq/magic-flow/MagicFlow/context/FlowContext/useFlow"
 import { cloneDeep, assignIn } from "lodash-es"
 import { DisabledField } from "@dtyq/magic-flow/MagicJsonSchemaEditor/types/Schema"
 import { useTranslation } from "react-i18next"
@@ -58,7 +58,7 @@ export default function ArgsSettings({
 }: ArgsSettingsProps) {
 	const { t } = useTranslation()
 	const [currentTab, setCurrentTab] = useState(activeKey)
-	const { selectedNodeId } = useFlow()
+	const { selectedNodeId } = useFlowNodes()
 
 	// 以父组件的为准
 	useEffect(() => {

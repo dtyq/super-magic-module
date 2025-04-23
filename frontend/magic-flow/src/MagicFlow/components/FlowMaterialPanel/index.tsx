@@ -3,9 +3,7 @@ import styles from "./index.module.less"
 
 // import useMaterialPanel from "./hooks/useMaterialPanel"
 import { prefix } from "@/MagicFlow/constants"
-import { useExternal } from "@/MagicFlow/context/ExternalContext/useExternal"
 import clsx from "clsx"
-import { TabObject } from "./constants"
 import { PanelProvider } from "./context/PanelContext/Provider"
 import useMaterialPanel from "./hooks/useMaterialPanel"
 import useMaterialSearch from "./hooks/useMaterialSearch"
@@ -22,7 +20,6 @@ function FlowMaterialPanel() {
 	const { tabContents, tabList, tab } = useTab()
 	const { keyword, onSearchChange, agentType, setAgentType } = useMaterialSearch({ tab })
 	const { show, setShow, stickyButtonStyle } = useMaterialPanel()
-	const { materialHeader } = useExternal()
 
 	// 使用useMemo缓存Panel Provider的value，避免不必要的重新渲染
 	const providerValue = useMemo(() => {
@@ -41,7 +38,7 @@ function FlowMaterialPanel() {
 				className={clsx(styles.flowMaterialPanel, `${prefix}flow-material-panel`)}
 				style={panelStyle}
 			>
-				<PanelHeader materialHeader={materialHeader} tabList={tabList} tab={tab} />
+				<PanelHeader tabList={tabList} tab={tab} />
 
 				<SearchBar keyword={keyword} onSearchChange={onSearchChange} />
 

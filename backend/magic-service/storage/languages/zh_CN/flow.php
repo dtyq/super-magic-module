@@ -62,6 +62,7 @@ return [
         'not_support_embedding' => '[:model_name] 不支持嵌入',
         'error_config_missing' => '配置项 :name 缺失，请检查相关设置或联系管理员处理。',
         'invalid_implementation_interface' => '实现必须是 :interface 的实例',
+        'embedding_failed' => '[:model_name] 嵌入失败',
     ],
     'max_record' => [
         'positive_integer' => '最大记录数 只能是 :min - :max 的正整数',
@@ -201,6 +202,21 @@ return [
     ],
     'component' => [
         'format_error' => '[:label] 格式错误',
+    ],
+    'export' => [
+        'not_main_flow' => '导出流程失败：[:label] 不是主流程',
+        'circular_dependency_detected' => '导出流程失败：检测到循环依赖关系',
+    ],
+    'import' => [
+        'missing_main_flow' => '导入流程失败：缺少主流程数据',
+        'missing_import_data' => '导入流程失败：缺少导入数据',
+        'main_flow_failed' => '导入主流程失败：:error',
+        'failed' => '导入流程 [:label] 失败',
+        'tool_set_failed' => '导入工具集 [:name] 失败：:error',
+        'tool_flow_failed' => '导入工具流程 [:name] 失败：:error',
+        'sub_flow_failed' => '导入子流程 [:name] 失败：:error',
+        'associate_agent_failed' => '关联助理失败：:error',
+        'missing_data' => '导入流程失败：缺少助理或流程数据',
     ],
     'fields' => [
         'flow_name' => '流程名称',

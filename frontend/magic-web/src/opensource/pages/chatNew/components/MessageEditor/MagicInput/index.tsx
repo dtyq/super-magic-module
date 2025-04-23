@@ -51,8 +51,8 @@ import InstructionActions from "../../quick-instruction"
 import QuickInstructionExtension from "../../quick-instruction/extension"
 import MessageRefer from "../../ChatMessageList/components/ReferMessage"
 import { generateRichText } from "../../ChatSubSider/utils"
-import { FileApi } from "@/opensource/apis"
-
+import { FileApi } from "@/apis"
+import MessageStore from "@/opensource/stores/chatNew/message"
 export interface SendData {
 	jsonValue: JSONContent | undefined
 	normalValue: string
@@ -177,6 +177,7 @@ const ConversationInput = observer(function ConversationInput({
 	const handleReferMessageClick = useMemoizedFn(() => {
 		if (referMessageId) {
 			// FIXME: 滚动到引用消息
+			MessageStore.setFocusMessageId(referMessageId)
 		}
 	})
 
@@ -431,7 +432,7 @@ const ConversationInput = observer(function ConversationInput({
 
 	const isShowStartPage = interfaceStore.isShowStartPage
 	const onCreateTopic = useMemoizedFn(() => {
-		if (isShowStartPage) interfaceStore.updateIsShowStartPage(false)
+		if (isShowStartPage) interfaceStore.closeStartPage()
 		TopicService.createTopic?.()
 	})
 

@@ -1,12 +1,7 @@
-import MagicImagePreview from "@/opensource/components/base/MagicImagePreview"
-import { Flex, Modal, Progress } from "antd"
-import { useMemo, useRef, useState } from "react"
-import { useBoolean, useMemoizedFn, useUpdateEffect } from "ahooks"
-import { useTranslation } from "react-i18next"
+import { Modal } from "antd"
+import { useMemo, useState } from "react"
+import { useMemoizedFn } from "ahooks"
 import Draggable from "react-draggable"
-import useCurrentImageSwitcher from "@/opensource/components/base/MagicImagePreview/hooks/useCurrentImageSwitcher"
-import useImageSize from "@/opensource/components/base/MagicImagePreview/hooks/useImageSize"
-import { resolveToString } from "@dtyq/es6-template-strings"
 import { ResizableBox } from "react-resizable"
 import type { ResizeCallbackData } from "react-resizable"
 import { observer } from "mobx-react-lite"
@@ -16,40 +11,22 @@ import useStyles from "./styles"
 import Header from "./components/Header"
 import useImageAction from "./hooks/useImageAction"
 import "react-resizable/css/styles.css"
-import ImageCompareSlider from "./components/ImageCompareSlider"
+import ImagePreviewMain from "./components/ImagePreviewMain"
 
 const ChatImagePreviewModal = observer(() => {
-	const { previewInfo: info, open: openProps, message, ...rest } = MessageFilePreviewStore
+	const { previewInfo: info, open: open, message, ...rest } = MessageFilePreviewStore
 	const { styles } = useStyles()
-	const { t } = useTranslation("interface")
-	const [open, { setTrue, setFalse }] = useBoolean(false)
-
-	useUpdateEffect(() => {
-		if (openProps) {
-			setTrue()
-		} else {
-			setFalse()
-		}
-	}, [openProps])
 
 	const closeModel = useMemoizedFn(() => {
-		setFalse()
+		MessageFilePreviewStore.setOpen(false)
 		MessageFilePreviewService.clearPreviewInfo()
 	})
 
 	const {
-		currentImage,
 		draggleRef,
 		loading,
-		progress,
 		bounds,
 		disabled,
-		isCompare,
-		isPressing,
-		viewType,
-		setViewType,
-		onLongPressStart,
-		onLongPressEnd,
 		onDownload,
 		navigateToMessage,
 		onMouseOver,
@@ -81,48 +58,6 @@ const ChatImagePreviewModal = observer(() => {
 		onHighDefinition,
 		navigateToMessage,
 	])
-
-	const { toNext, toPrev, nextDisabled, prevDisabled } = useCurrentImageSwitcher()
-
-	const imageRef = useRef<HTMLImageElement>(null)
-	const isLongImage = useImageSize(info?.url)
-
-	const ImageNode = useMemo(() => {
-		switch (info?.ext?.ext) {
-			case "svg":
-			case "svg+xml":
-				return (
-					currentImage && (
-						<div
-							draggable={false}
-							dangerouslySetInnerHTML={{ __html: currentImage }}
-							className={styles.svg}
-						/>
-					)
-				)
-			default:
-				return (
-					<img
-						ref={imageRef}
-						src={currentImage}
-						alt=""
-						draggable={false}
-						style={
-							isLongImage
-								? {
-										objectFit: "contain",
-										width: "100%",
-									}
-								: {
-										objectFit: "contain",
-										width: "100%",
-										height: "100%",
-									}
-						}
-					/>
-				)
-		}
-	}, [info?.ext?.ext, currentImage, styles.svg, isLongImage])
 
 	const [bodySize, setBodySize] = useState({
 		width: 800,
@@ -168,47 +103,7 @@ const ChatImagePreviewModal = observer(() => {
 				minConstraints={[600, 400]}
 				onResize={onResize}
 			>
-				<MagicImagePreview
-					rootClassName={styles.imagePreview}
-					onNext={info?.standalone ? undefined : toNext}
-					onPrev={info?.standalone ? undefined : toPrev}
-					nextDisabled={nextDisabled}
-					prevDisabled={prevDisabled}
-					hasCompare={isCompare}
-					viewType={viewType}
-					onChangeViewType={setViewType}
-					onLongPressStart={onLongPressStart}
-					onLongPressEnd={onLongPressEnd}
-				>
-					{isCompare ? (
-						<ImageCompareSlider
-							info={info}
-							viewType={viewType}
-							isPressing={isPressing}
-						/>
-					) : (
-						ImageNode
-					)}
-				</MagicImagePreview>
-				{loading && (
-					<Flex align="center" gap={10} className={styles.mask}>
-						<Progress percent={progress} showInfo={false} className={styles.progress} />
-						<Flex
-							vertical
-							gap={2}
-							align="center"
-							justify="center"
-							className={styles.progressText}
-						>
-							<span>
-								{resolveToString(t("chat.imagePreview.hightImageConverting"), {
-									num: progress,
-								})}
-							</span>
-							<span>{t("chat.imagePreview.convertingCloseTip")}</span>
-						</Flex>
-					</Flex>
-				)}
+				<ImagePreviewMain info={info} containerClassName={styles.imagePreview} />
 			</ResizableBox>
 		</Modal>
 	)

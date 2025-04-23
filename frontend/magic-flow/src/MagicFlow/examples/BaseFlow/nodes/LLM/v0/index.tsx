@@ -1,4 +1,4 @@
-import { useFlow } from "@/MagicFlow/context/FlowContext/useFlow"
+import { useNodeConfigActions } from "@/MagicFlow/context/FlowContext/useFlow"
 import { useCurrentNode } from "@/MagicFlow/nodes/common/context/CurrentNode/useCurrentNode"
 import DropdownCard from "@/common/BaseUI/DropdownCard"
 import { useMemoizedFn } from "ahooks"
@@ -15,7 +15,7 @@ import styles from "./index.module.less"
 
 export default function LLMV0() {
 	const [form] = Form.useForm()
-	const { nodeConfig, updateNodeConfig } = useFlow()
+	const { updateNodeConfig } = useNodeConfigActions()
 
 	const { currentNode } = useCurrentNode()
 
@@ -24,28 +24,21 @@ export default function LLMV0() {
 	const { expressionDataSource } = usePrevious()
 
 	const onValuesChange = useMemoizedFn((changeValues) => {
-		if (!currentNode || !nodeConfig || !nodeConfig[currentNode?.node_id]) return
-		const currentNodeConfig = nodeConfig[currentNode?.node_id]
-		const cloneNode = _.cloneDeep(currentNode)
+		if (!currentNode) return
 
 		// 特殊处理llm字段
 		if (changeValues.llm) {
 			const { model, ...rest } = changeValues.llm
-			_.set(currentNodeConfig, ["params", "model"], model)
+			_.set(currentNode, ["params", "model"], model)
 			if (rest && Object.keys(rest).length)
-				_.set(currentNodeConfig, ["params", "model_config"], rest)
+				_.set(currentNode, ["params", "model_config"], rest)
 		} else {
 			Object.entries(changeValues).forEach(([changeKey, changeValue]) => {
-				_.set(currentNodeConfig, ["params", changeKey], changeValue)
+				_.set(currentNode, ["params", changeKey], changeValue)
 			})
 		}
 
-		updateNodeConfig(
-			{
-				...currentNodeConfig,
-			},
-			cloneNode,
-		)
+		updateNodeConfig({ ...currentNode })
 	})
 
 	console.log("getFieldsValue", form.getFieldsValue(), initialValues)

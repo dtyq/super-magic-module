@@ -58,6 +58,7 @@ return [
         'disabled' => 'Model [:model_name] is disabled',
         'not_support_embedding' => '[:model_name] does not support embedding',
         'error_config_missing' => 'Configuration item :name is missing. Please check the settings or contact the administrator.',
+        'embedding_failed' => '[:model_name] embedding failed',
     ],
     'max_record' => [
         'positive_integer' => 'Maximum record number must be a positive integer between :min and :max',
@@ -185,6 +186,21 @@ return [
     ],
     'component' => [
         'format_error' => '[:label] Format error',
+    ],
+    'export' => [
+        'not_main_flow' => 'Export flow failed: [:label] is not a main flow',
+        'circular_dependency_detected' => 'Export flow failed: Circular dependency detected',
+    ],
+    'import' => [
+        'missing_main_flow' => 'Import flow failed: Missing main flow data',
+        'missing_import_data' => 'Import flow failed: Missing import data',
+        'main_flow_failed' => 'Import main flow failed: :error',
+        'failed' => 'Import flow [:label] failed',
+        'tool_set_failed' => 'Import tool set [:name] failed: :error',
+        'tool_flow_failed' => 'Import tool flow [:name] failed: :error',
+        'sub_flow_failed' => 'Import sub flow [:name] failed: :error',
+        'associate_agent_failed' => 'Associate agent failed: :error',
+        'missing_data' => 'Import flow failed: Missing agent or flow data',
     ],
     'fields' => [
         'flow_name' => 'Flow Name',

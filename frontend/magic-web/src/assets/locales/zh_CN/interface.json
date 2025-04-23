@@ -456,7 +456,8 @@
 			"senderImage": "{{username}}发送的图片",
 			"senderVideo": "{{username}}发送的视频",
 			"transpond": "转发",
-			"useHightImageTip": "AI 超清功能会消耗大量算力资源，每月使用次数有限，是否确认使用？"
+			"useHightImageTip": "AI 超清功能会消耗大量算力资源，每月使用次数有限，是否确认使用？",
+			"copy": "复制"
 		},
 		"input": {
 			"calendar": "日程",
@@ -586,7 +587,8 @@
 			"groupConversation": "群聊",
 			"message": "消息",
 			"pinned": "置顶",
-			"specialCardMessage": "[ 特殊卡片消息 ]"
+			"specialCardMessage": "[ 特殊卡片消息 ]",
+			"emptyFallbackText": "暂无会话"
 		},
 		"task": "任务",
 		"timedTask": {
@@ -679,7 +681,9 @@
 			"related": "延展",
 			"sources": "来源"
 		},
-		"you": "你"
+		"you": "你",
+		"emptyConversationFallbackText": "和小伙伴们打声招呼吧",
+		"emptyConversationFallbackButtonText": "去联系小伙伴"
 	},
 	"collectModal": {
 		"save": "保存",
@@ -1179,7 +1183,11 @@
 		"placeholder": "请输入内容",
 		"redo": "重做",
 		"rightAlign": "右对齐",
-		"undo": "撤销"
+		"undo": "撤销",
+		"fileTooLarge": "文件太大，请上传小于15MB的文件",
+		"invalidBase64": "文件格式不正确，请上传图片文件",
+		"uploadFailed": "文件上传失败，请重试",
+		"pasteFailed": "图片粘贴失败，请重试"
 	},
 	"search": "搜索",
 	"send": "发送",

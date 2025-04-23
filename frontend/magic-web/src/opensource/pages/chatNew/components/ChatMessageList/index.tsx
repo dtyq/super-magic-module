@@ -53,6 +53,7 @@ const ChatMessageList = observer(() => {
 	const resizeObserverRef = useRef<ResizeObserver | null>(null)
 	const initialRenderRef = useRef(true)
 	const isContentChanging = useRef(false)
+	const checkMessagesFillViewportTimerRef = useRef<NodeJS.Timeout | null>(null)
 	const state = useLocalObservable(() => ({
 		isLoadingMore: false,
 		isAtBottom: true,
@@ -116,9 +117,7 @@ const ChatMessageList = observer(() => {
 					/>
 				)
 			default:
-				return message.revoked ? (
-					<RevokeTip key={message.message_id} senderUid={message.sender_id} />
-				) : (
+				return (
 					<MessageItem
 						key={message.message_id}
 						message_id={message.message_id}
@@ -129,6 +128,7 @@ const ChatMessageList = observer(() => {
 						message={message.message}
 						unread_count={message.unread_count}
 						refer_message_id={message.refer_message_id}
+						revoked={message.revoked}
 					/>
 				)
 		}
@@ -226,6 +226,42 @@ const ChatMessageList = observer(() => {
 		}
 	})
 
+	// 检查是否需要加载更多消息来填充视图
+	const checkMessagesFillViewport = useMemoizedFn(async () => {
+		if (
+			!wrapperRef.current ||
+			!chatListRef.current ||
+			state.isLoadingMore ||
+			!MessageStore.hasMoreHistoryMessage
+		) {
+			return
+		}
+
+		const wrapperHeight = wrapperRef.current.clientHeight
+		const listHeight = chatListRef.current.clientHeight
+
+		// 如果内容高度小于容器高度，并且我们有足够的消息可以加载
+		// 加载更多历史消息直到填满视图或没有更多消息
+		if (listHeight < wrapperHeight && MessageStore.messages.length > 0) {
+			console.log("容器未填满，尝试加载更多历史消息", listHeight, wrapperHeight)
+
+			try {
+				await loadMoreHistoryMessages()
+
+				// 递归检查，直到填满或没有更多消息
+				if (checkMessagesFillViewportTimerRef.current) {
+					clearTimeout(checkMessagesFillViewportTimerRef.current)
+				}
+
+				checkMessagesFillViewportTimerRef.current = setTimeout(() => {
+					checkMessagesFillViewport()
+				}, 300)
+			} catch (error) {
+				console.error("加载更多消息失败", error)
+			}
+		}
+	})
+
 	// 处理容器大小变化
 	const handleResize = useMemoizedFn(() => {
 		if (!chatListRef.current || isScrolling) return
@@ -237,6 +273,7 @@ const ChatMessageList = observer(() => {
 		if (!lastMessageId) {
 			lastMessageId = messages[messages.length - 1]?.message_id
 			scrollToBottom(true)
+
 			return
 		}
 
@@ -304,6 +341,12 @@ const ChatMessageList = observer(() => {
 				wrapperRef.current.addEventListener("scroll", handleContainerScroll)
 			}
 			initialRenderRef.current = true
+
+			// 会话切换后，检查消息是否填满视图
+			if (checkMessagesFillViewportTimerRef.current) {
+				clearTimeout(checkMessagesFillViewportTimerRef.current)
+			}
+			checkMessagesFillViewport()
 		}, 1000)
 	}, [MessageStore.conversationId, MessageStore.topicId])
 
@@ -354,6 +397,9 @@ const ChatMessageList = observer(() => {
 			if (wrapperRef.current) {
 				wrapperRef.current.removeEventListener("scroll", handleContainerScroll)
 			}
+			if (checkMessagesFillViewportTimerRef.current) {
+				clearTimeout(checkMessagesFillViewportTimerRef.current)
+			}
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [])
@@ -391,7 +437,7 @@ const ChatMessageList = observer(() => {
 			// 从点击元素开始向上查找，直到找到带有 data-message-id 的元素
 			const messageElement = target.closest("[data-message-id]")
 			const messageId = messageElement?.getAttribute("data-message-id")
-			MessageDropdownService.setMenu(messageId ?? "")
+			MessageDropdownService.setMenu(messageId ?? "", e.target)
 			state.setDropdownPosition({ x: e.clientX, y: e.clientY })
 			state.setOpenDropdown(true)
 		}
@@ -462,7 +508,7 @@ const ChatMessageList = observer(() => {
 								key: item.key,
 								label: t(item.label ?? "", { ns: "interface" }),
 								danger: item.danger,
-								onClick: () => {
+								onClick: (e) => {
 									MessageDropdownService.clickMenuItem(item.key as any)
 								},
 							}

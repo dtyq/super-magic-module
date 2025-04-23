@@ -202,7 +202,7 @@ class MagicChatMessageAppService extends MagicSeqAppService
     /**
      * 消息鉴权.
      */
-    public function checkSendMessageAuth(MagicConversationEntity $conversationEntity, DataIsolation $dataIsolation): void
+    public function checkSendMessageAuth(MagicSeqEntity $senderSeqDTO, MagicConversationEntity $conversationEntity, DataIsolation $dataIsolation): void
     {
         // 检查会话 id所属组织，与当前传入组织编码的一致性
         if ($conversationEntity->getUserOrganizationCode() !== $dataIsolation->getCurrentOrganizationCode()) {
@@ -215,6 +215,38 @@ class MagicChatMessageAppService extends MagicSeqAppService
         // 会话是否已被删除
         if ($conversationEntity->getStatus() === ConversationStatus::Delete) {
             ExceptionBuilder::throw(ChatErrorCode::CONVERSATION_DELETED);
+        }
+        // 如果是编辑消息，检查被编辑消息的合法性(自己发的消息，且在当前会话中)
+        $seqExtra = $senderSeqDTO->getExtra();
+        try {
+            if ($seqExtra !== null && ($editMessageOptions = $seqExtra->getEditMessageOptions()) !== null) {
+                $messageEntity = $this->magicChatDomainService->getMessageByMagicMessageId($editMessageOptions->getMagicMessageId());
+                if ($messageEntity === null) {
+                    ExceptionBuilder::throw(ChatErrorCode::MESSAGE_NOT_FOUND);
+                }
+                // 检查消息是否属于当前用户
+                if ($messageEntity->getSenderId() !== $dataIsolation->getCurrentUserId()) {
+                    ExceptionBuilder::throw(ChatErrorCode::MESSAGE_NOT_FOUND);
+                }
+                $conversationDTO = new MagicConversationEntity();
+                $conversationDTO->setUserId($messageEntity->getSenderId());
+                $conversationDTO->setReceiveId($messageEntity->getReceiveId());
+                $senderConversationEntity = $this->magicConversationDomainService->getConversationByUserIdAndReceiveId($conversationDTO);
+                if ($senderConversationEntity === null) {
+                    ExceptionBuilder::throw(ChatErrorCode::MESSAGE_NOT_FOUND);
+                }
+                // 消息是否属于当前会话
+                if ($senderConversationEntity->getId() !== $conversationEntity->getId()) {
+                    ExceptionBuilder::throw(ChatErrorCode::MESSAGE_NOT_FOUND);
+                }
+            }
+        } catch (Throwable $exception) {
+            $this->logger->error(sprintf(
+                'checkSendMessageAuth error:%s senderSeqDTO:%s',
+                $exception->getMessage(),
+                Json::encode($senderSeqDTO->toArray())
+            ));
+            throw $exception;
         }
         // todo 检查是否有发消息的权限(需要有好友关系，企业关系，集团关系，合作伙伴关系等)
     }
@@ -663,13 +695,32 @@ PROMPT;
             ExceptionBuilder::throw(ChatErrorCode::CONVERSATION_TYPE_ERROR);
         }
         $messageStruct = $senderMessageDTO->getContent();
+        // 审计需求：如果是编辑消息，写入消息版本表，并更新原消息的version_id
+        $extra = $senderSeqDTO->getExtra();
+        $editMessageOptions = $extra?->getEditMessageOptions();
+        if ($extra !== null && $editMessageOptions !== null && ! empty($editMessageOptions->getMagicMessageId())) {
+            // 编辑消息的场景，magicMessageId 不变
+            $magicMessageId = $editMessageOptions->getMagicMessageId();
+            $senderMessageDTO->setMagicMessageId($magicMessageId);
+            // 编辑消息时，不创建新的 messageEntity，而是更新原消息
+            $messageEntity = $this->magicChatDomainService->getMessageByMagicMessageId($magicMessageId);
+            if ($messageEntity === null) {
+                ExceptionBuilder::throw(ChatErrorCode::MESSAGE_NOT_FOUND);
+            }
+            $messageVersionEntity = $this->magicChatDomainService->editMessage($senderMessageDTO, $messageEntity);
+            $editMessageOptions->setMessageVersionId($messageVersionEntity->getVersionId());
+            $senderSeqDTO->setExtra($extra->setEditMessageOptions($editMessageOptions));
+        }
 
+        // 流式消息的场景
         if ($messageStruct instanceof StreamMessageInterface && $messageStruct->isStream()) {
             [$senderSeqEntity, $messageEntity] = $this->magicChatDomainService->streamSendMessage($senderSeqDTO, $senderMessageDTO, $senderConversationEntity);
         } else {
             try {
                 Db::beginTransaction();
-                $messageEntity = $this->magicChatDomainService->createMagicMessageByAppClient($senderMessageDTO, $senderConversationEntity);
+                if (! isset($messageEntity)) {
+                    $messageEntity = $this->magicChatDomainService->createMagicMessageByAppClient($senderMessageDTO, $senderConversationEntity);
+                }
                 // 给自己的消息流生成序列,并确定消息的接收人列表
                 $senderSeqEntity = $this->magicChatDomainService->generateSenderSequenceByChatMessage($senderSeqDTO, $messageEntity, $senderConversationEntity);
                 // 避免 seq 表承载太多功能,加太多索引,因此将话题的消息单独写入到 topic_messages 表中
@@ -1000,7 +1051,7 @@ PROMPT;
         }
         $dataIsolation = $this->createDataIsolation($userAuthorization);
         // 消息鉴权
-        $this->checkSendMessageAuth($senderConversationEntity, $dataIsolation);
+        $this->checkSendMessageAuth($senderSeqDTO, $senderConversationEntity, $dataIsolation);
         // 安全性保证，校验附件中的文件是否属于当前用户
         $senderMessageDTO = $this->checkAndFillAttachments($senderMessageDTO, $dataIsolation);
         return $this->dispatchByConversationType($senderSeqDTO, $senderMessageDTO, $senderConversationEntity);

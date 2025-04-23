@@ -121,9 +121,11 @@ export const useCursorManager = (props: CursorManagerProps) => {
 
 		// 流式渲染结束时，清除所有光标并重置标记
 		if (wasStreaming && !isStreaming) {
-			globalCursorManager.instance?.clearAllCursors()
-			cursorAddedRef.current = false
-			finalCleanupRef.current = false
+			setTimeout(() => {
+				globalCursorManager.instance?.clearAllCursors()
+				cursorAddedRef.current = false
+				finalCleanupRef.current = false
+			}, 100)
 		}
 	}, [isStreaming])
 

@@ -14,7 +14,6 @@ import MessageService from "../../MessageService"
 import type { StreamMessageTask } from "./types"
 import { sliceMessage } from "./utils"
 import ConversationService from "../../../conversation/ConversationService"
-import { getSlicedText } from "../../../conversation/utils"
 
 const console = new Logger("StreamMessageApplyService", "blue", { console: false })
 
@@ -189,7 +188,7 @@ class StreamMessageApplyService {
 			// 创建字符缓冲区，用于平滑字符输出
 			const buffer: StreamResponse[] = []
 			// 控制输出速度的基础字符间隔时间(ms)
-			const baseInterval = 20
+			const baseInterval = 10
 			// 上次输出的时间戳
 			let lastOutputTime = Date.now()
 			// 字符输出间隔(ms)
@@ -197,7 +196,7 @@ class StreamMessageApplyService {
 			// 字符预加载阈值，当缓冲区字符数低于此值时主动拉取更多任务
 			const bufferThreshold = 10
 			// 平均字符输出速率，单位: 字符/秒
-			const avgOutputRate = 30
+			const avgOutputRate = 40
 			// 用于计算平均输出速度的窗口大小
 			const speedWindowSize = 20
 			// 最近输出的字符时间间隔记录

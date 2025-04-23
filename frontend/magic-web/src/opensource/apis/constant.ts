@@ -116,6 +116,8 @@ export const enum RequestUrl {
 	updateAiConversationQuickInstructionConfig = "/api/v1/im/conversations/${conversationId}/instructs",
 	/** 获取指定会话下的消息 */
 	getConversationMessages = "/api/v1/im/conversations/${conversationId}/messages/queries",
+	/** 根据应用消息ID获取消息 */
+	getMessagesByAppMessageId = "/api/v1/messages/app-message-ids/${appMessageId}/queries",
 
 	/**
 	 * 批量拉取指定会话下的消息

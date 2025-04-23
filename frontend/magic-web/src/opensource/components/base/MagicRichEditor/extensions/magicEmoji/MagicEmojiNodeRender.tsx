@@ -19,6 +19,11 @@ const MagicEmojiNodeRender = memo((props: NodeViewProps) => {
 			src={`${basePath}/${ns}${code}${suffix}`}
 			draggable="false"
 			width={size}
+			onMouseDown={(e: MouseEvent) => {
+				e.preventDefault()
+				e.stopPropagation()
+				return false
+			}}
 			{...HTMLAttributes}
 		/>
 	)

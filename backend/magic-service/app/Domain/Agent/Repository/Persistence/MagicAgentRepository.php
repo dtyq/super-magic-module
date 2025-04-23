@@ -270,4 +270,9 @@ class MagicAgentRepository extends AbstractRepository implements MagicAgentRepos
             ->get()
             ->toArray();
     }
+
+    public function updateFlowCode(string $agentId, string $flowCode)
+    {
+        $this->agentModel::query()->newQuery()->where('id', $agentId)->update(['flow_code' => $flowCode]);
+    }
 }

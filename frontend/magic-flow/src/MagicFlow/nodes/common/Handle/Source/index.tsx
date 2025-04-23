@@ -1,13 +1,13 @@
-import { useFlowInteraction } from "@/MagicFlow/components/FlowDesign/context/FlowInteraction/useFlowInteraction"
 import FlowPopup from "@/MagicFlow/components/FlowPopup"
-import { useFlowData, useFlowNodes } from "@/MagicFlow/context/FlowContext/useFlow"
+import { useFlowData } from "@/MagicFlow/context/FlowContext/useFlow"
 import { Popover } from "antd"
 import { useMemoizedFn, useUpdateEffect } from "ahooks"
 import clsx from "clsx"
-import React, { useMemo, useState } from "react"
+import React, { useEffect, useMemo, useState } from "react"
 import { Handle, Position } from "reactflow"
 import { PopupProvider } from "../../context/Popup/Provider"
 import styles from "./index.module.less"
+import { FLOW_EVENTS, flowEventBus } from "@/common/BaseUI/Select/constants"
 
 type SourceHandleProps = {
 	isConnectable?: boolean
@@ -33,9 +33,7 @@ export default function CustomHandle({
 }: SourceHandleProps) {
 	const [handleOvered, setHandleOvered] = useState(false)
 
-	const { selectedNodeId } = useFlowNodes()
 	const { debuggerMode } = useFlowData()
-	const { nodeClick } = useFlowInteraction()
 
 	const [openPopup, setPopupOpen] = useState(false)
 
@@ -49,18 +47,18 @@ export default function CustomHandle({
 
 	const onAddIconClick = useMemoizedFn((e) => {
 		e.stopPropagation()
+		flowEventBus.emit(FLOW_EVENTS.NODE_SELECTED, nodeId)
 		setPopupOpen(true)
 	})
 
-	useUpdateEffect(() => {
-		if (!selectedNodeId) {
+	useEffect(() => {
+		const cleanup = flowEventBus.on(FLOW_EVENTS.NODE_SELECTED, () => {
 			setPopupOpen(false)
+		})
+		return () => {
+			cleanup()
 		}
-	}, [selectedNodeId])
-
-	useUpdateEffect(() => {
-		setPopupOpen(false)
-	}, [nodeClick])
+	}, [])
 
 	const handleStyle = useMemo(() => {
 		if (!handleOvered && !openPopup) {

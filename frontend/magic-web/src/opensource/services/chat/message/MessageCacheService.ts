@@ -306,6 +306,15 @@ class MessageCacheService {
 	}
 
 	/**
+	 * 删除话题消息
+	 * @param conversationId 会话ID
+	 * @param topicId 话题ID
+	 */
+	removeTopicMessages(conversationId: string, topicId: string) {
+		MessageCacheStore.clear(conversationId, topicId)
+	}
+
+	/**
 	 * 更新消息
 	 * @param conversationId 会话ID
 	 * @param topicId 话题ID

@@ -1,11 +1,10 @@
-import { useFlowInteraction } from "@/MagicFlow/components/FlowDesign/context/FlowInteraction/useFlowInteraction"
 import { useExtraNodeConfig } from "@/MagicFlow/context/ExtraNodeConfigContext/useExtraNodeConfig"
 import { nodeManager } from "@/MagicFlow/register/node"
 import { getNodeVersion } from "@/MagicFlow/utils"
 import _ from "lodash"
-import React, { useMemo } from "react"
+import React, { useMemo, memo, useCallback } from "react"
 import { NodeProps, useStore } from "reactflow"
-import { useFlow, useFlowNodes } from "../../context/FlowContext/useFlow"
+import { useNodeConfig } from "../../context/FlowContext/useFlow"
 import { CurrentNodeProvider } from "../common/context/CurrentNode/Provider"
 import { PopupProvider } from "../common/context/Popup/Provider"
 import useAvatar from "../common/hooks/useAvatar"
@@ -14,16 +13,15 @@ import useDebug from "../common/hooks/useDebug"
 import useDrag from "../common/hooks/useDrag"
 import useEditName from "../common/hooks/useEditName"
 import usePopup from "../common/hooks/usePopup"
-import NodeContent from "./components/NodeContent"
-import NodeHandles from "./components/NodeHandles"
-import NodeHeader from "./components/NodeHeader"
+import NodeChildren from "./components/NodeChildren"
 import NodeToolbar from "./components/NodeToolbar"
 import NodeWrapper from "./components/NodeWrapper"
+import useNodeSelected from "@/MagicFlow/hooks/useNodeSelected"
 
 const connectionNodeIdSelector = (state: any) => state.connectionNodeId
 
 //@ts-ignore
-function BaseNode({ data, isConnectable, id, position }: NodeProps) {
+function BaseNodeComponent({ data, isConnectable, id, position }: NodeProps) {
 	const {
 		icon,
 		color,
@@ -35,21 +33,26 @@ function BaseNode({ data, isConnectable, id, position }: NodeProps) {
 	} = data
 
 	const connectionNodeId = useStore(connectionNodeIdSelector)
-	const { showParamsComp } = useFlowInteraction()
 	const isTarget = connectionNodeId && connectionNodeId !== id
-	const { selectedNodeId } = useFlowNodes()
-	const { nodeConfig } = useFlow()
+	const { nodeConfig } = useNodeConfig()
 	const { isEdit, setIsEdit, onChangeName } = useEditName({ id })
+	const { isSelected } = useNodeSelected(id)
 
 	const currentNode = useMemo(() => {
 		return nodeConfig[id]
 	}, [nodeConfig, id])
 
-	const { openPopup, onNodeWrapperClick, nodeName, onDropdownClick, setOpenPopup, closePopup } =
-		usePopup({
-			id,
+	// 使用useMemo包装对象引用，减少usePopup的不必要重新计算
+	const popupProps = useMemo(
+		() => ({
 			currentNode,
-		})
+			isSelected,
+		}),
+		[currentNode, isSelected],
+	)
+
+	const { openPopup, onNodeWrapperClick, nodeName, onDropdownClick, setOpenPopup, closePopup } =
+		usePopup(popupProps)
 
 	const ParamsComp = useMemo(
 		() =>
@@ -66,12 +69,6 @@ function BaseNode({ data, isConnectable, id, position }: NodeProps) {
 		[type, getNodeVersion(currentNode), "schema", "headerRight"],
 		null,
 	)
-
-	const showDefaultSourceHandle = useMemo(() => {
-		// 如果显示骨架，则业务的源点会消失，因此我们需要打开默认的源点
-		if (!showParamsComp) return true
-		return withSourceHandle
-	}, [showParamsComp, withSourceHandle])
 
 	const { onDragOver, onDragLeave, onDrop } = useDrag({ id })
 
@@ -90,11 +87,78 @@ function BaseNode({ data, isConnectable, id, position }: NodeProps) {
 	const { nodeStyleMap, commonStyle, customNodeRenderConfig } = useExtraNodeConfig()
 	const { AvatarComponent } = useAvatar({ icon, color, currentNode })
 
+	// 使用useMemo稳定化NodeChildren的props
+	const nodeChildrenProps = useMemo(
+		() => ({
+			// NodeHeader props
+			id,
+			headerBackgroundColor,
+			AvatarComponent,
+			isEdit,
+			setIsEdit,
+			nodeName,
+			onChangeName,
+			openPopup,
+			setOpenPopup,
+			onDropdownClick,
+			type,
+			desc,
+			customNodeRenderConfig,
+			HeaderRight,
+			allowDebug,
+			isDebug,
+			onDebugChange,
+
+			// NodeHandles props
+			showDefaultSourceHandle: withSourceHandle,
+			withTargetHandle,
+			isConnectable,
+			isSelected,
+			canConnect,
+			isTarget,
+
+			// NodeContent props
+			ParamsComp,
+		}),
+		[
+			id,
+			headerBackgroundColor,
+			AvatarComponent,
+			isEdit,
+			setIsEdit,
+			nodeName,
+			onChangeName,
+			openPopup,
+			setOpenPopup,
+			onDropdownClick,
+			type,
+			desc,
+			customNodeRenderConfig,
+			HeaderRight,
+			allowDebug,
+			isDebug,
+			onDebugChange,
+			withSourceHandle,
+			withTargetHandle,
+			isConnectable,
+			isSelected,
+			canConnect,
+			isTarget,
+			ParamsComp,
+		],
+	)
+
+	// 使用useCallback稳定化各种回调函数
+	const stableNodeWrapperClick = useCallback(onNodeWrapperClick, [onNodeWrapperClick])
+	const stableOnDragLeave = useCallback(onDragLeave, [onDragLeave])
+	const stableOnDragOver = useCallback(onDragOver, [onDragOver])
+	const stableOnDrop = useCallback(onDrop, [onDrop])
+
 	return (
 		<CurrentNodeProvider currentNode={currentNode}>
 			<PopupProvider closePopup={closePopup}>
 				<NodeToolbar
-					selectedNodeId={selectedNodeId}
+					isSelected={isSelected}
 					id={id}
 					changeable={changeable}
 					position={position}
@@ -102,52 +166,51 @@ function BaseNode({ data, isConnectable, id, position }: NodeProps) {
 
 				<NodeWrapper
 					id={id}
-					selectedNodeId={selectedNodeId}
-					onNodeWrapperClick={onNodeWrapperClick}
+					isSelected={isSelected}
+					onNodeWrapperClick={stableNodeWrapperClick}
 					defaultStyle={defaultStyle}
 					commonStyle={commonStyle}
 					nodeStyleMap={nodeStyleMap}
 					type={type}
-					onDragLeave={onDragLeave}
-					onDragOver={onDragOver}
-					onDrop={onDrop}
+					onDragLeave={stableOnDragLeave}
+					onDragOver={stableOnDragOver}
+					onDrop={stableOnDrop}
 				>
-					<NodeHeader
-						id={id}
-						headerBackgroundColor={headerBackgroundColor}
-						AvatarComponent={AvatarComponent}
-						isEdit={isEdit}
-						setIsEdit={setIsEdit}
-						nodeName={nodeName}
-						onChangeName={onChangeName}
-						openPopup={openPopup}
-						setOpenPopup={setOpenPopup}
-						onDropdownClick={onDropdownClick}
-						type={type}
-						desc={desc}
-						customNodeRenderConfig={customNodeRenderConfig}
-						HeaderRight={HeaderRight}
-						allowDebug={allowDebug}
-						isDebug={isDebug}
-						onDebugChange={onDebugChange}
-					/>
-
-					<NodeHandles
-						showDefaultSourceHandle
-						withTargetHandle={withTargetHandle}
-						nodeId={id}
-						isConnectable={isConnectable}
-						isSelected={selectedNodeId === id}
-						canConnect={canConnect}
-						isTarget={isTarget}
-						showParamsComp
-					/>
-
-					<NodeContent showParamsComp ParamsComp={ParamsComp} />
+					<NodeChildren {...nodeChildrenProps} />
 				</NodeWrapper>
 			</PopupProvider>
 		</CurrentNodeProvider>
 	)
 }
+
+// 自定义比较函数，判断是否需要重新渲染
+const propsAreEqual = (prevProps: NodeProps, nextProps: NodeProps) => {
+	// 检查基本属性变化
+	if (prevProps.id !== nextProps.id || prevProps.isConnectable !== nextProps.isConnectable) {
+		return false
+	}
+
+	// 因为位置变化由ReactFlow内部处理，不需要我们重新渲染节点内容
+
+	// 深度比较data属性中的关键项
+	const prevData = prevProps.data || {}
+	const nextData = nextProps.data || {}
+
+	// 检查关键属性变化
+	if (
+		prevData.type !== nextData.type ||
+		prevData.color !== nextData.color ||
+		prevData.desc !== nextData.desc ||
+		prevData.changeable !== nextData.changeable
+	) {
+		return false
+	}
+
+	// 如果上述比较都没有变化，则认为props相等，不需要重新渲染
+	return true
+}
+
+// 使用memo包装BaseNode组件
+const BaseNode = memo(BaseNodeComponent, propsAreEqual)
 
 export default BaseNode
