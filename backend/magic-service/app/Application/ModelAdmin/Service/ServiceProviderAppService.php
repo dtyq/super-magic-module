@@ -258,7 +258,7 @@ class ServiceProviderAppService
         /* @var ChatCompletionResponse $response */
         try {
             $embedding = $model->createEmbedding();
-            $embedding->embedding('test');
+            $embedding->embeddings('test', businessParams: ['organization_id' => $authorization->getOrganizationCode(), 'user_id' => $authorization->getId()]);
         } catch (Exception $exception) {
             $connectResponse->setStatus(false);
             $connectResponse->setMessage($exception->getMessage());

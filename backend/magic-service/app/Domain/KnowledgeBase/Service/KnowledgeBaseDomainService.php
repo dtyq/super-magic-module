@@ -69,7 +69,7 @@ readonly class KnowledgeBaseDomainService
         // 创建知识库前，先对嵌入模型进行连通性测试
         try {
             $model = di(ModelGatewayMapper::class)->getEmbeddingModelProxy($magicFlowKnowledgeEntity->getModel());
-            $model->embedding('test');
+            $model->embeddings('test', businessParams: ['organization_id' => $dataIsolation->getCurrentOrganizationCode(), 'user_id' => $dataIsolation->getCurrentUserId()]);
         } catch (Throwable $exception) {
             $modelName = ! empty($model) ? $model->getModelName() : '';
             ExceptionBuilder::throw(FlowErrorCode::KnowledgeValidateFailed, 'flow.model.embedding_failed', ['model_name' => $modelName]);

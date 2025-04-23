@@ -16,7 +16,7 @@ class KnowledgeBaseAssembler
     public static function entityToDTO(KnowledgeBaseEntity $entity): KnowledgeBaseDTO
     {
         $dto = new KnowledgeBaseDTO();
-        $dto->setId($entity->getCode());
+        $dto->setId($entity->getId());
         $dto->setCode($entity->getCode());
         $dto->setName($entity->getName());
         $dto->setDescription($entity->getDescription());

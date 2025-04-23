@@ -9,6 +9,7 @@ namespace App\Domain\KnowledgeBase\Entity;
 
 use App\Domain\Flow\Entity\ValueObject\Code;
 use App\Domain\Flow\Entity\ValueObject\ConstValue;
+use App\Domain\KnowledgeBase\Entity\ValueObject\FragmentConfig;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeSyncStatus;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeType;
 use App\Domain\KnowledgeBase\Entity\ValueObject\RetrieveConfig;
@@ -25,6 +26,8 @@ use DateTime;
  */
 class KnowledgeBaseEntity extends AbstractEntity
 {
+    protected ?FragmentConfig $fragmentConfig;
+
     protected ?int $id = null;
 
     protected string $organizationCode;
@@ -94,8 +97,6 @@ class KnowledgeBaseEntity extends AbstractEntity
     protected int $completedCount = 0;
 
     protected int $userOperation = 0;
-
-    protected ?array $fragmentConfig = null;
 
     protected ?array $embeddingConfig = null;
 
@@ -463,14 +464,25 @@ class KnowledgeBaseEntity extends AbstractEntity
         $this->forceCreateCode = $forceCreateCode;
     }
 
-    public function getFragmentConfig(): ?array
+    public function getFragmentConfig(): ?FragmentConfig
     {
         return $this->fragmentConfig;
     }
 
-    public function setFragmentConfig(?array $fragmentConfig): void
+    public function setFragmentConfig(null|array|FragmentConfig $fragmentConfig): self
     {
+        // 默认配置
+        is_null($fragmentConfig) && $fragmentConfig = [
+            'text_preprocess_rule' => [],
+            'segment_rule' => [
+                'separator' => '\n\n',
+                'chunk_size' => 500,
+                'chunk_overlap' => 50,
+            ],
+        ];
+        is_array($fragmentConfig) && $fragmentConfig = FragmentConfig::fromArray($fragmentConfig);
         $this->fragmentConfig = $fragmentConfig;
+        return $this;
     }
 
     public function getEmbeddingConfig(): ?array
@@ -478,9 +490,11 @@ class KnowledgeBaseEntity extends AbstractEntity
         return $this->embeddingConfig;
     }
 
-    public function setEmbeddingConfig(?array $embeddingConfig): void
+    public function setEmbeddingConfig(?array $embeddingConfig): self
     {
         $this->embeddingConfig = $embeddingConfig;
+        isset($embeddingConfig['model_id']) && $this->model = $embeddingConfig['model_id'];
+        return $this;
     }
 
     /**

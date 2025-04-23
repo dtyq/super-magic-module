@@ -10,6 +10,7 @@ namespace App\Domain\KnowledgeBase\Service;
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseDocumentEntity;
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseEntity;
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseFragmentEntity;
+use App\Domain\KnowledgeBase\Entity\ValueObject\FragmentConfig;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeBaseDataIsolation;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeSyncStatus;
 use App\Domain\KnowledgeBase\Entity\ValueObject\Query\KnowledgeBaseFragmentQuery;
@@ -21,7 +22,9 @@ use App\Domain\KnowledgeBase\Repository\Facade\KnowledgeBaseRepositoryInterface;
 use App\ErrorCode\FlowErrorCode;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Infrastructure\Core\ValueObject\Page;
+use App\Infrastructure\Util\Odin\TextSplitter\TokenTextSplitter;
 use Dtyq\AsyncEvent\AsyncEventUtil;
+use Exception;
 use Hyperf\DbConnection\Annotation\Transactional;
 use Hyperf\DbConnection\Db;
 
@@ -140,6 +143,28 @@ readonly class KnowledgeBaseFragmentDomainService
     public function batchChangeSyncStatus(array $ids, KnowledgeSyncStatus $syncStatus, string $syncMessage = ''): void
     {
         $this->knowledgeBaseFragmentRepository->batchChangeSyncStatus($ids, $syncStatus, $syncMessage);
+    }
+
+    /**
+     * @return array<string>
+     * @throws Exception
+     */
+    public function processFragmentsByContent(KnowledgeBaseDataIsolation $dataIsolation, string $content, FragmentConfig $fragmentConfig): array
+    {
+        // todo 目前只有默认分段，后续要补充父子分段逻辑
+        $normalFragmentConfig = $fragmentConfig->getNormal();
+        $splitter = new TokenTextSplitter(
+            chunkSize: $normalFragmentConfig->getSegmentRule()->getChunkSize(),
+            chunkOverlap: $normalFragmentConfig->getSegmentRule()->getChunkOverlap(),
+            fixedSeparator: $normalFragmentConfig->getSegmentRule()->getSeparator(),
+        );
+
+        $fragments = $splitter->splitText($content);
+
+        // 过滤掉空字符串
+        return array_values(array_filter($fragments, function ($fragment) {
+            return trim($fragment) !== '';
+        }));
     }
 
     #[Transactional]

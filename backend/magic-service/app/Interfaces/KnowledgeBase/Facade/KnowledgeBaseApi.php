@@ -10,6 +10,9 @@ namespace App\Interfaces\KnowledgeBase\Facade;
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseEntity;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeType;
 use App\Domain\KnowledgeBase\Entity\ValueObject\Query\KnowledgeBaseQuery;
+use App\Domain\ModelAdmin\Constant\ServiceProviderType;
+use App\Domain\ModelAdmin\Entity\ValueObject\ServiceProviderDTO;
+use App\Domain\ModelAdmin\Entity\ValueObject\ServiceProviderModelsDTO;
 use App\Interfaces\Authorization\Web\MagicUserAuthorization;
 use App\Interfaces\Kernel\DTO\PageDTO;
 use App\Interfaces\KnowledgeBase\Assembler\KnowledgeBaseAssembler;
@@ -24,6 +27,7 @@ class KnowledgeBaseApi extends AbstractKnowledgeBaseApi
     {
         $authorization = $this->getAuthorization();
         $dto = CreateKnowledgeBaseRequestDTO::fromRequest($this->request);
+        var_dump($dto->toArray());
         $entity = (new KnowledgeBaseEntity($dto->toArray()))->setType(KnowledgeType::UserKnowledgeBase->value);
         $entity = $this->knowledgeBaseAppService->save($authorization, $entity, $dto->getDocumentFiles());
         return KnowledgeBaseAssembler::entityToDTO($entity);
@@ -66,5 +70,43 @@ class KnowledgeBaseApi extends AbstractKnowledgeBaseApi
     public function destroy(string $code)
     {
         $this->knowledgeBaseAppService->destroy($this->getAuthorization(), $code);
+    }
+
+    /**
+     * 获取官方重排序提供商列表.
+     * @return ServiceProviderDTO
+     */
+    public function getOfficalRerankProviderList()
+    {
+        $dto = new ServiceProviderDTO();
+        $dto->setId('official_rerank');
+        $dto->setName('官方重排序服务商');
+        $dto->setProviderType(ServiceProviderType::OFFICIAL->value);
+        $dto->setDescription('官方提供的重排序服务');
+        $dto->setIcon('');
+        $dto->setCategory('rerank');
+        $dto->setStatus(1); // 1 表示启用
+        $dto->setCreatedAt(date('Y-m-d H:i:s'));
+
+        // 设置模型列表
+        $models = [];
+
+        // 基础重排序模型
+        $baseModel = new ServiceProviderModelsDTO();
+        $baseModel->setId('official_rerank_model');
+        $baseModel->setName('官方重排模型');
+        $baseModel->setModelVersion('v1.0');
+        $baseModel->setDescription('基础重排序模型，适用于一般场景');
+        $baseModel->setIcon('');
+        $baseModel->setModelType(1);
+        $baseModel->setCategory('rerank');
+        $baseModel->setStatus(1);
+        $baseModel->setSort(1);
+        $baseModel->setCreatedAt(date('Y-m-d H:i:s'));
+        $models[] = $baseModel;
+
+        $dto->setModels($models);
+
+        return $dto;
     }
 }

@@ -82,6 +82,8 @@ class MagicFlowKnowledgeFactory
             'updated_at' => $entity->getUpdatedAt(),
             'expected_num' => $entity->getExpectedNum(),
             'completed_num' => $entity->getCompletedNum(),
+            'fragment_config' => $entity->getFragmentConfig()?->toArray(),
+            'embedding_config' => $entity->getEmbeddingConfig(),
             'icon' => $entity->getIcon(),
         ];
 
