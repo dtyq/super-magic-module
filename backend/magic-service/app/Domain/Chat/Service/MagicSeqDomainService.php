@@ -30,7 +30,7 @@ use App\Infrastructure\Util\IdGenerator\IdGenerator;
 use App\Interfaces\Authorization\Web\MagicUserAuthorization;
 use App\Interfaces\Chat\Assembler\SeqAssembler;
 use Hyperf\Codec\Json;
-use Hyperf\Engine\Coroutine;
+use Hyperf\Coroutine\Coroutine;
 use RuntimeException;
 use Throwable;
 
