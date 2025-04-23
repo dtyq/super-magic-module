@@ -151,7 +151,7 @@ class ServiceProviderApi extends AbstractApi
         /** @var MagicUserAuthorization $authenticatable */
         $authenticatable = $this->getAuthorization();
         $category = $request->input('category');
-        $modelType = $request->input('model_type', -1);
+        $modelType = (int) $request->input('model_type', -1);
         $modelType = ModelType::tryFrom($modelType);
         $serviceProviderCategory = ServiceProviderCategory::tryFrom($category);
         $serviceProviderConfigId = $request->input('service_provider_config_id');
