@@ -245,27 +245,25 @@ class MagicTopicDomainService extends AbstractDomainService
     public function agentSendMessageGetTopicId(MagicConversationEntity $senderConversationEntity, int $getType): string
     {
         $receiverConversationEntity = $this->magicConversationRepository->getReceiveConversationBySenderConversationId($senderConversationEntity->getId());
-        if ($receiverConversationEntity === null) {
-            // 为收件方创建会话，但是不再触发 ConversationCreatedEvent 事件，避免事件循环
-            if (in_array($senderConversationEntity->getReceiveType(), [ConversationType::User, ConversationType::Ai], true)) {
-                $conversationDTO = new MagicConversationEntity();
-                $conversationDTO->setUserId($senderConversationEntity->getReceiveId());
-                $conversationDTO->setReceiveId($senderConversationEntity->getUserId());
-                # 创建会话窗口
-                $conversationDTO = $this->parsePrivateChatConversationReceiveType($conversationDTO);
-                # 准备生成一个会话窗口
-                $receiverConversationEntity = $this->magicConversationRepository->addConversation($conversationDTO);
-            }
+        // 为收件方创建会话，但是不再触发 ConversationCreatedEvent 事件，避免事件循环
+        if (($receiverConversationEntity === null) && in_array($senderConversationEntity->getReceiveType(), [ConversationType::User, ConversationType::Ai], true)) {
+            $conversationDTO = new MagicConversationEntity();
+            $conversationDTO->setUserId($senderConversationEntity->getReceiveId());
+            $conversationDTO->setReceiveId($senderConversationEntity->getUserId());
+            # 创建会话窗口
+            $conversationDTO = $this->parsePrivateChatConversationReceiveType($conversationDTO);
+            # 准备生成一个会话窗口
+            $receiverConversationEntity = $this->magicConversationRepository->addConversation($conversationDTO);
         }
-        $defaultTopicId = $receiverConversationEntity?->getExtra()?->getDefaultTopicId();
-        $senderTopicExist = $this->checkDefaultTopicExist($senderConversationEntity);
-        $receiverTopicExist = $this->checkDefaultTopicExist($receiverConversationEntity);
+        $senderTopicId = $this->checkDefaultTopicExist($senderConversationEntity);
+        $receiverTopicId = $this->checkDefaultTopicExist($receiverConversationEntity);
+        $defaultTopicId = $senderTopicId;
         // 如果 $getType 为新增话题，则默认创建话题，而不是默认话题
         if ($getType === 3) {
-            $defaultTopicId = '';
+            $senderTopicId = '';
         }
-        // 收发双方只要有一个的默认话题不存在,就需要创建
-        if (! $receiverTopicExist || ! $senderTopicExist || empty($defaultTopicId)) {
+        // 收发双方只要有一个的默认话题不存在,或者不在同一个默认话题，就需要创建
+        if (empty($senderTopicId) || empty($receiverTopicId) || $senderTopicId !== $receiverTopicId) {
             Db::beginTransaction();
             try {
                 // 为收发双方同时创建一个默认话题
@@ -294,17 +292,16 @@ class MagicTopicDomainService extends AbstractDomainService
     /**
      * 检查默认话题是否存在.
      */
-    private function checkDefaultTopicExist(MagicConversationEntity $conversationEntity): bool
+    private function checkDefaultTopicExist(MagicConversationEntity $conversationEntity): ?string
     {
         // 判断有没有默认话题的标签
         $topicId = $conversationEntity->getExtra()?->getDefaultTopicId();
         if (empty($topicId)) {
-            return false;
+            return null;
         }
         // 判断默认话题被删了没有
         $topicEntities = $this->magicChatTopicRepository->getTopicsByConversationId($conversationEntity->getId(), [$topicId]);
-        $topicEntity = $topicEntities[0] ?? null;
-        return ! (empty($topicEntity?->getTopicId()));
+        return ($topicEntities[0] ?? null)?->getTopicId();
     }
 
     /**

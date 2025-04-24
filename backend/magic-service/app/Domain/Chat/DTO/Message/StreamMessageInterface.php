@@ -9,6 +9,9 @@ namespace App\Domain\Chat\DTO\Message;
 
 use App\Domain\Chat\DTO\Message\StreamMessage\StreamOptions;
 
+/**
+ * 流式推送大模型的响应消息.
+ */
 interface StreamMessageInterface extends LLMMessageInterface
 {
     // 消息是否是流式消息

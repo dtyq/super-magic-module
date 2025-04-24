@@ -45,9 +45,14 @@ enum ChatMessageType: string
     case MagicSearchCard = 'magic_search_card';
 
     /**
-     * 多次流式响应后，最终合并成一条消息入库.
+     * 比较 low 的推送多次 seq，前端合并成一个渲染.
      */
     case AggregateAISearchCard = 'aggregate_ai_search_card';
+
+    /**
+     * 多次流式响应后，最终合并成一条消息入库.
+     */
+    case AggregateAISearchCardV2 = 'aggregate_ai_search_card_v2';
 
     /**
      * 流式响应.
@@ -68,6 +73,12 @@ enum ChatMessageType: string
 
     // 通用 agent 消息
     case SuperAgentCard = 'general_agent_card';
+
+    /**
+     * 未知消息。
+     * 由于版本迭代，发版时间差异等原因，可能产生未知类型的消息。
+     */
+    case Unknown = 'unknown';
 
     public function getName(): string
     {

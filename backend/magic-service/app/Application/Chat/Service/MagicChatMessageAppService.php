@@ -291,9 +291,10 @@ class MagicChatMessageAppService extends MagicSeqAppService
             $beginStreamMessage = $isStream && $contentStruct->getStreamOptions()->getStatus() === StreamMessageStatus::Start;
             if (! $isStream || $beginStreamMessage) {
                 // 非流式响应或者流式响应开始输入
-                $this->magicConversationDomainService->agentOperateConversationStatus(
+                $this->magicConversationDomainService->agentOperateConversationStatusV2(
                     ControlMessageType::EndConversationInput,
-                    $aiConversationEntity->getId()
+                    $aiConversationEntity->getId(),
+                    $aiSeqDTO->getExtra()?->getTopicId()
                 );
             }
             // 创建userAuth
@@ -427,9 +428,10 @@ class MagicChatMessageAppService extends MagicSeqAppService
             $beginStreamMessage = $isStream && $contentStruct->getStreamOptions()->getStatus() === StreamMessageStatus::Start;
             if (! $isStream || $beginStreamMessage) {
                 // 非流式响应或者流式响应开始输入
-                $this->magicConversationDomainService->agentOperateConversationStatus(
+                $this->magicConversationDomainService->agentOperateConversationStatusv2(
                     ControlMessageType::EndConversationInput,
-                    $aiConversationEntity->getId()
+                    $aiConversationEntity->getId(),
+                    $aiSeqDTO->getExtra()?->getTopicId()
                 );
             }
             // 创建userAuth

@@ -8,6 +8,7 @@ declare(strict_types=1);
 namespace App\Interfaces\Chat\Assembler;
 
 use App\Domain\Chat\DTO\Message\ChatMessage\AggregateAISearchCardMessage;
+use App\Domain\Chat\DTO\Message\ChatMessage\AggregateAISearchCardMessageV2;
 use App\Domain\Chat\DTO\Message\ChatMessage\AIImageCardMessage;
 use App\Domain\Chat\DTO\Message\ChatMessage\FilesMessage;
 use App\Domain\Chat\DTO\Message\ChatMessage\ImageConvertHighCardMessage;
@@ -19,6 +20,7 @@ use App\Domain\Chat\DTO\Message\ChatMessage\RecordingSummaryStreamMessage;
 use App\Domain\Chat\DTO\Message\ChatMessage\RichTextMessage;
 use App\Domain\Chat\DTO\Message\ChatMessage\SuperAgentMessageInterface;
 use App\Domain\Chat\DTO\Message\ChatMessage\TextMessage;
+use App\Domain\Chat\DTO\Message\ChatMessage\UnknowChatMessage;
 use App\Domain\Chat\DTO\Message\ChatMessage\VideosMessage;
 use App\Domain\Chat\DTO\Message\ChatMessage\VoicesMessage;
 use App\Domain\Chat\DTO\Message\ControlMessage\AddFriendMessage;
@@ -43,6 +45,7 @@ use App\Domain\Chat\DTO\Message\ControlMessage\MessagesSeen;
 use App\Domain\Chat\DTO\Message\ControlMessage\TopicCreateMessage;
 use App\Domain\Chat\DTO\Message\ControlMessage\TopicDeleteMessage;
 use App\Domain\Chat\DTO\Message\ControlMessage\TopicUpdateMessage;
+use App\Domain\Chat\DTO\Message\ControlMessage\UnknowControlMessage;
 use App\Domain\Chat\DTO\Message\MessageInterface;
 use App\Domain\Chat\DTO\Message\StreamMessage\StreamMessageStatus;
 use App\Domain\Chat\DTO\Request\ChatRequest;
@@ -55,6 +58,7 @@ use App\Domain\Chat\Entity\ValueObject\MessageType\ChatMessageType;
 use App\Domain\Chat\Entity\ValueObject\MessageType\ControlMessageType;
 use App\Domain\Contact\Entity\MagicUserEntity;
 use App\ErrorCode\ChatErrorCode;
+use App\Infrastructure\Core\Exception\BusinessException;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Interfaces\Authorization\Web\MagicUserAuthorization;
 use Throwable;
@@ -89,6 +93,8 @@ class MessageAssembler
             if ($messageTypeEnum instanceof ChatMessageType) {
                 return self::getChatMessageStruct($messageTypeEnum, $messageStructArray);
             }
+        } catch (BusinessException$exception) {
+            throw $exception;
         } catch (Throwable $exception) {
             ExceptionBuilder::throw(ChatErrorCode::MESSAGE_TYPE_ERROR, throwable: $exception);
         }
@@ -196,6 +202,7 @@ class MessageAssembler
             ChatMessageType::Markdown => new MarkdownMessage($messageStructArray),
             ChatMessageType::MagicSearchCard => new MagicSearchCardMessage($messageStructArray),
             ChatMessageType::AggregateAISearchCard => new AggregateAISearchCardMessage($messageStructArray),
+            ChatMessageType::AggregateAISearchCardV2 => new AggregateAISearchCardMessageV2($messageStructArray),
             ChatMessageType::AIImageCard => new AIImageCardMessage($messageStructArray),
             ChatMessageType::ImageConvertHighCard => new ImageConvertHighCardMessage($messageStructArray),
             ChatMessageType::Files => new FilesMessage($messageStructArray),
@@ -204,7 +211,7 @@ class MessageAssembler
             ChatMessageType::Voice => new VoicesMessage($messageStructArray),
             ChatMessageType::RecordingSummary => new RecordingSummaryMessage($messageStructArray),
             ChatMessageType::SuperAgentCard => make(SuperAgentMessageInterface::class, $messageStructArray),
-            default => ExceptionBuilder::throw(ChatErrorCode::MESSAGE_TYPE_ERROR),
+            default => new UnknowChatMessage()
         };
     }
 
@@ -238,7 +245,7 @@ class MessageAssembler
             ControlMessageType::GroupOwnerChange => new GroupOwnerChangeMessage($messageStructArray),
             ControlMessageType::AgentInstruct => new InstructMessage($messageStructArray),
             ControlMessageType::AddFriendSuccess => new AddFriendMessage($messageStructArray),
-            default => ExceptionBuilder::throw(ChatErrorCode::MESSAGE_TYPE_ERROR),
+            default => new UnknowControlMessage()
         };
     }
 

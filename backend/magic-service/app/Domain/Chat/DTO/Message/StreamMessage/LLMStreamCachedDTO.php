@@ -9,7 +9,7 @@ namespace App\Domain\Chat\DTO\Message\StreamMessage;
 
 use App\Domain\Chat\Entity\AbstractEntity;
 
-class StreamCachedDTO extends AbstractEntity
+class LLMStreamCachedDTO extends AbstractEntity
 {
     // 避免频繁操作数据库，在内存中缓存发送消息的 sender_message_id
     protected string $senderMessageId;

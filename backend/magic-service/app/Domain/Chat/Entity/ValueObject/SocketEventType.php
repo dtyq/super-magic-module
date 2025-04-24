@@ -26,4 +26,9 @@ enum SocketEventType: string
 
     // 流式消息
     case Stream = 'stream';
+
+    /**
+     * 实时性极高的过渡消息，没有 seq_id，不会被持久化，也不会被缓存。
+     */
+    case Intermediate = 'intermediate';
 }

@@ -20,6 +20,7 @@ use App\Domain\Chat\Entity\MagicChatFileEntity;
 use App\Domain\Chat\Entity\MagicConversationEntity;
 use App\Domain\Chat\Entity\MagicMessageEntity;
 use App\Domain\Chat\Entity\MagicSeqEntity;
+use App\Domain\Chat\Entity\ValueObject\ChatSocketIoNameSpace;
 use App\Domain\Chat\Entity\ValueObject\ConversationStatus;
 use App\Domain\Chat\Entity\ValueObject\ConversationType;
 use App\Domain\Chat\Entity\ValueObject\FileType;
@@ -213,7 +214,7 @@ class MagicRecordingSummaryAppService extends MagicSeqAppService
                 Db::commit();
                 $pushData = SeqAssembler::getClientSeqStruct($magicSeqEntity, $magicMessageEntity)->toArray();
                 $socketEventType = SocketEventType::Chat;
-                $this->socketIO->of('/im')->to($dataIsolation->getCurrentMagicId())->emit($socketEventType->value, $pushData);
+                $this->socketIO->of(ChatSocketIoNameSpace::Im->value)->to($dataIsolation->getCurrentMagicId())->emit($socketEventType->value, $pushData);
             } catch (Throwable $exception) {
                 Db::rollBack();
                 $this->logger->error(Json::encode([

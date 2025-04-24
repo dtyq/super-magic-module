@@ -10,6 +10,7 @@ namespace App\Domain\Chat\DTO\AISearch\Request;
 use App\Domain\Chat\DTO\Message\ChatMessage\RichTextMessage;
 use App\Domain\Chat\DTO\Message\ChatMessage\TextMessage;
 use App\Domain\Chat\DTO\Message\MessageInterface;
+use App\Domain\Chat\Entity\MagicSeqEntity;
 use App\Domain\Chat\Entity\ValueObject\AggregateSearch\SearchDeepLevel;
 use App\Domain\Chat\Entity\ValueObject\SearchEngineType;
 use App\Infrastructure\Util\Tiptap\TiptapUtil;
@@ -43,6 +44,8 @@ class MagicChatAggregateSearchReqDTO
     public string $userId = '';
 
     protected string $organizationCode = '';
+
+    private ?MagicSeqEntity $magicSeqEntity;
 
     public function getOrganizationCode(): string
     {
@@ -205,5 +208,15 @@ class MagicChatAggregateSearchReqDTO
             isset($messageInterface) && $history->addMessages($messageInterface, $llmConversationId);
         }
         return $history;
+    }
+
+    public function getMagicSeqEntity(): MagicSeqEntity
+    {
+        return $this->magicSeqEntity ?? new MagicSeqEntity();
+    }
+
+    public function setMagicSeqEntity(MagicSeqEntity $magicSeqEntity): void
+    {
+        $this->magicSeqEntity = $magicSeqEntity;
     }
 }
