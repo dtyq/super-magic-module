@@ -72,6 +72,12 @@ readonly class KnowledgeBaseDomainService
             $model->embeddings('test', businessParams: ['organization_id' => $dataIsolation->getCurrentOrganizationCode(), 'user_id' => $dataIsolation->getCurrentUserId()]);
         } catch (Throwable $exception) {
             $modelName = ! empty($model) ? $model->getModelName() : '';
+            simple_logger('KnowledgeBaseDomainService')->warning('KnowledgeBaseCheckEmbeddingsFailed', [
+                'file' => $exception->getFile(),
+                'line' => $exception->getLine(),
+                'code' => $exception->getCode(),
+                'trace' => $exception->getTraceAsString(),
+            ]);
             ExceptionBuilder::throw(FlowErrorCode::KnowledgeValidateFailed, 'flow.model.embedding_failed', ['model_name' => $modelName]);
         }
 
