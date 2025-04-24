@@ -482,6 +482,38 @@ class KnowledgeBaseApiTest extends HttpTestCase
         }
     }
 
+    public function testSimilarity()
+    {
+        // 创建测试知识库
+        $knowledgeBase = $this->createKnowledgeBase();
+        $code = $knowledgeBase['code'];
+
+        // 执行相似度查询
+        $query = '测试相似度查询';
+        $res = $this->post(
+            sprintf('%s/%s/fragments/similarity', self::API, $code),
+            ['query' => $query],
+            $this->getCommonHeaders()
+        );
+
+        $this->assertSame(1000, $res['code'], $res['message']);
+        $this->assertIsArray($res['data']);
+
+        // 验证返回结果的结构
+        if (! empty($res['data'])) {
+            $result = $res['data'][0];
+            $this->assertArrayHasKey('id', $result);
+            $this->assertArrayHasKey('content', $result);
+            $this->assertArrayHasKey('metadata', $result);
+            $this->assertArrayHasKey('score', $result);
+            $this->assertArrayHasKey('document_code', $result);
+            $this->assertArrayHasKey('knowledge_base_code', $result);
+
+            // 验证返回的内容包含查询关键词
+            $this->assertStringContainsString('测试', $result['content']);
+        }
+    }
+
     /**
      * 创建测试文档并返回文档数据.
      */

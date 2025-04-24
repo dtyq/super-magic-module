@@ -27,7 +27,6 @@ class KnowledgeBaseApi extends AbstractKnowledgeBaseApi
     {
         $authorization = $this->getAuthorization();
         $dto = CreateKnowledgeBaseRequestDTO::fromRequest($this->request);
-        var_dump($dto->toArray());
         $entity = (new KnowledgeBaseEntity($dto->toArray()))->setType(KnowledgeType::UserKnowledgeBase->value);
         $entity = $this->knowledgeBaseAppService->save($authorization, $entity, $dto->getDocumentFiles());
         return KnowledgeBaseAssembler::entityToDTO($entity);
@@ -74,9 +73,9 @@ class KnowledgeBaseApi extends AbstractKnowledgeBaseApi
 
     /**
      * 获取官方重排序提供商列表.
-     * @return ServiceProviderDTO
+     * @return array<ServiceProviderDTO>
      */
-    public function getOfficalRerankProviderList()
+    public function getOfficialRerankProviderList()
     {
         $dto = new ServiceProviderDTO();
         $dto->setId('official_rerank');
@@ -107,6 +106,6 @@ class KnowledgeBaseApi extends AbstractKnowledgeBaseApi
 
         $dto->setModels($models);
 
-        return $dto;
+        return [$dto];
     }
 }
