@@ -30,6 +30,8 @@ class KnowledgeBaseFragmentDTO extends AbstractFlowDTO
 
     public float $score;
 
+    public int $wordCount;
+
     public function getKnowledgeCode(): string
     {
         return $this->knowledgeCode;
@@ -120,6 +122,17 @@ class KnowledgeBaseFragmentDTO extends AbstractFlowDTO
     public function setDocumentCode(string $documentCode): KnowledgeBaseFragmentDTO
     {
         $this->documentCode = $documentCode;
+        return $this;
+    }
+
+    public function getWordCount(): int
+    {
+        return $this->wordCount;
+    }
+
+    public function setWordCount(int $wordCount): static
+    {
+        $this->wordCount = $wordCount;
         return $this;
     }
 }

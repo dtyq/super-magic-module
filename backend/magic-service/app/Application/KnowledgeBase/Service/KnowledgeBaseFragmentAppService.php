@@ -10,8 +10,11 @@ namespace App\Application\KnowledgeBase\Service;
 use App\Application\KnowledgeBase\VectorDatabase\Similarity\KnowledgeSimilarityFilter;
 use App\Application\KnowledgeBase\VectorDatabase\Similarity\KnowledgeSimilarityManager;
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseFragmentEntity;
+use App\Domain\KnowledgeBase\Entity\ValueObject\FragmentConfig;
 use App\Domain\KnowledgeBase\Entity\ValueObject\Query\KnowledgeBaseFragmentQuery;
 use App\Infrastructure\Core\ValueObject\Page;
+use App\Infrastructure\Util\SSRF\Exception\SSRFException;
+use App\Interfaces\KnowledgeBase\DTO\DocumentFileDTO;
 use Qbhy\HyperfAuth\Authenticatable;
 
 class KnowledgeBaseFragmentAppService extends AbstractKnowledgeAppService
@@ -63,5 +66,21 @@ class KnowledgeBaseFragmentAppService extends AbstractKnowledgeAppService
         $filter->setKnowledgeCodes([$knowledgeBaseCode]);
         $filter->setMetadataFilter($metadataFilter);
         di(KnowledgeSimilarityManager::class)->destroyByMetadataFilter($dataIsolation, $knowledgeBaseEntity, $filter);
+    }
+
+    /**
+     * @return array<KnowledgeBaseFragmentEntity>
+     * @throws SSRFException
+     */
+    public function fragmentPreview(Authenticatable $authorization, DocumentFileDTO $documentFile, FragmentConfig $fragmentConfig): array
+    {
+        $dataIsolation = $this->createKnowledgeBaseDataIsolation($authorization);
+        $fileUrl = $this->fileDomainService->getLink($dataIsolation->getCurrentOrganizationCode(), $documentFile->getKey());
+        if (empty($fileUrl)) {
+            $this->logger->warning('文件不存在');
+        }
+        $content = $this->fileParser->parse($fileUrl?->getUrl() ?? '');
+        $fragmentContents = $this->knowledgeBaseFragmentDomainService->processFragmentsByContent($dataIsolation, $content, $fragmentConfig);
+        return KnowledgeBaseFragmentEntity::fromFragmentContents($fragmentContents);
     }
 }

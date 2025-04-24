@@ -14,6 +14,7 @@ use App\Infrastructure\Core\Embeddings\VectorStores\PointInfo;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use DateTime;
 use Hyperf\Codec\Json;
+use Hyperf\Snowflake\IdGeneratorInterface;
 use Hyperf\Stringable\Str;
 
 use function mb_strlen;
@@ -366,6 +367,39 @@ class KnowledgeBaseFragmentEntity extends AbstractEntity
     {
         $this->wordCount = $wordCount;
         return $this;
+    }
+
+    /**
+     * @param array<string> $fragmentContents
+     * @return array<KnowledgeBaseFragmentEntity>
+     */
+    public static function fromFragmentContents(array $fragmentContents): array
+    {
+        $entities = [];
+        $now = new DateTime();
+
+        foreach ($fragmentContents as $content) {
+            $entity = new self();
+            $entity->setId(di(IdGeneratorInterface::class)->generate());
+            $entity->setContent($content);
+            $entity->setPointId(md5($content));
+            $entity->setWordCount(mb_strlen($content));
+            $entity->setKnowledgeCode('');
+            $entity->setDocumentCode('');
+            $entity->setBusinessId('');
+            $entity->setCreator('');
+            $entity->setCreatedAt($now);
+            $entity->setModifier('');
+            $entity->setUpdatedAt($now);
+            $entity->setMetadata([]);
+            $entity->setSyncStatus(KnowledgeSyncStatus::NotSynced);
+            $entity->setSyncTimes(0);
+            $entity->setSyncStatusMessage('');
+
+            $entities[] = $entity;
+        }
+
+        return $entities;
     }
 
     private function checkMetadata(): self
