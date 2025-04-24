@@ -396,6 +396,7 @@ class KnowledgeBaseApiTest extends HttpTestCase
         $this->assertArrayHasKey('knowledge_base_code', $data);
         $this->assertArrayHasKey('created_at', $data);
         $this->assertArrayHasKey('updated_at', $data);
+        $this->assertArrayHasKey('word_count', $data);
     }
 
     public function testDestroyFragment()
@@ -477,6 +478,7 @@ class KnowledgeBaseApiTest extends HttpTestCase
             $this->assertArrayHasKey('knowledge_base_code', $fragment);
             $this->assertArrayHasKey('created_at', $fragment);
             $this->assertArrayHasKey('updated_at', $fragment);
+            $this->assertArrayHasKey('word_count', $fragment);
         }
     }
 
