@@ -47,12 +47,19 @@ class KnowledgeBaseAppService extends AbstractKnowledgeAppService
         if ($oldKnowledge) {
             $operation = $this->getKnowledgeOperation($dataIsolation, $oldKnowledge->getCode());
             $operation->validate('w', $oldKnowledge->getCode());
+
+            // 使用原来的模型和向量库
+            $magicFlowKnowledgeEntity->setModel($oldKnowledge->getModel());
+            $magicFlowKnowledgeEntity->setVectorDB($oldKnowledge->getVectorDB());
         }
 
-        // 设置嵌入模型和向量数据库
-        $model = $this->serviceProviderDomainService->findSelectedActiveProviderByType($dataIsolation->getCurrentOrganizationCode(), ModelType::EMBEDDING);
-        $magicFlowKnowledgeEntity->setModel($magicFlowKnowledgeEntity->getEmbeddingConfig()['model_id'] ?? $model?->getServiceProviderModelsEntity()?->getModelId() ?? EmbeddingGenerator::defaultModel());
-        $magicFlowKnowledgeEntity->setVectorDB(VectorStoreDriver::default()->value);
+        // 创建的才需要设置
+        if ($magicFlowKnowledgeEntity->shouldCreate()) {
+            // 设置嵌入模型和向量数据库
+            $model = $this->serviceProviderDomainService->findSelectedActiveProviderByType($dataIsolation->getCurrentOrganizationCode(), ModelType::EMBEDDING);
+            $magicFlowKnowledgeEntity->setModel($magicFlowKnowledgeEntity->getEmbeddingConfig()['model_id'] ?? $model?->getServiceProviderModelsEntity()?->getModelId() ?? EmbeddingGenerator::defaultModel());
+            $magicFlowKnowledgeEntity->setVectorDB(VectorStoreDriver::default()->value);
+        }
 
         // 获取 文件
         $files = $this->getFileLinks($dataIsolation->getCurrentOrganizationCode(), array_map(fn ($dto) => $dto->getKey(), $documentFiles));

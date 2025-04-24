@@ -31,6 +31,8 @@ class CreateKnowledgeBaseRequestDTO extends AbstractRequestDTO
 
     public RetrieveConfig $retrieveConfig;
 
+    public string $businessId = '';
+
     public function getName(): string
     {
         return $this->name;
@@ -117,6 +119,16 @@ class CreateKnowledgeBaseRequestDTO extends AbstractRequestDTO
     public function setDocumentFiles(array $documentFiles): void
     {
         $this->documentFiles = array_map(fn ($file) => new DocumentFileDTO($file), $documentFiles);
+    }
+
+    public function getBusinessId(): string
+    {
+        return $this->businessId;
+    }
+
+    public function setBusinessId(string $businessId): void
+    {
+        $this->businessId = $businessId;
     }
 
     protected static function getHyperfValidationRules(): array

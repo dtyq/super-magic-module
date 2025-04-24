@@ -1,4 +1,4 @@
-import { Button, Drawer, message, Modal, Timeline, Tooltip } from "antd"
+import { Drawer, message, Modal, Timeline } from "antd"
 import { useBoolean, useMemoizedFn } from "ahooks"
 import { useFlowStore } from "@/opensource/stores/flow"
 import type { MagicFlow } from "@dtyq/magic-flow/MagicFlow/types/flow"
@@ -11,10 +11,11 @@ import { useBotStore } from "@/opensource/stores/bot"
 import { useTranslation } from "react-i18next"
 import { resolveToString } from "@dtyq/es6-template-strings"
 import { BotApi, FlowApi } from "@/apis"
-import styles from "./index.module.less"
 import { useCustomFlow } from "../../context/CustomFlowContext/useCustomFlow"
-import PublishTimelineItem from "./PublishTimelineItem"
 import { hasEditRight } from "../AuthControlButton/types"
+import PublishCardItem from "./PublishCardItem"
+import { useStyles } from "./style"
+import MagicButton from "@/opensource/components/base/MagicButton"
 
 type PublishListButtonProps = {
 	isAgent: boolean
@@ -23,7 +24,7 @@ type PublishListButtonProps = {
 
 export default function PublishListButton({ isAgent, flow }: PublishListButtonProps) {
 	const { t } = useTranslation()
-
+	const { styles } = useStyles()
 	const [open, { setTrue, setFalse }] = useBoolean(false)
 
 	const { setCurrentFlow } = useCustomFlow()
@@ -93,14 +94,14 @@ export default function PublishListButton({ isAgent, flow }: PublishListButtonPr
 
 	const Title = useMemo(() => {
 		return (
-			<div className={styles.title}>
+			<div>
 				<div className={styles.topTitle}>{t("common.publishVersion", { ns: "flow" })}</div>
 				<div className={styles.topDesc}>
 					{t("common.publishVersionDesc", { ns: "flow" })}
 				</div>
 			</div>
 		)
-	}, [t])
+	}, [styles.topDesc, styles.topTitle, t])
 
 	const groupPublishList = useMemo(() => {
 		// Step 1: 将 created_at 分解成 created_date 和 created_time 字段
@@ -115,17 +116,14 @@ export default function PublishListButton({ isAgent, flow }: PublishListButtonPr
 		})
 
 		// Step 2: 根据 created_date 进行分组
-		const groupedVersions = processedVersions.reduce(
-			(groups, version) => {
-				if (!groups[version.created_date]) {
-					groups[version.created_date] = []
-				}
-				// @ts-ignore
-				groups[version.created_date].push(version)
-				return groups
-			},
-			{} as Record<string, FlowDraft.ListItem[]>,
-		)
+		const groupedVersions = processedVersions.reduce((groups, version) => {
+			if (!groups[version.created_date]) {
+				groups[version.created_date] = []
+			}
+			// @ts-ignore
+			groups[version.created_date].push(version)
+			return groups
+		}, {} as Record<string, FlowDraft.ListItem[]>)
 
 		// Step 3: 将分组结果转换为二维数组并根据 created_date 倒序排序
 		const sortedGroupedVersions = Object.keys(groupedVersions)
@@ -138,17 +136,12 @@ export default function PublishListButton({ isAgent, flow }: PublishListButtonPr
 
 	return (
 		<>
-			<Tooltip title={t("common.versionList", { ns: "flow" })}>
-				<Button
-					type="text"
-					// @ts-ignore
-					theme="light"
-					className={styles.copyButton}
-					onClick={setTrue}
-				>
-					<IconArchive color="#000000" stroke={1.5} />
-				</Button>
-			</Tooltip>
+			<MagicButton
+				tip={t("common.versionList", { ns: "flow" })}
+				className={styles.copyButton}
+				onClick={setTrue}
+				icon={<IconArchive size={18} color="#000000" />}
+			/>
 			<Drawer
 				title={Title}
 				className={cx(styles.drawer, {
@@ -163,13 +156,19 @@ export default function PublishListButton({ isAgent, flow }: PublishListButtonPr
 						// @ts-ignore
 						const createDate = subList?.[0]?.created_date
 						return (
-							<PublishTimelineItem
-								createDate={createDate}
-								versionList={subList}
-								key={createDate}
-								onSwitchDraft={onSwitchDraft}
-								flow={flow}
-							/>
+							<Timeline.Item key={createDate}>
+								<div className={styles.createDate}>{createDate}</div>
+								{subList.map((version) => {
+									return (
+										<PublishCardItem
+											key={version.id}
+											version={version}
+											onSwitchDraft={onSwitchDraft}
+											flow={flow}
+										/>
+									)
+								})}
+							</Timeline.Item>
 						)
 					})}
 				</Timeline>

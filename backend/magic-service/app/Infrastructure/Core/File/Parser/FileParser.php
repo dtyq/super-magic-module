@@ -37,15 +37,12 @@ class FileParser
         if ($cachedContent !== false) {
             return $cachedContent;
         }
-
-        $res = '';
         try {
             // / 检测文件安全性
             $safeUrl = SSRFUtil::getSafeUrl($fileUrl, replaceIp: false);
             $tempFile = tempnam(sys_get_temp_dir(), 'downloaded_');
 
-            $this->downloadFile($safeUrl, $tempFile);
-            $this->checkFileSize($tempFile);
+            $this->downloadFile($safeUrl, $tempFile, 50 * 1024 * 1024);
 
             // 检查文件的MIME类型
             $finfo = finfo_open(FILEINFO_MIME_TYPE);
@@ -68,35 +65,35 @@ class FileParser
                 default => ExceptionBuilder::throw(FlowErrorCode::ExecuteFailed, 'flow.node.loader.unsupported_file_type', ['file_extension' => $extension]),
             };
             $res = $interface->parse($tempFile, $fileUrl, $extension);
-            
+
             // 设置缓存
             $this->redis->set($cacheKey, $res, 600);
+            return $res;
         } finally {
             if (isset($tempFile) && file_exists($tempFile)) {
                 unlink($tempFile); // 确保临时文件被删除
             }
         }
-        return $res;
     }
 
     /**
      * 下载文件到临时位置.
-     * @return string 返回文件路径
      */
-    private static function downloadFile(string $url, string $tempFile): string
+    private static function downloadFile(string $url, string $tempFile, int $maxSize = 0): void
     {
         // 如果是本地文件路径，直接返回
         if (file_exists($url)) {
-            return $url;
+            return;
         }
 
         // 如果url是本地文件协议，转换为实际路径
         if (str_starts_with($url, 'file://')) {
             $localPath = substr($url, 7);
             if (file_exists($localPath)) {
-                return $localPath;
+                return;
             }
         }
+        self::checkUrlFileSize($url, $maxSize);
 
         $context = stream_context_create([
             'ssl' => [
@@ -115,17 +112,27 @@ class FileParser
 
         fclose($fileStream);
         fclose($localFile);
-
-        return $tempFile;
     }
 
     /**
      * 检查文件大小是否超限.
      */
-    private static function checkFileSize(string $filePath, int $maxSize = 52428800): void // 50MB
+    private static function checkUrlFileSize(string $fileUrl, int $maxSize = 0): void
     {
-        if (filesize($filePath) > $maxSize) {
-            ExceptionBuilder::throw(FlowErrorCode::Error, message: '文件太大，无法下载');
+        if ($maxSize <= 0) {
+            return;
+        }
+        // 下载之前，检测文件大小
+        $headers = get_headers($fileUrl, true);
+        if (isset($headers['Content-Length'])) {
+            $fileSize = (int) $headers['Content-Length'];
+            if ($fileSize > $maxSize) {
+                ExceptionBuilder::throw(FlowErrorCode::Error, message: '文件大小超过限制');
+            }
+        }
+        // 不允许下载没有Content-Length的文件
+        if (! isset($headers['Content-Length'])) {
+            ExceptionBuilder::throw(FlowErrorCode::Error, message: '文件大小未知，禁止下载');
         }
     }
 
