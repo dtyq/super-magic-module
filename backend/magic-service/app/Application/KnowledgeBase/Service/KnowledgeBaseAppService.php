@@ -62,7 +62,7 @@ class KnowledgeBaseAppService extends AbstractKnowledgeAppService
             }
         }
 
-        $knowledgeBaseEntity = $this->knowledgeBaseDomainService->save($dataIsolation, $magicFlowKnowledgeEntity, $this->DocumentFileDTOListToVOList($documentFiles));
+        $knowledgeBaseEntity = $this->knowledgeBaseDomainService->save($dataIsolation, $magicFlowKnowledgeEntity, $this->documentFileDTOListToVOList($documentFiles));
         $knowledgeBaseEntity->setUserOperation($operation->value);
         $iconFileLink = $this->getFileLink($dataIsolation->getCurrentOrganizationCode(), $knowledgeBaseEntity->getIcon());
         $knowledgeBaseEntity->setIcon($iconFileLink?->getUrl() ?? '');

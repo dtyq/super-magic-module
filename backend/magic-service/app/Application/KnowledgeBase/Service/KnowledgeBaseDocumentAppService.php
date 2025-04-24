@@ -48,7 +48,7 @@ class KnowledgeBaseDocumentAppService extends AbstractKnowledgeAppService
         $knowledgeBaseEntity = $this->knowledgeBaseDomainService->show($dataIsolation, $documentEntity->getKnowledgeBaseCode());
         if (! $documentEntity->getCode()) {
             // 新建文档
-            return $this->knowledgeBaseDocumentDomainService->create($dataIsolation, $knowledgeBaseEntity, $documentEntity, $this->DocumentFileDTOToVO($documentFile));
+            return $this->knowledgeBaseDocumentDomainService->create($dataIsolation, $knowledgeBaseEntity, $documentEntity, $this->documentFileDTOToVO($documentFile));
         }
         return $this->knowledgeBaseDocumentDomainService->update($dataIsolation, $knowledgeBaseEntity, $documentEntity);
     }

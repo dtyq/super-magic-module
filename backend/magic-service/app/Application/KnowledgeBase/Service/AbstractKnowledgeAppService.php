@@ -44,7 +44,7 @@ abstract class AbstractKnowledgeAppService extends AbstractKernelAppService
         $this->logger = $loggerFactory->get(get_class($this));
     }
 
-    public function DocumentFileDTOToVO(?DocumentFileDTO $dto): ?DocumentFileVO
+    public function documentFileDTOToVO(?DocumentFileDTO $dto): ?DocumentFileVO
     {
         if ($dto === null) {
             return null;
@@ -58,9 +58,9 @@ abstract class AbstractKnowledgeAppService extends AbstractKernelAppService
      * @param array<DocumentFileDTO> $dtoList
      * @return array<DocumentFileVO>
      */
-    public function DocumentFileDTOListToVOList(array $dtoList): array
+    public function documentFileDTOListToVOList(array $dtoList): array
     {
-        return array_map(fn (DocumentFileDTO $dto) => $this->DocumentFileDTOToVO($dto), $dtoList);
+        return array_map(fn (DocumentFileDTO $dto) => $this->documentFileDTOToVO($dto), $dtoList);
     }
 
     protected function getKnowledgeOperation(KnowledgeBaseDataIsolation $dataIsolation, int|string $knowledgeCode): Operation
