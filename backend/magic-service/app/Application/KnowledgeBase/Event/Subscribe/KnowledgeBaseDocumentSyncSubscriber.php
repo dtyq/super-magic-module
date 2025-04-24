@@ -73,7 +73,7 @@ readonly class KnowledgeBaseDocumentSyncSubscriber implements ListenerInterface
                 $content = $fileParser->parse($file->getFileLink()->getUrl());
 
                 $logger->info('解析文件完成，正在文件分段，文件名：' . $file->getName());
-                $splitText = $knowledgeBaseFragmentDomainService->processFragmentsByContent($dataIsolation, $content, $event->knowledgeBaseEntity->getFragmentConfig());
+                $splitText = $knowledgeBaseFragmentDomainService->processFragmentsByContent($dataIsolation, $content, $documentEntity->getFragmentConfig());
                 $logger->info('文件分段完成，文件名：' . $file->getName() . '，分段数量:' . count($splitText));
 
                 foreach ($splitText as $text) {
