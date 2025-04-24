@@ -16,15 +16,28 @@ use App\Infrastructure\Core\File\Parser\Driver\Interfaces\TextFileParserDriverIn
 use App\Infrastructure\Core\File\Parser\Driver\Interfaces\WordFileParserDriverInterface;
 use App\Infrastructure\Util\SSRF\Exception\SSRFException;
 use App\Infrastructure\Util\SSRF\SSRFUtil;
+use Hyperf\Redis\Redis;
 use Symfony\Component\Mime\MimeTypes;
 
 class FileParser
 {
+    public function __construct(protected Redis $redis)
+    {
+    }
+
     /**
      * @throws SSRFException
      */
     public function parse(string $fileUrl): string
     {
+        // 使用md5作为缓存key
+        $cacheKey = 'file_parser:parse_' . md5($fileUrl);
+        // 检查缓存,如果存在则返回缓存内容
+        $cachedContent = $this->redis->get($cacheKey);
+        if ($cachedContent !== false) {
+            return $cachedContent;
+        }
+
         $res = '';
         try {
             // / 检测文件安全性
@@ -55,6 +68,9 @@ class FileParser
                 default => ExceptionBuilder::throw(FlowErrorCode::ExecuteFailed, 'flow.node.loader.unsupported_file_type', ['file_extension' => $extension]),
             };
             $res = $interface->parse($tempFile, $fileUrl, $extension);
+            
+            // 设置缓存
+            $this->redis->set($cacheKey, $res, 600);
         } finally {
             if (isset($tempFile) && file_exists($tempFile)) {
                 unlink($tempFile); // 确保临时文件被删除

@@ -8,6 +8,7 @@ declare(strict_types=1);
 namespace App\Interfaces\KnowledgeBase\Facade;
 
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseFragmentEntity;
+use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeRetrievalResult;
 use App\Domain\KnowledgeBase\Entity\ValueObject\Query\KnowledgeBaseFragmentQuery;
 use App\Infrastructure\Core\ValueObject\Page;
 use App\Interfaces\Kernel\DTO\PageDTO;
@@ -86,5 +87,15 @@ class KnowledgeBaseFragmentApi extends AbstractKnowledgeBaseApi
             return KnowledgeBaseFragmentAssembler::entityToDTO($entity);
         }, $result);
         return new PageDTO(1, count($list), $list);
+    }
+
+    /**
+     * @return array<KnowledgeRetrievalResult>
+     */
+    public function similarity(string $code): array
+    {
+        $query = $this->request->input('query', '');
+        $userAuthorization = $this->getAuthorization();
+        return $this->knowledgeBaseFragmentAppService->similarity($userAuthorization, $code, $query);
     }
 }
