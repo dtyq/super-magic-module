@@ -142,6 +142,32 @@ class KnowledgeBaseApiTest extends HttpTestCase
             'name' => '更新后的知识库',
             'description' => '这是更新后的知识库描述',
             'enabled' => false,
+            'retrieve_config' => [
+                'top_k' => 4,
+                'weights' => null,
+                'search_method' => 'graph_search',
+                'reranking_model' => ['reranking_model_name' => 'BAAI/bge-reranker-large'],
+                'score_threshold' => 0.67,
+                'reranking_enable' => true,
+                'score_threshold_enabled' => true,
+            ],
+            'fragment_config' => [
+                'mode' => FragmentMode::NORMAL->value,
+                'normal' => [
+                    'text_preprocess_rule' => [
+                        TextPreprocessRule::REPLACE_WHITESPACE->value,
+                        TextPreprocessRule::REMOVE_URL_EMAIL->value,
+                    ],
+                    'segment_rule' => [
+                        'separator' => ' ',
+                        'chunk_size' => 50,
+                        'chunk_overlap' => 10,
+                    ],
+                ],
+            ],
+            'embedding_config' => [
+                'model_id' => 'dmeta-embedding',
+            ],
         ];
 
         $this->updateKnowledgeBase($code, $data);
@@ -151,6 +177,53 @@ class KnowledgeBaseApiTest extends HttpTestCase
         $this->assertSame('更新后的知识库', $knowledgeBase['name']);
         $this->assertSame('这是更新后的知识库描述', $knowledgeBase['description']);
         $this->assertFalse($knowledgeBase['enabled']);
+        $this->assertSame([
+            'search_method' => 'graph_search',
+            'top_k' => 4,
+            'score_threshold' => 0.67,
+            'score_threshold_enabled' => true,
+            'reranking_mode' => 'weighted_score',
+            'reranking_enable' => true,
+            'weights' => [
+                'vector_setting' => [
+                    'vector_weight' => 1,
+                    'embedding_model_name' => '',
+                    'embedding_provider_name' => '',
+                ],
+                'keyword_setting' => [
+                    'keyword_weight' => 0,
+                ],
+                'graph_setting' => [
+                    'relation_weight' => 0.5,
+                    'max_depth' => 2,
+                    'include_properties' => true,
+                    'timeout' => 5,
+                    'retry_count' => 3,
+                ],
+            ],
+            'reranking_model' => [
+                'reranking_model_name' => 'BAAI/bge-reranker-large',
+                'reranking_provider_name' => '',
+            ],
+        ], $knowledgeBase['retrieve_config']);
+
+        $this->assertSame([
+            'mode' => FragmentMode::NORMAL->value,
+            'normal' => [
+                'text_preprocess_rule' => [
+                    TextPreprocessRule::REPLACE_WHITESPACE->value,
+                    TextPreprocessRule::REMOVE_URL_EMAIL->value,
+                ],
+                'segment_rule' => [
+                    'separator' => ' ',
+                    'chunk_size' => 50,
+                    'chunk_overlap' => 10,
+                ],
+            ],
+            'parent_child' => null,
+        ], $knowledgeBase['fragment_config']);
+
+        $this->assertSame(['model_id' => 'dmeta-embedding'], $knowledgeBase['embedding_config']);
     }
 
     public function testDeleteKnowledgeBase()

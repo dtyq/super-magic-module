@@ -43,6 +43,9 @@ class KnowledgeBaseAssembler
         $dto->setDocumentCount(0);
         $dto->setWordCount($entity->getWordCount());
         $dto->setIcon($entity->getIcon());
+        $dto->setFragmentConfig($entity->getFragmentConfig());
+        $dto->setEmbeddingConfig($entity->getEmbeddingConfig());
+        $dto->setRetrieveConfig($entity->getRetrieveConfig());
 
         return $dto;
     }
