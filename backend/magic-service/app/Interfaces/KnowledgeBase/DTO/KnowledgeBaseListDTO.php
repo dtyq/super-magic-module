@@ -229,6 +229,7 @@ class KnowledgeBaseListDTO extends AbstractFlowDTO
     public static function fromEntity(KnowledgeBaseEntity $entity, array $users = [], array $knowledgeBaseDocumentCountMap = []): KnowledgeBaseListDTO
     {
         $listDTO = new KnowledgeBaseListDTO($entity->toArray());
+        // 兼容旧知识库逻辑，旧知识库逻辑id为code
         $listDTO->setId($entity->getCode());
         $listDTO->setCode($entity->getCode());
         $listDTO->setCreator($entity->getCreator());

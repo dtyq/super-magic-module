@@ -9,7 +9,6 @@ namespace App\Application\KnowledgeBase\Event\Subscribe;
 
 use App\Application\ModelGateway\Mapper\ModelGatewayMapper;
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseDocumentEntity;
-use App\Domain\KnowledgeBase\Entity\ValueObject\DocType;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeBaseDataIsolation;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeSyncStatus;
 use App\Domain\KnowledgeBase\Event\KnowledgeBaseSavedEvent;
@@ -17,7 +16,6 @@ use App\Domain\KnowledgeBase\Service\KnowledgeBaseDocumentDomainService;
 use App\Domain\KnowledgeBase\Service\KnowledgeBaseDomainService;
 use App\Infrastructure\Core\Embeddings\EmbeddingGenerator\EmbeddingGenerator;
 use App\Infrastructure\Core\Embeddings\VectorStores\VectorStoreDriver;
-use App\Infrastructure\Util\FileType;
 use Hyperf\Event\Annotation\Listener;
 use Hyperf\Event\Contract\ListenerInterface;
 use Psr\Container\ContainerInterface;
@@ -70,10 +68,8 @@ readonly class KnowledgeBaseSyncSubscriber implements ListenerInterface
             // 根据files批量创建文档
             $files = $event->documentFiles;
             foreach ($files as $file) {
-                $extension = FileType::getType($file->getFileLink()->getUrl());
                 $documentEntity = (new KnowledgeBaseDocumentEntity())
                     ->setKnowledgeBaseCode($knowledge->getCode())
-                    ->setDocType(DocType::fromExtension($extension)->value)
                     ->setName($file->getName())
                     ->setCreatedUid($knowledge->getCreator())
                     ->setUpdatedUid($knowledge->getCreator())

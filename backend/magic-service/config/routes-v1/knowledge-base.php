@@ -37,4 +37,5 @@ Router::addGroup('/api/v1/knowledge-bases', static function () {
         Router::get('/{id}', [KnowledgeBaseFragmentApi::class, 'show']);
         Router::delete('/{id}', [KnowledgeBaseFragmentApi::class, 'destroy']);
     });
+    Router::post('/fragments/preview', [KnowledgeBaseFragmentApi::class, 'fragmentPreview']);
 }, ['middleware' => [RequestContextMiddleware::class]]);

@@ -46,7 +46,7 @@ class KnowledgeBaseModel extends AbstractModel
     protected array $fillable = [
         'id', 'code', 'version', 'name', 'description', 'type', 'enabled', 'business_id', 'sync_status', 'sync_status_message', 'model', 'vector_db',
         'organization_code', 'created_uid', 'created_at', 'updated_uid', 'updated_at', 'deleted_at', 'expected_num', 'completed_num', 'retrieve_config',
-        'word_count', 'icon',
+        'word_count', 'icon', 'fragment_config', 'embedding_config',
     ];
 
     protected array $casts = [
@@ -65,6 +65,8 @@ class KnowledgeBaseModel extends AbstractModel
         'expected_num' => 'integer',
         'completed_num' => 'integer',
         'retrieve_config' => 'string',
+        'embedding_config' => 'array',
+        'fragment_config' => 'array',
         'word_count' => 'integer',
         'icon' => 'string',
 

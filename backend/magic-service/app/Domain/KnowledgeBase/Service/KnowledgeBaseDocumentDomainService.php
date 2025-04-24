@@ -22,6 +22,7 @@ use App\Infrastructure\Core\Embeddings\EmbeddingGenerator\EmbeddingGenerator;
 use App\Infrastructure\Core\Embeddings\VectorStores\VectorStoreDriver;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Infrastructure\Core\ValueObject\Page;
+use App\Infrastructure\Util\FileType;
 use Dtyq\AsyncEvent\AsyncEventUtil;
 use Hyperf\DbConnection\Db;
 
@@ -192,7 +193,8 @@ readonly class KnowledgeBaseDocumentDomainService
 
         $documentEntity->setUpdatedAt($documentEntity->getCreatedAt());
         $documentEntity->setUpdatedUid($documentEntity->getCreatedUid());
-        $documentEntity->setDocType(DocType::fromExtension($documentFile?->getFileLink()->getUrl() ?? '')->value);
+        $extension = FileType::getType($documentFile->getFileLink()->getUrl());
+        $documentEntity->setDocType(DocType::fromExtension($extension)->value);
         $documentEntity->setSyncStatus(0); // 0 表示未同步
     }
 

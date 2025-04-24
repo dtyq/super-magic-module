@@ -11,6 +11,7 @@ use App\Application\Kernel\AbstractKernelAppService;
 use App\Application\Permission\Service\OperationPermissionAppService;
 use App\Domain\Contact\Service\MagicUserDomainService;
 use App\Domain\File\Service\FileDomainService;
+use App\Domain\KnowledgeBase\Entity\ValueObject\DocumentFileVO;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeBaseDataIsolation;
 use App\Domain\KnowledgeBase\Service\KnowledgeBaseDocumentDomainService;
 use App\Domain\KnowledgeBase\Service\KnowledgeBaseDomainService;
@@ -20,9 +21,15 @@ use App\Domain\Permission\Entity\ValueObject\OperationPermission\Operation;
 use App\Domain\Permission\Entity\ValueObject\OperationPermission\ResourceType;
 use App\ErrorCode\PermissionErrorCode;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
+use App\Infrastructure\Core\File\Parser\FileParser;
+use App\Interfaces\KnowledgeBase\DTO\DocumentFileDTO;
+use Hyperf\Logger\LoggerFactory;
+use Psr\Log\LoggerInterface;
 
 abstract class AbstractKnowledgeAppService extends AbstractKernelAppService
 {
+    protected LoggerInterface $logger;
+
     public function __construct(
         protected readonly MagicUserDomainService $magicUserDomainService,
         protected readonly OperationPermissionAppService $operationPermissionAppService,
@@ -31,7 +38,29 @@ abstract class AbstractKnowledgeAppService extends AbstractKernelAppService
         protected readonly KnowledgeBaseFragmentDomainService $knowledgeBaseFragmentDomainService,
         protected readonly FileDomainService $fileDomainService,
         protected readonly ServiceProviderDomainService $serviceProviderDomainService,
+        protected readonly FileParser $fileParser,
+        LoggerFactory $loggerFactory,
     ) {
+        $this->logger = $loggerFactory->get(get_class($this));
+    }
+
+    public function documentFileDTOToVO(?DocumentFileDTO $dto): ?DocumentFileVO
+    {
+        if ($dto === null) {
+            return null;
+        }
+        $data = $dto->toArray();
+        unset($data['file_link']);
+        return (new DocumentFileVO($data))->setFileLink($dto->getFileLink());
+    }
+
+    /**
+     * @param array<DocumentFileDTO> $dtoList
+     * @return array<DocumentFileVO>
+     */
+    public function documentFileDTOListToVOList(array $dtoList): array
+    {
+        return array_map(fn (DocumentFileDTO $dto) => $this->documentFileDTOToVO($dto), $dtoList);
     }
 
     protected function getKnowledgeOperation(KnowledgeBaseDataIsolation $dataIsolation, int|string $knowledgeCode): Operation

@@ -7,8 +7,10 @@ declare(strict_types=1);
 
 namespace HyperfTest\Cases\Api\KnowledgeBase;
 
+use App\Domain\KnowledgeBase\Entity\ValueObject\FragmentMode;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeType;
 use App\Domain\KnowledgeBase\Entity\ValueObject\SearchType;
+use App\Domain\KnowledgeBase\Entity\ValueObject\TextPreprocessRule;
 use App\ErrorCode\FlowErrorCode;
 use Hyperf\Snowflake\IdGeneratorInterface;
 use HyperfTest\HttpTestCase;
@@ -35,8 +37,7 @@ class KnowledgeBaseApiTest extends HttpTestCase
             'icon' => 'DT001/588417216353927169/4c9184f37cff01bcdc32dc486ec36961/Oz_iUDWyjYwLxME31WwFn.jpg',
             'enabled' => true,
             'is_draft' => true,
-            'fragment_config' => [],
-            'embedding_config' => [],
+            'embedding_config' => ['model_id' => 'dmeta-embedding'],
             'retrieve_config' => [
                 'top_k' => 4,
                 'weights' => null,
@@ -45,6 +46,20 @@ class KnowledgeBaseApiTest extends HttpTestCase
                 'score_threshold' => 0.67,
                 'reranking_enable' => true,
                 'score_threshold_enabled' => true,
+            ],
+            'fragment_config' => [
+                'mode' => FragmentMode::NORMAL->value,
+                'normal' => [
+                    'text_preprocess_rule' => [
+                        TextPreprocessRule::REPLACE_WHITESPACE->value,
+                        TextPreprocessRule::REMOVE_URL_EMAIL->value,
+                    ],
+                    'segment_rule' => [
+                        'separator' => '\n',
+                        'chunk_size' => 50,
+                        'chunk_overlap' => 10,
+                    ],
+                ],
             ],
         ];
 
@@ -416,6 +431,56 @@ class KnowledgeBaseApiTest extends HttpTestCase
     }
 
     /**
+     * 测试知识库片段预览功能.
+     */
+    public function testFragmentPreview()
+    {
+        $data = [
+            'document_file' => [
+                'name' => 'test.md',
+                'key' => 'test001/open/4c9184f37cff01bcdc32dc486ec36961/9w-fHAaMI4hY3VEIhhozL.md',
+            ],
+            'fragment_config' => [
+                'mode' => FragmentMode::NORMAL->value,
+                'normal' => [
+                    'text_preprocess_rule' => [
+                        TextPreprocessRule::REPLACE_WHITESPACE->value,
+                        TextPreprocessRule::REMOVE_URL_EMAIL->value,
+                    ],
+                    'segment_rule' => [
+                        'separator' => '\n',
+                        'chunk_size' => 50,
+                        'chunk_overlap' => 10,
+                    ],
+                ],
+            ],
+        ];
+
+        $res = $this->post(
+            self::API . '/fragments/preview',
+            $data,
+            $this->getCommonHeaders()
+        );
+
+        $this->assertSame(1000, $res['code'], $res['message']);
+        $this->assertArrayHasKey('data', $res);
+        $this->assertArrayHasKey('total', $res['data']);
+        $this->assertArrayHasKey('list', $res['data']);
+        $this->assertIsArray($res['data']['list']);
+
+        if (! empty($res['data']['list'])) {
+            $fragment = $res['data']['list'][0];
+            $this->assertArrayHasKey('id', $fragment);
+            $this->assertArrayHasKey('content', $fragment);
+            $this->assertArrayHasKey('metadata', $fragment);
+            $this->assertArrayHasKey('document_code', $fragment);
+            $this->assertArrayHasKey('knowledge_base_code', $fragment);
+            $this->assertArrayHasKey('created_at', $fragment);
+            $this->assertArrayHasKey('updated_at', $fragment);
+        }
+    }
+
+    /**
      * 创建测试文档并返回文档数据.
      */
     protected function createDocument(array $overrideData = [], ?string $knowledgeBaseCode = null): array
@@ -470,6 +535,23 @@ class KnowledgeBaseApiTest extends HttpTestCase
             'enabled' => true,
             'is_draft' => true,
             'document_files' => [['name' => 'aaa.txt', 'key' => 'test001/open/4c9184f37cff01bcdc32dc486ec36961/9w-fHAaMI4hY3VEIhhozL.md']],
+            'fragment_config' => [
+                'mode' => FragmentMode::NORMAL->value,
+                'normal' => [
+                    'text_preprocess_rule' => [
+                        TextPreprocessRule::REPLACE_WHITESPACE->value,
+                        TextPreprocessRule::REMOVE_URL_EMAIL->value,
+                    ],
+                    'segment_rule' => [
+                        'separator' => '\n',
+                        'chunk_size' => 50,
+                        'chunk_overlap' => 10,
+                    ],
+                ],
+            ],
+            'embedding_config' => [
+                'model_id' => 'dmeta-embedding',
+            ],
         ], $data);
 
         $res = $this->post(self::API, $data, $this->getCommonHeaders());

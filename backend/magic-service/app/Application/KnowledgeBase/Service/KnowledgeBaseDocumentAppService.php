@@ -9,7 +9,6 @@ namespace App\Application\KnowledgeBase\Service;
 
 use App\Domain\Flow\Entity\ValueObject\Query\KnowledgeBaseDocumentQuery;
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseDocumentEntity;
-use App\Domain\KnowledgeBase\Entity\ValueObject\DocumentFileVO;
 use App\Infrastructure\Core\Embeddings\EmbeddingGenerator\EmbeddingGenerator;
 use App\Infrastructure\Core\Embeddings\VectorStores\VectorStoreDriver;
 use App\Infrastructure\Core\ValueObject\Page;
@@ -49,7 +48,7 @@ class KnowledgeBaseDocumentAppService extends AbstractKnowledgeAppService
         $knowledgeBaseEntity = $this->knowledgeBaseDomainService->show($dataIsolation, $documentEntity->getKnowledgeBaseCode());
         if (! $documentEntity->getCode()) {
             // 新建文档
-            return $this->knowledgeBaseDocumentDomainService->create($dataIsolation, $knowledgeBaseEntity, $documentEntity, DocumentFileVO::fromDTO($documentFile));
+            return $this->knowledgeBaseDocumentDomainService->create($dataIsolation, $knowledgeBaseEntity, $documentEntity, $this->documentFileDTOToVO($documentFile));
         }
         return $this->knowledgeBaseDocumentDomainService->update($dataIsolation, $knowledgeBaseEntity, $documentEntity);
     }
