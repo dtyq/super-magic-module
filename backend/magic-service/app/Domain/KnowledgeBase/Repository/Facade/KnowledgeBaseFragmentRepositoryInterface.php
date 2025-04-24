@@ -17,6 +17,11 @@ interface KnowledgeBaseFragmentRepositoryInterface
 {
     public function getById(KnowledgeBaseDataIsolation $dataIsolation, int $id, bool $selectForUpdate = false): ?KnowledgeBaseFragmentEntity;
 
+    /**
+     * @return array<KnowledgeBaseFragmentEntity>
+     */
+    public function getByIds(KnowledgeBaseDataIsolation $dataIsolation, array $ids, bool $selectForUpdate = false): array;
+
     public function getByBusinessId(KnowledgeBaseDataIsolation $dataIsolation, string $knowledgeCode, string $businessId): ?KnowledgeBaseFragmentEntity;
 
     public function getByPointId(KnowledgeBaseDataIsolation $dataIsolation, string $knowledgeCode, string $pointId): ?KnowledgeBaseFragmentEntity;

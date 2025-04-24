@@ -177,9 +177,22 @@ class KnowledgeBaseApiTest extends HttpTestCase
         $this->assertIsInt($document['doc_type']);
         $this->assertTrue($document['enabled']);
         $this->assertSame(['source' => 'test'], $document['doc_metadata']);
-        $this->assertSame(['chunk_size' => 500], $document['fragment_config']);
-        $this->assertSame(['model' => 'test-embedding'], $document['embedding_config']);
-        $this->assertSame(['engine' => 'test-db'], $document['vector_db_config']);
+        $this->assertSame([
+            'mode' => FragmentMode::NORMAL->value,
+            'normal' => [
+                'text_preprocess_rule' => [
+                    TextPreprocessRule::REPLACE_WHITESPACE->value,
+                    TextPreprocessRule::REMOVE_URL_EMAIL->value,
+                ],
+                'segment_rule' => [
+                    'separator' => '\n\n',
+                    'chunk_size' => 50,
+                    'chunk_overlap' => 10,
+                ],
+            ],
+            'parent_child' => null,
+        ], $document['fragment_config']);
+        $this->assertSame(['model_id' => 'dmeta-embedding'], $document['embedding_config']);
         $this->assertSame([], $document['retrieve_config']);
         $this->assertArrayHasKey('knowledge_base_code', $document);
     }
@@ -209,10 +222,6 @@ class KnowledgeBaseApiTest extends HttpTestCase
         $this->assertSame($updateData['name'], $res['data']['name']);
         $this->assertSame($updateData['enabled'], $res['data']['enabled']);
         $this->assertSame($updateData['doc_metadata'], $res['data']['doc_metadata']);
-        $this->assertSame($updateData['fragment_config'], $res['data']['fragment_config']);
-        $this->assertSame($updateData['embedding_config'], $res['data']['embedding_config']);
-        $this->assertSame($updateData['vector_db_config'], $res['data']['vector_db_config']);
-        $this->assertSame($updateData['retrieve_config'], $res['data']['retrieve_config']);
     }
 
     public function testGetDocumentDetail()
@@ -368,7 +377,7 @@ class KnowledgeBaseApiTest extends HttpTestCase
         $this->assertArrayHasKey('total', $res['data']);
         $this->assertArrayHasKey('list', $res['data']);
         $this->assertIsArray($res['data']['list']);
-        $this->assertCount(4, $res['data']['list']);
+        $this->assertCount(5, $res['data']['list']);
     }
 
     public function testGetFragmentDetail()
@@ -488,6 +497,14 @@ class KnowledgeBaseApiTest extends HttpTestCase
         $knowledgeBase = $this->createKnowledgeBase();
         $code = $knowledgeBase['code'];
 
+        // 创建测试文档
+        $document = $this->createDocument([], $code);
+
+        // 创建测试片段
+        $fragment = $this->createFragment([
+            'content' => '这是一个测试片段内容，用于测试相似度查询功能',
+        ], $document['code'], $code);
+
         // 执行相似度查询
         $query = '测试相似度查询';
         $res = $this->post(
@@ -528,10 +545,6 @@ class KnowledgeBaseApiTest extends HttpTestCase
             'doc_type' => 1,
             'enabled' => true,
             'doc_metadata' => ['source' => 'test'],
-            'fragment_config' => ['chunk_size' => 500],
-            'embedding_config' => ['model' => 'test-embedding'],
-            'vector_db_config' => ['engine' => 'test-db'],
-            'retrieve_config' => [],
             'document_file' => ['name' => 'test.txt', 'key' => 'test001/open/4c9184f37cff01bcdc32dc486ec36961/9w-fHAaMI4hY3VEIhhozL.md'],
         ];
 
@@ -577,7 +590,7 @@ class KnowledgeBaseApiTest extends HttpTestCase
                         TextPreprocessRule::REMOVE_URL_EMAIL->value,
                     ],
                     'segment_rule' => [
-                        'separator' => '\n',
+                        'separator' => '\n\n',
                         'chunk_size' => 50,
                         'chunk_overlap' => 10,
                     ],

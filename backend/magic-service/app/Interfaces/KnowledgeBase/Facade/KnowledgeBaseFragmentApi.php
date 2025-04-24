@@ -8,11 +8,11 @@ declare(strict_types=1);
 namespace App\Interfaces\KnowledgeBase\Facade;
 
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseFragmentEntity;
-use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeRetrievalResult;
 use App\Domain\KnowledgeBase\Entity\ValueObject\Query\KnowledgeBaseFragmentQuery;
 use App\Infrastructure\Core\ValueObject\Page;
 use App\Interfaces\Kernel\DTO\PageDTO;
 use App\Interfaces\KnowledgeBase\Assembler\KnowledgeBaseFragmentAssembler;
+use App\Interfaces\KnowledgeBase\DTO\KnowledgeBaseFragmentDTO;
 use App\Interfaces\KnowledgeBase\DTO\Request\CreateFragmentRequestDTO;
 use App\Interfaces\KnowledgeBase\DTO\Request\FragmentPreviewRequestDTO;
 use App\Interfaces\KnowledgeBase\DTO\Request\GetFragmentListRequestDTO;
@@ -90,12 +90,13 @@ class KnowledgeBaseFragmentApi extends AbstractKnowledgeBaseApi
     }
 
     /**
-     * @return array<KnowledgeRetrievalResult>
+     * @return array<KnowledgeBaseFragmentDTO>
      */
     public function similarity(string $code): array
     {
         $query = $this->request->input('query', '');
         $userAuthorization = $this->getAuthorization();
-        return $this->knowledgeBaseFragmentAppService->similarity($userAuthorization, $code, $query);
+        $entities = $this->knowledgeBaseFragmentAppService->similarity($userAuthorization, $code, $query);
+        return array_map(fn (KnowledgeBaseFragmentEntity $entity) => KnowledgeBaseFragmentAssembler::entityToDTO($entity), $entities);
     }
 }

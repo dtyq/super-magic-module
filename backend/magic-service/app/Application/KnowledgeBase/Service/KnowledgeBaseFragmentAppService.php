@@ -86,7 +86,7 @@ class KnowledgeBaseFragmentAppService extends AbstractKnowledgeAppService
     }
 
     /**
-     * @return array<KnowledgeRetrievalResult>
+     * @return array<KnowledgeBaseFragmentEntity>
      */
     public function similarity(Authenticatable $authenticatable, string $knowledgeBaseCode, string $query): array
     {
@@ -99,6 +99,14 @@ class KnowledgeBaseFragmentAppService extends AbstractKnowledgeAppService
         $filter->setKnowledgeCodes([$knowledgeBaseCode]);
         $filter->setLimit($retrieveConfig->getTopK());
         $filter->setScore($retrieveConfig->getScoreThreshold());
-        return $this->knowledgeSimilarityManager->similarity($dataIsolation, $filter, $knowledgeBaseEntity->getRetrieveConfig());
+        $result = $this->knowledgeSimilarityManager->similarity($dataIsolation, $filter, $knowledgeBaseEntity->getRetrieveConfig());
+        /** @var array<string, KnowledgeRetrievalResult> $result */
+        $result = array_column($result, null, 'id');
+        $fragmentIds = array_column($result, 'id');
+        $fragmentEntities = $this->knowledgeBaseFragmentDomainService->getByIds($dataIsolation, $fragmentIds);
+        foreach ($fragmentEntities as $fragmentEntity) {
+            $fragmentEntity->setScore($result[(string) $fragmentEntity->getId()]->getScore());
+        }
+        return $fragmentEntities;
     }
 }

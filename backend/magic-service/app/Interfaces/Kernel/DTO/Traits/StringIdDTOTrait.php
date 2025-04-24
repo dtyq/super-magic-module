@@ -16,8 +16,9 @@ trait StringIdDTOTrait
         return $this->id;
     }
 
-    public function setId(null|int|string $id): void
+    public function setId(null|int|string $id): static
     {
         $this->id = is_null($id) ? $id : (string) $id;
+        return $this;
     }
 }
