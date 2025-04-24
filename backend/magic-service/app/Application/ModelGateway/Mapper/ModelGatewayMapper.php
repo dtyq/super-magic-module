@@ -10,6 +10,7 @@ namespace App\Application\ModelGateway\Mapper;
 use App\Domain\Flow\Entity\ValueObject\FlowDataIsolation;
 use App\Domain\Flow\Entity\ValueObject\Query\MagicFlowAIModelQuery;
 use App\Domain\Flow\Service\MagicFlowAIModelDomainService;
+use App\Domain\ModelAdmin\Constant\ModelType;
 use App\Domain\ModelAdmin\Constant\ServiceProviderCategory;
 use App\Domain\ModelAdmin\Constant\ServiceProviderCode;
 use App\Domain\ModelAdmin\Entity\ServiceProviderConfigEntity;
@@ -354,6 +355,20 @@ class ModelGatewayMapper extends ModelMapper
             $serviceProviderCode = ServiceProviderCode::tryFrom($providerConfigEntity->getProviderCode());
         }
 
+        $chat = false;
+        $functionCall = false;
+        $multiModal = false;
+        $embedding = false;
+        $vectorSize = 0;
+        if ($providerModelsEntity->getModelType() === ModelType::LLM->value) {
+            $chat = true;
+            $functionCall = $providerModelsEntity->getConfig()->isSupportFunction();
+            $multiModal = $providerModelsEntity->getConfig()->isSupportMultiModal();
+        } elseif ($providerModelsEntity->getModelType() === ModelType::EMBEDDING->value) {
+            $embedding = true;
+            $vectorSize = $providerModelsEntity->getConfig()->getVectorSize();
+        }
+
         // 服务商侧的接入点名称
         $endpointName = $providerModelsEntity->getModelVersion();
         $config = $providerConfigEntity->getConfig();
@@ -372,11 +387,11 @@ class ModelGatewayMapper extends ModelMapper
                 'implementation' => $serviceProviderCode->getImplementation(),
                 'config' => $serviceProviderCode->getImplementationConfig($config, $modelVersion),
                 'model_options' => [
-                    'chat' => true,
-                    'function_call' => true,
-                    'embedding' => false,
-                    'multi_modal' => false,
-                    'vector_size' => 0,
+                    'chat' => $chat,
+                    'function_call' => $functionCall,
+                    'embedding' => $embedding,
+                    'multi_modal' => $multiModal,
+                    'vector_size' => $vectorSize,
                 ],
             ]),
             attributes: new OdinModelAttributes(
