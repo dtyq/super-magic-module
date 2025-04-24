@@ -17,9 +17,12 @@ use App\Domain\Chat\DTO\Message\ControlMessage\ConversationWindowOpenMessage;
 use App\Domain\Chat\Entity\MagicConversationEntity;
 use App\Domain\Chat\Entity\MagicMessageEntity;
 use App\Domain\Chat\Entity\MagicSeqEntity;
+use App\Domain\Chat\Entity\ValueObject\ChatSocketIoNameSpace;
 use App\Domain\Chat\Entity\ValueObject\ConversationStatus;
 use App\Domain\Chat\Entity\ValueObject\ConversationType;
+use App\Domain\Chat\Entity\ValueObject\MagicMessageStatus;
 use App\Domain\Chat\Entity\ValueObject\MessageType\ControlMessageType;
+use App\Domain\Chat\Entity\ValueObject\SocketEventType;
 use App\Domain\Chat\Event\ConversationCreatedEvent;
 use App\Domain\Contact\Entity\ValueObject\DataIsolation;
 use App\Domain\Group\Entity\MagicGroupEntity;
@@ -188,6 +191,7 @@ class MagicConversationDomainService extends AbstractDomainService
     /**
      * 智能体触发会话的开始输入或者结束输入.
      * 直接操作对方的会话窗口，而不是把消息发在自己的会话窗口然后再经由消息分发模块转发到对方的会话窗口.
+     * @deprecated 用户端调用 agentOperateConversationStatusV2 方法代替
      */
     public function agentOperateConversationStatus(ControlMessageType $controlMessageType, string $agentConversationId): bool
     {
@@ -220,6 +224,56 @@ class MagicConversationDomainService extends AbstractDomainService
         $seqEntity = $this->generateReceiveSequenceByControlMessage($messageDTO, $receiveConversationEntity);
         // 通知收件方所有设备
         $this->pushControlSequence($seqEntity);
+        return true;
+    }
+
+    /**
+     * 使用 intermediate 事件进行中间态消息推送，不持久化消息. 支持话题级别的“正在输入中”
+     * 直接操作对方的会话窗口，而不是把消息发在自己的会话窗口然后再经由消息分发模块转发到对方的会话窗口.
+     */
+    public function agentOperateConversationStatusV2(ControlMessageType $controlMessageType, string $agentConversationId, ?string $topicId = null): bool
+    {
+        // 查找对方的会话窗口
+        $receiveConversationEntity = $this->magicConversationRepository->getReceiveConversationBySenderConversationId($agentConversationId);
+        if ($receiveConversationEntity === null) {
+            return true;
+        }
+        $receiveUserEntity = $this->magicUserRepository->getUserById($receiveConversationEntity->getUserId());
+        if ($receiveUserEntity === null) {
+            return true;
+        }
+        if (! in_array($controlMessageType, [ControlMessageType::StartConversationInput, ControlMessageType::EndConversationInput], true)) {
+            return true;
+        }
+        $messageDTO = new MagicMessageEntity();
+        if ($controlMessageType === ControlMessageType::StartConversationInput) {
+            $content = new ConversationStartInputMessage();
+        } else {
+            $content = new ConversationEndInputMessage();
+        }
+        $messageDTO->setMessageType($controlMessageType);
+        $messageDTO->setContent($content);
+        /** @var ConversationEndInputMessage|ConversationStartInputMessage $messageStruct */
+        $messageStruct = $messageDTO->getContent();
+        // 生成控制消息,推送收件方
+        $messageStruct->setConversationId($receiveConversationEntity->getId());
+        $messageDTO->setContent($messageStruct);
+        $time = date('Y-m-d H:i:s');
+        // 生成消息流生成序列.
+        $seqData = [
+            'organization_code' => $receiveConversationEntity->getUserOrganizationCode(),
+            'object_type' => $receiveUserEntity->getUserType()->value,
+            'object_id' => $receiveUserEntity->getMagicId(),
+            'seq_type' => $messageDTO->getMessageType()->getName(),
+            'content' => $content->toArray(),
+            'conversation_id' => $receiveConversationEntity->getId(),
+            'status' => MagicMessageStatus::Read->value, // 控制消息不需要已读回执
+            'created_at' => $time,
+            'updated_at' => $time,
+            'app_message_id' => $messageDTO->getAppMessageId(),
+        ];
+        // 直接推送消息给收件方
+        $this->socketIO->of(ChatSocketIoNameSpace::Im->value)->to($receiveUserEntity->getMagicId())->compress(true)->emit(SocketEventType::Intermediate->value, $seqData);
         return true;
     }
 

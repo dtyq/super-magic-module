@@ -11,10 +11,11 @@ use App\Infrastructure\Core\Traits\MagicCacheTrait;
 use DateTime;
 use Hyperf\Codec\Exception\InvalidArgumentException;
 use Hyperf\Codec\Json;
+use Hyperf\Contract\Arrayable;
 use JsonSerializable;
 use Throwable;
 
-abstract class UnderlineObjectJsonSerializable implements JsonSerializable
+abstract class UnderlineObjectJsonSerializable implements JsonSerializable, Arrayable
 {
     use MagicCacheTrait;
 

@@ -8,6 +8,7 @@ declare(strict_types=1);
 namespace App\Domain\Chat\Service;
 
 use App\Domain\Chat\DTO\AISearch\Request\MagicChatAggregateSearchReqDTO;
+use App\Domain\Chat\DTO\Message\ChatMessage\Item\DeepSearch\EventItem;
 use App\Domain\Chat\Entity\ValueObject\AISearchCommonQueryVo;
 use App\Domain\Chat\Entity\ValueObject\BingSearchMarketCode;
 use App\Domain\Chat\Entity\ValueObject\SearchEngineType;
@@ -35,6 +36,7 @@ use Hyperf\Logger\LoggerFactory;
 use Hyperf\Odin\Api\Response\ChatCompletionResponse;
 use Hyperf\Odin\Api\Response\ToolCall;
 use Hyperf\Odin\Contract\Model\ModelInterface;
+use Hyperf\Odin\Exception\LLMException\LLMNetworkException;
 use Hyperf\Odin\Memory\MessageHistory;
 use Hyperf\Odin\Message\AssistantMessage;
 use Hyperf\Odin\Message\SystemMessage;
@@ -114,6 +116,7 @@ class MagicLLMDomainService
     ```markdown
     PROMPT;
 
+    /* @phpstan-ignore-next-line */
     private string $pptQueryPrompt = <<<'PROMPT'
     Today is {date_now}
 
@@ -320,36 +323,37 @@ class MagicLLMDomainService
      */
     public function generatePPTFromMindMap(AISearchCommonQueryVo $queryVo, string $mindMap): string
     {
-        $userMessage = $queryVo->getUserMessage();
-        $conversationId = $queryVo->getConversationId();
-        $model = $queryVo->getModel();
-        $systemPrompt = str_replace(['{mind_map}', '{date_now}'], [$mindMap, date('Y年 m月 d日, H时 i分 s秒')], $this->pptQueryPrompt);
-        $this->logger->info(Json::encode([
-            'log_title' => 'mindSearch systemPrompt ppt',
-            'systemPrompt' => $systemPrompt,
-        ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
-        // 访问 llm
-        try {
-            $generatePPTResponse = (string) $this->llmChat(
-                $systemPrompt,
-                $userMessage,
-                $model,
-                null,
-                null,
-                $conversationId,
-                $queryVo->getMagicApiBusinessParam()
-            );
-            // 去掉换行符
-            $generatePPTResponse = str_replace('\n', '', $generatePPTResponse);
-            $this->logger->info(Json::encode([
-                'log_title' => 'mindSearch generatePPTFromMindMap',
-                'log_content' => $generatePPTResponse,
-            ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
-            return $this->stripMarkdownCodeBlock($generatePPTResponse, 'markdown');
-        } catch (Throwable $e) {
-            $this->logger->error(sprintf('mindSearch 生成PPT时发生错误:%s,file:%s,line:%s trace:%s, will generate again.', $e->getMessage(), $e->getFile(), $e->getLine(), $e->getTraceAsString()));
-            throw $e;
-        }
+        // 直接用思维导图生成 ppt
+        return $mindMap;
+        //        $userMessage = $queryVo->getUserMessage();
+        //        $conversationId = $queryVo->getConversationId();
+        //        $model = $queryVo->getModel();
+        //        $systemPrompt = str_replace(['{mind_map}', '{date_now}'], [$mindMap, date('Y年 m月 d日, H时 i分 s秒')], $this->pptQueryPrompt);
+        //        $this->logger->info(Json::encode([
+        //            'log_title' => 'mindSearch systemPrompt ppt',
+        //        ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+        //        // 访问 llm
+        //        try {
+        //            $generatePPTResponse = (string) $this->llmChat(
+        //                $systemPrompt,
+        //                $userMessage,
+        //                $model,
+        //                null,
+        //                null,
+        //                $conversationId,
+        //                $queryVo->getMagicApiBusinessParam()
+        //            );
+        //            // 去掉换行符
+        //            $generatePPTResponse = str_replace('\n', '', $generatePPTResponse);
+        //            $this->logger->info(Json::encode([
+        //                'log_title' => 'mindSearch generatePPTFromMindMap',
+        //                'log_content' => $generatePPTResponse,
+        //            ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+        //            return $this->stripMarkdownCodeBlock($generatePPTResponse, 'markdown');
+        //        } catch (Throwable $e) {
+        //            $this->logger->error(sprintf('mindSearch 生成PPT时发生错误:%s,file:%s,line:%s trace:%s, will generate again.', $e->getMessage(), $e->getFile(), $e->getLine(), $e->getTraceAsString()));
+        //            throw $e;
+        //        }
     }
 
     /**
@@ -382,7 +386,6 @@ class MagicLLMDomainService
         );
         $this->logger->info(Json::encode([
             'log_title' => 'mindSearch systemPrompt mindMap',
-            'systemPrompt' => $systemPrompt,
         ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
         // 访问 llm
         try {
@@ -410,7 +413,10 @@ class MagicLLMDomainService
         }
     }
 
-    public function generateEventFromMessage(AISearchCommonQueryVo $queryVo, array $searchContexts)
+    /**
+     * @return EventItem[]
+     */
+    public function generateEventFromMessage(AISearchCommonQueryVo $queryVo, array $searchContexts): array
     {
         $question = $queryVo->getUserMessage();
         $conversationId = $queryVo->getConversationId();
@@ -446,7 +452,6 @@ class MagicLLMDomainService
         );
         $this->logger->info(Json::encode([
             'log_title' => 'mindSearch systemPrompt eventMap',
-            'systemPrompt' => $systemPrompt,
         ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
         // 访问 llm
         try {
@@ -464,7 +469,12 @@ class MagicLLMDomainService
                 'log_title' => 'mindSearch relationEventsResponse',
                 'log_content' => $relationEventsResponse,
             ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
-            return Json::decode($relationEventsResponse);
+            $relationEventsResponse = Json::decode($relationEventsResponse);
+            $eventsItem = [];
+            foreach ($relationEventsResponse as $item) {
+                $eventsItem[] = new EventItem($item);
+            }
+            return $eventsItem;
         } catch (Throwable $e) {
             $this->logger->error(sprintf('mindSearch 生成事件时发生错误:%s,file:%s,line:%s trace:%s, will generate again.', $e->getMessage(), $e->getFile(), $e->getLine(), $e->getTraceAsString()));
             // 事件生成经常不是 json
@@ -510,7 +520,6 @@ class MagicLLMDomainService
         );
         $this->logger->info(Json::encode([
             'log_title' => 'mindSearch systemPrompt summarize',
-            'systemPrompt' => $systemPrompt,
         ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
 
         // 访问 llm
@@ -613,7 +622,6 @@ class MagicLLMDomainService
         );
         $this->logger->info(Json::encode([
             'log_title' => 'mindSearch systemPrompt filterSearchContexts',
-            'systemPrompt' => $systemPrompt,
         ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
         // 访问 llm
         $filteredSearchContexts = [];
@@ -925,7 +933,6 @@ class MagicLLMDomainService
             );
             $this->logger->info(Json::encode([
                 'log_title' => 'mindSearch systemPrompt getRelatedQuestions',
-                'systemPrompt' => $systemPrompt,
             ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
             $tools = [(new SubQuestionsTool())->toArray()];
             $relatedQuestionsResponse = $this->llmChat(
@@ -1094,7 +1101,12 @@ class MagicLLMDomainService
             temperature: 0.1,
             businessParams: $businessParams,
         );
-        return $agent->chatAndNotAutoExecuteTools(new UserMessage($query));
+        // 捕捉 LLMNetworkException 异常，重试一次
+        return Retry::whenThrows(LLMNetworkException::class)->sleep(500)->max(3)->call(
+            function () use ($agent, $query) {
+                return $agent->chatAndNotAutoExecuteTools(new UserMessage($query));
+            }
+        );
     }
 
     /**

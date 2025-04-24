@@ -12,6 +12,7 @@ use App\Domain\Chat\DTO\Message\EmptyMessage;
 use App\Domain\Chat\DTO\Message\MessageInterface;
 use App\Domain\Chat\DTO\Message\StreamMessage\StreamOptions;
 use App\Domain\Chat\DTO\Message\StreamMessageInterface;
+use App\Domain\Chat\DTO\Response\ClientJsonStreamSequenceResponse;
 use App\Domain\Chat\DTO\Response\ClientSequenceResponse;
 use App\Domain\Chat\DTO\Response\ClientStreamSequenceResponse;
 use App\Domain\Chat\DTO\Response\Common\ClientMessage;
@@ -76,7 +77,7 @@ class SeqAssembler
     }
 
     /**
-     * 流式消息的客户端 seq 结构.
+     * 大模型响应流式消息的客户端 seq 结构.
      */
     public static function getClientStreamSeqStruct(
         StreamOptions $streamOptions,
@@ -100,6 +101,16 @@ class SeqAssembler
         }
         $response->setStatus($streamOptions->getStatus());
         return $response;
+    }
+
+    /**
+     * Json 流式消息的客户端 seq 结构.
+     */
+    public static function getClientJsonStreamSeqStruct(
+        MagicSeqEntity $seqEntity,
+        ?array $thisTimeStreamMessages = null
+    ): ?ClientJsonStreamSequenceResponse {
+        return (new ClientJsonStreamSequenceResponse())->setTargetSeqId($seqEntity->getSeqId())->setStreams($thisTimeStreamMessages);
     }
 
     /**

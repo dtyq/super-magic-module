@@ -54,13 +54,14 @@ use App\Infrastructure\Util\Locker\RedisLocker;
 use App\Interfaces\Chat\Assembler\MessageAssembler;
 use App\Interfaces\Chat\Assembler\SeqAssembler;
 use Hyperf\Amqp\Producer;
+use Hyperf\Cache\Driver\MemoryDriver;
 use Hyperf\Codec\Json;
-use Hyperf\Context\ApplicationContext;
 use Hyperf\DbConnection\Db;
 use Hyperf\Logger\LoggerFactory;
 use Hyperf\Redis\Redis;
 use Hyperf\Snowflake\IdGeneratorInterface;
 use Hyperf\SocketIOServer\SocketIO;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -68,6 +69,8 @@ use function Hyperf\Coroutine\co;
 
 abstract class AbstractDomainService
 {
+    protected readonly MemoryDriver $memoryDriver;
+
     public function __construct(
         protected MagicUserRepositoryInterface $magicUserRepository,
         protected MagicMessageRepositoryInterface $magicMessageRepository,
@@ -97,11 +100,19 @@ abstract class AbstractDomainService
         protected readonly MagicFlowAIModelRepositoryInterface $magicFlowAIModelRepository,
         protected readonly CloudFileRepositoryInterface $cloudFileRepository,
         protected readonly MagicChatMessageVersionsRepositoryInterface $magicChatMessageVersionsRepository,
+        protected ContainerInterface $container
     ) {
         try {
-            $this->logger = ApplicationContext::getContainer()->get(LoggerFactory::class)->get(get_class($this));
+            $this->logger = $this->container->get(LoggerFactory::class)->get(get_class($this));
         } catch (Throwable) {
         }
+        $this->memoryDriver = new MemoryDriver($container, [
+            'prefix' => 'magic-chat:',
+            'skip_cache_results' => [null, '', []],
+            // 1GB
+            'size' => 1024 * 1024 * 1024,
+            'throw_when_size_exceeded' => true,
+        ], );
     }
 
     /**

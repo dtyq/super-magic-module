@@ -9,7 +9,7 @@ namespace App\Domain\Chat\DTO\Message\StreamMessage;
 
 trait StreamMessageTrait
 {
-    protected StreamOptions $streamOptions;
+    protected ?StreamOptions $streamOptions;
 
     // 消息是否是流式消息
     public function isStream(): bool
@@ -35,7 +35,7 @@ trait StreamMessageTrait
         } elseif ($streamOptions instanceof StreamOptions) {
             $this->streamOptions = $streamOptions;
         } else {
-            $this->streamOptions = new StreamOptions();
+            $this->streamOptions = null;
         }
         return $this;
     }

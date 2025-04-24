@@ -17,6 +17,7 @@ use App\Domain\Chat\DTO\Request\ChatRequest;
 use App\Domain\Chat\DTO\Request\Common\MagicContext;
 use App\Domain\Chat\DTO\Request\ControlRequest;
 use App\Domain\Chat\DTO\Request\StreamRequest;
+use App\Domain\Chat\Entity\ValueObject\ChatSocketIoNameSpace;
 use App\Domain\Chat\Entity\ValueObject\ConversationType;
 use App\Domain\Chat\Entity\ValueObject\MessagePriority;
 use App\Domain\Chat\Entity\ValueObject\MessageType\ControlMessageType;
@@ -345,7 +346,7 @@ class MagicChatWebSocketApi extends BaseNamespace
                     if (! $this->redis->set('magic-im:subscribe:keepalive', '1', ['ex' => 5, 'nx'])) {
                         return;
                     }
-                    $this->socketIO->of('/im')->to('magic-im:subscribe:keepalive')->emit(SocketEventType::Chat->value, ControlMessageType::Ping->value);
+                    $this->socketIO->of(ChatSocketIoNameSpace::Im->value)->to('magic-im:subscribe:keepalive')->emit(SocketEventType::Chat->value, ControlMessageType::Ping->value);
                     $producer = ApplicationContext::getContainer()->get(Producer::class);
                     // 对所有队列投一条消息,以保活链接/队列
                     $messagePriorities = MessagePriority::cases();
