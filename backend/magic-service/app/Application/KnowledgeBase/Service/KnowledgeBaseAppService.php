@@ -48,8 +48,7 @@ class KnowledgeBaseAppService extends AbstractKnowledgeAppService
             $operation = $this->getKnowledgeOperation($dataIsolation, $oldKnowledge->getCode());
             $operation->validate('w', $oldKnowledge->getCode());
 
-            // 使用原来的模型和向量库
-            $magicFlowKnowledgeEntity->setModel($oldKnowledge->getModel());
+            // 使用原来的向量库
             $magicFlowKnowledgeEntity->setVectorDB($oldKnowledge->getVectorDB());
         }
 
