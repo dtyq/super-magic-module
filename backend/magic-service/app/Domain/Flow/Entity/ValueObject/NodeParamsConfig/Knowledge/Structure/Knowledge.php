@@ -7,13 +7,11 @@ declare(strict_types=1);
 
 namespace App\Domain\Flow\Entity\ValueObject\NodeParamsConfig\Knowledge\Structure;
 
-use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeType;
-
 readonly class Knowledge
 {
     public function __construct(
         private string $knowledgeCode,
-        private KnowledgeType $knowledgeType,
+        private int $knowledgeType,
         private string $businessId,
         private string $name,
         private string $description
@@ -30,7 +28,7 @@ readonly class Knowledge
         return $this->knowledgeCode;
     }
 
-    public function getKnowledgeType(): KnowledgeType
+    public function getKnowledgeType(): int
     {
         return $this->knowledgeType;
     }
@@ -49,7 +47,7 @@ readonly class Knowledge
     {
         return [
             'knowledge_code' => $this->knowledgeCode,
-            'knowledge_type' => $this->knowledgeType->value,
+            'knowledge_type' => $this->knowledgeType,
             'business_id' => $this->businessId,
             'name' => $this->name,
             'description' => $this->description,
