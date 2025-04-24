@@ -73,6 +73,7 @@ readonly class KnowledgeBaseDomainService
         } catch (Throwable $exception) {
             $modelName = ! empty($model) ? $model->getModelName() : '';
             simple_logger('KnowledgeBaseDomainService')->warning('KnowledgeBaseCheckEmbeddingsFailed', [
+                'message' => $exception->getMessage(),
                 'file' => $exception->getFile(),
                 'line' => $exception->getLine(),
                 'code' => $exception->getCode(),
