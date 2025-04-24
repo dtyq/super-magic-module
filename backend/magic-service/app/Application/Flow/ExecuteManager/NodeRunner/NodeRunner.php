@@ -22,7 +22,6 @@ use App\Domain\Flow\Entity\ValueObject\MemoryType;
 use App\Domain\Flow\Entity\ValueObject\Node;
 use App\Domain\Flow\Entity\ValueObject\NodeDebugResult;
 use App\Domain\Flow\Service\MagicFlowDomainService;
-use App\Domain\ModelAdmin\Service\ServiceProviderDomainService;
 use App\Domain\ModelGateway\Service\MsgLogDomainService;
 use App\ErrorCode\FlowErrorCode;
 use App\Infrastructure\Core\Contract\Flow\NodeRunnerInterface;
@@ -61,8 +60,6 @@ abstract class NodeRunner implements NodeRunnerInterface
 
     protected MsgLogDomainService $msgLogDomainService;
 
-    protected ServiceProviderDomainService $serviceProviderDomainService;
-
     protected MagicUserDomainService $userDomainService;
 
     protected ModelGatewayMapper $modelGatewayMapper;
@@ -80,7 +77,6 @@ abstract class NodeRunner implements NodeRunnerInterface
         $this->fileDomainService = di(FileDomainService::class);
         $this->operationPermissionAppService = di(OperationPermissionAppService::class);
         $this->magicChatFileDomainService = di(MagicChatFileDomainService::class);
-        $this->serviceProviderDomainService = di(ServiceProviderDomainService::class);
         $this->msgLogDomainService = di(MsgLogDomainService::class);
         $this->userDomainService = di(MagicUserDomainService::class);
         $this->modelGatewayMapper = di(ModelGatewayMapper::class);
