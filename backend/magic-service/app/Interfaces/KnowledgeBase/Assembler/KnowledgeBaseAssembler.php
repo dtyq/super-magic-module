@@ -16,7 +16,8 @@ class KnowledgeBaseAssembler
     public static function entityToDTO(KnowledgeBaseEntity $entity): KnowledgeBaseDTO
     {
         $dto = new KnowledgeBaseDTO();
-        $dto->setId($entity->getId());
+        // 兼容旧知识库逻辑，旧知识库逻辑id为code
+        $dto->setId($entity->getCode());
         $dto->setCode($entity->getCode());
         $dto->setName($entity->getName());
         $dto->setDescription($entity->getDescription());
