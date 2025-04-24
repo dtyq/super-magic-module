@@ -863,16 +863,6 @@ class MagicChatDomainService extends AbstractDomainService
                     $this->socketIO->of(ChatSocketIoNameSpace::Im->value)->to($receiveSeqEntity->getObjectId())->compress(true)->emit(SocketEventType::Stream->value, $receiveData);
                 }
             }
-
-            if (isset($receiveData)) {
-                echo PHP_EOL;
-                $receiveData = Json::encode($receiveData);
-                if (mb_strlen($receiveData) > 200) {
-                    $receiveData = mb_substr($receiveData, 0, 200) . '...';
-                }
-                echo '推送消息给接收方:' . $receiveData . "\n";
-                echo PHP_EOL;
-            }
             return [$senderSeqEntity, $messageEntity];
         } finally {
             $this->locker->release($lockKey, $lockOwner);
