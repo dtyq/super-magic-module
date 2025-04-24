@@ -6,7 +6,7 @@ import { useMemo } from "react"
 import { cx } from "antd-style"
 import MagicAvatar from "@/opensource/components/base/MagicAvatar"
 import { useTranslation } from "react-i18next"
-import styles from "./index.module.less"
+import { useStyles } from "./style"
 
 export type PublishCardItemProps = {
 	version: FlowDraft.ListItem
@@ -16,6 +16,7 @@ export type PublishCardItemProps = {
 
 export default function PublishCardItem({ version, flow, onSwitchDraft }: PublishCardItemProps) {
 	const { t } = useTranslation("interface")
+	const { styles } = useStyles()
 	const { t: globalT } = useTranslation()
 	const isActiveVersion = useMemo(() => {
 		// @ts-ignore
