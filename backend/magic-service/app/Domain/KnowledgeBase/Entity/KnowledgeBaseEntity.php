@@ -14,7 +14,6 @@ use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeSyncStatus;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeType;
 use App\Domain\KnowledgeBase\Entity\ValueObject\RetrieveConfig;
 use App\ErrorCode\FlowErrorCode;
-use App\Infrastructure\Core\AbstractEntity;
 use App\Infrastructure\Core\Embeddings\EmbeddingGenerator\EmbeddingGenerator;
 use App\Infrastructure\Core\Embeddings\VectorStores\VectorStoreDriver;
 use App\Infrastructure\Core\Embeddings\VectorStores\VectorStoreInterface;
@@ -24,7 +23,7 @@ use DateTime;
 /**
  * 知识库.
  */
-class KnowledgeBaseEntity extends AbstractEntity
+class KnowledgeBaseEntity extends AbstractKnowledgeBaseEntity
 {
     protected ?FragmentConfig $fragmentConfig;
 
@@ -316,7 +315,7 @@ class KnowledgeBaseEntity extends AbstractEntity
 
     public function getModel(): string
     {
-        return $this->model;
+        return $this->getEmbeddingConfig()['model_id'] ?? $this->model;
     }
 
     public function setModel(string $model): static
@@ -466,20 +465,13 @@ class KnowledgeBaseEntity extends AbstractEntity
 
     public function getFragmentConfig(): ?FragmentConfig
     {
-        return $this->fragmentConfig;
+        return $this->fragmentConfig ?? $this->getDefaultFragmentConfig();
     }
 
     public function setFragmentConfig(null|array|FragmentConfig $fragmentConfig): self
     {
         // 默认配置
-        is_null($fragmentConfig) && $fragmentConfig = [
-            'text_preprocess_rule' => [],
-            'segment_rule' => [
-                'separator' => '\n\n',
-                'chunk_size' => 500,
-                'chunk_overlap' => 50,
-            ],
-        ];
+        is_null($fragmentConfig) && $fragmentConfig = $this->getDefaultFragmentConfig();
         is_array($fragmentConfig) && $fragmentConfig = FragmentConfig::fromArray($fragmentConfig);
         $this->fragmentConfig = $fragmentConfig;
         return $this;

@@ -73,9 +73,9 @@ class KnowledgeBaseApi extends AbstractKnowledgeBaseApi
 
     /**
      * 获取官方重排序提供商列表.
-     * @return ServiceProviderDTO
+     * @return array<ServiceProviderDTO>
      */
-    public function getOfficalRerankProviderList()
+    public function getOfficialRerankProviderList()
     {
         $dto = new ServiceProviderDTO();
         $dto->setId('official_rerank');
@@ -106,6 +106,6 @@ class KnowledgeBaseApi extends AbstractKnowledgeBaseApi
 
         $dto->setModels($models);
 
-        return $dto;
+        return [$dto];
     }
 }

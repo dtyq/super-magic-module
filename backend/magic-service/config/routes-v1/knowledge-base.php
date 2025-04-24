@@ -18,6 +18,7 @@ Router::addGroup('/api/v1/knowledge-bases', static function () {
         Router::post('/queries', [KnowledgeBaseApi::class, 'queries']);
         Router::get('/{code}', [KnowledgeBaseApi::class, 'show']);
         Router::delete('/{code}', [KnowledgeBaseApi::class, 'destroy']);
+        Router::get('/providers/rerank/list', [KnowledgeBaseApi::class, 'getOfficialRerankProviderList']);
     });
 
     // 文档
@@ -38,4 +39,5 @@ Router::addGroup('/api/v1/knowledge-bases', static function () {
         Router::delete('/{id}', [KnowledgeBaseFragmentApi::class, 'destroy']);
     });
     Router::post('/fragments/preview', [KnowledgeBaseFragmentApi::class, 'fragmentPreview']);
+    Router::post('/{code}/fragments/similarity', [KnowledgeBaseFragmentApi::class, 'similarity']);
 }, ['middleware' => [RequestContextMiddleware::class]]);

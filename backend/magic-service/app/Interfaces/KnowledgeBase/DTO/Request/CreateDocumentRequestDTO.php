@@ -18,13 +18,7 @@ class CreateDocumentRequestDTO extends AbstractRequestDTO
 
     public array $docMetadata = [];
 
-    public array $fragmentConfig = [];
-
-    public array $embeddingConfig = [];
-
     public array $vectorDbConfig = [];
-
-    public array $retrieveConfig = [];
 
     public DocumentFileDTO $documentFile;
 
@@ -34,10 +28,6 @@ class CreateDocumentRequestDTO extends AbstractRequestDTO
             'knowledge_base_code' => 'required|string|max:64',
             'enabled' => 'required|boolean',
             'doc_metadata' => 'array',
-            'fragment_config' => 'array',
-            'embedding_config' => 'array',
-            'vector_db_config' => 'array',
-            'retrieve_config' => 'array',
             'document_file' => 'required|array',
             'document_file.name' => 'required|string|max:255',
             'document_file.key' => 'required|string|max:255',
@@ -90,28 +80,6 @@ class CreateDocumentRequestDTO extends AbstractRequestDTO
         return $this;
     }
 
-    public function getFragmentConfig(): array
-    {
-        return $this->fragmentConfig;
-    }
-
-    public function setFragmentConfig(array $fragmentConfig): self
-    {
-        $this->fragmentConfig = $fragmentConfig;
-        return $this;
-    }
-
-    public function getEmbeddingConfig(): array
-    {
-        return $this->embeddingConfig;
-    }
-
-    public function setEmbeddingConfig(array $embeddingConfig): self
-    {
-        $this->embeddingConfig = $embeddingConfig;
-        return $this;
-    }
-
     public function getVectorDbConfig(): array
     {
         return $this->vectorDbConfig;
@@ -120,17 +88,6 @@ class CreateDocumentRequestDTO extends AbstractRequestDTO
     public function setVectorDbConfig(array $vectorDbConfig): self
     {
         $this->vectorDbConfig = $vectorDbConfig;
-        return $this;
-    }
-
-    public function getRetrieveConfig(): array
-    {
-        return $this->retrieveConfig;
-    }
-
-    public function setRetrieveConfig(array $retrieveConfig): self
-    {
-        $this->retrieveConfig = $retrieveConfig;
         return $this;
     }
 

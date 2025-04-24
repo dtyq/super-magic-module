@@ -14,8 +14,6 @@ use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeSyncStatus;
 use App\Domain\KnowledgeBase\Event\KnowledgeBaseSavedEvent;
 use App\Domain\KnowledgeBase\Service\KnowledgeBaseDocumentDomainService;
 use App\Domain\KnowledgeBase\Service\KnowledgeBaseDomainService;
-use App\Infrastructure\Core\Embeddings\EmbeddingGenerator\EmbeddingGenerator;
-use App\Infrastructure\Core\Embeddings\VectorStores\VectorStoreDriver;
 use Hyperf\Event\Annotation\Listener;
 use Hyperf\Event\Contract\ListenerInterface;
 use Psr\Container\ContainerInterface;
@@ -73,9 +71,11 @@ readonly class KnowledgeBaseSyncSubscriber implements ListenerInterface
                     ->setName($file->getName())
                     ->setCreatedUid($knowledge->getCreator())
                     ->setUpdatedUid($knowledge->getCreator())
-                    ->setEmbeddingModel(EmbeddingGenerator::defaultModel())
-                    ->setFragmentConfig([])
-                    ->setVectorDb(VectorStoreDriver::default()->value);
+                    ->setEmbeddingModel($knowledge->getModel())
+                    ->setFragmentConfig($knowledge->getFragmentConfig())
+                    ->setEmbeddingConfig($knowledge->getEmbeddingConfig())
+                    ->setRetrieveConfig($knowledge->getRetrieveConfig())
+                    ->setVectorDb($knowledge->getVectorDb());
                 $knowledgeBaseDocumentDomainService->create($dataIsolation, $knowledge, $documentEntity, $file);
             }
         } catch (Throwable $throwable) {

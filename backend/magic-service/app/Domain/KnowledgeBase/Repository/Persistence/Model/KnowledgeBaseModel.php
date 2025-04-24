@@ -33,6 +33,8 @@ use Hyperf\Snowflake\Concern\Snowflake;
  * @property int $expected_num
  * @property int $completed_num
  * @property string $retrieve_config
+ * @property array $fragment_config
+ * @property array $embedding_config
  * @property int $word_count 字数统计
  * @property string $icon 图标
  */

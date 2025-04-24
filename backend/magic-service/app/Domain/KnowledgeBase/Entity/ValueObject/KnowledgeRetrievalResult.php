@@ -61,6 +61,8 @@ class KnowledgeRetrievalResult extends AbstractValueObject
      */
     private string $type = self::TYPE_SEMANTIC;
 
+    private float $score = 0;
+
     /**
      * 从知识库片段实体创建检索结果.
      *
@@ -73,7 +75,8 @@ class KnowledgeRetrievalResult extends AbstractValueObject
         string $id = '',
         string $content = '',
         string $businessId = '',
-        array $metadata = []
+        array $metadata = [],
+        float $score = 0,
     ): self {
         $instance = new self();
         $instance->setId($id);
@@ -81,6 +84,7 @@ class KnowledgeRetrievalResult extends AbstractValueObject
         $instance->setBusinessId($businessId);
         $instance->setMetadata($metadata);
         $instance->setType(self::TYPE_SEMANTIC);
+        $instance->setScore($score);
 
         return $instance;
     }
@@ -242,5 +246,16 @@ class KnowledgeRetrievalResult extends AbstractValueObject
     public function isHybrid(): bool
     {
         return $this->type === self::TYPE_HYBRID;
+    }
+
+    public function getScore(): float
+    {
+        return $this->score;
+    }
+
+    public function setScore(float $score): static
+    {
+        $this->score = $score;
+        return $this;
     }
 }

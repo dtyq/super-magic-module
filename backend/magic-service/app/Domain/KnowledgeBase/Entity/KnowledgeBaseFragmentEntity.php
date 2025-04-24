@@ -9,7 +9,6 @@ namespace App\Domain\KnowledgeBase\Entity;
 
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeSyncStatus;
 use App\ErrorCode\FlowErrorCode;
-use App\Infrastructure\Core\AbstractEntity;
 use App\Infrastructure\Core\Embeddings\VectorStores\PointInfo;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use DateTime;
@@ -22,7 +21,7 @@ use function mb_strlen;
 /**
  * 向量知识库文本片段.
  */
-class KnowledgeBaseFragmentEntity extends AbstractEntity
+class KnowledgeBaseFragmentEntity extends AbstractKnowledgeBaseEntity
 {
     public const string PAYLOAD_PREFIX = '#';
 
@@ -263,8 +262,9 @@ class KnowledgeBaseFragmentEntity extends AbstractEntity
         return $this->syncStatus;
     }
 
-    public function setSyncStatus(KnowledgeSyncStatus $syncStatus): self
+    public function setSyncStatus(int|KnowledgeSyncStatus $syncStatus): self
     {
+        is_int($syncStatus) && $syncStatus = KnowledgeSyncStatus::from($syncStatus);
         $this->syncStatus = $syncStatus;
         return $this;
     }
@@ -307,8 +307,9 @@ class KnowledgeBaseFragmentEntity extends AbstractEntity
         return $this->createdAt;
     }
 
-    public function setCreatedAt(DateTime $createdAt): self
+    public function setCreatedAt(DateTime|string $createdAt): self
     {
+        is_string($createdAt) && $createdAt = DateTime::createFromFormat('Y-m-d H:i:s', $createdAt);
         $this->createdAt = $createdAt;
         return $this;
     }
@@ -329,8 +330,9 @@ class KnowledgeBaseFragmentEntity extends AbstractEntity
         return $this->updatedAt;
     }
 
-    public function setUpdatedAt(DateTime $updatedAt): self
+    public function setUpdatedAt(DateTime|string $updatedAt): self
     {
+        is_string($updatedAt) && $updatedAt = DateTime::createFromFormat('Y-m-d H:i:s', $updatedAt);
         $this->updatedAt = $updatedAt;
         return $this;
     }

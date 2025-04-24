@@ -130,6 +130,14 @@ readonly class KnowledgeBaseFragmentDomainService
     }
 
     /**
+     * @return array<KnowledgeBaseFragmentEntity>
+     */
+    public function getByIds(KnowledgeBaseDataIsolation $dataIsolation, array $ids): array
+    {
+        return $this->knowledgeBaseFragmentRepository->getByIds($dataIsolation, $ids);
+    }
+
+    /**
      * @return array<string, KnowledgeSyncStatus>
      */
     public function getFinalSyncStatusByDocumentCodes(KnowledgeBaseDataIsolation $dataIsolation, array $documentCodes): array
