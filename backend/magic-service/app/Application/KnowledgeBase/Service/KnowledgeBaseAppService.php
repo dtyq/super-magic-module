@@ -52,7 +52,6 @@ class KnowledgeBaseAppService extends AbstractKnowledgeAppService
             $magicFlowKnowledgeEntity->setModel($oldKnowledge->getModel());
             $magicFlowKnowledgeEntity->setVectorDB($oldKnowledge->getVectorDB());
         }
-
         // 创建的才需要设置
         if ($magicFlowKnowledgeEntity->shouldCreate()) {
             // 设置嵌入模型和向量数据库

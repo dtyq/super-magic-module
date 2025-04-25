@@ -173,6 +173,9 @@ class KnowledgeBaseEntity extends AbstractKnowledgeBaseEntity
         $magicFlowKnowledgeEntity->setModifier($this->creator);
         $magicFlowKnowledgeEntity->setUpdatedAt($this->createdAt);
         $magicFlowKnowledgeEntity->setIcon($this->icon);
+        $magicFlowKnowledgeEntity->setFragmentConfig($this->fragmentConfig);
+        $magicFlowKnowledgeEntity->setEmbeddingConfig($this->embeddingConfig);
+        $magicFlowKnowledgeEntity->setRetrieveConfig($this->retrieveConfig);
         if (! empty($this->version)) {
             $magicFlowKnowledgeEntity->setVersion($this->version);
         }
