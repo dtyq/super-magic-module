@@ -286,7 +286,7 @@ class MagicAgentApi extends AbstractApi
     {
         /** @var MagicUserAuthorization $authorization */
         $authorization = $this->getAuthorization();
-        $agentVersionId = $agentVersionId ?? $request->input('agent_version_id');
+        $agentVersionId = $agentVersionId ?? $request->input('bot_version_id');
         $magicAgentVersionEntity = $this->magicAgentAppService->getAgentVersionById($agentVersionId, $authorization);
         $userDTO = MagicUserEntity::fromMagicAgentVersionEntity($magicAgentVersionEntity);
         $aiCode = $magicAgentVersionEntity->getFlowCode();
