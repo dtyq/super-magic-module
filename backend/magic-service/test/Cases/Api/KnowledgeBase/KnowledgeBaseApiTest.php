@@ -10,8 +10,8 @@ namespace HyperfTest\Cases\Api\KnowledgeBase;
 use App\Domain\KnowledgeBase\Entity\ValueObject\FragmentMode;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeType;
 use App\Domain\KnowledgeBase\Entity\ValueObject\SearchType;
-use App\Domain\KnowledgeBase\Entity\ValueObject\TextPreprocessRule;
 use App\ErrorCode\FlowErrorCode;
+use App\Infrastructure\Util\Text\TextPreprocess\ValueObject\TextPreprocessRule;
 use Hyperf\Snowflake\IdGeneratorInterface;
 use HyperfTest\HttpTestCase;
 

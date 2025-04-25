@@ -7,10 +7,10 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Core;
 
-use App\Infrastructure\Core\Exception\BusinessException;
 use Hyperf\HttpServer\Contract\RequestInterface;
 use Hyperf\HttpServer\Router\Dispatched;
 use Hyperf\Validation\Contract\ValidatorFactoryInterface;
+use Hyperf\Validation\ValidationException;
 
 use function di;
 
@@ -42,8 +42,7 @@ abstract class AbstractRequestDTO extends AbstractDTO
         $messages = static::getHyperfValidationMessage();
         $validator = di(ValidatorFactoryInterface::class)->make($params, $rules, $messages);
         if ($validator->fails()) {
-            $errMsg = $validator->errors()->first();
-            throw new BusinessException($errMsg);
+            throw new ValidationException($validator);
         }
         $validator->validated();
         return $params;
