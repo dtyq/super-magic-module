@@ -8,6 +8,8 @@ declare(strict_types=1);
 namespace App\Interfaces\KnowledgeBase\DTO;
 
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseEntity;
+use App\Domain\KnowledgeBase\Entity\ValueObject\FragmentConfig;
+use App\Domain\KnowledgeBase\Entity\ValueObject\RetrieveConfig;
 use App\Interfaces\Flow\DTO\AbstractFlowDTO;
 use App\Interfaces\Kernel\Assembler\OperatorAssembler;
 
@@ -52,6 +54,47 @@ class KnowledgeBaseListDTO extends AbstractFlowDTO
     public int $wordCount = 0;
 
     public int $documentCount = 0;
+
+    public ?RetrieveConfig $retrieveConfig = null;
+
+    public ?FragmentConfig $fragmentConfig = null;
+
+    public ?array $embeddingConfig = [];
+
+    public function getRetrieveConfig(): ?RetrieveConfig
+    {
+        return $this->retrieveConfig;
+    }
+
+    public function setRetrieveConfig(null|array|RetrieveConfig $retrieveConfig): static
+    {
+        is_array($retrieveConfig) && $retrieveConfig = RetrieveConfig::fromArray($retrieveConfig);
+        $this->retrieveConfig = $retrieveConfig;
+        return $this;
+    }
+
+    public function getFragmentConfig(): ?FragmentConfig
+    {
+        return $this->fragmentConfig;
+    }
+
+    public function setFragmentConfig(null|array|FragmentConfig $fragmentConfig): static
+    {
+        is_array($fragmentConfig) && $fragmentConfig = FragmentConfig::fromArray($fragmentConfig);
+        $this->fragmentConfig = $fragmentConfig;
+        return $this;
+    }
+
+    public function getEmbeddingConfig(): ?array
+    {
+        return $this->embeddingConfig;
+    }
+
+    public function setEmbeddingConfig(?array $embeddingConfig): static
+    {
+        $this->embeddingConfig = $embeddingConfig;
+        return $this;
+    }
 
     public function getExpectedNum(): int
     {
@@ -229,6 +272,7 @@ class KnowledgeBaseListDTO extends AbstractFlowDTO
     public static function fromEntity(KnowledgeBaseEntity $entity, array $users = [], array $knowledgeBaseDocumentCountMap = []): KnowledgeBaseListDTO
     {
         $listDTO = new KnowledgeBaseListDTO($entity->toArray());
+        // 兼容旧知识库逻辑，旧知识库逻辑id为code
         $listDTO->setId($entity->getCode());
         $listDTO->setCode($entity->getCode());
         $listDTO->setCreator($entity->getCreator());
@@ -241,6 +285,9 @@ class KnowledgeBaseListDTO extends AbstractFlowDTO
         $listDTO->setExpectedNum($entity->getExpectedNum());
         $listDTO->setCompletedNum($entity->getCompletedNum());
         $listDTO->setWordCount($entity->getWordCount());
+        $listDTO->setRetrieveConfig($entity->getRetrieveConfig());
+        $listDTO->setEmbeddingConfig($entity->getEmbeddingConfig());
+        $listDTO->setFragmentConfig($entity->getFragmentConfig());
         $listDTO->setDocumentCount($knowledgeBaseDocumentCountMap[$entity->getCode()] ?? 0);
         return $listDTO;
     }

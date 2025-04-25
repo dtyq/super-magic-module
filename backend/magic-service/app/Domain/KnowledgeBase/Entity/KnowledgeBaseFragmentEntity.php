@@ -9,11 +9,11 @@ namespace App\Domain\KnowledgeBase\Entity;
 
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeSyncStatus;
 use App\ErrorCode\FlowErrorCode;
-use App\Infrastructure\Core\AbstractEntity;
 use App\Infrastructure\Core\Embeddings\VectorStores\PointInfo;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use DateTime;
 use Hyperf\Codec\Json;
+use Hyperf\Snowflake\IdGeneratorInterface;
 use Hyperf\Stringable\Str;
 
 use function mb_strlen;
@@ -21,7 +21,7 @@ use function mb_strlen;
 /**
  * 向量知识库文本片段.
  */
-class KnowledgeBaseFragmentEntity extends AbstractEntity
+class KnowledgeBaseFragmentEntity extends AbstractKnowledgeBaseEntity
 {
     public const string PAYLOAD_PREFIX = '#';
 
@@ -262,8 +262,9 @@ class KnowledgeBaseFragmentEntity extends AbstractEntity
         return $this->syncStatus;
     }
 
-    public function setSyncStatus(KnowledgeSyncStatus $syncStatus): self
+    public function setSyncStatus(int|KnowledgeSyncStatus $syncStatus): self
     {
+        is_int($syncStatus) && $syncStatus = KnowledgeSyncStatus::from($syncStatus);
         $this->syncStatus = $syncStatus;
         return $this;
     }
@@ -306,8 +307,9 @@ class KnowledgeBaseFragmentEntity extends AbstractEntity
         return $this->createdAt;
     }
 
-    public function setCreatedAt(DateTime $createdAt): self
+    public function setCreatedAt(DateTime|string $createdAt): self
     {
+        is_string($createdAt) && $createdAt = DateTime::createFromFormat('Y-m-d H:i:s', $createdAt);
         $this->createdAt = $createdAt;
         return $this;
     }
@@ -328,8 +330,9 @@ class KnowledgeBaseFragmentEntity extends AbstractEntity
         return $this->updatedAt;
     }
 
-    public function setUpdatedAt(DateTime $updatedAt): self
+    public function setUpdatedAt(DateTime|string $updatedAt): self
     {
+        is_string($updatedAt) && $updatedAt = DateTime::createFromFormat('Y-m-d H:i:s', $updatedAt);
         $this->updatedAt = $updatedAt;
         return $this;
     }
@@ -366,6 +369,39 @@ class KnowledgeBaseFragmentEntity extends AbstractEntity
     {
         $this->wordCount = $wordCount;
         return $this;
+    }
+
+    /**
+     * @param array<string> $fragmentContents
+     * @return array<KnowledgeBaseFragmentEntity>
+     */
+    public static function fromFragmentContents(array $fragmentContents): array
+    {
+        $entities = [];
+        $now = new DateTime();
+
+        foreach ($fragmentContents as $content) {
+            $entity = new self();
+            $entity->setId(di(IdGeneratorInterface::class)->generate());
+            $entity->setContent($content);
+            $entity->setPointId(md5($content));
+            $entity->setWordCount(mb_strlen($content));
+            $entity->setKnowledgeCode('');
+            $entity->setDocumentCode('');
+            $entity->setBusinessId('');
+            $entity->setCreator('');
+            $entity->setCreatedAt($now);
+            $entity->setModifier('');
+            $entity->setUpdatedAt($now);
+            $entity->setMetadata([]);
+            $entity->setSyncStatus(KnowledgeSyncStatus::NotSynced);
+            $entity->setSyncTimes(0);
+            $entity->setSyncStatusMessage('');
+
+            $entities[] = $entity;
+        }
+
+        return $entities;
     }
 
     private function checkMetadata(): self

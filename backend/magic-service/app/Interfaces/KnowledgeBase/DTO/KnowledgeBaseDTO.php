@@ -8,6 +8,8 @@ declare(strict_types=1);
 namespace App\Interfaces\KnowledgeBase\DTO;
 
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseEntity;
+use App\Domain\KnowledgeBase\Entity\ValueObject\FragmentConfig;
+use App\Domain\KnowledgeBase\Entity\ValueObject\RetrieveConfig;
 use App\Interfaces\Flow\DTO\AbstractFlowDTO;
 
 class KnowledgeBaseDTO extends AbstractFlowDTO
@@ -66,6 +68,47 @@ class KnowledgeBaseDTO extends AbstractFlowDTO
     public int $wordCount = 0;
 
     public int $documentCount = 0;
+
+    public ?RetrieveConfig $retrieveConfig;
+
+    public ?FragmentConfig $fragmentConfig;
+
+    public ?array $embeddingConfig = [];
+
+    public function getRetrieveConfig(): ?RetrieveConfig
+    {
+        return $this->retrieveConfig;
+    }
+
+    public function setRetrieveConfig(null|array|RetrieveConfig $retrieveConfig): static
+    {
+        is_array($retrieveConfig) && $retrieveConfig = RetrieveConfig::fromArray($retrieveConfig);
+        $this->retrieveConfig = $retrieveConfig;
+        return $this;
+    }
+
+    public function getFragmentConfig(): ?FragmentConfig
+    {
+        return $this->fragmentConfig;
+    }
+
+    public function setFragmentConfig(null|array|FragmentConfig $fragmentConfig): static
+    {
+        is_array($fragmentConfig) && $fragmentConfig = FragmentConfig::fromArray($fragmentConfig);
+        $this->fragmentConfig = $fragmentConfig;
+        return $this;
+    }
+
+    public function getEmbeddingConfig(): ?array
+    {
+        return $this->embeddingConfig;
+    }
+
+    public function setEmbeddingConfig(?array $embeddingConfig): static
+    {
+        $this->embeddingConfig = $embeddingConfig;
+        return $this;
+    }
 
     public function getUserOperation(): int
     {

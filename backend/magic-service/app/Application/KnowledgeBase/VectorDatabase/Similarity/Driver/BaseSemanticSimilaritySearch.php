@@ -57,7 +57,7 @@ class BaseSemanticSimilaritySearch implements SemanticSimilaritySearchInterface
         );
         foreach ($points as $point) {
             $fragment = KnowledgeBaseFragmentEntity::createByPointInfo($point, $knowledgeBaseEntity->getCode());
-            $result[] = KnowledgeRetrievalResult::fromFragment((string) $fragment->getId(), $fragment->getContent(), $fragment->getBusinessId(), $fragment->getMetadata());
+            $result[] = KnowledgeRetrievalResult::fromFragment((string) $fragment->getId(), $fragment->getContent(), $fragment->getBusinessId(), $fragment->getMetadata(), $fragment->getScore());
             if (count($result) >= $filter->getLimit()) {
                 break;
             }

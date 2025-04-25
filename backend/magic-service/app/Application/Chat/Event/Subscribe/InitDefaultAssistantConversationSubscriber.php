@@ -30,30 +30,36 @@ class InitDefaultAssistantConversationSubscriber extends ConsumerMessage
     private LoggerInterface $logger;
 
     public function __construct(
-        protected MagicAgentAppService $magicAgentAppService,
-        protected MagicAgentDomainService $magicAgentDomainService,
-        protected MagicUserDomainService $magicUserDomainService,
+        protected MagicAgentAppService           $magicAgentAppService,
+        protected MagicAgentDomainService        $magicAgentDomainService,
+        protected MagicUserDomainService         $magicUserDomainService,
         protected MagicAgentVersionDomainService $magicAgentVersionDomainService,
-        protected MagicUserAuthorization $magicUserAuthorization,
-        protected MagicAccountAppService $magicAccountAppService,
-    ) {
+        protected MagicUserAuthorization         $magicUserAuthorization,
+        protected MagicAccountAppService         $magicAccountAppService,
+    )
+    {
         $this->logger = di(LoggerFactory::class)->get(get_class($this));
     }
 
     public function consumeMessage($data, AMQPMessage $message): Result
     {
-        $data['user_entity']['user_type'] = UserType::tryFrom($data['user_entity']['user_type']);
-        $data['user_entity']['status'] = UserStatus::tryFrom($data['user_entity']['status']);
-        $data['user_entity']['like_num'] = (int) $data['user_entity']['like_num'];
-        /** @var MagicUserEntity $userEntity */
-        $userEntity = new MagicUserEntity($data['user_entity']);
-        /** @var array<string> $defaultConversationAICodes */
-        $defaultConversationAICodes = $data['default_conversation_ai_codes'];
-        // 先批量注册，防止组织下没有该助理用户.
-        $this->batchAiRegister($userEntity, $defaultConversationAICodes);
-        // 初始化默认会话
-        $this->magicAgentAppService->initDefaultAssistantConversation($userEntity, $defaultConversationAICodes);
-        return Result::ACK;
+        try {
+//            $data['user_entity']['user_type'] = UserType::tryFrom($data['user_entity']['user_type']);
+//            $data['user_entity']['status'] = UserStatus::tryFrom($data['user_entity']['status']);
+//            $data['user_entity']['like_num'] = (int)$data['user_entity']['like_num'];
+//            /** @var MagicUserEntity $userEntity */
+//            $userEntity = new MagicUserEntity($data['user_entity']);
+//            /** @var array<string> $defaultConversationAICodes */
+//            $defaultConversationAICodes = $data['default_conversation_ai_codes'];
+//            // 先批量注册，防止组织下没有该助理用户.
+//            $this->batchAiRegister($userEntity, $defaultConversationAICodes);
+//            // 初始化默认会话
+//            $this->magicAgentAppService->initDefaultAssistantConversation($userEntity, $defaultConversationAICodes);
+        } catch (Throwable) {
+
+        } finally {
+            return Result::ACK;
+        }
     }
 
     /**

@@ -12,7 +12,9 @@ use App\Domain\KnowledgeBase\Entity\ValueObject\Query\KnowledgeBaseFragmentQuery
 use App\Infrastructure\Core\ValueObject\Page;
 use App\Interfaces\Kernel\DTO\PageDTO;
 use App\Interfaces\KnowledgeBase\Assembler\KnowledgeBaseFragmentAssembler;
+use App\Interfaces\KnowledgeBase\DTO\KnowledgeBaseFragmentDTO;
 use App\Interfaces\KnowledgeBase\DTO\Request\CreateFragmentRequestDTO;
+use App\Interfaces\KnowledgeBase\DTO\Request\FragmentPreviewRequestDTO;
 use App\Interfaces\KnowledgeBase\DTO\Request\GetFragmentListRequestDTO;
 use App\Interfaces\KnowledgeBase\DTO\Request\UpdateFragmentRequestDTO;
 use DateTime;
@@ -73,5 +75,28 @@ class KnowledgeBaseFragmentApi extends AbstractKnowledgeBaseApi
     public function destroy(string $knowledgeBaseCode, string $documentCode, int $id)
     {
         $this->knowledgeBaseFragmentAppService->destroy($this->getAuthorization(), $knowledgeBaseCode, $documentCode, $id);
+    }
+
+    public function fragmentPreview()
+    {
+        $dto = FragmentPreviewRequestDTO::fromRequest($this->request);
+        $userAuthorization = $this->getAuthorization();
+
+        $result = $this->knowledgeBaseFragmentAppService->fragmentPreview($userAuthorization, $dto->getDocumentFile(), $dto->getFragmentConfig());
+        $list = array_map(function (KnowledgeBaseFragmentEntity $entity) {
+            return KnowledgeBaseFragmentAssembler::entityToDTO($entity);
+        }, $result);
+        return new PageDTO(1, count($list), $list);
+    }
+
+    /**
+     * @return array<KnowledgeBaseFragmentDTO>
+     */
+    public function similarity(string $code): array
+    {
+        $query = $this->request->input('query', '');
+        $userAuthorization = $this->getAuthorization();
+        $entities = $this->knowledgeBaseFragmentAppService->similarity($userAuthorization, $code, $query);
+        return array_map(fn (KnowledgeBaseFragmentEntity $entity) => KnowledgeBaseFragmentAssembler::entityToDTO($entity), $entities);
     }
 }

@@ -46,4 +46,16 @@ interface DataIsolationInterface
     public function disabled(): static;
 
     public function extends(DataIsolationInterface $parentDataIsolation): void;
+
+    public function isContainOfficialOrganization(): bool;
+
+    public function setContainOfficialOrganization(bool $containOfficialOrganization): void;
+
+    public function isOnlyOfficialOrganization(): bool;
+
+    public function setOnlyOfficialOrganization(bool $onlyOfficialOrganization): void;
+
+    public function getOfficialOrganizationCodes(): array;
+
+    public function setOfficialOrganizationCodes(array $officialOrganizationCodes): void;
 }

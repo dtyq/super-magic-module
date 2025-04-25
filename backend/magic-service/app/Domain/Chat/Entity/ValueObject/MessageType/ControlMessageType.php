@@ -99,6 +99,12 @@ enum ControlMessageType: string
     // 添加好友申请
     case AddFriendApply = 'add_friend_apply';
 
+    /**
+     * 未知消息。
+     * 由于版本迭代，发版时间差异等原因，可能产生未知类型的消息。
+     */
+    case Unknown = 'unknown';
+
     public function getName(): string
     {
         return $this->value;
@@ -122,7 +128,6 @@ enum ControlMessageType: string
     {
         return match ($this) {
             self::AddFriendSuccess,
-            self::SeenMessages,
             self::OpenConversation => true,
             default => false,
         };

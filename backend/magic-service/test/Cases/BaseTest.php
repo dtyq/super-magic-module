@@ -7,7 +7,6 @@ declare(strict_types=1);
 
 namespace HyperfTest\Cases;
 
-use App\Infrastructure\Core\Contract\Session\SessionInterface;
 use HyperfTest\HttpTestCase;
 
 /**
@@ -17,7 +16,6 @@ class BaseTest extends HttpTestCase
 {
     public function testO()
     {
-        $sessionInterface = di(SessionInterface::class);
-        var_dump(get_class($sessionInterface));
+        $this->assertTrue(defined('MAGIC_ACCESS_TOKEN'));
     }
 }

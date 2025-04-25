@@ -7,8 +7,10 @@ declare(strict_types=1);
 
 namespace HyperfTest\Cases\Api\KnowledgeBase;
 
+use App\Domain\KnowledgeBase\Entity\ValueObject\FragmentMode;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeType;
 use App\Domain\KnowledgeBase\Entity\ValueObject\SearchType;
+use App\Domain\KnowledgeBase\Entity\ValueObject\TextPreprocessRule;
 use App\ErrorCode\FlowErrorCode;
 use Hyperf\Snowflake\IdGeneratorInterface;
 use HyperfTest\HttpTestCase;
@@ -35,8 +37,7 @@ class KnowledgeBaseApiTest extends HttpTestCase
             'icon' => 'DT001/588417216353927169/4c9184f37cff01bcdc32dc486ec36961/Oz_iUDWyjYwLxME31WwFn.jpg',
             'enabled' => true,
             'is_draft' => true,
-            'fragment_config' => [],
-            'embedding_config' => [],
+            'embedding_config' => ['model_id' => 'dmeta-embedding'],
             'retrieve_config' => [
                 'top_k' => 4,
                 'weights' => null,
@@ -45,6 +46,20 @@ class KnowledgeBaseApiTest extends HttpTestCase
                 'score_threshold' => 0.67,
                 'reranking_enable' => true,
                 'score_threshold_enabled' => true,
+            ],
+            'fragment_config' => [
+                'mode' => FragmentMode::NORMAL->value,
+                'normal' => [
+                    'text_preprocess_rule' => [
+                        TextPreprocessRule::REPLACE_WHITESPACE->value,
+                        TextPreprocessRule::REMOVE_URL_EMAIL->value,
+                    ],
+                    'segment_rule' => [
+                        'separator' => '\n',
+                        'chunk_size' => 50,
+                        'chunk_overlap' => 10,
+                    ],
+                ],
             ],
         ];
 
@@ -127,6 +142,32 @@ class KnowledgeBaseApiTest extends HttpTestCase
             'name' => '更新后的知识库',
             'description' => '这是更新后的知识库描述',
             'enabled' => false,
+            'retrieve_config' => [
+                'top_k' => 4,
+                'weights' => null,
+                'search_method' => 'graph_search',
+                'reranking_model' => ['reranking_model_name' => 'BAAI/bge-reranker-large'],
+                'score_threshold' => 0.67,
+                'reranking_enable' => true,
+                'score_threshold_enabled' => true,
+            ],
+            'fragment_config' => [
+                'mode' => FragmentMode::NORMAL->value,
+                'normal' => [
+                    'text_preprocess_rule' => [
+                        TextPreprocessRule::REPLACE_WHITESPACE->value,
+                        TextPreprocessRule::REMOVE_URL_EMAIL->value,
+                    ],
+                    'segment_rule' => [
+                        'separator' => ' ',
+                        'chunk_size' => 50,
+                        'chunk_overlap' => 10,
+                    ],
+                ],
+            ],
+            'embedding_config' => [
+                'model_id' => 'dmeta-embedding',
+            ],
         ];
 
         $this->updateKnowledgeBase($code, $data);
@@ -136,6 +177,53 @@ class KnowledgeBaseApiTest extends HttpTestCase
         $this->assertSame('更新后的知识库', $knowledgeBase['name']);
         $this->assertSame('这是更新后的知识库描述', $knowledgeBase['description']);
         $this->assertFalse($knowledgeBase['enabled']);
+        $this->assertSame([
+            'search_method' => 'graph_search',
+            'top_k' => 4,
+            'score_threshold' => 0.67,
+            'score_threshold_enabled' => true,
+            'reranking_mode' => 'weighted_score',
+            'reranking_enable' => true,
+            'weights' => [
+                'vector_setting' => [
+                    'vector_weight' => 1,
+                    'embedding_model_name' => '',
+                    'embedding_provider_name' => '',
+                ],
+                'keyword_setting' => [
+                    'keyword_weight' => 0,
+                ],
+                'graph_setting' => [
+                    'relation_weight' => 0.5,
+                    'max_depth' => 2,
+                    'include_properties' => true,
+                    'timeout' => 5,
+                    'retry_count' => 3,
+                ],
+            ],
+            'reranking_model' => [
+                'reranking_model_name' => 'BAAI/bge-reranker-large',
+                'reranking_provider_name' => '',
+            ],
+        ], $knowledgeBase['retrieve_config']);
+
+        $this->assertSame([
+            'mode' => FragmentMode::NORMAL->value,
+            'normal' => [
+                'text_preprocess_rule' => [
+                    TextPreprocessRule::REPLACE_WHITESPACE->value,
+                    TextPreprocessRule::REMOVE_URL_EMAIL->value,
+                ],
+                'segment_rule' => [
+                    'separator' => ' ',
+                    'chunk_size' => 50,
+                    'chunk_overlap' => 10,
+                ],
+            ],
+            'parent_child' => null,
+        ], $knowledgeBase['fragment_config']);
+
+        $this->assertSame(['model_id' => 'dmeta-embedding'], $knowledgeBase['embedding_config']);
     }
 
     public function testDeleteKnowledgeBase()
@@ -162,9 +250,22 @@ class KnowledgeBaseApiTest extends HttpTestCase
         $this->assertIsInt($document['doc_type']);
         $this->assertTrue($document['enabled']);
         $this->assertSame(['source' => 'test'], $document['doc_metadata']);
-        $this->assertSame(['chunk_size' => 500], $document['fragment_config']);
-        $this->assertSame(['model' => 'test-embedding'], $document['embedding_config']);
-        $this->assertSame(['engine' => 'test-db'], $document['vector_db_config']);
+        $this->assertSame([
+            'mode' => FragmentMode::NORMAL->value,
+            'normal' => [
+                'text_preprocess_rule' => [
+                    TextPreprocessRule::REPLACE_WHITESPACE->value,
+                    TextPreprocessRule::REMOVE_URL_EMAIL->value,
+                ],
+                'segment_rule' => [
+                    'separator' => '\n\n',
+                    'chunk_size' => 50,
+                    'chunk_overlap' => 10,
+                ],
+            ],
+            'parent_child' => null,
+        ], $document['fragment_config']);
+        $this->assertSame(['model_id' => 'dmeta-embedding'], $document['embedding_config']);
         $this->assertSame([], $document['retrieve_config']);
         $this->assertArrayHasKey('knowledge_base_code', $document);
     }
@@ -194,10 +295,6 @@ class KnowledgeBaseApiTest extends HttpTestCase
         $this->assertSame($updateData['name'], $res['data']['name']);
         $this->assertSame($updateData['enabled'], $res['data']['enabled']);
         $this->assertSame($updateData['doc_metadata'], $res['data']['doc_metadata']);
-        $this->assertSame($updateData['fragment_config'], $res['data']['fragment_config']);
-        $this->assertSame($updateData['embedding_config'], $res['data']['embedding_config']);
-        $this->assertSame($updateData['vector_db_config'], $res['data']['vector_db_config']);
-        $this->assertSame($updateData['retrieve_config'], $res['data']['retrieve_config']);
     }
 
     public function testGetDocumentDetail()
@@ -353,7 +450,7 @@ class KnowledgeBaseApiTest extends HttpTestCase
         $this->assertArrayHasKey('total', $res['data']);
         $this->assertArrayHasKey('list', $res['data']);
         $this->assertIsArray($res['data']['list']);
-        $this->assertCount(4, $res['data']['list']);
+        $this->assertCount(5, $res['data']['list']);
     }
 
     public function testGetFragmentDetail()
@@ -381,6 +478,7 @@ class KnowledgeBaseApiTest extends HttpTestCase
         $this->assertArrayHasKey('knowledge_base_code', $data);
         $this->assertArrayHasKey('created_at', $data);
         $this->assertArrayHasKey('updated_at', $data);
+        $this->assertArrayHasKey('word_count', $data);
     }
 
     public function testDestroyFragment()
@@ -416,6 +514,97 @@ class KnowledgeBaseApiTest extends HttpTestCase
     }
 
     /**
+     * 测试知识库片段预览功能.
+     */
+    public function testFragmentPreview()
+    {
+        $data = [
+            'document_file' => [
+                'name' => 'test.md',
+                'key' => 'test001/open/4c9184f37cff01bcdc32dc486ec36961/9w-fHAaMI4hY3VEIhhozL.md',
+            ],
+            'fragment_config' => [
+                'mode' => FragmentMode::NORMAL->value,
+                'normal' => [
+                    'text_preprocess_rule' => [
+                        TextPreprocessRule::REPLACE_WHITESPACE->value,
+                        TextPreprocessRule::REMOVE_URL_EMAIL->value,
+                    ],
+                    'segment_rule' => [
+                        'separator' => '\n',
+                        'chunk_size' => 50,
+                        'chunk_overlap' => 10,
+                    ],
+                ],
+            ],
+        ];
+
+        $res = $this->post(
+            self::API . '/fragments/preview',
+            $data,
+            $this->getCommonHeaders()
+        );
+
+        $this->assertSame(1000, $res['code'], $res['message']);
+        $this->assertArrayHasKey('data', $res);
+        $this->assertArrayHasKey('total', $res['data']);
+        $this->assertArrayHasKey('list', $res['data']);
+        $this->assertIsArray($res['data']['list']);
+
+        if (! empty($res['data']['list'])) {
+            $fragment = $res['data']['list'][0];
+            $this->assertArrayHasKey('id', $fragment);
+            $this->assertArrayHasKey('content', $fragment);
+            $this->assertArrayHasKey('metadata', $fragment);
+            $this->assertArrayHasKey('document_code', $fragment);
+            $this->assertArrayHasKey('knowledge_base_code', $fragment);
+            $this->assertArrayHasKey('created_at', $fragment);
+            $this->assertArrayHasKey('updated_at', $fragment);
+            $this->assertArrayHasKey('word_count', $fragment);
+        }
+    }
+
+    public function testSimilarity()
+    {
+        // 创建测试知识库
+        $knowledgeBase = $this->createKnowledgeBase();
+        $code = $knowledgeBase['code'];
+
+        // 创建测试文档
+        $document = $this->createDocument([], $code);
+
+        // 创建测试片段
+        $fragment = $this->createFragment([
+            'content' => '这是一个测试片段内容，用于测试相似度查询功能',
+        ], $document['code'], $code);
+
+        // 执行相似度查询
+        $query = '测试相似度查询';
+        $res = $this->post(
+            sprintf('%s/%s/fragments/similarity', self::API, $code),
+            ['query' => $query],
+            $this->getCommonHeaders()
+        );
+
+        $this->assertSame(1000, $res['code'], $res['message']);
+        $this->assertIsArray($res['data']);
+
+        // 验证返回结果的结构
+        if (! empty($res['data'])) {
+            $result = $res['data'][0];
+            $this->assertArrayHasKey('id', $result);
+            $this->assertArrayHasKey('content', $result);
+            $this->assertArrayHasKey('metadata', $result);
+            $this->assertArrayHasKey('score', $result);
+            $this->assertArrayHasKey('document_code', $result);
+            $this->assertArrayHasKey('knowledge_base_code', $result);
+
+            // 验证返回的内容包含查询关键词
+            $this->assertStringContainsString('测试', $result['content']);
+        }
+    }
+
+    /**
      * 创建测试文档并返回文档数据.
      */
     protected function createDocument(array $overrideData = [], ?string $knowledgeBaseCode = null): array
@@ -429,10 +618,6 @@ class KnowledgeBaseApiTest extends HttpTestCase
             'doc_type' => 1,
             'enabled' => true,
             'doc_metadata' => ['source' => 'test'],
-            'fragment_config' => ['chunk_size' => 500],
-            'embedding_config' => ['model' => 'test-embedding'],
-            'vector_db_config' => ['engine' => 'test-db'],
-            'retrieve_config' => [],
             'document_file' => ['name' => 'test.txt', 'key' => 'test001/open/4c9184f37cff01bcdc32dc486ec36961/9w-fHAaMI4hY3VEIhhozL.md'],
         ];
 
@@ -470,6 +655,23 @@ class KnowledgeBaseApiTest extends HttpTestCase
             'enabled' => true,
             'is_draft' => true,
             'document_files' => [['name' => 'aaa.txt', 'key' => 'test001/open/4c9184f37cff01bcdc32dc486ec36961/9w-fHAaMI4hY3VEIhhozL.md']],
+            'fragment_config' => [
+                'mode' => FragmentMode::NORMAL->value,
+                'normal' => [
+                    'text_preprocess_rule' => [
+                        TextPreprocessRule::REPLACE_WHITESPACE->value,
+                        TextPreprocessRule::REMOVE_URL_EMAIL->value,
+                    ],
+                    'segment_rule' => [
+                        'separator' => '\n\n',
+                        'chunk_size' => 50,
+                        'chunk_overlap' => 10,
+                    ],
+                ],
+            ],
+            'embedding_config' => [
+                'model_id' => 'dmeta-embedding',
+            ],
         ], $data);
 
         $res = $this->post(self::API, $data, $this->getCommonHeaders());

@@ -11,6 +11,7 @@ use App\Domain\KnowledgeBase\Entity\KnowledgeBaseEntity;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeSyncStatus;
 use App\Domain\KnowledgeBase\Entity\ValueObject\RetrieveConfig;
 use App\Domain\KnowledgeBase\Repository\Persistence\Model\KnowledgeBaseModel;
+use Hyperf\Codec\Json;
 
 class MagicFlowKnowledgeFactory
 {
@@ -38,6 +39,8 @@ class MagicFlowKnowledgeFactory
         $entity->setCompletedNum($model->completed_num);
         $entity->setIcon($model->icon);
         $entity->setWordCount($model->word_count);
+        $entity->setFragmentConfig($model->fragment_config);
+        $entity->setEmbeddingConfig($model->embedding_config);
 
         // 处理检索配置
         if (! empty($model->retrieve_config)) {
@@ -82,6 +85,8 @@ class MagicFlowKnowledgeFactory
             'updated_at' => $entity->getUpdatedAt(),
             'expected_num' => $entity->getExpectedNum(),
             'completed_num' => $entity->getCompletedNum(),
+            'fragment_config' => $entity->getFragmentConfig()?->toArray(),
+            'embedding_config' => $entity->getEmbeddingConfig(),
             'icon' => $entity->getIcon(),
         ];
 

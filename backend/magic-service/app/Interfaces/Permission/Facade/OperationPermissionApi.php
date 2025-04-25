@@ -9,6 +9,7 @@ namespace App\Interfaces\Permission\Facade;
 
 use App\Application\Permission\Service\OperationPermissionAppService;
 use App\Domain\Permission\Entity\ValueObject\OperationPermission\ResourceType;
+use App\Infrastructure\Util\Auth\PermissionChecker;
 use App\Interfaces\Permission\Assembler\OperationPermissionAssembler;
 use App\Interfaces\Permission\DTO\ResourceAccessDTO;
 use App\Interfaces\Permission\DTO\ResourceTransferOwnerDTO;
@@ -56,5 +57,12 @@ class OperationPermissionApi extends AbstractPermissionApi
         $data = $this->operationPermissionAppService->listByResource($authorization, $resourceType, $resourceId);
 
         return OperationPermissionAssembler::createResourceAccessDTO($resourceType, $resourceId, $data['list'], $data['users'], $data['departments'], $data['groups']);
+    }
+
+    public function checkOrganizationAdmin(): array
+    {
+        $authorization = $this->getAuthorization();
+        $isAdmin = PermissionChecker::isOrganizationAdmin($authorization->getOrganizationCode(), $authorization->getMobile());
+        return ['is_admin' => $isAdmin];
     }
 }

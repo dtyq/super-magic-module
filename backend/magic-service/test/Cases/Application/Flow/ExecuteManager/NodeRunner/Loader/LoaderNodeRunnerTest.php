@@ -12,8 +12,8 @@ use App\Domain\Flow\Entity\ValueObject\Node;
 use App\Domain\Flow\Entity\ValueObject\NodeOutput;
 use App\Domain\Flow\Entity\ValueObject\NodeType;
 use App\Infrastructure\Core\Dag\VertexResult;
-use Connector\Component\ComponentFactory;
-use Connector\Component\Structure\StructureType;
+use Dtyq\FlowExprEngine\ComponentFactory;
+use Dtyq\FlowExprEngine\Structure\StructureType;
 use Hyperf\Codec\Json;
 use HyperfTest\Cases\Application\Flow\ExecuteManager\ExecuteManagerBaseTest;
 

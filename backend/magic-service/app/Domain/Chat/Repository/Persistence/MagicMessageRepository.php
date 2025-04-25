@@ -57,11 +57,11 @@ class MagicMessageRepository implements MagicMessageRepositoryInterface
         $this->magicMessage::query()->whereIn('magic_message_id', $magicMessageIds)->delete();
     }
 
-    public function updateMessageContent(MagicMessageEntity $messageEntity): void
+    public function updateMessageContent(MagicMessageEntity $messageEntity, array $messageContent): void
     {
         $this->magicMessage::query()->where('magic_message_id', $messageEntity->getMagicMessageId())->update(
             [
-                'content' => Json::encode($messageEntity->getContent()->toArray()),
+                'content' => Json::encode($messageContent),
             ]
         );
     }

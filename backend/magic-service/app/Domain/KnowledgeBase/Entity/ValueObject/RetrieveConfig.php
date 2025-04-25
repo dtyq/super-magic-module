@@ -25,13 +25,6 @@ class RetrieveConfig extends AbstractValueObject
     public const int CURRENT_VERSION = 1;
 
     /**
-     * 配置版本.
-     *
-     * 用于配置结构变更时的兼容性处理
-     */
-    private int $version = self::CURRENT_VERSION;
-
-    /**
      * 检索方法.
      *
      * 可选值：
@@ -42,24 +35,24 @@ class RetrieveConfig extends AbstractValueObject
      *
      * @see RetrievalMethod
      */
-    private string $searchMethod = RetrievalMethod::SEMANTIC_SEARCH;
+    protected string $searchMethod = RetrievalMethod::SEMANTIC_SEARCH;
 
     /**
      * 返回的最大结果数量.
      */
-    private int $topK = 3;
+    protected int $topK = 3;
 
     /**
      * 分数阈值
      *
      * 只返回相似度分数大于该阈值的结果
      */
-    private float $scoreThreshold = 0.5;
+    protected float $scoreThreshold = 0.5;
 
     /**
      * 是否启用分数阈值过滤.
      */
-    private bool $scoreThresholdEnabled = false;
+    protected bool $scoreThresholdEnabled = false;
 
     /**
      * 重排序模式.
@@ -70,19 +63,19 @@ class RetrieveConfig extends AbstractValueObject
      *
      * @see RerankMode
      */
-    private string $rerankingMode = RerankMode::WEIGHTED_SCORE;
+    protected string $rerankingMode = RerankMode::WEIGHTED_SCORE;
 
     /**
      * 是否启用重排序.
      */
-    private bool $rerankingEnable = false;
+    protected bool $rerankingEnable = false;
 
     /**
      * 权重配置.
      *
      * 包含向量检索和关键词检索的权重配置
      */
-    private array $weights = [
+    protected array $weights = [
         'vector_setting' => [
             'vector_weight' => 1.0,
             'embedding_model_name' => '',
@@ -105,10 +98,17 @@ class RetrieveConfig extends AbstractValueObject
      *
      * 包含重排序模型的相关配置参数
      */
-    private array $rerankingModel = [
+    protected array $rerankingModel = [
         'reranking_model_name' => '',
         'reranking_provider_name' => '',
     ];
+
+    /**
+     * 配置版本.
+     *
+     * 用于配置结构变更时的兼容性处理
+     */
+    private int $version = self::CURRENT_VERSION;
 
     /**
      * 获取配置版本.

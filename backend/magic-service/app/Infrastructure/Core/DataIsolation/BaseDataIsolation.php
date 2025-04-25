@@ -39,6 +39,21 @@ class BaseDataIsolation implements DataIsolationInterface
 
     private string $thirdPlatformOrganizationCode;
 
+    /**
+     * 是否包含官方组织.
+     */
+    private bool $containOfficialOrganization = false;
+
+    /**
+     * 是否仅仅包含官方组织.
+     */
+    private bool $onlyOfficialOrganization = false;
+
+    /**
+     * 官方组织codes.
+     */
+    private array $officialOrganizationCodes = [];
+
     public function __construct(string $currentOrganizationCode = '', string $userId = '', string $magicId = '')
     {
         $this->environment = app_env();
@@ -46,6 +61,11 @@ class BaseDataIsolation implements DataIsolationInterface
         $this->currentUserId = $userId;
         $this->magicId = $magicId;
         $this->thirdPlatformDataIsolationManager = di(ThirdPlatformDataIsolationManagerInterface::class);
+
+        if (config('office_organization')) {
+            // 目前只有 1 个官方组织
+            $this->officialOrganizationCodes = [config('office_organization')];
+        }
     }
 
     public static function createByBaseDataIsolation(BaseDataIsolation $baseDataIsolation): static
@@ -80,7 +100,18 @@ class BaseDataIsolation implements DataIsolationInterface
 
     public function getOrganizationCodes(): array
     {
-        return [$this->currentOrganizationCode];
+        if ($this->onlyOfficialOrganization) {
+            return $this->officialOrganizationCodes;
+        }
+        if (! empty($this->currentOrganizationCode)) {
+            $organizationCodes = [$this->currentOrganizationCode];
+        } else {
+            $organizationCodes = [];
+        }
+        if ($this->containOfficialOrganization) {
+            $organizationCodes = array_merge($organizationCodes, $this->officialOrganizationCodes);
+        }
+        return array_unique($organizationCodes);
     }
 
     public function getCurrentOrganizationCode(): string
@@ -169,5 +200,35 @@ class BaseDataIsolation implements DataIsolationInterface
     {
         $this->currentOrganizationCode = $currentOrganizationCode;
         return $this;
+    }
+
+    public function isContainOfficialOrganization(): bool
+    {
+        return $this->containOfficialOrganization;
+    }
+
+    public function setContainOfficialOrganization(bool $containOfficialOrganization): void
+    {
+        $this->containOfficialOrganization = $containOfficialOrganization;
+    }
+
+    public function isOnlyOfficialOrganization(): bool
+    {
+        return $this->onlyOfficialOrganization;
+    }
+
+    public function setOnlyOfficialOrganization(bool $onlyOfficialOrganization): void
+    {
+        $this->onlyOfficialOrganization = $onlyOfficialOrganization;
+    }
+
+    public function getOfficialOrganizationCodes(): array
+    {
+        return $this->officialOrganizationCodes;
+    }
+
+    public function setOfficialOrganizationCodes(array $officialOrganizationCodes): void
+    {
+        $this->officialOrganizationCodes = $officialOrganizationCodes;
     }
 }

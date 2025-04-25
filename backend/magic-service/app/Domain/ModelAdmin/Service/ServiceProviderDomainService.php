@@ -123,6 +123,9 @@ class ServiceProviderDomainService
     {
         $serviceProviderModelsEntity->valid();
 
+        if ($serviceProviderModelsEntity->getModelType() === ModelType::EMBEDDING->value) {
+            $serviceProviderModelsEntity->getConfig()->setSupportEmbedding(true);
+        }
         $organizationCode = $serviceProviderModelsEntity->getOrganizationCode();
         $serviceProviderConfigEntity = $this->serviceProviderConfigRepository->getByIdAndOrganizationCode(
             (string) $serviceProviderModelsEntity->getServiceProviderConfigId(),

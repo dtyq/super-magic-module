@@ -26,8 +26,8 @@ class MagicAgentEventAppService implements AgentExecuteInterface
         $agentAccountEntity = $userCallAgentEvent->agentAccountEntity;
 
         // 流程开始执行前,触发开始输入事件
-        if ($seqEntity->canTriggerFlowOperateConversationStatus()) {
-            $this->magicConversationDomainService->agentOperateConversationStatus(
+        if ($seqEntity->canTriggerFlow()) {
+            $this->magicConversationDomainService->agentOperateConversationStatusV2(
                 ControlMessageType::StartConversationInput,
                 $seqEntity->getConversationId()
             );
@@ -38,8 +38,8 @@ class MagicAgentEventAppService implements AgentExecuteInterface
 
         // 流程执行结束，推送结束输入事件
         // ai准备开始发消息了,结束输入状态
-        if ($seqEntity->canTriggerFlowOperateConversationStatus()) {
-            $this->magicConversationDomainService->agentOperateConversationStatus(
+        if ($seqEntity->canTriggerFlow()) {
+            $this->magicConversationDomainService->agentOperateConversationStatusV2(
                 ControlMessageType::EndConversationInput,
                 $seqEntity->getConversationId()
             );

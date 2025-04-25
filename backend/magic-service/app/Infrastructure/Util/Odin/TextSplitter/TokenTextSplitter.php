@@ -76,6 +76,12 @@ class TokenTextSplitter extends TextSplitter
      */
     public function splitText(string $text): array
     {
+        // 检测并转换编码
+        $encoding = $this->detectEncoding($text);
+        if ($encoding !== 'UTF-8') {
+            $text = mb_convert_encoding($text, 'UTF-8', $encoding);
+        }
+
         // 使用固定分隔符进行初始分割
         $chunks = $this->fixedSeparator ? explode($this->fixedSeparator, $text) : [$text];
 
@@ -284,5 +290,34 @@ class TokenTextSplitter extends TextSplitter
 
             return $count;
         };
+    }
+
+    /**
+     * 检测文件内容的编码
+     */
+    private function detectEncoding(string $content): string
+    {
+        // 检查 BOM
+        if (str_starts_with($content, "\xEF\xBB\xBF")) {
+            return 'UTF-8';
+        }
+        if (str_starts_with($content, "\xFF\xFE")) {
+            return 'UTF-16LE';
+        }
+        if (str_starts_with($content, "\xFE\xFF")) {
+            return 'UTF-16BE';
+        }
+
+        // 尝试检测编码
+        $encoding = mb_detect_encoding($content, ['UTF-8', 'GBK', 'GB2312', 'BIG5', 'ASCII'], true);
+        if ($encoding === false) {
+            // 如果无法检测到编码，尝试使用 iconv 检测
+            $encoding = mb_detect_encoding($content, ['UTF-8', 'GBK', 'GB2312', 'BIG5', 'ASCII'], false);
+            if ($encoding === false) {
+                return 'UTF-8'; // 默认使用 UTF-8
+            }
+        }
+
+        return $encoding;
     }
 }

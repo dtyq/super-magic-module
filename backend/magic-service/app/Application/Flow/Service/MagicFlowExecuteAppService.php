@@ -54,7 +54,7 @@ class MagicFlowExecuteAppService extends AbstractFlowAppService
             ExceptionBuilder::throw(GenericErrorCode::SystemError, 'sender_seq_not_found');
         }
         $messageEntity = $senderEntities['message'] ?? null;
-        if (! $messageEntity instanceof MagicMessageEntity && ! $seqEntity->isIgnoreMessageEntity()) {
+        if (! $messageEntity instanceof MagicMessageEntity && ! $seqEntity->canTriggerFlow()) {
             ExceptionBuilder::throw(GenericErrorCode::SystemError, 'sender_message_not_found');
         }
 
@@ -80,7 +80,7 @@ class MagicFlowExecuteAppService extends AbstractFlowAppService
             userInfo: ['user_entity' => $senderUserEntity, 'account_entity' => $senderAccountEntity],
             messageInfo: ['message_entity' => $messageEntity, 'seq_entity' => $seqEntity],
             globalVariable: $magicFlow->getGlobalVariable(),
-            isIgnoreMessageEntity: $seqEntity->isIgnoreMessageEntity(),
+            isIgnoreMessageEntity: $seqEntity->canTriggerFlow(),
         );
         $operator = $this->createExecutionOperator($authorization);
         $operator->setSourceId('im_chat');

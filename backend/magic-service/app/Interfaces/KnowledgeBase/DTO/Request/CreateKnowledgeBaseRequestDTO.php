@@ -7,6 +7,7 @@ declare(strict_types=1);
 
 namespace App\Interfaces\KnowledgeBase\DTO\Request;
 
+use App\Domain\KnowledgeBase\Entity\ValueObject\FragmentConfig;
 use App\Domain\KnowledgeBase\Entity\ValueObject\RetrieveConfig;
 use App\Infrastructure\Core\AbstractRequestDTO;
 use App\Interfaces\KnowledgeBase\DTO\DocumentFileDTO;
@@ -21,14 +22,16 @@ class CreateKnowledgeBaseRequestDTO extends AbstractRequestDTO
 
     public bool $enabled;
 
-    public ?array $fragmentConfig = null;
-
     public ?array $embeddingConfig = null;
-
-    public ?array $retrieveConfig = null;
 
     /** @var array<DocumentFileDTO> */
     public array $documentFiles = [];
+
+    public FragmentConfig $fragmentConfig;
+
+    public RetrieveConfig $retrieveConfig;
+
+    public string $businessId = '';
 
     public function getName(): string
     {
@@ -63,14 +66,14 @@ class CreateKnowledgeBaseRequestDTO extends AbstractRequestDTO
         return $this;
     }
 
-    public function getFragmentConfig(): ?array
+    public function getFragmentConfig(): FragmentConfig
     {
         return $this->fragmentConfig;
     }
 
     public function setFragmentConfig(?array $fragmentConfig): self
     {
-        $this->fragmentConfig = $fragmentConfig;
+        $this->fragmentConfig = FragmentConfig::fromArray($fragmentConfig);
         return $this;
     }
 
@@ -85,13 +88,14 @@ class CreateKnowledgeBaseRequestDTO extends AbstractRequestDTO
         return $this;
     }
 
-    public function getRetrieveConfig(): ?array
+    public function getRetrieveConfig(): RetrieveConfig
     {
-        return $this->retrieveConfig ?? RetrieveConfig::createDefault()->toArray();
+        return $this->retrieveConfig ?? RetrieveConfig::createDefault();
     }
 
     public function setRetrieveConfig(?array $retrieveConfig): self
     {
+        $retrieveConfig = RetrieveConfig::fromArray($retrieveConfig);
         $this->retrieveConfig = $retrieveConfig;
         return $this;
     }
@@ -117,6 +121,16 @@ class CreateKnowledgeBaseRequestDTO extends AbstractRequestDTO
         $this->documentFiles = array_map(fn ($file) => new DocumentFileDTO($file), $documentFiles);
     }
 
+    public function getBusinessId(): string
+    {
+        return $this->businessId;
+    }
+
+    public function setBusinessId(string $businessId): void
+    {
+        $this->businessId = $businessId;
+    }
+
     protected static function getHyperfValidationRules(): array
     {
         return [
@@ -124,12 +138,34 @@ class CreateKnowledgeBaseRequestDTO extends AbstractRequestDTO
             'description' => 'string|max:255',
             'icon' => 'string|max:255',
             'enabled' => 'required|boolean',
-            'fragment_config' => 'array',
             'embedding_config' => 'array',
             'retrieve_config' => 'array',
             'document_files' => 'required|array',
             'document_files.*.name' => 'required|string',
             'document_files.*.key' => 'required|string',
+            // 分段设置
+            'fragment_config' => 'required|array',
+            'fragment_config.mode' => 'required|integer|in:1,2',
+            'fragment_config.normal' => 'required_if:fragment_config.mode,1|array',
+            'fragment_config.normal.text_preprocess_rule' => 'required_if:fragment_config.mode,1|array',
+            'fragment_config.normal.text_preprocess_rule.*' => 'required|integer|in:1,2',
+            'fragment_config.normal.segment_rule' => 'required_if:fragment_config.mode,1|array',
+            'fragment_config.normal.segment_rule.separator' => 'required_if:fragment_config.mode,1|string',
+            'fragment_config.normal.segment_rule.chunk_size' => 'required_if:fragment_config.mode,1|integer|min:1',
+            'fragment_config.normal.segment_rule.chunk_overlap' => 'required_if:fragment_config.mode,1|integer|min:0',
+            'fragment_config.parent_child' => 'required_if:fragment_config.mode,2|array',
+            'fragment_config.parent_child.separator' => 'required_if:fragment_config.mode,2|string',
+            'fragment_config.parent_child.chunk_size' => 'required_if:fragment_config.mode,2|integer|min:1',
+            'fragment_config.parent_child.parent_mode' => 'required_if:fragment_config.mode,2|integer|in:1,2',
+            'fragment_config.parent_child.child_segment_rule' => 'required_if:fragment_config.mode,2|array',
+            'fragment_config.parent_child.child_segment_rule.separator' => 'required_if:fragment_config.mode,2|string',
+            'fragment_config.parent_child.child_segment_rule.chunk_size' => 'required_if:fragment_config.mode,2|integer|min:1',
+            'fragment_config.parent_child.parent_segment_rule' => 'required_if:fragment_config.mode,2|array',
+            'fragment_config.parent_child.parent_segment_rule.separator' => 'required_if:fragment_config.mode,2|string',
+            'fragment_config.parent_child.parent_segment_rule.chunk_size' => 'required_if:fragment_config.mode,2|integer|min:1',
+            'fragment_config.parent_child.text_preprocess_rule' => 'required_if:fragment_config.mode,2|array',
+            'fragment_config.parent_child.text_preprocess_rule.*' => 'required|integer|in:1,2',
+            // todo 检索设置
         ];
     }
 

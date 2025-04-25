@@ -374,16 +374,19 @@ class MagicAgentAppService extends AbstractAppService
 
         // 只有发布到企业才把自己给添加
         if ($agentVersionDTO->getReleaseScope() === MagicAgentReleaseStatus::PUBLISHED_TO_ENTERPRISE->value) {
-            $user = new User();
-            $user->setId($authorization->getId());
             $visibilityConfig = $agentVersionDTO->getVisibilityConfig();
             if (! $visibilityConfig) {
                 $visibilityConfig = new VisibilityConfig();
                 $agentVersionDTO->setVisibilityConfig($visibilityConfig);
             }
-            $agentVersionDTO->getVisibilityConfig()->addUser($user);
-        }
 
+            $currentUserId = $authorization->getId();
+            if (! in_array($currentUserId, array_column($visibilityConfig->getUsers(), 'id'))) {
+                $user = new User();
+                $user->setId($currentUserId);
+                $agentVersionDTO->getVisibilityConfig()->addUser($user);
+            }
+        }
         $agent = $this->magicAgentDomainService->getAgentById($agentVersionDTO->getAgentId());
 
         $isAddFriend = $agent->getAgentVersionId() === null;
@@ -644,6 +647,9 @@ class MagicAgentAppService extends AbstractAppService
             $magicAgentVO->setMagicUserEntity($userDto);
         }
 
+        if ($magicAgentVO->getAgentVersionEntity()) {
+            $this->setVisibilityConfigDetails($magicAgentVO->getAgentVersionEntity()->getVisibilityConfig(), $authenticatable);
+        }
         return $magicAgentVO;
     }
 
@@ -779,27 +785,35 @@ class MagicAgentAppService extends AbstractAppService
             $authorization->getId()
         );
 
-        // 处理成员信息
+        // 处理成员信息，移除当前用户
         $users = $visibilityConfig->getUsers();
         if (! empty($users)) {
-            $userIds = array_column($users, 'id');
-            $avatars = [];
-            $userEntities = $this->magicUserDomainService->getUserByIds($userIds, $dataIsolation);
-
-            $userMap = [];
-            foreach ($userEntities as $userEntity) {
-                $userMap[$userEntity->getUserId()] = $userEntity;
-                $avatars[] = $userEntity->getAvatarUrl();
-            }
-
-            $fileLinks = $this->fileDomainService->getLinks($authorization->getOrganizationCode(), $avatars);
-
+            $currentUserId = $authorization->getId();
+            // 过滤掉当前用户
+            $filteredUsers = [];
             foreach ($users as $user) {
-                $userEntity = $userMap[$user->getId()];
-                $user->setNickname($userEntity->getNickname());
-                if (! isset($fileLinks[$userEntity->getAvatarUrl()])) {
-                    $user->setAvatar($fileLinks[$userEntity->getAvatarUrl()]->getUrl());
+                if ($user->getId() !== $currentUserId) {
+                    $filteredUsers[] = $user;
                 }
+            }
+            if (! empty($filteredUsers)) {
+                $userEntities = $this->magicUserDomainService->getUserByIds(array_column($filteredUsers, 'id'), $dataIsolation);
+                $userMap = [];
+                foreach ($userEntities as $userEntity) {
+                    $userMap[$userEntity->getUserId()] = $userEntity;
+                }
+
+                // 先设置为null
+                $visibilityConfig->setUsers([]);
+
+                foreach ($filteredUsers as $user) {
+                    $userEntity = $userMap[$user->getId()];
+                    $user->setNickname($userEntity->getNickname());
+                    $user->setAvatar($userEntity->getAvatarUrl());
+                    $visibilityConfig->addUser($user);
+                }
+            } else {
+                $visibilityConfig->setUsers([]);
             }
         }
 

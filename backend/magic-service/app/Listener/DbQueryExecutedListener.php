@@ -74,7 +74,9 @@ class DbQueryExecutedListener implements ListenerInterface
         // 检查是否操作敏感表
         $isSensitive = false;
         foreach ($this->sensitiveTables as $table) {
-            if (str_contains($sql, $table)) {
+            // 使用更严格的表名匹配
+            $pattern = '/\b' . preg_quote($table, '/') . '\b/i';
+            if (preg_match($pattern, $sql)) {
                 $isSensitive = true;
                 break;
             }
@@ -85,38 +87,89 @@ class DbQueryExecutedListener implements ListenerInterface
             return $sql;
         }
 
+        // 使用大小写不敏感的正则表达式匹配SQL语句类型
         // 处理INSERT语句
-        if (str_contains($sql, 'insert into')) {
+        if (preg_match('/\binsert\s+into\b/i', $sql)) {
             // 提取并保留id字段，替换其他字段值为'***'
-            $pattern = '/values\s*\(([^)]+)\)/i';
+            $pattern = '/values\s*(\((?:[^)(]+|(?1))*\))/i';
             if (preg_match($pattern, $sql, $matches) && ! empty($matches[1])) {
-                $values = explode(',', $matches[1], 2);
-                // 假设第一个字段是id
-                $idValue = trim($values[0]);
-                $sql = preg_replace($pattern, 'VALUES (' . $idValue . ', ***)', $sql);
+                $values = $matches[1];
+                // 处理单个或多个值列表的情况
+                if (preg_match('/^\(([^,]+)(,.+)?\)$/i', $values, $valueMatches)) {
+                    // 假设第一个字段是id
+                    $idValue = trim($valueMatches[1]);
+                    $replacement = '(' . $idValue . ', ***)';
+                    $sql = preg_replace($pattern, 'VALUES ' . $replacement, $sql, 1);
+                } else {
+                    // 如果无法解析字段，则整体替换
+                    $sql = preg_replace($pattern, '(***)', $sql, 1);
+                }
             } else {
-                // 如果无法解析字段，则整体替换
-                $sql = preg_replace('/values\s*\([^)]+\)/i', 'VALUES (***)', $sql);
+                // 如果无法匹配到VALUES子句，尝试另一种格式
+                $pattern = '/\bvalues\b\s*(\((?:[^)(]+|(?1))*\))/i';
+                if (preg_match($pattern, $sql, $matches) && ! empty($matches[1])) {
+                    $sql = preg_replace($pattern, 'VALUES (***)', $sql, 1);
+                }
             }
         }
 
         // 处理UPDATE语句
-        if (str_contains($sql, 'update') && str_contains($sql, 'set')) {
-            // 提取SET和WHERE之间的部分
-            if (preg_match('/\bset\b(.*?)(?:\bwhere\b|$)/is', $sql, $setMatches)) {
+        if (preg_match('/\bupdate\b/i', $sql) && preg_match('/\bset\b/i', $sql)) {
+            // 针对包含JSON数据的情况，采用更简单的方式脱敏
+            if (preg_match('/json|[{}\[\]":]/', $sql)) {
+                // 分割SQL获取表名部分和WHERE部分
+                if (preg_match('/\bupdate\b\s+(`?\w+`?(?:\.\w+)?)\s+\bset\b/i', $sql, $tableMatches) && ! empty($tableMatches[1])) {
+                    $tableName = $tableMatches[1];
+                    $whereClause = '';
+                    if (preg_match('/\bwhere\b(.*?)$/is', $sql, $whereMatches)) {
+                        $whereClause = ' WHERE' . $whereMatches[1];
+                    }
+                    // 对于JSON数据，直接返回简化的SQL，保留表名和WHERE条件
+                    return "UPDATE {$tableName} SET [复杂JSON数据已脱敏]{$whereClause}";
+                }
+                // 如果无法解析，完全脱敏
+                return 'UPDATE [表名] SET [复杂数据已脱敏]';
+            }
+
+            // 提取SET和WHERE之间的部分，更健壮的处理方式
+            $pattern = '/\bset\b(.*?)(?:\bwhere\b|$)/is';
+            if (preg_match($pattern, $sql, $setMatches)) {
                 $setClause = $setMatches[1];
+                $originalSetClause = $setClause;
 
-                // 使用更健壮的方式分割SET子句中的赋值部分
-                $pattern = '/(`?\w+`?(?:\.[`\w]+)?)\s*=\s*(?:\'(?:[^\'\\\]|\\\.)*\'|"(?:[^"\\\]|\\\.)*"|[^,]+)(?:,|$)/';
+                // 更健壮地分割和处理SET子句中的赋值部分
+                $fieldPattern = '/(`?\w+`?(?:\.\w+)?)\s*=\s*(?:\'(?:[^\'\\\]|\\\.)*\'|"(?:[^"\\\]|\\\.)*"|[^,\s]+)(?:,|$)/is';
+                if (preg_match_all($fieldPattern, $setClause, $fieldMatches)) {
+                    foreach ($fieldMatches[0] as $index => $match) {
+                        $fieldName = $fieldMatches[1][$index];
+                        $replacement = $fieldName . " = '***'";
+                        // 保持原有的逗号分隔符
+                        if (str_ends_with(trim($match), ',')) {
+                            $replacement .= ',';
+                        }
+                        $setClause = str_replace($match, $replacement, $setClause);
+                    }
+                    $sql = str_replace($originalSetClause, $setClause, $sql);
+                } else {
+                    // 如果无法通过正则解析，采用更简单的方式脱敏
+                    if (preg_match('/\bupdate\b\s+(`?\w+`?(?:\.\w+)?)/i', $sql, $tableMatches) && ! empty($tableMatches[1])) {
+                        $tableName = $tableMatches[1];
+                        $whereClause = '';
+                        if (preg_match('/\bwhere\b(.*?)$/is', $sql, $whereMatches)) {
+                            $whereClause = ' WHERE' . $whereMatches[1];
+                        }
+                        $sql = "UPDATE {$tableName} SET [数据已脱敏]{$whereClause}";
+                    }
+                }
+            }
+        }
 
-                $replacedSetClause = preg_replace_callback($pattern, function ($matches) {
-                    // 保留字段名，替换值为'***'
-                    return $matches[1] . " = '***'";
-                }, $setClause);
-
-                // 替换原SQL中的SET子句
-                if ($replacedSetClause) {
-                    $sql = str_replace($setClause, $replacedSetClause, $sql);
+        // 处理SELECT语句，脱敏可能包含的敏感数据
+        if (preg_match('/\bselect\b/i', $sql)) {
+            foreach ($this->sensitiveTables as $table) {
+                if (preg_match('/\b' . preg_quote($table, '/') . '\b/i', $sql)) {
+                    // 简单地在日志中标记为敏感查询，不显示详细内容
+                    return "SELECT [敏感数据] FROM {$table} [查询已脱敏]";
                 }
             }
         }

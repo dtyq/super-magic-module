@@ -144,5 +144,21 @@
         "php-accessor": "php -dopcache.enable_cli=1 -dopcache.jit_buffer_size=128M -dopcache.jit=tracing vendor/bin/php-accessor generate"
     },
     "repositories": [
+        {
+            "type": "github",
+            "url": "https://github.com/dtyq/async-event.git"
+        },
+        {
+            "type": "github",
+            "url": "https://github.com/dtyq/cloudfile.git"
+        },
+        {
+            "type": "github",
+            "url": "https://github.com/dtyq/easy-dingtalk.git"
+        },
+        {
+            "type": "github",
+            "url": "https://github.com/dtyq/sdk-base.git"
+        }
     ]
 }

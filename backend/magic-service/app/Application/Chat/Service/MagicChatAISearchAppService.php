@@ -55,6 +55,7 @@ use Throwable;
 
 /**
  * 聊天消息相关.
+ * @deprecated 使用 MagicChatAISearchV2AppService 代替
  */
 class MagicChatAISearchAppService extends AbstractAppService
 {
@@ -80,9 +81,10 @@ class MagicChatAISearchAppService extends AbstractAppService
         $topicId = $dto->getTopicId();
         $searchKeyword = $dto->getUserMessage();
         // ai准备开始发消息了,结束输入状态
-        $this->magicConversationDomainService->agentOperateConversationStatus(
+        $this->magicConversationDomainService->agentOperateConversationStatusV2(
             ControlMessageType::EndConversationInput,
-            $conversationId
+            $conversationId,
+            $topicId
         );
         $this->logger->info(sprintf('mindSearch aggregateSearch 开始聚合搜索  searchKeyword：%s 搜索类型：%s', $searchKeyword, $dto->getSearchDeepLevel()->name));
         $antiRepeatKey = md5($conversationId . $topicId . $searchKeyword);

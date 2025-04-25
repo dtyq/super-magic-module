@@ -9,11 +9,11 @@ namespace App\Domain\KnowledgeBase\Entity;
 
 use App\Domain\Flow\Entity\ValueObject\Code;
 use App\Domain\Flow\Entity\ValueObject\ConstValue;
+use App\Domain\KnowledgeBase\Entity\ValueObject\FragmentConfig;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeSyncStatus;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeType;
 use App\Domain\KnowledgeBase\Entity\ValueObject\RetrieveConfig;
 use App\ErrorCode\FlowErrorCode;
-use App\Infrastructure\Core\AbstractEntity;
 use App\Infrastructure\Core\Embeddings\EmbeddingGenerator\EmbeddingGenerator;
 use App\Infrastructure\Core\Embeddings\VectorStores\VectorStoreDriver;
 use App\Infrastructure\Core\Embeddings\VectorStores\VectorStoreInterface;
@@ -23,8 +23,10 @@ use DateTime;
 /**
  * 知识库.
  */
-class KnowledgeBaseEntity extends AbstractEntity
+class KnowledgeBaseEntity extends AbstractKnowledgeBaseEntity
 {
+    protected ?FragmentConfig $fragmentConfig = null;
+
     protected ?int $id = null;
 
     protected string $organizationCode;
@@ -94,8 +96,6 @@ class KnowledgeBaseEntity extends AbstractEntity
     protected int $completedCount = 0;
 
     protected int $userOperation = 0;
-
-    protected ?array $fragmentConfig = null;
 
     protected ?array $embeddingConfig = null;
 
@@ -173,6 +173,9 @@ class KnowledgeBaseEntity extends AbstractEntity
         $magicFlowKnowledgeEntity->setModifier($this->creator);
         $magicFlowKnowledgeEntity->setUpdatedAt($this->createdAt);
         $magicFlowKnowledgeEntity->setIcon($this->icon);
+        $magicFlowKnowledgeEntity->setFragmentConfig($this->fragmentConfig);
+        $magicFlowKnowledgeEntity->setEmbeddingConfig($this->embeddingConfig);
+        $magicFlowKnowledgeEntity->setRetrieveConfig($this->retrieveConfig);
         if (! empty($this->version)) {
             $magicFlowKnowledgeEntity->setVersion($this->version);
         }
@@ -315,7 +318,7 @@ class KnowledgeBaseEntity extends AbstractEntity
 
     public function getModel(): string
     {
-        return $this->model;
+        return $this->getEmbeddingConfig()['model_id'] ?? $this->model;
     }
 
     public function setModel(string $model): static
@@ -463,14 +466,18 @@ class KnowledgeBaseEntity extends AbstractEntity
         $this->forceCreateCode = $forceCreateCode;
     }
 
-    public function getFragmentConfig(): ?array
+    public function getFragmentConfig(): ?FragmentConfig
     {
-        return $this->fragmentConfig;
+        return $this->fragmentConfig ?? $this->getDefaultFragmentConfig();
     }
 
-    public function setFragmentConfig(?array $fragmentConfig): void
+    public function setFragmentConfig(null|array|FragmentConfig $fragmentConfig): self
     {
+        // 默认配置
+        is_null($fragmentConfig) && $fragmentConfig = $this->getDefaultFragmentConfig();
+        is_array($fragmentConfig) && $fragmentConfig = FragmentConfig::fromArray($fragmentConfig);
         $this->fragmentConfig = $fragmentConfig;
+        return $this;
     }
 
     public function getEmbeddingConfig(): ?array
@@ -478,9 +485,11 @@ class KnowledgeBaseEntity extends AbstractEntity
         return $this->embeddingConfig;
     }
 
-    public function setEmbeddingConfig(?array $embeddingConfig): void
+    public function setEmbeddingConfig(?array $embeddingConfig): self
     {
         $this->embeddingConfig = $embeddingConfig;
+        isset($embeddingConfig['model_id']) && $this->model = $embeddingConfig['model_id'];
+        return $this;
     }
 
     /**

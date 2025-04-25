@@ -16,6 +16,7 @@ use App\Domain\Flow\Entity\ValueObject\FlowDataIsolation;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeBaseDataIsolation;
 use App\Domain\ModelGateway\Entity\ValueObject\LLMDataIsolation;
 use App\Domain\Permission\Entity\ValueObject\PermissionDataIsolation;
+use App\Domain\Provider\Entity\ValueObject\ProviderDataIsolation;
 use App\ErrorCode\GenericErrorCode;
 use App\Infrastructure\Core\DataIsolation\BaseDataIsolation;
 use App\Infrastructure\Core\DataIsolation\HandleDataIsolationInterface;
@@ -47,6 +48,17 @@ abstract class AbstractKernelAppService
     public function getFileLink(string $organizationCode, string $icon): ?FileLink
     {
         return di(FileDomainService::class)->getLink($organizationCode, $icon);
+    }
+
+    public function createProviderDataIsolation(Authenticatable|BaseDataIsolation $authorization): ProviderDataIsolation
+    {
+        $dataIsolation = new ProviderDataIsolation();
+        if ($authorization instanceof BaseDataIsolation) {
+            $dataIsolation->extends($authorization);
+            return $dataIsolation;
+        }
+        $this->handleByAuthorization($authorization, $dataIsolation);
+        return $dataIsolation;
     }
 
     protected function createExecutionOperator(Authenticatable|BaseDataIsolation $authorization): Operator
