@@ -18,6 +18,7 @@ return [
     'app_host' => env('APP_HOST', ''),
     'app_code' => env('APP_CODE', 'magic'),
     'scan_cacheable' => env('SCAN_CACHEABLE', false),
+    'office_organization' => env('OFFICE_ORGANIZATION', ''),
     StdoutLoggerInterface::class => [
         'log_level' => [
             LogLevel::ALERT,
