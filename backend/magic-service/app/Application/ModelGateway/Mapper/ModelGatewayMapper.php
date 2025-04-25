@@ -335,6 +335,7 @@ class ModelGatewayMapper extends ModelMapper
         }
         // 获取第一个模型
         $providerModel = $providerModels[0];
+        $this->logger->info('获取服务商模型,模型id', $providerModel->getId());
         if (! $providerModel->isActive()) {
             ExceptionBuilder::throw(ServiceProviderErrorCode::ModelNotActive);
         }
@@ -343,6 +344,7 @@ class ModelGatewayMapper extends ModelMapper
         if (! $providerConfig || ! $providerConfig->isActive()) {
             ExceptionBuilder::throw(ServiceProviderErrorCode::ServiceProviderNotActive);
         }
+        $this->logger->info('获取服务商配置,配置id', $providerConfig->getId());
         return $this->createModelByAdmin($providerConfig, $providerModel);
     }
 
