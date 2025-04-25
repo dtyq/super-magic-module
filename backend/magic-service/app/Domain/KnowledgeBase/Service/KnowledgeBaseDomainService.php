@@ -21,6 +21,7 @@ use App\Domain\KnowledgeBase\Event\KnowledgeBaseSavedEvent;
 use App\Domain\KnowledgeBase\Repository\Facade\KnowledgeBaseFragmentRepositoryInterface;
 use App\Domain\KnowledgeBase\Repository\Facade\KnowledgeBaseRepositoryInterface;
 use App\ErrorCode\FlowErrorCode;
+use App\Infrastructure\Core\Exception\BusinessException;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Infrastructure\Core\ValueObject\Page;
 use Dtyq\AsyncEvent\AsyncEventUtil;
@@ -69,7 +70,10 @@ readonly class KnowledgeBaseDomainService
         // 创建知识库前，先对嵌入模型进行连通性测试
         try {
             $model = di(ModelGatewayMapper::class)->getEmbeddingModelProxy($magicFlowKnowledgeEntity->getModel());
-            $model->embeddings('test', businessParams: ['organization_id' => $dataIsolation->getCurrentOrganizationCode(), 'user_id' => $dataIsolation->getCurrentUserId()]);
+            $embeddingResult = $model->embeddings('test', businessParams: ['organization_id' => $dataIsolation->getCurrentOrganizationCode(), 'user_id' => $dataIsolation->getCurrentUserId()]);
+            if (count($embeddingResult->getData()[0]?->getEmbedding()) !== $model->getVectorSize()) {
+                throw new BusinessException();
+            }
         } catch (Throwable $exception) {
             $modelName = ! empty($model) ? $model->getModelName() : '';
             ExceptionBuilder::throw(FlowErrorCode::KnowledgeValidateFailed, 'flow.model.embedding_failed', ['model_name' => $modelName]);

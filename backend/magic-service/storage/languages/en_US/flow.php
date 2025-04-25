@@ -58,7 +58,7 @@ return [
         'disabled' => 'Model [:model_name] is disabled',
         'not_support_embedding' => '[:model_name] does not support embedding',
         'error_config_missing' => 'Configuration item :name is missing. Please check the settings or contact the administrator.',
-        'embedding_failed' => '[:model_name] embedding failed',
+        'embedding_failed' => '[:model_name] embedding failed, please check the embedding configuration',
     ],
     'max_record' => [
         'positive_integer' => 'Maximum record number must be a positive integer between :min and :max',

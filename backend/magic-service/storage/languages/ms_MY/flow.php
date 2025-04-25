@@ -58,7 +58,7 @@ return [
         'disabled' => 'Model [:model_name] dimatikan',
         'not_support_embedding' => '[:model_name] tidak menyokong pembenaman',
         'error_config_missing' => 'Item konfigurasi :name hilang. Sila periksa tetapan atau hubungi pentadbir.',
-        'embedding_failed' => '[:model_name] pembenaman gagal',
+        'embedding_failed' => '[:model_name] pembenaman gagal, sila periksa konfigurasi pembenaman',
     ],
     'max_record' => [
         'positive_integer' => 'Bilangan rekod maksimum mesti integer positif antara :min dan :max',
