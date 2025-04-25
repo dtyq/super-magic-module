@@ -60,14 +60,6 @@ class KnowledgeBaseAppService extends AbstractKnowledgeAppService
             $magicFlowKnowledgeEntity->setVectorDB(VectorStoreDriver::default()->value);
         }
 
-        // 创建的才需要设置
-        if ($magicFlowKnowledgeEntity->shouldCreate()) {
-            // 设置嵌入模型和向量数据库
-            $model = $this->serviceProviderDomainService->findSelectedActiveProviderByType($dataIsolation->getCurrentOrganizationCode(), ModelType::EMBEDDING);
-            $magicFlowKnowledgeEntity->setModel($magicFlowKnowledgeEntity->getEmbeddingConfig()['model_id'] ?? $model?->getServiceProviderModelsEntity()?->getModelId() ?? EmbeddingGenerator::defaultModel());
-            $magicFlowKnowledgeEntity->setVectorDB(VectorStoreDriver::default()->value);
-        }
-
         // 获取 文件
         $files = $this->getFileLinks($dataIsolation->getCurrentOrganizationCode(), array_map(fn ($dto) => $dto->getKey(), $documentFiles));
         foreach ($documentFiles as $documentFile) {
