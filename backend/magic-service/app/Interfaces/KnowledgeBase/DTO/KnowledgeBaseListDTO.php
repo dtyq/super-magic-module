@@ -55,40 +55,42 @@ class KnowledgeBaseListDTO extends AbstractFlowDTO
 
     public int $documentCount = 0;
 
-    public RetrieveConfig $retrieveConfig;
+    public ?RetrieveConfig $retrieveConfig = null;
 
-    public FragmentConfig $fragmentConfig;
+    public ?FragmentConfig $fragmentConfig = null;
 
-    public array $embeddingConfig = [];
+    public ?array $embeddingConfig = [];
 
-    public function getRetrieveConfig(): RetrieveConfig
+    public function getRetrieveConfig(): ?RetrieveConfig
     {
         return $this->retrieveConfig;
     }
 
-    public function setRetrieveConfig(RetrieveConfig $retrieveConfig): static
+    public function setRetrieveConfig(null|array|RetrieveConfig $retrieveConfig): static
     {
+        is_array($retrieveConfig) && $retrieveConfig = RetrieveConfig::fromArray($retrieveConfig);
         $this->retrieveConfig = $retrieveConfig;
         return $this;
     }
 
-    public function getFragmentConfig(): FragmentConfig
+    public function getFragmentConfig(): ?FragmentConfig
     {
         return $this->fragmentConfig;
     }
 
-    public function setFragmentConfig(FragmentConfig $fragmentConfig): static
+    public function setFragmentConfig(null|array|FragmentConfig $fragmentConfig): static
     {
+        is_array($fragmentConfig) && $fragmentConfig = FragmentConfig::fromArray($fragmentConfig);
         $this->fragmentConfig = $fragmentConfig;
         return $this;
     }
 
-    public function getEmbeddingConfig(): array
+    public function getEmbeddingConfig(): ?array
     {
         return $this->embeddingConfig;
     }
 
-    public function setEmbeddingConfig(array $embeddingConfig): static
+    public function setEmbeddingConfig(?array $embeddingConfig): static
     {
         $this->embeddingConfig = $embeddingConfig;
         return $this;
