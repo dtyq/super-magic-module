@@ -19,4 +19,4 @@ enum Category: string
             self::VLM => '视觉模型',
         };
     }
-} 
+}

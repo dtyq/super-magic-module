@@ -32,7 +32,7 @@ class ProviderFactory
         $entity->setRemark($model->remark);
         $entity->setCreatedAt($model->created_at ?? new DateTime());
         $entity->setUpdatedAt($model->updated_at ?? new DateTime());
-        
+
         return $entity;
     }
-} 
+}

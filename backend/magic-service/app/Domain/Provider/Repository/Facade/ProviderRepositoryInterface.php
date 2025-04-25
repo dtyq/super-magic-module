@@ -22,4 +22,4 @@ interface ProviderRepositoryInterface
      * @return array{total: int, list: array<ProviderEntity>}
      */
     public function queries(ProviderDataIsolation $dataIsolation, ProviderQuery $query, Page $page): array;
-} 
+}

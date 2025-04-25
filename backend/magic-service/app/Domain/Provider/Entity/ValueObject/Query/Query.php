@@ -11,4 +11,4 @@ use App\Infrastructure\Core\AbstractQuery;
 
 abstract class Query extends AbstractQuery
 {
-} 
+}

@@ -13,7 +13,7 @@ use App\Domain\Provider\Entity\ValueObject\Query\ProviderQuery;
 use App\Domain\Provider\Repository\Facade\ProviderRepositoryInterface;
 use App\Infrastructure\Core\ValueObject\Page;
 
-readonly class ProviderService
+readonly class ProviderDomainService
 {
     public function __construct(
         private ProviderRepositoryInterface $providerRepository
