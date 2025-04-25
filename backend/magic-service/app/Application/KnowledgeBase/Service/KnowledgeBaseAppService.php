@@ -7,17 +7,24 @@ declare(strict_types=1);
 
 namespace App\Application\KnowledgeBase\Service;
 
+use App\Application\ModelGateway\Mapper\ModelGatewayMapper;
 use App\Domain\Contact\Entity\MagicUserEntity;
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseEntity;
 use App\Domain\KnowledgeBase\Entity\ValueObject\Query\KnowledgeBaseQuery;
 use App\Domain\ModelAdmin\Constant\ModelType;
 use App\Domain\Permission\Entity\ValueObject\OperationPermission\Operation;
 use App\Domain\Permission\Entity\ValueObject\OperationPermission\ResourceType;
+use App\ErrorCode\FlowErrorCode;
 use App\Infrastructure\Core\Embeddings\EmbeddingGenerator\EmbeddingGenerator;
 use App\Infrastructure\Core\Embeddings\VectorStores\VectorStoreDriver;
+use App\Infrastructure\Core\Exception\BusinessException;
+use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Infrastructure\Core\ValueObject\Page;
 use App\Interfaces\KnowledgeBase\DTO\DocumentFileDTO;
 use Qbhy\HyperfAuth\Authenticatable;
+use Throwable;
+
+use function Hyperf\Translation\__;
 
 class KnowledgeBaseAppService extends AbstractKnowledgeAppService
 {
@@ -67,6 +74,25 @@ class KnowledgeBaseAppService extends AbstractKnowledgeAppService
             if ($fileLink = $files[$documentFile->getKey()] ?? null) {
                 $documentFile->setFileLink($fileLink);
             }
+        }
+
+        // 创建知识库前，先对嵌入模型进行连通性测试
+        try {
+            $model = di(ModelGatewayMapper::class)->getEmbeddingModelProxy($magicFlowKnowledgeEntity->getModel());
+            $embeddingResult = $model->embeddings('test', businessParams: ['organization_id' => $dataIsolation->getCurrentOrganizationCode(), 'user_id' => $dataIsolation->getCurrentUserId()]);
+            if (count($embeddingResult->getData()[0]?->getEmbedding()) !== $model->getVectorSize()) {
+                throw new BusinessException(__('flow.model.vector_size_not_match'));
+            }
+        } catch (Throwable $exception) {
+            $modelName = ! empty($model) ? $model->getModelName() : '';
+            simple_logger('KnowledgeBaseDomainService')->warning('KnowledgeBaseCheckEmbeddingsFailed', [
+                'message' => $exception->getMessage(),
+                'file' => $exception->getFile(),
+                'line' => $exception->getLine(),
+                'code' => $exception->getCode(),
+                'trace' => $exception->getTraceAsString(),
+            ]);
+            ExceptionBuilder::throw(FlowErrorCode::KnowledgeValidateFailed, 'flow.model.embedding_failed', ['model_name' => $modelName]);
         }
 
         $knowledgeBaseEntity = $this->knowledgeBaseDomainService->save($dataIsolation, $magicFlowKnowledgeEntity, $this->documentFileDTOListToVOList($documentFiles));

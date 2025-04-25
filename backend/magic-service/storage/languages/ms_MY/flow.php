@@ -59,6 +59,7 @@ return [
         'not_support_embedding' => '[:model_name] tidak menyokong pembenaman',
         'error_config_missing' => 'Item konfigurasi :name hilang. Sila periksa tetapan atau hubungi pentadbir.',
         'embedding_failed' => '[:model_name] pembenaman gagal, sila periksa konfigurasi pembenaman',
+        'vector_size_not_match' => '[:model_name] saiz vektor tidak sepadan, sila periksa saiz vektor',
     ],
     'max_record' => [
         'positive_integer' => 'Bilangan rekod maksimum mesti integer positif antara :min dan :max',
