@@ -109,6 +109,8 @@ use App\Domain\OrganizationEnvironment\Repository\OrganizationsEnvironmentReposi
 use App\Domain\OrganizationEnvironment\Repository\OrganizationsPlatformRepository;
 use App\Domain\Permission\Repository\Facade\OperationPermissionRepositoryInterface;
 use App\Domain\Permission\Repository\Persistence\OperationPermissionRepository;
+use App\Domain\Provider\Repository\Facade\ProviderRepositoryInterface;
+use App\Domain\Provider\Repository\Persistence\ProviderRepository;
 use App\Domain\Token\Item\MagicTokenExtra;
 use App\Domain\Token\Repository\Facade\MagicTokenExtraInterface;
 use App\Domain\Token\Repository\Facade\MagicTokenRepositoryInterface;
@@ -214,6 +216,9 @@ $dependencies = [
 
     // magic-bot
     MagicBotThirdPlatformChatRepositoryInterface::class => MagicBotThirdPlatformChatRepository::class,
+
+    // provider
+    ProviderRepositoryInterface::class => ProviderRepository::class,
 
     // magic-api
     ApplicationRepositoryInterface::class => ApplicationRepository::class,
