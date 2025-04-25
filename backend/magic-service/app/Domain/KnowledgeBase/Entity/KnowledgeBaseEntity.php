@@ -25,7 +25,7 @@ use DateTime;
  */
 class KnowledgeBaseEntity extends AbstractKnowledgeBaseEntity
 {
-    protected ?FragmentConfig $fragmentConfig;
+    protected ?FragmentConfig $fragmentConfig = null;
 
     protected ?int $id = null;
 
