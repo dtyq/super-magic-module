@@ -556,6 +556,11 @@ class KnowledgeBaseEntity extends AbstractKnowledgeBaseEntity
         return $this->wordCount;
     }
 
+    public function getDefaultDocumentCode(): string
+    {
+        return $this->code . '-DEFAULT-DOC';
+    }
+
     public function setWordCount(int $wordCount): void
     {
         $this->wordCount = $wordCount;

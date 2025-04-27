@@ -361,9 +361,4 @@ class KnowledgeBaseDocumentEntity extends AbstractKnowledgeBaseEntity
         }
         return $driver->get();
     }
-
-    public static function getDefaultDocumentCode(string $knowledgeBaseCode): string
-    {
-        return $knowledgeBaseCode . '-DEFAULT-DOC';
-    }
 }

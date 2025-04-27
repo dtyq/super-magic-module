@@ -8,7 +8,6 @@ declare(strict_types=1);
 namespace App\Interfaces\KnowledgeBase\Facade;
 
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseFragmentEntity;
-use App\Domain\KnowledgeBase\Entity\ValueObject\Query\KnowledgeBaseFragmentQuery;
 use App\Infrastructure\Core\ValueObject\Page;
 use App\Interfaces\Kernel\DTO\PageDTO;
 use App\Interfaces\KnowledgeBase\Assembler\KnowledgeBaseFragmentAssembler;
@@ -55,7 +54,7 @@ class KnowledgeBaseFragmentApi extends AbstractKnowledgeBaseApi
     public function queries(string $knowledgeBaseCode, string $documentCode)
     {
         $dto = GetFragmentListRequestDTO::fromRequest($this->request);
-        $query = KnowledgeBaseFragmentQuery::fromGetFragmentListRequestDTO($dto);
+        $query = KnowledgeBaseFragmentAssembler::getFragmentListRequestDTOToQuery($dto);
         $query->setKnowledgeCode($knowledgeBaseCode);
         $query->setDocumentCode($documentCode);
         $page = new Page($dto->getPage(), $dto->getPageSize());
