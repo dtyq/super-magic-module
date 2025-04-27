@@ -15,7 +15,9 @@ use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeRetrievalResult;
 use App\Domain\KnowledgeBase\Entity\ValueObject\Query\KnowledgeBaseFragmentQuery;
 use App\Infrastructure\Core\ValueObject\Page;
 use App\Infrastructure\Util\SSRF\Exception\SSRFException;
+use App\Interfaces\KnowledgeBase\Assembler\KnowledgeBaseFragmentAssembler;
 use App\Interfaces\KnowledgeBase\DTO\DocumentFileDTO;
+use App\Interfaces\KnowledgeBase\DTO\KnowledgeBaseFragmentDTO;
 use Qbhy\HyperfAuth\Authenticatable;
 
 class KnowledgeBaseFragmentAppService extends AbstractKnowledgeAppService
@@ -86,7 +88,7 @@ class KnowledgeBaseFragmentAppService extends AbstractKnowledgeAppService
     }
 
     /**
-     * @return array<KnowledgeBaseFragmentEntity>
+     * @return array<KnowledgeBaseFragmentDTO>
      */
     public function similarity(Authenticatable $authenticatable, string $knowledgeBaseCode, string $query): array
     {
@@ -103,10 +105,14 @@ class KnowledgeBaseFragmentAppService extends AbstractKnowledgeAppService
         /** @var array<string, KnowledgeRetrievalResult> $result */
         $result = array_column($result, null, 'id');
         $fragmentIds = array_column($result, 'id');
+        $documentCodes = array_column($result, 'document_code');
+        $documentCodeNameMap = $this->knowledgeBaseDocumentDomainService->getDocumentNamesByDocumentCodes($dataIsolation, $documentCodes);
         $fragmentEntities = $this->knowledgeBaseFragmentDomainService->getByIds($dataIsolation, $fragmentIds);
-        foreach ($fragmentEntities as $fragmentEntity) {
-            $fragmentEntity->setScore($result[(string) $fragmentEntity->getId()]->getScore());
+        $dtoList = array_map(fn (KnowledgeBaseFragmentEntity $entity) => KnowledgeBaseFragmentAssembler::entityToDTO($entity), $fragmentEntities);
+        foreach ($dtoList as $dto) {
+            $dto->setScore($result[(string) $dto->getId()]->getScore())
+                ->setDocumentName($documentCodeNameMap[$dto->getDocumentCode()]);
         }
-        return $fragmentEntities;
+        return $dtoList;
     }
 }

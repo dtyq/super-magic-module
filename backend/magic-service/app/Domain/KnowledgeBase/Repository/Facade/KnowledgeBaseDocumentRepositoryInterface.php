@@ -37,6 +37,11 @@ interface KnowledgeBaseDocumentRepositoryInterface
     public function getDocumentCountByKnowledgeBaseCode(KnowledgeBaseDataIsolation $dataIsolation, array $knowledgeBaseCodes): array;
 
     /**
+     * @return array<string, string> array<文档code, 文档名>
+     */
+    public function getDocumentNamesByDocumentCodes(KnowledgeBaseDataIsolation $dataIsolation, array $knowledgeBaseDocumentCodes): array;
+
+    /**
      * 查询知识库文档列表.
      *
      * @return array{total: int, list: array<KnowledgeBaseDocumentEntity>}

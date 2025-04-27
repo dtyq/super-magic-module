@@ -122,6 +122,24 @@ class KnowledgeBaseDocumentRepository extends KnowledgeBaseAbstractRepository im
     }
 
     /**
+     * @return array<string, string> array<文档code, 文档名>
+     */
+    public function getDocumentNamesByDocumentCodes(KnowledgeBaseDataIsolation $dataIsolation, array $knowledgeBaseDocumentCodes): array
+    {
+        // 分组聚合查询，获取每个文档的文档名
+        $res = $this->createBuilder($dataIsolation, KnowledgeBaseDocumentModel::query())
+            ->groupBy('code')
+            ->whereIn('code', $knowledgeBaseDocumentCodes)
+            ->get('name')
+            ->toArray();
+        $mapping = [];
+        foreach ($res as $value) {
+            $mapping[$value['code']] = $value['name'];
+        }
+        return $mapping;
+    }
+
+    /**
      * 查询知识库文档列表.
      *
      * @return array{total: int, list: array<KnowledgeBaseDocumentEntity>}

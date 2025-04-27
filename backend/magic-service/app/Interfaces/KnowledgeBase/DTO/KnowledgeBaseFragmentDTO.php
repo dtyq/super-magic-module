@@ -18,6 +18,8 @@ class KnowledgeBaseFragmentDTO extends AbstractFlowDTO
 
     public string $documentCode;
 
+    public string $documentName;
+
     public string $content;
 
     public array $metadata = [];
@@ -140,6 +142,17 @@ class KnowledgeBaseFragmentDTO extends AbstractFlowDTO
     public function setWordCount(int $wordCount): static
     {
         $this->wordCount = $wordCount;
+        return $this;
+    }
+
+    public function getDocumentName(): string
+    {
+        return $this->documentName;
+    }
+
+    public function setDocumentName(string $documentName): static
+    {
+        $this->documentName = $documentName;
         return $this;
     }
 }
