@@ -65,12 +65,12 @@ class ModelGatewayMapper extends ModelMapper
         $this->loadApiModels();
     }
 
-    public function exist(string $model): bool
+    public function exist(string $model, ?string $orgCode = null): bool
     {
         if (isset($this->models['chat'][$model]) || isset($this->models['embedding'][$model])) {
             return true;
         }
-        return (bool) $this->getByAdmin($model);
+        return (bool) $this->getByAdmin($model, $orgCode);
     }
 
     /**
