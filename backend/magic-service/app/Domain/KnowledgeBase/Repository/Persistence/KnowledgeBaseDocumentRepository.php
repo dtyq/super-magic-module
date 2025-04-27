@@ -198,7 +198,7 @@ class KnowledgeBaseDocumentRepository extends KnowledgeBaseAbstractRepository im
     {
         $builder = $this->createBuilder($dataIsolation, KnowledgeBaseFragmentsModel::query());
         $builder
-            ->where('knowledge_base_code', $knowledgeBaseCode)
+            ->where('knowledge_code', $knowledgeBaseCode)
             ->where('document_code', $documentCode)
             ->delete();
     }
