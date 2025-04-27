@@ -62,7 +62,8 @@ return [
         'not_support_embedding' => '[:model_name] 不支持嵌入',
         'error_config_missing' => '配置项 :name 缺失，请检查相关设置或联系管理员处理。',
         'invalid_implementation_interface' => '实现必须是 :interface 的实例',
-        'embedding_failed' => '[:model_name] 嵌入失败',
+        'embedding_failed' => '[:model_name] 嵌入失败, 请检查嵌入配置',
+        'vector_size_not_match' => '[:model_name] 向量大小不匹配, 请检查向量大小',
     ],
     'max_record' => [
         'positive_integer' => '最大记录数 只能是 :min - :max 的正整数',

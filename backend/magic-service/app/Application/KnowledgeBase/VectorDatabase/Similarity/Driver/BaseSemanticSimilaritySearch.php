@@ -16,9 +16,18 @@ use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeRetrievalResult;
 use App\Domain\KnowledgeBase\Entity\ValueObject\RetrieveConfig;
 use App\Infrastructure\Core\Embeddings\EmbeddingGenerator\EmbeddingGeneratorInterface;
 use App\Infrastructure\Core\Embeddings\Rerank\RerankGeneratorInterface;
+use Hyperf\Logger\LoggerFactory;
+use Psr\Log\LoggerInterface;
 
 class BaseSemanticSimilaritySearch implements SemanticSimilaritySearchInterface
 {
+    protected LoggerInterface $logger;
+
+    public function __construct(LoggerFactory $loggerFactory)
+    {
+        $this->logger = $loggerFactory->get(get_class($this));
+    }
+
     public function search(KnowledgeBaseDataIsolation $dataIsolation, KnowledgeSimilarityFilter $filter, KnowledgeBaseEntity $knowledgeBaseEntity, RetrieveConfig $retrieveConfig): array
     {
         // 场景验证， 如果开启重新排序，可以多召回数据，然后根据得分进行排序，取 limit ，最多不超过 20 或者 limit 上限
@@ -38,7 +47,9 @@ class BaseSemanticSimilaritySearch implements SemanticSimilaritySearchInterface
 
         $result = [];
         // 根据模型进行向量化
+        $this->logger->info('即将加载嵌入模型' . $knowledgeBaseEntity->getModel());
         $model = $modelGatewayMapper->getEmbeddingModelProxy($knowledgeBaseEntity->getModel());
+        $this->logger->info('已加载嵌入模型: ' . $model->getModelName() . ', 向量大小: ' . $model->getVectorSize());
         $embeddingGenerator = di(EmbeddingGeneratorInterface::class);
         $queryEmbeddings = $embeddingGenerator->embedText($model, $question, options: [
             'business_params' => [
