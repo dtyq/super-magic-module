@@ -35,7 +35,7 @@ class KnowledgeBaseFragmentsModel extends AbstractModel
     use Snowflake;
     use SoftDeletes;
 
-    protected ?string $table = 'knowledge_base_fragments';
+    protected ?string $table = 'magic_flow_knowledge_fragment';
 
     protected array $fillable = [
         'id', 'knowledge_code', 'content', 'metadata', 'business_id', 'sync_status', 'sync_times', 'sync_status_message', 'point_id', 'vector',
