@@ -77,7 +77,7 @@ class ModelGatewayMapper extends ModelMapper
      * 内部使用 chat 时，一定是使用该方法.
      * 会自动替代为本地代理模型.
      */
-    public function getChatModelProxy(string $model, ?string $orgCode = null): ModelInterface
+    public function getChatModelProxy(string $model, ?string $orgCode = null): MagicAILocalModel
     {
         /** @var AbstractModel $odinModel */
         $odinModel = $this->getOrganizationChatModel($model, $orgCode);
@@ -89,7 +89,7 @@ class ModelGatewayMapper extends ModelMapper
      * 内部使用 embedding 时，一定是使用该方法.
      * 会自动替代为本地代理模型.
      */
-    public function getEmbeddingModelProxy(string $model, ?string $orgCode = null): EmbeddingInterface
+    public function getEmbeddingModelProxy(string $model, ?string $orgCode = null): MagicAILocalModel
     {
         /** @var AbstractModel $odinModel */
         $odinModel = $this->getOrganizationEmbeddingModel($model, $orgCode);
@@ -336,7 +336,6 @@ class ModelGatewayMapper extends ModelMapper
         }
         // 获取第一个模型
         $providerModel = $providerModels[0];
-        $this->logger->info('获取服务商模型,模型id', $providerModel->getId());
         if (! $providerModel->isActive()) {
             ExceptionBuilder::throw(ServiceProviderErrorCode::ModelNotActive);
         }
@@ -345,7 +344,6 @@ class ModelGatewayMapper extends ModelMapper
         if (! $providerConfig || ! $providerConfig->isActive()) {
             ExceptionBuilder::throw(ServiceProviderErrorCode::ServiceProviderNotActive);
         }
-        $this->logger->info('获取服务商配置,配置id', $providerConfig->getId());
         return $this->createModelByAdmin($providerConfig, $providerModel);
     }
 
@@ -449,10 +447,10 @@ class ModelGatewayMapper extends ModelMapper
         );
     }
 
-    private function createProxy(string $model, ModelOptions $modelOptions, ApiOptions $apiOptions): EmbeddingInterface|ModelInterface
+    private function createProxy(string $model, ModelOptions $modelOptions, ApiOptions $apiOptions): MagicAILocalModel
     {
         // 使用ModelFactory创建模型实例
-        return ModelFactory::create(
+        $odinModel = ModelFactory::create(
             MagicAILocalModel::class,
             $model,
             [
@@ -462,5 +460,9 @@ class ModelGatewayMapper extends ModelMapper
             $apiOptions,
             $this->logger
         );
+        if (! $odinModel instanceof MagicAILocalModel) {
+            throw new InvalidArgumentException(sprintf('Implementation %s is not defined.', MagicAILocalModel::class));
+        }
+        return $odinModel;
     }
 }

@@ -21,6 +21,7 @@ use Hyperf\Odin\Contract\Message\MessageInterface;
 use Hyperf\Odin\Contract\Model\EmbeddingInterface;
 use Hyperf\Odin\Contract\Model\ModelInterface;
 use Hyperf\Odin\Model\AbstractModel;
+use Hyperf\Odin\Model\Embedding;
 use Hyperf\Odin\Utils\ToolUtil;
 use Psr\Log\LoggerInterface;
 
@@ -50,6 +51,17 @@ class MagicAILocalModel extends AbstractModel implements ModelInterface, Embeddi
         $sendMsgGPTDTO->setUser($user);
         $sendMsgGPTDTO->setBusinessParams($businessParams);
         return di(LLMAppService::class)->embeddings($sendMsgGPTDTO);
+    }
+
+    public function embedding(array|string $input, ?string $encoding_format = 'float', ?string $user = null, array $businessParams = []): Embedding
+    {
+        $response = $this->embeddings($input, $encoding_format, $user, $businessParams);
+        // 从响应中提取嵌入向量
+        $embeddings = [];
+        foreach ($response->getData() as $embedding) {
+            $embeddings[] = $embedding->getEmbedding();
+        }
+        return new Embedding($embeddings[0] ?? []);
     }
 
     /**
