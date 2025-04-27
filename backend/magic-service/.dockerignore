@@ -56,6 +56,5 @@ yarn-error.log
 
 # 新增的代码块
 runtime/
-storage/
 test/
 *.bak 
