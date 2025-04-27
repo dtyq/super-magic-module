@@ -44,6 +44,9 @@ class KnowledgeSimilarityAgentPlugin implements AgentPluginInterface
 
     public function getAppendSystemPrompt(): ?string
     {
+        if (empty($this->knowledgeConfig->getKnowledgeList())) {
+            return '';
+        }
         $appendSystemPrompt = '';
         foreach ($this->toolsClass as $toolsClass) {
             $tool = \Hyperf\Support\make($toolsClass);
@@ -58,6 +61,9 @@ class KnowledgeSimilarityAgentPlugin implements AgentPluginInterface
 
     public function getTools(): array
     {
+        if (empty($this->knowledgeConfig->getKnowledgeList())) {
+            return [];
+        }
         $tools = [];
         foreach ($this->toolsClass as $toolsClass) {
             $tool = \Hyperf\Support\make($toolsClass);
