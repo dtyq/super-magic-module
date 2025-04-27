@@ -29,4 +29,6 @@ interface OrganizationsEnvironmentRepositoryInterface
      * @return string[]
      */
     public function getAllOrganizationCodes(): array;
+
+    public function getOrganizationEnvironmentByThirdPartyOrganizationCode(string $thirdPartyOrganizationCode, MagicEnvironmentEntity $magicEnvironmentEntity): ?MagicOrganizationEnvEntity;
 }

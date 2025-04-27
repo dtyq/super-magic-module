@@ -68,6 +68,14 @@ class MagicOrganizationEnvDomainService
         }
     }
 
+    public function getOrganizationEnvironmentByThirdPartyOrganizationCode(string $thirdPartyOrganizationCode, MagicEnvironmentEntity $magicEnvEntity): ?MagicOrganizationEnvEntity
+    {
+        return $this->magicOrganizationsEnvironmentRepository->getOrganizationEnvironmentByThirdPartyOrganizationCode(
+            $thirdPartyOrganizationCode,
+            $magicEnvEntity
+        );
+    }
+
     public function getMagicEnvironmentById(int $envId): ?MagicEnvironmentEntity
     {
         // 组织所在的环境
