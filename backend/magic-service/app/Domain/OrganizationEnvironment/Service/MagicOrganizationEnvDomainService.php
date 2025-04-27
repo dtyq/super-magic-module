@@ -68,11 +68,11 @@ class MagicOrganizationEnvDomainService
         }
     }
 
-    public function getOrganizationEnvironmentByTeamshareOrganizationCode(string $teamshareOrganizationCode, MagicEnvironmentEntity $magicEnvEntity): ?MagicOrganizationEnvEntity
+    public function getOrganizationEnvironmentByThirdPartyOrganizationCode(string $thirdPartyOrganizationCode, MagicEnvironmentEntity $magicEnvEntity): ?MagicOrganizationEnvEntity
     {
-        return $this->magicOrganizationsEnvironmentRepository->getOrganizationEnvironmentByTeamshareOrganizationCode(
-            teamshareOrganizationCode: $teamshareOrganizationCode,
-            magicEnvironmentEntity: $magicEnvEntity
+        return $this->magicOrganizationsEnvironmentRepository->getOrganizationEnvironmentByThirdPartyOrganizationCode(
+            $thirdPartyOrganizationCode,
+            $magicEnvEntity
         );
     }
 

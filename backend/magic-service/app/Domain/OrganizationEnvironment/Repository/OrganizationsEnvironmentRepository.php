@@ -88,11 +88,11 @@ readonly class OrganizationsEnvironmentRepository implements OrganizationsEnviro
         return array_column($result, 'magic_organization_code');
     }
 
-    public function getOrganizationEnvironmentByTeamshareOrganizationCode(string $teamshareOrganizationCode, MagicEnvironmentEntity $magicEnvironmentEntity): ?MagicOrganizationEnvEntity
+    public function getOrganizationEnvironmentByThirdPartyOrganizationCode(string $thirdPartyOrganizationCode, MagicEnvironmentEntity $magicEnvironmentEntity): ?MagicOrganizationEnvEntity
     {
         $magicOrganizationEnv = $this->magicEnvironments->newQuery()
             ->whereIn('environment_id', $magicEnvironmentEntity->getRelationEnvIds())
-            ->where('origin_organization_code', $teamshareOrganizationCode)
+            ->where('origin_organization_code', $thirdPartyOrganizationCode)
             ->first();
 
         if ($magicOrganizationEnv === null) {
