@@ -23,7 +23,7 @@ readonly class OdinEmbeddingGenerator implements EmbeddingGeneratorInterface
         $businessParams = $options['business_params'] ?? [];
         unset($options['business_params']);
         // 对嵌入做缓存，减少消耗
-        $cacheKey = 'embedding:' . md5(get_class($embeddingModel) . $text . serialize($options));
+        $cacheKey = 'embedding:' . md5($embeddingModel->getModelName() . $embeddingModel->getVectorSize() . $text . serialize($options));
         if ($this->cache->has($cacheKey)) {
             $data = $this->cache->get($cacheKey);
         } else {
