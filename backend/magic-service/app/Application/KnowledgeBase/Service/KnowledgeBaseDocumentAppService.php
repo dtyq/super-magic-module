@@ -71,6 +71,7 @@ class KnowledgeBaseDocumentAppService extends AbstractKnowledgeAppService
         // 兼容旧数据，新增默认文档
         $fragmentQuery = new KnowledgeBaseFragmentQuery();
         $fragmentQuery->setKnowledgeCode($query->getKnowledgeBaseCode());
+        $fragmentQuery->setIsDefaultDocumentCode(true);
         $fragmentEntities = $this->knowledgeBaseFragmentDomainService->queries($dataIsolation, $fragmentQuery, new Page(1, 1));
         if (! empty($fragmentEntities['list'])) {
             $knowledgeBaseEntity = $this->knowledgeBaseDomainService->show($dataIsolation, $query->getKnowledgeBaseCode());
