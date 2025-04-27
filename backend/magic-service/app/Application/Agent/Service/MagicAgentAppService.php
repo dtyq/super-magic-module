@@ -550,35 +550,6 @@ class MagicAgentAppService extends AbstractAppService
         $this->magicAgentVersionDomainService->updateAgentEnterpriseStatus($magicAgentVersionEntity->getId(), $status);
     }
 
-    public function updateBotMarketStatus(string $agentId, int $status, string $userId): void
-    {
-        /*
-         * // 校验
-         * if ($status !== MagicAgentVersionStatus::APP_MARKET_LISTED && $status !== MagicAgentVersionStatus::APP_MARKET_UNLISTED){
-         * ExceptionBuilder::throw(BotErrorCode::VALIDATE_FAILED, '发布到市场的状态只能是已上架或者未上架');
-         * }
-         * // 获取助理
-         * $magicBotEntity = $this->magicBotDomainService->getBotByUserId($botId, $userId);
-         *
-         * // 是否是自己的助理
-         * if ($magicBotEntity->getCreatedUid() !== $userId){
-         * ExceptionBuilder::throw(BotErrorCode::VALIDATE_FAILED, '非法操作');
-         *
-         * }
-         *
-         * // 获取助理版本
-         * $magicBotVersionEntity = $this->magicBotVersionDomainService->getById($magicBotEntity->getBotVersionId());
-         *
-         * // 校验状态是否允许被修改: APPROVAL_PASSED
-         * if ($magicBotVersionEntity->getApprovalStatus() !== MagicAgentVersionStatus::APPROVAL_PASSED){
-         * ExceptionBuilder::throw(BotErrorCode::VALIDATE_FAILED, '审核未通过,不允许修改状态');
-         * }
-         *
-         * // 修改版本
-         * $this->magicBotVersionDomainService->updateBotEnterpriseStatus($magicBotVersionEntity->getId(),$status);
-         */
-    }
-
     /**
      * @param MagicUserAuthorization $authenticatable
      */
@@ -896,9 +867,9 @@ class MagicAgentAppService extends AbstractAppService
 
         // 准备基本配置
         $config = [
-            'robot_name' => '文档解析助手',
-            'robot_description' => '文档解析助手',
-            'robot_avatar' => 'MAGIC/' . $authorization->getOrganizationCode() . '/default/bot.png',
+            'agent_name' => '文档解析助手',
+            'agent_description' => '文档解析助手',
+            'agent_avatar' => 'MAGIC/' . $authorization->getOrganizationCode() . '/default/bot.png',
             'flow' => $this->loadPresetConfig('document', ['modelName' => $modelName]),
         ];
 
@@ -919,11 +890,11 @@ class MagicAgentAppService extends AbstractAppService
     {
         // 验证配置必要字段
         if (empty($config['agent_name'])) {
-            ExceptionBuilder::throw(AgentErrorCode::VALIDATE_FAILED, 'bot.robot_name_required');
+            ExceptionBuilder::throw(AgentErrorCode::VALIDATE_FAILED, 'agent.robot_name_required');
         }
 
         if (empty($config['flow'])) {
-            ExceptionBuilder::throw(AgentErrorCode::VALIDATE_FAILED, 'bot.flow_configuration_required');
+            ExceptionBuilder::throw(AgentErrorCode::VALIDATE_FAILED, 'agent.flow_configuration_required');
         }
 
         // 创建机器人
@@ -935,6 +906,9 @@ class MagicAgentAppService extends AbstractAppService
         $magicAgentDTO->setCurrentOrganizationCode($authorization->getOrganizationCode());
 
         $magicAgentEntity = $this->saveAgent($authorization, $magicAgentDTO);
+        if (isset($config['instruct'])) {
+            $this->magicAgentDomainService->saveInstruct($authorization->getOrganizationCode(), $magicAgentEntity->getId(), $config['instruct'], $authorization->getId());
+        }
         // 创建Flow
         $magicFLowDTO = new MagicFlowDTO($config['flow']);
         $magicFlowAssembler = new MagicFlowAssembler();
@@ -1251,7 +1225,7 @@ class MagicAgentAppService extends AbstractAppService
      */
     private function loadPresetConfig(string $presetName, array $variables = []): array
     {
-        $presetPath = BASE_PATH . "/storage/flow/{$presetName}.txt";
+        $presetPath = BASE_PATH . "/storage/agent/{$presetName}.txt";
         $config = $this->readJsonToArray($presetPath, $variables);
 
         if (empty($config)) {
