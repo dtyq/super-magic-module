@@ -7,6 +7,7 @@ declare(strict_types=1);
 
 namespace App\Application\ModelGateway\Mapper;
 
+use App\Domain\Flow\Entity\MagicFlowAIModelEntity;
 use App\Domain\Flow\Entity\ValueObject\FlowDataIsolation;
 use App\Domain\Flow\Entity\ValueObject\Query\MagicFlowAIModelQuery;
 use App\Domain\Flow\Service\MagicFlowAIModelDomainService;
@@ -244,43 +245,21 @@ class ModelGatewayMapper extends ModelMapper
         $dataIsolation = FlowDataIsolation::create()->disabled();
         $list = di(MagicFlowAIModelDomainService::class)->queries($dataIsolation, $query, $page)['list'];
         foreach ($list as $modelEntity) {
-            $key = $modelEntity->getModelName() ?: $modelEntity->getName();
             try {
-                $this->addModel($modelEntity->getName(), [
-                    'model' => $key,
-                    'implementation' => $modelEntity->getImplementation(),
-                    'config' => $modelEntity->getActualImplementationConfig(),
-                    'model_options' => [
-                        'chat' => ! $modelEntity->isSupportEmbedding(),
-                        'function_call' => true,
-                        'embedding' => $modelEntity->isSupportEmbedding(),
-                        'multi_modal' => $modelEntity->isSupportMultiModal(),
-                        'vector_size' => $modelEntity->getVectorSize(),
-                    ],
-                ]);
-                $this->addAttributes(
-                    key: $modelEntity->getName(),
-                    attributes: new OdinModelAttributes(
-                        key: $modelEntity->getName(),
-                        name: $modelEntity->getName(),
-                        label: $modelEntity->getLabel(),
-                        icon: $modelEntity->getIcon(),
-                        tags: $modelEntity->getTags(),
-                        createdAt: $modelEntity->getCreatedAt(),
-                        owner: 'MagicAI',
-                    )
-                );
+                // 为了兼容历史数据，每个 flow_model_config 同时支持 model 和 model_name 的映射
+                $this->addFlowModelConfig($modelEntity, $modelEntity->getModelName());
+                $this->addFlowModelConfig($modelEntity, $modelEntity->getName());
                 $this->logger->info('FlowModelRegister', [
-                    'key' => $key,
-                    'model' => $key,
+                    'model_name' => $modelEntity->getModelName(),
+                    'name' => $modelEntity->getName(),
                     'label' => $modelEntity->getLabel(),
                     'implementation' => $modelEntity->getImplementation(),
                     'display' => $modelEntity->isDisplay(),
                 ]);
             } catch (Throwable $exception) {
                 $this->logger->warning('FlowModelRegisterWarning', [
-                    'key' => $key,
-                    'model' => $key,
+                    'model_name' => $modelEntity->getModelName(),
+                    'name' => $modelEntity->getName(),
                     'label' => $modelEntity->getLabel(),
                     'implementation' => $modelEntity->getImplementation(),
                     'display' => $modelEntity->isDisplay(),
@@ -288,6 +267,37 @@ class ModelGatewayMapper extends ModelMapper
                 ]);
             }
         }
+    }
+
+    /**
+     * @param string $key 为了兼容历史数据，每个 flow_model_config 同时支持 model 和 model_name 的映射
+     */
+    private function addFlowModelConfig(MagicFlowAIModelEntity $modelEntity, string $key)
+    {
+        $this->addModel($modelEntity->getName(), [
+            'model' => $key,
+            'implementation' => $modelEntity->getImplementation(),
+            'config' => $modelEntity->getActualImplementationConfig(),
+            'model_options' => [
+                'chat' => ! $modelEntity->isSupportEmbedding(),
+                'function_call' => true,
+                'embedding' => $modelEntity->isSupportEmbedding(),
+                'multi_modal' => $modelEntity->isSupportMultiModal(),
+                'vector_size' => $modelEntity->getVectorSize(),
+            ],
+        ]);
+        $this->addAttributes(
+            key: $modelEntity->getName(),
+            attributes: new OdinModelAttributes(
+                key: $modelEntity->getName(),
+                name: $modelEntity->getName(),
+                label: $modelEntity->getLabel(),
+                icon: $modelEntity->getIcon(),
+                tags: $modelEntity->getTags(),
+                createdAt: $modelEntity->getCreatedAt(),
+                owner: 'MagicAI',
+            )
+        );
     }
 
     /**
