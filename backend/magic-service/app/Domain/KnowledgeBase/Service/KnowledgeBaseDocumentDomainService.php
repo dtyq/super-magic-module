@@ -18,7 +18,6 @@ use App\Domain\KnowledgeBase\Event\KnowledgeBaseDefaultDocumentSavedEvent;
 use App\Domain\KnowledgeBase\Event\KnowledgeBaseDocumentRemovedEvent;
 use App\Domain\KnowledgeBase\Event\KnowledgeBaseDocumentSavedEvent;
 use App\Domain\KnowledgeBase\Repository\Facade\KnowledgeBaseDocumentRepositoryInterface;
-use App\Domain\KnowledgeBase\Repository\Facade\KnowledgeBaseFragmentRepositoryInterface;
 use App\ErrorCode\FlowErrorCode;
 use App\Infrastructure\Core\Embeddings\VectorStores\VectorStoreDriver;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
@@ -34,7 +33,6 @@ readonly class KnowledgeBaseDocumentDomainService
 {
     public function __construct(
         private KnowledgeBaseDocumentRepositoryInterface $knowledgeBaseDocumentRepository,
-        private KnowledgeBaseFragmentRepositoryInterface $knowledgeBaseFragmentRepository,
     ) {
     }
 
@@ -52,7 +50,7 @@ readonly class KnowledgeBaseDocumentDomainService
 
     public function update(KnowledgeBaseDataIsolation $dataIsolation, KnowledgeBaseEntity $knowledgeBaseEntity, KnowledgeBaseDocumentEntity $documentEntity): KnowledgeBaseDocumentEntity
     {
-        $oldDocument = $this->show($dataIsolation, $documentEntity->getCode());
+        $oldDocument = $this->show($dataIsolation, $knowledgeBaseEntity->getCode(), $documentEntity->getCode());
         $this->prepareForUpdate($documentEntity, $oldDocument);
         return $this->knowledgeBaseDocumentRepository->update($dataIsolation, $documentEntity);
     }
@@ -70,9 +68,9 @@ readonly class KnowledgeBaseDocumentDomainService
     /**
      * 查看单个知识库文档详情.
      */
-    public function show(KnowledgeBaseDataIsolation $dataIsolation, string $documentCode, bool $selectForUpdate = false): KnowledgeBaseDocumentEntity
+    public function show(KnowledgeBaseDataIsolation $dataIsolation, string $knowledgeBaseCode, string $documentCode, bool $selectForUpdate = false): KnowledgeBaseDocumentEntity
     {
-        $document = $this->knowledgeBaseDocumentRepository->show($dataIsolation, $documentCode, $selectForUpdate);
+        $document = $this->knowledgeBaseDocumentRepository->show($dataIsolation, $knowledgeBaseCode, $documentCode, $selectForUpdate);
         if ($document === null) {
             ExceptionBuilder::throw(FlowErrorCode::KnowledgeValidateFailed, 'common.not_found', ['label' => 'document']);
         }
@@ -82,18 +80,18 @@ readonly class KnowledgeBaseDocumentDomainService
     /**
      * 删除知识库文档.
      */
-    public function destroy(KnowledgeBaseDataIsolation $dataIsolation, string $documentCode): void
+    public function destroy(KnowledgeBaseDataIsolation $dataIsolation, string $knowledgeBaseCode, string $documentCode): void
     {
         $documentEntity = null;
-        Db::transaction(function () use ($dataIsolation, $documentCode) {
+        Db::transaction(function () use ($dataIsolation, $documentCode, $knowledgeBaseCode) {
             // 首先删除文档下的所有片段
-            $this->destroyFragments($dataIsolation, $documentCode);
-            $documentEntity = $this->show($dataIsolation, $documentCode, true);
+            $this->destroyFragments($dataIsolation, $knowledgeBaseCode, $documentCode);
+            $documentEntity = $this->show($dataIsolation, $knowledgeBaseCode, $documentCode, true);
             // 然后删除文档本身
-            $this->knowledgeBaseDocumentRepository->destroy($dataIsolation, $documentCode);
+            $this->knowledgeBaseDocumentRepository->destroy($dataIsolation, $knowledgeBaseCode, $documentCode);
             // 更新字符数
             $deltaWordCount = -$documentEntity->getWordCount();
-            $this->updateWordCount($dataIsolation, $documentEntity->getCode(), $deltaWordCount);
+            $this->updateWordCount($dataIsolation, $knowledgeBaseCode, $documentEntity->getCode(), $deltaWordCount);
         });
         // 异步删除向量数据库片段
         ! is_null($documentEntity) && AsyncEventUtil::dispatch(new KnowledgeBaseDocumentRemovedEvent($documentEntity));
@@ -102,9 +100,9 @@ readonly class KnowledgeBaseDocumentDomainService
     /**
      * 重建知识库文档向量索引.
      */
-    public function rebuild(KnowledgeBaseDataIsolation $dataIsolation, string $documentCode, bool $force = false): void
+    public function rebuild(KnowledgeBaseDataIsolation $dataIsolation, string $knowledgeBaseCode, string $documentCode, bool $force = false): void
     {
-        $document = $this->show($dataIsolation, $documentCode);
+        $document = $this->show($dataIsolation, $knowledgeBaseCode, $documentCode);
 
         // 如果强制重建或者同步状态为失败，则重新同步
         if ($force || $document->getSyncStatus() === 2) { // 2 表示同步失败
@@ -118,12 +116,12 @@ readonly class KnowledgeBaseDocumentDomainService
         }
     }
 
-    public function updateWordCount(KnowledgeBaseDataIsolation $dataIsolation, string $documentCode, int $deltaWordCount): void
+    public function updateWordCount(KnowledgeBaseDataIsolation $dataIsolation, string $knowledgeBaseCode, string $documentCode, int $deltaWordCount): void
     {
         if ($deltaWordCount === 0) {
             return;
         }
-        $this->knowledgeBaseDocumentRepository->updateWordCount($dataIsolation, $documentCode, $deltaWordCount);
+        $this->knowledgeBaseDocumentRepository->updateWordCount($dataIsolation, $knowledgeBaseCode, $documentCode, $deltaWordCount);
     }
 
     /**
@@ -137,9 +135,9 @@ readonly class KnowledgeBaseDocumentDomainService
     /**
      * @return array<string, string> array<文档code, 文档名>
      */
-    public function getDocumentNamesByDocumentCodes(KnowledgeBaseDataIsolation $dataIsolation, array $knowledgeBaseCodes): array
+    public function getDocumentNamesByDocumentCodes(KnowledgeBaseDataIsolation $dataIsolation, string $knowledgeBaseCode, array $documentCodes): array
     {
-        return $this->knowledgeBaseDocumentRepository->getDocumentNamesByDocumentCodes($dataIsolation, $knowledgeBaseCodes);
+        return $this->knowledgeBaseDocumentRepository->getDocumentNamesByDocumentCodes($dataIsolation, $knowledgeBaseCode, $documentCodes);
     }
 
     public function changeSyncStatus(KnowledgeBaseDataIsolation $dataIsolation, KnowledgeBaseDocumentEntity $documentEntity): void
@@ -151,7 +149,7 @@ readonly class KnowledgeBaseDocumentDomainService
     {
         // 尝试获取默认文档
         $defaultDocumentCode = $knowledgeBaseEntity->getDefaultDocumentCode();
-        $documentEntity = $this->knowledgeBaseDocumentRepository->show($dataIsolation, $defaultDocumentCode);
+        $documentEntity = $this->knowledgeBaseDocumentRepository->show($dataIsolation, $knowledgeBaseEntity->getCode(), $defaultDocumentCode);
         if ($documentEntity) {
             return $documentEntity;
         }
@@ -180,9 +178,9 @@ readonly class KnowledgeBaseDocumentDomainService
     /**
      * 删除文档下的所有片段.
      */
-    private function destroyFragments(KnowledgeBaseDataIsolation $dataIsolation, string $documentCode): void
+    private function destroyFragments(KnowledgeBaseDataIsolation $dataIsolation, string $knowledgeBaseCode, string $documentCode): void
     {
-        $this->knowledgeBaseDocumentRepository->destroyFragmentsByDocumentCode($dataIsolation, $documentCode);
+        $this->knowledgeBaseDocumentRepository->destroyFragmentsByDocumentCode($dataIsolation, $knowledgeBaseCode, $documentCode);
     }
 
     /**

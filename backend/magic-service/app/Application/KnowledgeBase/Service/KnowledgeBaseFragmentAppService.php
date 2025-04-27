@@ -27,7 +27,7 @@ class KnowledgeBaseFragmentAppService extends AbstractKnowledgeAppService
         $dataIsolation = $this->createKnowledgeBaseDataIsolation($authorization);
         $this->checkKnowledgeBaseOperation($dataIsolation, 'w', $savingMagicFlowKnowledgeFragmentEntity->getKnowledgeCode(), $savingMagicFlowKnowledgeFragmentEntity->getDocumentCode());
         $savingMagicFlowKnowledgeFragmentEntity->setCreator($dataIsolation->getCurrentUserId());
-        $knowledgeBaseDocumentEntity = $this->knowledgeBaseDocumentDomainService->show($dataIsolation, $savingMagicFlowKnowledgeFragmentEntity->getDocumentCode());
+        $knowledgeBaseDocumentEntity = $this->knowledgeBaseDocumentDomainService->show($dataIsolation, $savingMagicFlowKnowledgeFragmentEntity->getKnowledgeCode(), $savingMagicFlowKnowledgeFragmentEntity->getDocumentCode());
         $knowledgeBaseEntity = $this->knowledgeBaseDomainService->show($dataIsolation, $savingMagicFlowKnowledgeFragmentEntity->getKnowledgeCode());
         return $this->knowledgeBaseFragmentDomainService->save($dataIsolation, $knowledgeBaseEntity, $knowledgeBaseDocumentEntity, $savingMagicFlowKnowledgeFragmentEntity);
     }
@@ -110,7 +110,7 @@ class KnowledgeBaseFragmentAppService extends AbstractKnowledgeAppService
         $result = array_column($result, null, 'id');
         $fragmentIds = array_column($result, 'id');
         $documentCodes = array_column($result, 'document_code');
-        $documentCodeNameMap = $this->knowledgeBaseDocumentDomainService->getDocumentNamesByDocumentCodes($dataIsolation, $documentCodes);
+        $documentCodeNameMap = $this->knowledgeBaseDocumentDomainService->getDocumentNamesByDocumentCodes($dataIsolation, $knowledgeBaseCode, $documentCodes);
         $fragmentEntities = $this->knowledgeBaseFragmentDomainService->getByIds($dataIsolation, $fragmentIds);
         $dtoList = array_map(fn (KnowledgeBaseFragmentEntity $entity) => KnowledgeBaseFragmentAssembler::entityToDTO($entity), $fragmentEntities);
         foreach ($dtoList as $dto) {
