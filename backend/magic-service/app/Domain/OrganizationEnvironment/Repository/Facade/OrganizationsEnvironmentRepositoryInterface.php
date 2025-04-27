@@ -29,4 +29,6 @@ interface OrganizationsEnvironmentRepositoryInterface
      * @return string[]
      */
     public function getAllOrganizationCodes(): array;
+
+    public function getOrganizationEnvironmentByTeamshareOrganizationCode(string $teamshareOrganizationCode, MagicEnvironmentEntity $magicEnvironmentEntity): ?MagicOrganizationEnvEntity;
 }

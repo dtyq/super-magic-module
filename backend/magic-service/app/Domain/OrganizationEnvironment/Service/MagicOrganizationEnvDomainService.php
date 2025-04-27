@@ -68,6 +68,14 @@ class MagicOrganizationEnvDomainService
         }
     }
 
+    public function getOrganizationEnvironmentByTeamshareOrganizationCode(string $teamshareOrganizationCode, MagicEnvironmentEntity $magicEnvEntity): ?MagicOrganizationEnvEntity
+    {
+        return $this->magicOrganizationsEnvironmentRepository->getOrganizationEnvironmentByTeamshareOrganizationCode(
+            teamshareOrganizationCode: $teamshareOrganizationCode,
+            magicEnvironmentEntity: $magicEnvEntity
+        );
+    }
+
     public function getMagicEnvironmentById(int $envId): ?MagicEnvironmentEntity
     {
         // 组织所在的环境
