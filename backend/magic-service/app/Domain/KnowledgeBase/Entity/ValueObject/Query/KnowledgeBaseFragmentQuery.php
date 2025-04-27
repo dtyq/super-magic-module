@@ -7,8 +7,6 @@ declare(strict_types=1);
 
 namespace App\Domain\KnowledgeBase\Entity\ValueObject\Query;
 
-use App\Interfaces\KnowledgeBase\DTO\Request\GetFragmentListRequestDTO;
-
 class KnowledgeBaseFragmentQuery extends Query
 {
     public string $knowledgeCode = '';
@@ -23,13 +21,7 @@ class KnowledgeBaseFragmentQuery extends Query
 
     public bool $withTrashed = false;
 
-    public static function fromGetFragmentListRequestDTO(GetFragmentListRequestDTO $dto): KnowledgeBaseFragmentQuery
-    {
-        $query = new self($dto->toArray());
-        $query->setKnowledgeCode($dto->getKnowledgeBaseCode());
-        $query->setOrder(['updated_at' => 'desc']);
-        return $query;
-    }
+    public bool $isDefaultDocumentCode = false;
 
     public function getKnowledgeCode(): string
     {
@@ -91,6 +83,17 @@ class KnowledgeBaseFragmentQuery extends Query
     public function setWithTrashed(bool $withTrashed): self
     {
         $this->withTrashed = $withTrashed;
+        return $this;
+    }
+
+    public function isDefaultDocumentCode(): bool
+    {
+        return $this->isDefaultDocumentCode;
+    }
+
+    public function setIsDefaultDocumentCode(bool $isDefaultDocumentCode): static
+    {
+        $this->isDefaultDocumentCode = $isDefaultDocumentCode;
         return $this;
     }
 }
