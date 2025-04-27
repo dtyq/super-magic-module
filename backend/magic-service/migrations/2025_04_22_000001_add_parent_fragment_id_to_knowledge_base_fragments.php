@@ -15,9 +15,9 @@ return new class extends Migration {
     public function up(): void
     {
         // 修改表结构，添加新字段
-        Schema::table('knowledge_base_fragments', function (Blueprint $table) {
+        Schema::table('magic_flow_knowledge_fragment', function (Blueprint $table) {
             // 检查是否已存在字段，避免重复添加
-            if (! Schema::hasColumn('knowledge_base_fragments', 'parent_fragment_id')) {
+            if (! Schema::hasColumn('magic_flow_knowledge_fragment', 'parent_fragment_id')) {
                 $table->unsignedBigInteger('parent_fragment_id')->nullable()->comment('父片段id')->index();
             }
         });
@@ -28,9 +28,9 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::table('knowledge_base_fragments', function (Blueprint $table) {
+        Schema::table('magic_flow_knowledge_fragment', function (Blueprint $table) {
             // 检查是否已存在字段，避免重复删除
-            if (Schema::hasColumn('knowledge_base_fragments', 'parent_fragment_id')) {
+            if (Schema::hasColumn('magic_flow_knowledge_fragment', 'parent_fragment_id')) {
                 $table->dropColumn('parent_fragment_id');
             }
         });

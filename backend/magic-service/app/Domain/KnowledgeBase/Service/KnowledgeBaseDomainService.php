@@ -7,7 +7,6 @@ declare(strict_types=1);
 
 namespace App\Domain\KnowledgeBase\Service;
 
-use App\Application\ModelGateway\Mapper\ModelGatewayMapper;
 use App\Domain\Flow\Entity\ValueObject\Code;
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseEntity;
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseFragmentEntity;
@@ -21,13 +20,11 @@ use App\Domain\KnowledgeBase\Event\KnowledgeBaseSavedEvent;
 use App\Domain\KnowledgeBase\Repository\Facade\KnowledgeBaseFragmentRepositoryInterface;
 use App\Domain\KnowledgeBase\Repository\Facade\KnowledgeBaseRepositoryInterface;
 use App\ErrorCode\FlowErrorCode;
-use App\Infrastructure\Core\Exception\BusinessException;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Infrastructure\Core\ValueObject\Page;
 use Dtyq\AsyncEvent\AsyncEventUtil;
 use Hyperf\DbConnection\Annotation\Transactional;
 use Psr\SimpleCache\CacheInterface;
-use Throwable;
 
 readonly class KnowledgeBaseDomainService
 {
@@ -65,25 +62,6 @@ readonly class KnowledgeBaseDomainService
                 ExceptionBuilder::throw(FlowErrorCode::KnowledgeValidateFailed, 'flow.common.not_found', ['label' => $savingMagicFlowKnowledgeEntity->getCode()]);
             }
             $savingMagicFlowKnowledgeEntity->prepareForModification($magicFlowKnowledgeEntity);
-        }
-
-        // 创建知识库前，先对嵌入模型进行连通性测试
-        try {
-            $model = di(ModelGatewayMapper::class)->getEmbeddingModelProxy($magicFlowKnowledgeEntity->getModel());
-            $embeddingResult = $model->embeddings('test', businessParams: ['organization_id' => $dataIsolation->getCurrentOrganizationCode(), 'user_id' => $dataIsolation->getCurrentUserId()]);
-            if (count($embeddingResult->getData()[0]?->getEmbedding()) !== $model->getVectorSize()) {
-                throw new BusinessException();
-            }
-        } catch (Throwable $exception) {
-            $modelName = ! empty($model) ? $model->getModelName() : '';
-            simple_logger('KnowledgeBaseDomainService')->warning('KnowledgeBaseCheckEmbeddingsFailed', [
-                'message' => $exception->getMessage(),
-                'file' => $exception->getFile(),
-                'line' => $exception->getLine(),
-                'code' => $exception->getCode(),
-                'trace' => $exception->getTraceAsString(),
-            ]);
-            ExceptionBuilder::throw(FlowErrorCode::KnowledgeValidateFailed, 'flow.model.embedding_failed', ['model_name' => $modelName]);
         }
 
         $magicFlowKnowledgeEntity = $this->magicFlowKnowledgeRepository->save($dataIsolation, $magicFlowKnowledgeEntity);

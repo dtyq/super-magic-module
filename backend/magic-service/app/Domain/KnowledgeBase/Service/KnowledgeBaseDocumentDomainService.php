@@ -132,6 +132,14 @@ readonly class KnowledgeBaseDocumentDomainService
         return $this->knowledgeBaseDocumentRepository->getDocumentCountByKnowledgeBaseCode($dataIsolation, $knowledgeBaseCodes);
     }
 
+    /**
+     * @return array<string, string> array<文档code, 文档名>
+     */
+    public function getDocumentNamesByDocumentCodes(KnowledgeBaseDataIsolation $dataIsolation, array $knowledgeBaseCodes): array
+    {
+        return $this->knowledgeBaseDocumentRepository->getDocumentNamesByDocumentCodes($dataIsolation, $knowledgeBaseCodes);
+    }
+
     public function changeSyncStatus(KnowledgeBaseDataIsolation $dataIsolation, KnowledgeBaseDocumentEntity $documentEntity): void
     {
         $this->knowledgeBaseDocumentRepository->changeSyncStatus($dataIsolation, $documentEntity);
@@ -193,8 +201,12 @@ readonly class KnowledgeBaseDocumentDomainService
 
         $documentEntity->setUpdatedAt($documentEntity->getCreatedAt());
         $documentEntity->setUpdatedUid($documentEntity->getCreatedUid());
-        $extension = FileType::getType($documentFile->getFileLink()->getUrl());
-        $documentEntity->setDocType(DocType::fromExtension($extension)->value);
+        if ($documentFile) {
+            $extension = FileType::getType($documentFile->getFileLink()->getUrl());
+            $documentEntity->setDocType(DocType::fromExtension($extension)->value);
+        } else {
+            $documentEntity->setDocType(DocType::TXT->value);
+        }
         $documentEntity->setSyncStatus(0); // 0 表示未同步
     }
 
@@ -211,32 +223,11 @@ readonly class KnowledgeBaseDocumentDomainService
         $newDocument->setCreatedUid($oldDocument->getCreatedUid());
         $newDocument->setDocType($oldDocument->getDocType());
         $newDocument->setWordCount($oldDocument->getWordCount());
+        $newDocument->setSyncStatus($oldDocument->getSyncStatus());
+        $newDocument->setSyncStatusMessage($oldDocument->getSyncStatusMessage());
+        $newDocument->setSyncTimes($oldDocument->getSyncTimes());
 
         // 更新时间
         $newDocument->setUpdatedAt(date('Y-m-d H:i:s'));
-
-        // 如果文档内容或者配置变化，重置同步状态
-        if ($this->isContentOrConfigChanged($newDocument, $oldDocument)) {
-            $newDocument->setSyncStatus(0); // 0 表示未同步
-            $newDocument->setSyncStatusMessage('');
-            $newDocument->setSyncTimes(0);
-        } else {
-            $newDocument->setSyncStatus($oldDocument->getSyncStatus());
-            $newDocument->setSyncStatusMessage($oldDocument->getSyncStatusMessage());
-            $newDocument->setSyncTimes($oldDocument->getSyncTimes());
-        }
-    }
-
-    /**
-     * 判断文档内容或配置是否变化.
-     */
-    private function isContentOrConfigChanged(KnowledgeBaseDocumentEntity $newDocument, KnowledgeBaseDocumentEntity $oldDocument): bool
-    {
-        // 检查可能影响向量索引的字段是否变化
-        return $newDocument->getDocMetadata() != $oldDocument->getDocMetadata()
-            || $newDocument->getEmbeddingModel() !== $oldDocument->getEmbeddingModel()
-            || $newDocument->getVectorDb() !== $oldDocument->getVectorDb()
-            || $newDocument->getEmbeddingConfig() != $oldDocument->getEmbeddingConfig()
-            || $newDocument->getRetrieveConfig() != $oldDocument->getRetrieveConfig();
     }
 }
