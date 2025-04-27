@@ -92,7 +92,10 @@ class KnowledgeBaseFragmentRepository extends KnowledgeBaseAbstractRepository im
             $builder->where('knowledge_code', $query->getKnowledgeCode());
         }
         if ($query->getDocumentCode()) {
-            $builder->where('document_code', $query->getDocumentCode());
+            $documentCodes = [$query->getDocumentCode()];
+            // 兼容旧知识库片段，因为旧的知识库没有文档概念，如果是默认文档，就把旧知识库片段一起查出来
+            $query->isDefaultDocumentCode() && $documentCodes[] = '';
+            $builder->whereIn('document_code', $documentCodes);
         }
         if (! is_null($query->getSyncStatus())) {
             $builder->where('sync_status', $query->getSyncStatus());

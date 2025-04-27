@@ -39,6 +39,10 @@ class KnowledgeBaseFragmentAppService extends AbstractKnowledgeAppService
     {
         $dataIsolation = $this->createKnowledgeBaseDataIsolation($authorization);
         $this->checkKnowledgeBaseOperation($dataIsolation, 'r', $query->getKnowledgeCode(), $query->getDocumentCode());
+        $knowledgeBaseEntity = $this->knowledgeBaseDomainService->show($dataIsolation, $query->getKnowledgeCode());
+        if ($knowledgeBaseEntity->getDefaultDocumentCode() === $query->getDocumentCode()) {
+            $query->setIsDefaultDocumentCode(true);
+        }
 
         return $this->knowledgeBaseFragmentDomainService->queries($dataIsolation, $query, $page);
     }

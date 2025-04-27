@@ -8,7 +8,9 @@ declare(strict_types=1);
 namespace App\Interfaces\KnowledgeBase\Assembler;
 
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseFragmentEntity;
+use App\Domain\KnowledgeBase\Entity\ValueObject\Query\KnowledgeBaseFragmentQuery;
 use App\Interfaces\KnowledgeBase\DTO\KnowledgeBaseFragmentDTO;
+use App\Interfaces\KnowledgeBase\DTO\Request\GetFragmentListRequestDTO;
 
 class KnowledgeBaseFragmentAssembler
 {
@@ -22,5 +24,13 @@ class KnowledgeBaseFragmentAssembler
 
     public static function createListDTO()
     {
+    }
+
+    public static function getFragmentListRequestDTOToQuery(GetFragmentListRequestDTO $dto): KnowledgeBaseFragmentQuery
+    {
+        $query = new KnowledgeBaseFragmentQuery($dto->toArray());
+        $query->setKnowledgeCode($dto->getKnowledgeBaseCode());
+        $query->setOrder(['updated_at' => 'desc']);
+        return $query;
     }
 }

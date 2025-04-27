@@ -14,11 +14,12 @@ use App\Domain\KnowledgeBase\Entity\ValueObject\DocType;
 use App\Domain\KnowledgeBase\Entity\ValueObject\DocumentFileVO;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeBaseDataIsolation;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeSyncStatus;
+use App\Domain\KnowledgeBase\Event\KnowledgeBaseDefaultDocumentSavedEvent;
 use App\Domain\KnowledgeBase\Event\KnowledgeBaseDocumentRemovedEvent;
 use App\Domain\KnowledgeBase\Event\KnowledgeBaseDocumentSavedEvent;
 use App\Domain\KnowledgeBase\Repository\Facade\KnowledgeBaseDocumentRepositoryInterface;
+use App\Domain\KnowledgeBase\Repository\Facade\KnowledgeBaseFragmentRepositoryInterface;
 use App\ErrorCode\FlowErrorCode;
-use App\Infrastructure\Core\Embeddings\EmbeddingGenerator\EmbeddingGenerator;
 use App\Infrastructure\Core\Embeddings\VectorStores\VectorStoreDriver;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Infrastructure\Core\ValueObject\Page;
@@ -32,7 +33,8 @@ use Hyperf\DbConnection\Db;
 readonly class KnowledgeBaseDocumentDomainService
 {
     public function __construct(
-        private KnowledgeBaseDocumentRepositoryInterface $knowledgeBaseDocumentRepository
+        private KnowledgeBaseDocumentRepositoryInterface $knowledgeBaseDocumentRepository,
+        private KnowledgeBaseFragmentRepositoryInterface $knowledgeBaseFragmentRepository,
     ) {
     }
 
@@ -148,13 +150,14 @@ readonly class KnowledgeBaseDocumentDomainService
     public function getOrCreateDefaultDocument(KnowledgeBaseDataIsolation $dataIsolation, KnowledgeBaseEntity $knowledgeBaseEntity): KnowledgeBaseDocumentEntity
     {
         // 尝试获取默认文档
-        $documentEntity = $this->knowledgeBaseDocumentRepository->show($dataIsolation, $knowledgeBaseEntity->getDefaultDocumentCode());
+        $defaultDocumentCode = $knowledgeBaseEntity->getDefaultDocumentCode();
+        $documentEntity = $this->knowledgeBaseDocumentRepository->show($dataIsolation, $defaultDocumentCode);
         if ($documentEntity) {
             return $documentEntity;
         }
         // 如果文档不存在，创建新的默认文档
         $documentEntity = (new KnowledgeBaseDocumentEntity())
-            ->setCode($knowledgeBaseEntity->getDefaultDocumentCode())
+            ->setCode($defaultDocumentCode)
             ->setName('未命名文档')
             ->setKnowledgeBaseCode($knowledgeBaseEntity->getCode())
             ->setCreatedUid($knowledgeBaseEntity->getCreator())
@@ -162,11 +165,16 @@ readonly class KnowledgeBaseDocumentDomainService
             ->setDocType(DocType::TXT->value)
             ->setSyncStatus(KnowledgeSyncStatus::Synced->value)
             ->setOrganizationCode($knowledgeBaseEntity->getOrganizationCode())
-            ->setEmbeddingModel(EmbeddingGenerator::defaultModel())
-            ->setFragmentConfig([])
+            ->setEmbeddingModel($knowledgeBaseEntity->getModel())
+            ->setEmbeddingConfig($knowledgeBaseEntity->getEmbeddingConfig())
+            ->setFragmentConfig($knowledgeBaseEntity->getFragmentConfig())
+            ->setRetrieveConfig($knowledgeBaseEntity->getRetrieveConfig())
             ->setWordCount(0)
             ->setVectorDb(VectorStoreDriver::default()->value);
-        return $this->knowledgeBaseDocumentRepository->restoreOrCreate($dataIsolation, $documentEntity);
+        $res = $this->knowledgeBaseDocumentRepository->restoreOrCreate($dataIsolation, $documentEntity);
+        $event = new KnowledgeBaseDefaultDocumentSavedEvent($knowledgeBaseEntity, $documentEntity);
+        AsyncEventUtil::dispatch($event);
+        return $res;
     }
 
     /**
