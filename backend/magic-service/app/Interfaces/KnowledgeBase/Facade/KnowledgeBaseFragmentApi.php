@@ -92,8 +92,7 @@ class KnowledgeBaseFragmentApi extends AbstractKnowledgeBaseApi
     {
         $query = $this->request->input('query', '');
         $userAuthorization = $this->getAuthorization();
-        $entities = $this->knowledgeBaseFragmentAppService->similarity($userAuthorization, $code, $query);
-        $list = array_map(fn (KnowledgeBaseFragmentEntity $entity) => KnowledgeBaseFragmentAssembler::entityToDTO($entity), $entities);
+        $list = $this->knowledgeBaseFragmentAppService->similarity($userAuthorization, $code, $query);
         return new PageDTO(1, count($list), $list);
     }
 }
