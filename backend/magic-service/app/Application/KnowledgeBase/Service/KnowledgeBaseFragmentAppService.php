@@ -109,9 +109,9 @@ class KnowledgeBaseFragmentAppService extends AbstractKnowledgeAppService
         /** @var array<string, KnowledgeRetrievalResult> $result */
         $result = array_column($result, null, 'id');
         $fragmentIds = array_column($result, 'id');
-        $documentCodes = array_column($result, 'document_code');
-        $documentCodeNameMap = $this->knowledgeBaseDocumentDomainService->getDocumentNamesByDocumentCodes($dataIsolation, $knowledgeBaseCode, $documentCodes);
         $fragmentEntities = $this->knowledgeBaseFragmentDomainService->getByIds($dataIsolation, $fragmentIds);
+        $documentCodes = array_column($fragmentEntities, 'document_code');
+        $documentCodeNameMap = $this->knowledgeBaseDocumentDomainService->getDocumentNamesByDocumentCodes($dataIsolation, $knowledgeBaseCode, $documentCodes);
         $dtoList = array_map(fn (KnowledgeBaseFragmentEntity $entity) => KnowledgeBaseFragmentAssembler::entityToDTO($entity), $fragmentEntities);
         foreach ($dtoList as $dto) {
             $dto->setScore($result[(string) $dto->getId()]->getScore())

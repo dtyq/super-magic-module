@@ -131,7 +131,7 @@ class KnowledgeBaseDocumentRepository extends KnowledgeBaseAbstractRepository im
         $res = $this->createBuilder($dataIsolation, KnowledgeBaseDocumentModel::query())
             ->where('knowledge_base_code', $knowledgeBaseCode)
             ->whereIn('code', $knowledgeBaseDocumentCodes)
-            ->get('name')
+            ->get(['code', 'name'])
             ->toArray();
         $mapping = [];
         foreach ($res as $value) {

@@ -591,7 +591,7 @@ class KnowledgeBaseApiTest extends HttpTestCase
 
         // 验证返回结果的结构
         if (! empty($res['data'])) {
-            $result = $res['data'][0];
+            $result = $res['data']['list'][0];
             $this->assertArrayHasKey('id', $result);
             $this->assertArrayHasKey('content', $result);
             $this->assertArrayHasKey('metadata', $result);
