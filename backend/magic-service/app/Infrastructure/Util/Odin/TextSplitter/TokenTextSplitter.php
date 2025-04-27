@@ -170,7 +170,7 @@ class TokenTextSplitter extends TextSplitter
         if ($separator !== '') {
             $splits = $separator === ' ' ? preg_split('/\s+/', $text) : explode($separator, $text);
         } else {
-            $splits = str_split($text);
+            $splits = mb_str_split($text);
         }
 
         // 过滤空字符串
