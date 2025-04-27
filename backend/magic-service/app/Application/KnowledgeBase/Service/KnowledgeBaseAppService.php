@@ -75,15 +75,16 @@ class KnowledgeBaseAppService extends AbstractKnowledgeAppService
             }
         }
 
+        $modelName = $magicFlowKnowledgeEntity->getModel();
         // 创建知识库前，先对嵌入模型进行连通性测试
         try {
             $model = di(ModelGatewayMapper::class)->getEmbeddingModelProxy($magicFlowKnowledgeEntity->getModel());
-            $embeddingResult = $model->embeddings('test', businessParams: ['organization_id' => $dataIsolation->getCurrentOrganizationCode(), 'user_id' => $dataIsolation->getCurrentUserId()]);
-            if (count($embeddingResult->getData()[0]?->getEmbedding()) !== $model->getVectorSize()) {
+            $modelName = $model->getModelName();
+            $embeddingResult = $model->embedding('test', businessParams: ['organization_id' => $dataIsolation->getCurrentOrganizationCode(), 'user_id' => $dataIsolation->getCurrentUserId()]);
+            if (count($embeddingResult->getEmbeddings()) !== $model->getVectorSize()) {
                 throw new BusinessException(__('flow.model.vector_size_not_match'));
             }
         } catch (Throwable $exception) {
-            $modelName = ! empty($model) ? $model->getModelName() : '';
             simple_logger('KnowledgeBaseDomainService')->warning('KnowledgeBaseCheckEmbeddingsFailed', [
                 'message' => $exception->getMessage(),
                 'file' => $exception->getFile(),
