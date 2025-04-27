@@ -8,7 +8,6 @@ declare(strict_types=1);
 namespace App\Domain\Flow\Entity\ValueObject\NodeParamsConfig\Knowledge\Structure;
 
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeBaseDataIsolation;
-use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeType;
 use App\Domain\KnowledgeBase\Entity\ValueObject\Query\KnowledgeBaseQuery;
 use App\Domain\KnowledgeBase\Service\KnowledgeBaseDomainService;
 use App\ErrorCode\FlowErrorCode;
@@ -93,9 +92,9 @@ class KnowledgeConfig
             if (empty($knowledgeItem['knowledge_type'])) {
                 continue;
             }
-            $type = KnowledgeType::tryFrom($knowledgeItem['knowledge_type']);
+            $type = (int) $knowledgeItem['knowledge_type'];
             if (! $type) {
-                ExceptionBuilder::throw(FlowErrorCode::FlowNodeValidateFailed, 'flow.node.knowledge_similarity.type_valid');
+                continue;
             }
             if (empty($knowledgeItem['knowledge_code'])) {
                 continue;

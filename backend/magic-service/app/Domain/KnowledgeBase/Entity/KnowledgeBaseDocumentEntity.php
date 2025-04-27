@@ -7,9 +7,9 @@ declare(strict_types=1);
 
 namespace App\Domain\KnowledgeBase\Entity;
 
+use App\Domain\KnowledgeBase\Entity\ValueObject\FragmentConfig;
 use App\Domain\KnowledgeBase\Entity\ValueObject\RetrieveConfig;
 use App\ErrorCode\FlowErrorCode;
-use App\Infrastructure\Core\AbstractEntity;
 use App\Infrastructure\Core\Embeddings\VectorStores\VectorStoreDriver;
 use App\Infrastructure\Core\Embeddings\VectorStores\VectorStoreInterface;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
@@ -17,7 +17,7 @@ use App\Infrastructure\Core\Exception\ExceptionBuilder;
 /**
  * 知识库文档实体.
  */
-class KnowledgeBaseDocumentEntity extends AbstractEntity
+class KnowledgeBaseDocumentEntity extends AbstractKnowledgeBaseEntity
 {
     protected ?int $id = null;
 
@@ -49,7 +49,7 @@ class KnowledgeBaseDocumentEntity extends AbstractEntity
 
     protected ?RetrieveConfig $retrieveConfig = null;
 
-    protected ?array $fragmentConfig = null;
+    protected ?FragmentConfig $fragmentConfig = null;
 
     protected ?array $embeddingConfig = null;
 
@@ -224,13 +224,16 @@ class KnowledgeBaseDocumentEntity extends AbstractEntity
         return $this;
     }
 
-    public function getFragmentConfig(): array
+    public function getFragmentConfig(): FragmentConfig
     {
-        return $this->fragmentConfig;
+        return $this->fragmentConfig ?? $this->getDefaultFragmentConfig();
     }
 
-    public function setFragmentConfig(?array $fragmentConfig): self
+    public function setFragmentConfig(null|array|FragmentConfig $fragmentConfig): self
     {
+        // 默认配置
+        is_null($fragmentConfig) && $fragmentConfig = $this->getDefaultFragmentConfig();
+        is_array($fragmentConfig) && $fragmentConfig = FragmentConfig::fromArray($fragmentConfig);
         $this->fragmentConfig = $fragmentConfig;
         return $this;
     }

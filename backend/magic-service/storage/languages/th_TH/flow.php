@@ -58,7 +58,8 @@ return [
         'disabled' => 'โมเดล [:model_name] ถูกปิดใช้งาน',
         'not_support_embedding' => '[:model_name] ไม่รองรับการฝังตัว',
         'error_config_missing' => 'ไม่พบรายการกำหนดค่า :name โปรดตรวจสอบการตั้งค่าหรือติดต่อผู้ดูแลระบบ',
-        'embedding_failed' => '[:model_name] การฝังตัวล้มเหลว',
+        'embedding_failed' => '[:model_name] การฝังตัวล้มเหลว, โปรดตรวจสอบการตั้งค่าฝังตัว',
+        'vector_size_not_match' => '[:model_name] ขนาดเวกเตอร์ไม่ตรงกับการตั้งค่า, โปรดตรวจสอบขนาดเวกเตอร์',
     ],
     'max_record' => [
         'positive_integer' => 'จำนวนบันทึกสูงสุดต้องเป็นจำนวนเต็มบวกระหว่าง :min และ :max',

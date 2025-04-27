@@ -10,6 +10,7 @@ namespace App\Application\ModelGateway\Mapper;
 use App\Domain\Flow\Entity\ValueObject\FlowDataIsolation;
 use App\Domain\Flow\Entity\ValueObject\Query\MagicFlowAIModelQuery;
 use App\Domain\Flow\Service\MagicFlowAIModelDomainService;
+use App\Domain\ModelAdmin\Constant\ModelType;
 use App\Domain\ModelAdmin\Constant\ServiceProviderCategory;
 use App\Domain\ModelAdmin\Constant\ServiceProviderCode;
 use App\Domain\ModelAdmin\Entity\ServiceProviderConfigEntity;
@@ -76,7 +77,7 @@ class ModelGatewayMapper extends ModelMapper
      * 内部使用 chat 时，一定是使用该方法.
      * 会自动替代为本地代理模型.
      */
-    public function getChatModelProxy(string $model, ?string $orgCode = null): ModelInterface
+    public function getChatModelProxy(string $model, ?string $orgCode = null): MagicAILocalModel
     {
         /** @var AbstractModel $odinModel */
         $odinModel = $this->getOrganizationChatModel($model, $orgCode);
@@ -88,7 +89,7 @@ class ModelGatewayMapper extends ModelMapper
      * 内部使用 embedding 时，一定是使用该方法.
      * 会自动替代为本地代理模型.
      */
-    public function getEmbeddingModelProxy(string $model, ?string $orgCode = null): EmbeddingInterface
+    public function getEmbeddingModelProxy(string $model, ?string $orgCode = null): MagicAILocalModel
     {
         /** @var AbstractModel $odinModel */
         $odinModel = $this->getOrganizationEmbeddingModel($model, $orgCode);
@@ -354,6 +355,20 @@ class ModelGatewayMapper extends ModelMapper
             $serviceProviderCode = ServiceProviderCode::tryFrom($providerConfigEntity->getProviderCode());
         }
 
+        $chat = false;
+        $functionCall = false;
+        $multiModal = false;
+        $embedding = false;
+        $vectorSize = 0;
+        if ($providerModelsEntity->getModelType() === ModelType::LLM->value) {
+            $chat = true;
+            $functionCall = $providerModelsEntity->getConfig()->isSupportFunction();
+            $multiModal = $providerModelsEntity->getConfig()->isSupportMultiModal();
+        } elseif ($providerModelsEntity->getModelType() === ModelType::EMBEDDING->value) {
+            $embedding = true;
+            $vectorSize = $providerModelsEntity->getConfig()->getVectorSize();
+        }
+
         // 服务商侧的接入点名称
         $endpointName = $providerModelsEntity->getModelVersion();
         $config = $providerConfigEntity->getConfig();
@@ -372,11 +387,11 @@ class ModelGatewayMapper extends ModelMapper
                 'implementation' => $serviceProviderCode->getImplementation(),
                 'config' => $serviceProviderCode->getImplementationConfig($config, $modelVersion),
                 'model_options' => [
-                    'chat' => true,
-                    'function_call' => true,
-                    'embedding' => false,
-                    'multi_modal' => false,
-                    'vector_size' => 0,
+                    'chat' => $chat,
+                    'function_call' => $functionCall,
+                    'embedding' => $embedding,
+                    'multi_modal' => $multiModal,
+                    'vector_size' => $vectorSize,
                 ],
             ]),
             attributes: new OdinModelAttributes(
@@ -432,10 +447,10 @@ class ModelGatewayMapper extends ModelMapper
         );
     }
 
-    private function createProxy(string $model, ModelOptions $modelOptions, ApiOptions $apiOptions): EmbeddingInterface|ModelInterface
+    private function createProxy(string $model, ModelOptions $modelOptions, ApiOptions $apiOptions): MagicAILocalModel
     {
         // 使用ModelFactory创建模型实例
-        return ModelFactory::create(
+        $odinModel = ModelFactory::create(
             MagicAILocalModel::class,
             $model,
             [
@@ -445,5 +460,9 @@ class ModelGatewayMapper extends ModelMapper
             $apiOptions,
             $this->logger
         );
+        if (! $odinModel instanceof MagicAILocalModel) {
+            throw new InvalidArgumentException(sprintf('Implementation %s is not defined.', MagicAILocalModel::class));
+        }
+        return $odinModel;
     }
 }

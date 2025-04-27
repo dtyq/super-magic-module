@@ -32,6 +32,19 @@ class KnowledgeBaseFragmentRepository extends KnowledgeBaseAbstractRepository im
         return $model ? MagicFlowKnowledgeFragmentFactory::modelToEntity($model) : null;
     }
 
+    public function getByIds(KnowledgeBaseDataIsolation $dataIsolation, array $ids, bool $selectForUpdate = false): array
+    {
+        $builder = $this->createBuilder($dataIsolation, KnowledgeBaseFragmentsModel::query());
+        $res = $builder
+            ->when($selectForUpdate, function ($builder) {
+                return $builder->lockForUpdate();
+            })
+            ->whereIn('id', $ids)
+            ->get()
+            ->toArray();
+        return array_map(fn ($item) => new KnowledgeBaseFragmentEntity($item), $res);
+    }
+
     public function getByBusinessId(KnowledgeBaseDataIsolation $dataIsolation, string $knowledgeCode, string $businessId): ?KnowledgeBaseFragmentEntity
     {
         $builder = $this->createBuilder($dataIsolation, KnowledgeBaseFragmentsModel::query());

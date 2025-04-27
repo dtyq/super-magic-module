@@ -23,6 +23,7 @@ use App\ErrorCode\FlowErrorCode;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Infrastructure\Core\ValueObject\Page;
 use App\Infrastructure\Util\Odin\TextSplitter\TokenTextSplitter;
+use App\Infrastructure\Util\Text\TextPreprocess\TextPreprocessUtil;
 use Dtyq\AsyncEvent\AsyncEventUtil;
 use Exception;
 use Hyperf\DbConnection\Annotation\Transactional;
@@ -130,6 +131,14 @@ readonly class KnowledgeBaseFragmentDomainService
     }
 
     /**
+     * @return array<KnowledgeBaseFragmentEntity>
+     */
+    public function getByIds(KnowledgeBaseDataIsolation $dataIsolation, array $ids): array
+    {
+        return $this->knowledgeBaseFragmentRepository->getByIds($dataIsolation, $ids);
+    }
+
+    /**
      * @return array<string, KnowledgeSyncStatus>
      */
     public function getFinalSyncStatusByDocumentCodes(KnowledgeBaseDataIsolation $dataIsolation, array $documentCodes): array
@@ -152,6 +161,10 @@ readonly class KnowledgeBaseFragmentDomainService
     public function processFragmentsByContent(KnowledgeBaseDataIsolation $dataIsolation, string $content, FragmentConfig $fragmentConfig): array
     {
         // todo 目前只有默认分段，后续要补充父子分段逻辑
+        // 先进行预处理
+        $content = TextPreprocessUtil::preprocess($fragmentConfig->getNormal()->getTextPreprocessRule(), $content);
+
+        // 再进行分段
         $normalFragmentConfig = $fragmentConfig->getNormal();
         $splitter = new TokenTextSplitter(
             chunkSize: $normalFragmentConfig->getSegmentRule()->getChunkSize(),

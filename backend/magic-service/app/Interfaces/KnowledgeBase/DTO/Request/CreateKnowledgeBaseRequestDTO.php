@@ -31,6 +31,8 @@ class CreateKnowledgeBaseRequestDTO extends AbstractRequestDTO
 
     public RetrieveConfig $retrieveConfig;
 
+    public string $businessId = '';
+
     public function getName(): string
     {
         return $this->name;
@@ -119,6 +121,16 @@ class CreateKnowledgeBaseRequestDTO extends AbstractRequestDTO
         $this->documentFiles = array_map(fn ($file) => new DocumentFileDTO($file), $documentFiles);
     }
 
+    public function getBusinessId(): string
+    {
+        return $this->businessId;
+    }
+
+    public function setBusinessId(string $businessId): void
+    {
+        $this->businessId = $businessId;
+    }
+
     protected static function getHyperfValidationRules(): array
     {
         return [
@@ -143,7 +155,7 @@ class CreateKnowledgeBaseRequestDTO extends AbstractRequestDTO
             'fragment_config.normal.segment_rule.chunk_overlap' => 'required_if:fragment_config.mode,1|integer|min:0',
             'fragment_config.parent_child' => 'required_if:fragment_config.mode,2|array',
             'fragment_config.parent_child.separator' => 'required_if:fragment_config.mode,2|string',
-            'fragment_config.parent_child.chunk_size' => 'required_if:fragment_config.mode,2|string',
+            'fragment_config.parent_child.chunk_size' => 'required_if:fragment_config.mode,2|integer|min:1',
             'fragment_config.parent_child.parent_mode' => 'required_if:fragment_config.mode,2|integer|in:1,2',
             'fragment_config.parent_child.child_segment_rule' => 'required_if:fragment_config.mode,2|array',
             'fragment_config.parent_child.child_segment_rule.separator' => 'required_if:fragment_config.mode,2|string',

@@ -11,6 +11,7 @@ use App\Application\KnowledgeBase\VectorDatabase\Similarity\KnowledgeSimilarityF
 use App\Application\KnowledgeBase\VectorDatabase\Similarity\KnowledgeSimilarityManager;
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseFragmentEntity;
 use App\Domain\KnowledgeBase\Entity\ValueObject\FragmentConfig;
+use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeRetrievalResult;
 use App\Domain\KnowledgeBase\Entity\ValueObject\Query\KnowledgeBaseFragmentQuery;
 use App\Infrastructure\Core\ValueObject\Page;
 use App\Infrastructure\Util\SSRF\Exception\SSRFException;
@@ -82,5 +83,30 @@ class KnowledgeBaseFragmentAppService extends AbstractKnowledgeAppService
         $content = $this->fileParser->parse($fileUrl?->getUrl() ?? '');
         $fragmentContents = $this->knowledgeBaseFragmentDomainService->processFragmentsByContent($dataIsolation, $content, $fragmentConfig);
         return KnowledgeBaseFragmentEntity::fromFragmentContents($fragmentContents);
+    }
+
+    /**
+     * @return array<KnowledgeBaseFragmentEntity>
+     */
+    public function similarity(Authenticatable $authenticatable, string $knowledgeBaseCode, string $query): array
+    {
+        $dataIsolation = $this->createKnowledgeBaseDataIsolation($authenticatable);
+        $this->checkKnowledgeBaseOperation($dataIsolation, 'r', $knowledgeBaseCode);
+        $knowledgeBaseEntity = $this->knowledgeBaseDomainService->show($dataIsolation, $knowledgeBaseCode);
+        $retrieveConfig = $knowledgeBaseEntity->getRetrieveConfig();
+        $filter = new KnowledgeSimilarityFilter();
+        $filter->setQuery($query);
+        $filter->setKnowledgeCodes([$knowledgeBaseCode]);
+        $filter->setLimit($retrieveConfig->getTopK());
+        $filter->setScore($retrieveConfig->getScoreThreshold());
+        $result = $this->knowledgeSimilarityManager->similarity($dataIsolation, $filter, $knowledgeBaseEntity->getRetrieveConfig());
+        /** @var array<string, KnowledgeRetrievalResult> $result */
+        $result = array_column($result, null, 'id');
+        $fragmentIds = array_column($result, 'id');
+        $fragmentEntities = $this->knowledgeBaseFragmentDomainService->getByIds($dataIsolation, $fragmentIds);
+        foreach ($fragmentEntities as $fragmentEntity) {
+            $fragmentEntity->setScore($result[(string) $fragmentEntity->getId()]->getScore());
+        }
+        return $fragmentEntities;
     }
 }

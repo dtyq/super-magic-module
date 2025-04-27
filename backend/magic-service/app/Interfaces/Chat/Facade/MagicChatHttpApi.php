@@ -83,7 +83,7 @@ class MagicChatHttpApi extends AbstractApi
         $params = $this->checkParams($params, $rules);
         $this->logger->info('pullMessageByAppMessageId:' . $appMessageId);
         $authorization = $this->getAuthorization();
-        return $this->magicChatMessageAppService->pullByAppMessageId($authorization, $appMessageId, $params['page_token']);
+        return $this->magicChatMessageAppService->pullByAppMessageId($authorization, $appMessageId, $params['page_token'] ?? '');
     }
 
     /**
@@ -100,7 +100,7 @@ class MagicChatHttpApi extends AbstractApi
         $messagesQueryDTO = new MessagesQueryDTO();
         $messagesQueryDTO->setLimit(500);
         $messagesQueryDTO->setOrder(Order::Desc);
-        $messagesQueryDTO->setPageToken($params['page_token']);
+        $messagesQueryDTO->setPageToken($params['page_token'] ?? '');
         $authorization = $this->getAuthorization();
         return $this->magicChatMessageAppService->pullRecentMessage($authorization, $messagesQueryDTO);
     }

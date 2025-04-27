@@ -21,14 +21,6 @@ class UpdateDocumentRequestDTO extends AbstractRequestDTO
 
     public bool $enabled = true;
 
-    public array $fragmentConfig = [];
-
-    public array $embeddingConfig = [];
-
-    public array $vectorDbConfig = [];
-
-    public array $retrieveConfig = [];
-
     public static function getHyperfValidationRules(): array
     {
         return [
@@ -36,10 +28,6 @@ class UpdateDocumentRequestDTO extends AbstractRequestDTO
             'name' => 'required|string|max:255',
             'doc_metadata' => 'array',
             'enabled' => 'boolean',
-            'fragment_config' => 'array',
-            'embedding_config' => 'array',
-            'vector_db_config' => 'array',
-            'retrieve_config' => 'array',
         ];
     }
 
@@ -95,50 +83,6 @@ class UpdateDocumentRequestDTO extends AbstractRequestDTO
     public function setEnabled(bool $enabled): self
     {
         $this->enabled = $enabled;
-        return $this;
-    }
-
-    public function getFragmentConfig(): array
-    {
-        return $this->fragmentConfig;
-    }
-
-    public function setFragmentConfig(array $fragmentConfig): self
-    {
-        $this->fragmentConfig = $fragmentConfig;
-        return $this;
-    }
-
-    public function getEmbeddingConfig(): array
-    {
-        return $this->embeddingConfig;
-    }
-
-    public function setEmbeddingConfig(array $embeddingConfig): self
-    {
-        $this->embeddingConfig = $embeddingConfig;
-        return $this;
-    }
-
-    public function getVectorDbConfig(): array
-    {
-        return $this->vectorDbConfig;
-    }
-
-    public function setVectorDbConfig(array $vectorDbConfig): self
-    {
-        $this->vectorDbConfig = $vectorDbConfig;
-        return $this;
-    }
-
-    public function getRetrieveConfig(): array
-    {
-        return $this->retrieveConfig;
-    }
-
-    public function setRetrieveConfig(array $retrieveConfig): self
-    {
-        $this->retrieveConfig = $retrieveConfig;
         return $this;
     }
 

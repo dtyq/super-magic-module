@@ -30,14 +30,17 @@ class KnowledgeBaseFragmentDTO extends AbstractFlowDTO
 
     public float $score;
 
+    public int $wordCount;
+
     public function getKnowledgeCode(): string
     {
         return $this->knowledgeCode;
     }
 
-    public function setKnowledgeCode(?string $knowledgeCode): void
+    public function setKnowledgeCode(?string $knowledgeCode): static
     {
         $this->knowledgeCode = $knowledgeCode ?? '';
+        return $this;
     }
 
     public function getKnowledgeBaseCode(): string
@@ -56,9 +59,10 @@ class KnowledgeBaseFragmentDTO extends AbstractFlowDTO
         return $this->content;
     }
 
-    public function setContent(?string $content): void
+    public function setContent(?string $content): static
     {
         $this->content = $content ?? '';
+        return $this;
     }
 
     public function getMetadata(): array
@@ -66,9 +70,10 @@ class KnowledgeBaseFragmentDTO extends AbstractFlowDTO
         return $this->metadata;
     }
 
-    public function setMetadata(?array $metadata): void
+    public function setMetadata(?array $metadata): static
     {
         $this->metadata = $metadata ?? [];
+        return $this;
     }
 
     public function getBusinessId(): string
@@ -76,9 +81,10 @@ class KnowledgeBaseFragmentDTO extends AbstractFlowDTO
         return $this->businessId;
     }
 
-    public function setBusinessId(?string $businessId): void
+    public function setBusinessId(?string $businessId): static
     {
         $this->businessId = $businessId ?? '';
+        return $this;
     }
 
     public function getSyncStatus(): int
@@ -86,10 +92,11 @@ class KnowledgeBaseFragmentDTO extends AbstractFlowDTO
         return $this->syncStatus;
     }
 
-    public function setSyncStatus(null|int|KnowledgeSyncStatus $syncStatus): void
+    public function setSyncStatus(null|int|KnowledgeSyncStatus $syncStatus): static
     {
         $syncStatus instanceof KnowledgeSyncStatus && $syncStatus = $syncStatus->value;
         $this->syncStatus = $syncStatus ?? 0;
+        return $this;
     }
 
     public function getSyncStatusMessage(): string
@@ -97,9 +104,10 @@ class KnowledgeBaseFragmentDTO extends AbstractFlowDTO
         return $this->syncStatusMessage;
     }
 
-    public function setSyncStatusMessage(?string $syncStatusMessage): void
+    public function setSyncStatusMessage(?string $syncStatusMessage): static
     {
         $this->syncStatusMessage = $syncStatusMessage ?? '';
+        return $this;
     }
 
     public function getScore(): float
@@ -107,9 +115,10 @@ class KnowledgeBaseFragmentDTO extends AbstractFlowDTO
         return $this->score;
     }
 
-    public function setScore(?float $score): void
+    public function setScore(?float $score): static
     {
         $this->score = $score ?? 0.0;
+        return $this;
     }
 
     public function getDocumentCode(): string
@@ -120,6 +129,17 @@ class KnowledgeBaseFragmentDTO extends AbstractFlowDTO
     public function setDocumentCode(string $documentCode): KnowledgeBaseFragmentDTO
     {
         $this->documentCode = $documentCode;
+        return $this;
+    }
+
+    public function getWordCount(): int
+    {
+        return $this->wordCount;
+    }
+
+    public function setWordCount(int $wordCount): static
+    {
+        $this->wordCount = $wordCount;
         return $this;
     }
 }

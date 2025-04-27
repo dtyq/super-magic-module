@@ -27,6 +27,8 @@ class UpdateKnowledgeBaseRequestDTO extends AbstractRequestDTO
 
     public array $retrieveConfig;
 
+    protected string $businessId = '';
+
     public function getCode(): string
     {
         return $this->code;
@@ -112,6 +114,16 @@ class UpdateKnowledgeBaseRequestDTO extends AbstractRequestDTO
     public function setIcon(string $icon): void
     {
         $this->icon = $icon;
+    }
+
+    public function getBusinessId(): string
+    {
+        return $this->businessId;
+    }
+
+    public function setBusinessId(string $businessId): void
+    {
+        $this->businessId = $businessId;
     }
 
     protected static function getHyperfValidationRules(): array

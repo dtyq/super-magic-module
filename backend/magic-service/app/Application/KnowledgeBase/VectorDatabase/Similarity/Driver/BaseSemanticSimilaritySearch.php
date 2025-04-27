@@ -16,9 +16,18 @@ use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeRetrievalResult;
 use App\Domain\KnowledgeBase\Entity\ValueObject\RetrieveConfig;
 use App\Infrastructure\Core\Embeddings\EmbeddingGenerator\EmbeddingGeneratorInterface;
 use App\Infrastructure\Core\Embeddings\Rerank\RerankGeneratorInterface;
+use Hyperf\Logger\LoggerFactory;
+use Psr\Log\LoggerInterface;
 
 class BaseSemanticSimilaritySearch implements SemanticSimilaritySearchInterface
 {
+    protected LoggerInterface $logger;
+
+    public function __construct(LoggerFactory $loggerFactory)
+    {
+        $this->logger = $loggerFactory->get(get_class($this));
+    }
+
     public function search(KnowledgeBaseDataIsolation $dataIsolation, KnowledgeSimilarityFilter $filter, KnowledgeBaseEntity $knowledgeBaseEntity, RetrieveConfig $retrieveConfig): array
     {
         // 场景验证， 如果开启重新排序，可以多召回数据，然后根据得分进行排序，取 limit ，最多不超过 20 或者 limit 上限
@@ -57,7 +66,7 @@ class BaseSemanticSimilaritySearch implements SemanticSimilaritySearchInterface
         );
         foreach ($points as $point) {
             $fragment = KnowledgeBaseFragmentEntity::createByPointInfo($point, $knowledgeBaseEntity->getCode());
-            $result[] = KnowledgeRetrievalResult::fromFragment((string) $fragment->getId(), $fragment->getContent(), $fragment->getBusinessId(), $fragment->getMetadata());
+            $result[] = KnowledgeRetrievalResult::fromFragment((string) $fragment->getId(), $fragment->getContent(), $fragment->getBusinessId(), $fragment->getMetadata(), $fragment->getScore());
             if (count($result) >= $filter->getLimit()) {
                 break;
             }

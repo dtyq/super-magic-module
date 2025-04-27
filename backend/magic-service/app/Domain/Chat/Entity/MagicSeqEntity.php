@@ -94,10 +94,7 @@ final class MagicSeqEntity extends AbstractEntity
 
     public function setId(int|string $id): self
     {
-        if (is_int($id)) {
-            $id = (string) $id;
-        }
-        $this->id = $id;
+        $this->id = (string) $id;
         return $this;
     }
 
@@ -111,12 +108,13 @@ final class MagicSeqEntity extends AbstractEntity
         if (is_string($seqType)) {
             $typeEnum = ChatMessageType::tryFrom($seqType);
             if ($typeEnum === null) {
-                $seqType = ControlMessageType::tryFrom($seqType);
+                $this->seqType = ControlMessageType::tryFrom($seqType);
             } else {
-                $seqType = $typeEnum;
+                $this->seqType = $typeEnum;
             }
+        } else {
+            $this->seqType = $seqType;
         }
-        $this->seqType = $seqType;
         return $this;
     }
 
@@ -149,10 +147,7 @@ final class MagicSeqEntity extends AbstractEntity
 
     public function setReferMessageId(int|string $referMessageId): self
     {
-        if (is_int($referMessageId)) {
-            $referMessageId = (string) $referMessageId;
-        }
-        $this->referMessageId = $referMessageId;
+        $this->referMessageId = (string) $referMessageId;
         return $this;
     }
 
@@ -163,10 +158,7 @@ final class MagicSeqEntity extends AbstractEntity
 
     public function setSenderMessageId(int|string $senderMessageId): self
     {
-        if (is_int($senderMessageId)) {
-            $senderMessageId = (string) $senderMessageId;
-        }
-        $this->senderMessageId = $senderMessageId;
+        $this->senderMessageId = (string) $senderMessageId;
         return $this;
     }
 
@@ -186,12 +178,13 @@ final class MagicSeqEntity extends AbstractEntity
         return $this->objectType;
     }
 
-    public function setObjectType(ConversationType|int $objectType): self
+    public function setObjectType(ConversationType|int|string $objectType): self
     {
-        if (is_int($objectType)) {
-            $objectType = ConversationType::tryFrom($objectType);
+        if ($objectType instanceof ConversationType) {
+            $this->objectType = $objectType;
+        } elseif (is_numeric($objectType)) {
+            $this->objectType = ConversationType::tryFrom($objectType);
         }
-        $this->objectType = $objectType;
         return $this;
     }
 
@@ -202,10 +195,7 @@ final class MagicSeqEntity extends AbstractEntity
 
     public function setObjectId(int|string $objectId): self
     {
-        if (is_int($objectId)) {
-            $objectId = (string) $objectId;
-        }
-        $this->objectId = $objectId;
+        $this->objectId = (string) $objectId;
         return $this;
     }
 
@@ -216,10 +206,7 @@ final class MagicSeqEntity extends AbstractEntity
 
     public function setSeqId(int|string $seqId): self
     {
-        if (is_int($seqId)) {
-            $seqId = (string) $seqId;
-        }
-        $this->seqId = $seqId;
+        $this->seqId = (string) $seqId;
         return $this;
     }
 
@@ -230,10 +217,7 @@ final class MagicSeqEntity extends AbstractEntity
 
     public function setMessageId(int|string $messageId): self
     {
-        if (is_int($messageId)) {
-            $messageId = (string) $messageId;
-        }
-        $this->messageId = $messageId;
+        $this->messageId = (string) $messageId;
         return $this;
     }
 
@@ -244,10 +228,7 @@ final class MagicSeqEntity extends AbstractEntity
 
     public function setConversationId(int|string $conversationId): self
     {
-        if (is_int($conversationId)) {
-            $conversationId = (string) $conversationId;
-        }
-        $this->conversationId = $conversationId;
+        $this->conversationId = (string) $conversationId;
         return $this;
     }
 
@@ -256,12 +237,17 @@ final class MagicSeqEntity extends AbstractEntity
         return $this->status;
     }
 
-    public function setStatus(null|int|MagicMessageStatus $status): self
+    public function setStatus(null|int|MagicMessageStatus|string $status): self
     {
-        if (is_int($status)) {
-            $status = MagicMessageStatus::tryFrom($status);
+        if ($status instanceof MagicMessageStatus) {
+            $this->status = $status;
+            return $this;
         }
-        $this->status = $status;
+        if (is_numeric($status)) {
+            $this->status = MagicMessageStatus::tryFrom($status);
+        } else {
+            $this->status = null;
+        }
         return $this;
     }
 
@@ -367,18 +353,8 @@ final class MagicSeqEntity extends AbstractEntity
         return $data;
     }
 
-    public function canTriggerFlowOperateConversationStatus(): bool
-    {
-        return ! $this->isIgnoreMessageEntity();
-    }
-
-    public function isIgnoreMessageEntity(): bool
-    {
-        return in_array($this->seqType, [ControlMessageType::AddFriendSuccess, ControlMessageType::OpenConversation]);
-    }
-
     public function canTriggerFlow(): bool
     {
-        return in_array($this->seqType, [ControlMessageType::AddFriendSuccess, ControlMessageType::OpenConversation]);
+        return in_array($this->seqType, [ControlMessageType::AddFriendSuccess, ControlMessageType::OpenConversation], true);
     }
 }

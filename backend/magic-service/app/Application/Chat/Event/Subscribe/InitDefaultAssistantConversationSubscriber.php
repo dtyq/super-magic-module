@@ -42,18 +42,23 @@ class InitDefaultAssistantConversationSubscriber extends ConsumerMessage
 
     public function consumeMessage($data, AMQPMessage $message): Result
     {
-        $data['user_entity']['user_type'] = UserType::tryFrom($data['user_entity']['user_type']);
-        $data['user_entity']['status'] = UserStatus::tryFrom($data['user_entity']['status']);
-        $data['user_entity']['like_num'] = (int) $data['user_entity']['like_num'];
-        /** @var MagicUserEntity $userEntity */
-        $userEntity = new MagicUserEntity($data['user_entity']);
-        /** @var array<string> $defaultConversationAICodes */
-        $defaultConversationAICodes = $data['default_conversation_ai_codes'];
-        // 先批量注册，防止组织下没有该助理用户.
-        $this->batchAiRegister($userEntity, $defaultConversationAICodes);
-        // 初始化默认会话
-        $this->magicAgentAppService->initDefaultAssistantConversation($userEntity, $defaultConversationAICodes);
-        return Result::ACK;
+        try {
+            $data['user_entity']['user_type'] = UserType::tryFrom($data['user_entity']['user_type']);
+            $data['user_entity']['status'] = UserStatus::tryFrom($data['user_entity']['status']);
+            $data['user_entity']['like_num'] = (int) $data['user_entity']['like_num'];
+            /** @var MagicUserEntity $userEntity */
+            $userEntity = new MagicUserEntity($data['user_entity']);
+            /** @var array<string> $defaultConversationAICodes */
+            $defaultConversationAICodes = $data['default_conversation_ai_codes'];
+            // 先批量注册，防止组织下没有该助理用户.
+            $this->batchAiRegister($userEntity, $defaultConversationAICodes);
+            // 初始化默认会话
+            $this->magicAgentAppService->initDefaultAssistantConversation($userEntity, $defaultConversationAICodes);
+            return Result::ACK;
+        } catch (Throwable $exception) {
+            $this->logger->error("初始化默认会话失败，错误信息: {$exception->getMessage()}, 堆栈: {$exception->getTraceAsString()}");
+            return Result::ACK;
+        }
     }
 
     /**
