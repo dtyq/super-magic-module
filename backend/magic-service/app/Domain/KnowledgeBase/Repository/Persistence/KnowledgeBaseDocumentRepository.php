@@ -92,12 +92,13 @@ class KnowledgeBaseDocumentRepository extends KnowledgeBaseAbstractRepository im
         return new KnowledgeBaseDocumentEntity($model->toArray());
     }
 
-    public function updateWordCount(KnowledgeBaseDataIsolation $dataIsolation, string $documentCode, int $deltaWordCount): void
+    public function updateWordCount(KnowledgeBaseDataIsolation $dataIsolation, string $knowledgeBaseCode, string $documentCode, int $deltaWordCount): void
     {
         if ($deltaWordCount === 0) {
             return;
         }
         $this->createBuilder($dataIsolation, KnowledgeBaseDocumentModel::query())
+            ->where('knowledge_base_code', $knowledgeBaseCode)
             ->where('code', $documentCode)
             ->increment('word_count', $deltaWordCount);
     }
@@ -124,13 +125,13 @@ class KnowledgeBaseDocumentRepository extends KnowledgeBaseAbstractRepository im
     /**
      * @return array<string, string> array<文档code, 文档名>
      */
-    public function getDocumentNamesByDocumentCodes(KnowledgeBaseDataIsolation $dataIsolation, array $knowledgeBaseDocumentCodes): array
+    public function getDocumentNamesByDocumentCodes(KnowledgeBaseDataIsolation $dataIsolation, string $knowledgeBaseCode, array $knowledgeBaseDocumentCodes): array
     {
-        // 分组聚合查询，获取每个文档的文档名
+        // 获取每个文档的文档名
         $res = $this->createBuilder($dataIsolation, KnowledgeBaseDocumentModel::query())
-            ->groupBy('code')
+            ->where('knowledge_base_code', $knowledgeBaseCode)
             ->whereIn('code', $knowledgeBaseDocumentCodes)
-            ->get('name')
+            ->get(['code', 'name'])
             ->toArray();
         $mapping = [];
         foreach ($res as $value) {
@@ -163,13 +164,17 @@ class KnowledgeBaseDocumentRepository extends KnowledgeBaseAbstractRepository im
     /**
      * 查看单个知识库文档详情.
      */
-    public function show(KnowledgeBaseDataIsolation $dataIsolation, string $documentCode, bool $selectForUpdate = false): ?KnowledgeBaseDocumentEntity
+    public function show(KnowledgeBaseDataIsolation $dataIsolation, string $knowledgeBaseCode, string $documentCode, bool $selectForUpdate = false): ?KnowledgeBaseDocumentEntity
     {
         $builder = $this->createBuilder($dataIsolation, KnowledgeBaseDocumentModel::query());
         if ($selectForUpdate) {
             $builder = $builder->lockForUpdate();
         }
-        $model = $builder->where('code', $documentCode)->orderBy('version', 'desc')->first();
+        $model = $builder
+            ->where('knowledge_base_code', $knowledgeBaseCode)
+            ->where('code', $documentCode)
+            ->orderBy('version', 'desc')
+            ->first();
 
         return $model ? new KnowledgeBaseDocumentEntity($model->toArray()) : null;
     }
@@ -177,19 +182,25 @@ class KnowledgeBaseDocumentRepository extends KnowledgeBaseAbstractRepository im
     /**
      * 删除知识库文档.
      */
-    public function destroy(KnowledgeBaseDataIsolation $dataIsolation, string $documentCode): void
+    public function destroy(KnowledgeBaseDataIsolation $dataIsolation, string $knowledgeBaseCode, string $documentCode): void
     {
         $builder = $this->createBuilder($dataIsolation, KnowledgeBaseDocumentModel::query());
-        $builder->where('code', $documentCode)->delete();
+        $builder
+            ->where('knowledge_base_code', $knowledgeBaseCode)
+            ->where('code', $documentCode)
+            ->delete();
     }
 
     /**
      * 根据文档编码删除所有片段.
      */
-    public function destroyFragmentsByDocumentCode(KnowledgeBaseDataIsolation $dataIsolation, string $documentCode): void
+    public function destroyFragmentsByDocumentCode(KnowledgeBaseDataIsolation $dataIsolation, string $knowledgeBaseCode, string $documentCode): void
     {
         $builder = $this->createBuilder($dataIsolation, KnowledgeBaseFragmentsModel::query());
-        $builder->where('document_code', $documentCode)->delete();
+        $builder
+            ->where('knowledge_base_code', $knowledgeBaseCode)
+            ->where('document_code', $documentCode)
+            ->delete();
     }
 
     /**
@@ -245,9 +256,7 @@ class KnowledgeBaseDocumentRepository extends KnowledgeBaseAbstractRepository im
         $builder = $this->createBuilder($dataIsolation, KnowledgeBaseDocumentModel::query());
 
         // 按知识库编码过滤
-        if ($query->getKnowledgeBaseCode() !== null) {
-            $builder->where('knowledge_base_code', $query->getKnowledgeBaseCode());
-        }
+        $builder->where('knowledge_base_code', $query->getKnowledgeBaseCode());
 
         // 按文档编码过滤
         if ($query->getCode() !== null) {

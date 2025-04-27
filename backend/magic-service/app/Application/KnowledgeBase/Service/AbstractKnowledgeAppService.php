@@ -102,7 +102,7 @@ abstract class AbstractKnowledgeAppService extends AbstractKernelAppService
         }
         // 如果传了文档code，就获取文档对应的知识库code，并进行校验
         if ($documentCode) {
-            $document = $this->knowledgeBaseDocumentDomainService->show($dataIsolation, $documentCode);
+            $document = $this->knowledgeBaseDocumentDomainService->show($dataIsolation, $knowledgeBaseCode, $documentCode);
             if ($knowledgeBaseCode !== $document->getKnowledgeBaseCode()) {
                 ExceptionBuilder::throw(PermissionErrorCode::AccessDenied, 'common.access', ['label' => $operation]);
             }
