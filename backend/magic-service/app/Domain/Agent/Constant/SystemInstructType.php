@@ -10,11 +10,8 @@ namespace App\Domain\Agent\Constant;
 use App\ErrorCode\AgentErrorCode;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Infrastructure\Util\IdGenerator\IdGenerator;
-use Hyperf\Contract\TranslatorInterface;
-use Psr\Log\LoggerInterface;
 
 use function Hyperf\Translation\__;
-use function Hyperf\Translation\trans;
 
 enum SystemInstructType: int
 {
@@ -46,7 +43,7 @@ enum SystemInstructType: int
     public static function getTypeOptions(): array
     {
         return [
-            self::EMOJI->value => self::logTrans('agent.system_instruct_type_emoji'),
+            self::EMOJI->value => __('agent.system_instruct_type_emoji'),
             self::FILE->value => __('agent.system_instruct_type_file'),
             self::NEW_TOPIC->value => __('agent.system_instruct_type_new_topic'),
             self::SCHEDULE->value => __('agent.system_instruct_type_schedule'),
@@ -214,78 +211,5 @@ enum SystemInstructType: int
         }
 
         return $instructs;
-    }
-
-    /**
-     * 记录翻译并返回结果的辅助方法.
-     */
-    private static function logTrans(string $key, array $replace = [], ?string $locale = null)
-    {
-        $result = trans($key, $replace, $locale);
-
-        // 获取日志记录器
-        $logger = di(LoggerInterface::class);
-        $translator = di(TranslatorInterface::class);
-
-        // 判断是否找到翻译
-        $found = ($result !== $key);
-
-        // 只有未找到翻译时，才记录详细的调试信息
-        if (! $found) {
-            $parsedKey = $translator->parseKey($key);
-            $logger->warning('翻译键未找到', [
-                'key' => $key,
-                'namespace' => $parsedKey[0],
-                'group' => $parsedKey[1],
-                'item' => $parsedKey[2],
-                'locale' => $locale ?? $translator->getLocale(),
-                'fallback_locale' => $translator->getFallback(),
-                'expected_file_path' => BASE_PATH . '/storage/languages/'
-                    . ($locale ?? $translator->getLocale())
-                    . '/' . $parsedKey[1] . '.php',
-            ]);
-
-            // 检查翻译文件是否存在
-            $path = BASE_PATH . '/storage/languages/'
-                . ($locale ?? $translator->getLocale())
-                . '/' . $parsedKey[1] . '.php';
-
-            if (file_exists($path)) {
-                $logger->info('翻译文件存在，检查内容', [
-                    'file_path' => $path,
-                    'file_exists' => true,
-                ]);
-
-                // 尝试手动获取文件内容
-                $fileContent = include $path;
-                if (is_array($fileContent)) {
-                    $logger->info('翻译文件内容', [
-                        'file_path' => $path,
-                        'content_keys' => array_keys($fileContent),
-                        'has_key' => isset($fileContent[$parsedKey[2]]),
-                        'item_key' => $parsedKey[2],
-                    ]);
-
-                    if (isset($fileContent[$parsedKey[2]])) {
-                        $logger->warning('键在文件中存在但未被查找到，可能是加载问题', [
-                            'value_in_file' => $fileContent[$parsedKey[2]],
-                        ]);
-                    } else {
-                        $logger->warning('键在文件中不存在', [
-                            'value_in_file' => $parsedKey,
-                        ]);
-                    }
-                } else {
-                    $logger->warning('翻译文件内容不是数组', [
-                        'file_path' => $path,
-                    ]);
-                }
-            } else {
-                $logger->warning('翻译文件不存在', [
-                    'file_path' => $path,
-                ]);
-            }
-        }
-        return $result;
     }
 }
