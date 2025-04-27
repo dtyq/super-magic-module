@@ -820,6 +820,7 @@ class MagicAgentAppService extends AbstractAppService
 
         try {
             $this->logger->info(sprintf('获取 initAgents 锁成功, 开始执行初始化, orgCode: %s, userId: %s', $orgCode, $userId));
+            $this->initChatAgent($authenticatable);
             $this->initImageGenerationAgent($authenticatable);
             $this->initDocAnalysisAgent($authenticatable);
         } finally {
@@ -827,6 +828,31 @@ class MagicAgentAppService extends AbstractAppService
             $this->redisLocker->release($lockKey, $userId);
             $this->logger->info(sprintf('释放 initAgents 锁, orgCode: %s, userId: %s', $orgCode, $userId));
         }
+    }
+
+    /**
+     * 为新注册的组织创建人初始化一个Chat.
+     *
+     * @param MagicUserAuthorization $authorization 用户授权信息
+     */
+    #[Transactional]
+    public function initChatAgent(Authenticatable $authorization): void
+    {
+        $service = di(MagicFlowAIModelAppService::class);
+        $model = $service->getEnabled($authorization);
+        $modelName = $model['list'][0]->getModelName();
+
+        $loadPresetConfig = $this->loadPresetConfig('chat', ['modelName' => $modelName]);
+        // 准备基本配置
+        $config = [
+            'robot_name' => '麦吉助理',
+            'robot_description' => '我会回答你一切',
+            'robot_avatar' => 'MAGIC/' . $authorization->getOrganizationCode() . '/default/agent.png',
+            'flow' => $loadPresetConfig['flow'],
+        ];
+
+        // 调用通用初始化方法
+        $this->initAgentFromConfig($authorization, $config);
     }
 
     /**
@@ -849,7 +875,7 @@ class MagicAgentAppService extends AbstractAppService
         $config = [
             'agent_name' => '文生图助手',
             'agent_description' => '一个强大的AI文本生成图像助手，可以根据您的描述创建精美图像。',
-            'agent_avatar' => 'MAGIC/' . $authorization->getOrganizationCode() . '/default/bot.png',
+            'agent_avatar' => 'MAGIC/' . $authorization->getOrganizationCode() . '/default/agent.png',
             'flow' => $loadPresetConfig['flow'],
             'instruct' => $loadPresetConfig['instructs'],
         ];
