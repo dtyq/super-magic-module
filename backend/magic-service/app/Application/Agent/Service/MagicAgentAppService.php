@@ -838,15 +838,20 @@ class MagicAgentAppService extends AbstractAppService
     public function initImageGenerationAgent(Authenticatable $authorization): void
     {
         $service = di(MagicFlowAIModelAppService::class);
-        $model = $service->getEnabled($authorization);
-        $modelName = $model['list'][0]->getModelName();
+        $models = $service->getEnabled($authorization);
+        $modelName = 'gtp4o';
+        if (! empty($models['list'])) {
+            $modelName = $models['list'][0]->getModelName();
+        }
 
+        $loadPresetConfig = $this->loadPresetConfig('generate_image', ['modelName' => $modelName]);
         // 准备基本配置
         $config = [
             'agent_name' => '文生图助手',
             'agent_description' => '一个强大的AI文本生成图像助手，可以根据您的描述创建精美图像。',
             'agent_avatar' => 'MAGIC/' . $authorization->getOrganizationCode() . '/default/bot.png',
-            'flow' => $this->loadPresetConfig('generate_image', ['modelName' => $modelName]),
+            'flow' => $loadPresetConfig['flow'],
+            'instruct' => $loadPresetConfig['instructs'],
         ];
 
         // 调用通用初始化方法
@@ -862,15 +867,18 @@ class MagicAgentAppService extends AbstractAppService
     public function initDocAnalysisAgent(Authenticatable $authorization): void
     {
         $service = di(MagicFlowAIModelAppService::class);
-        $model = $service->getEnabled($authorization);
-        $modelName = $model['list'][0]->getModelName();
+        $models = $service->getEnabled($authorization);
+        $modelName = 'gtp4o';
+        if (! empty($models['list'])) {
+            $modelName = $models['list'][0]->getModelName();
+        }
 
         // 准备基本配置
         $config = [
             'agent_name' => '文档解析助手',
             'agent_description' => '文档解析助手',
-            'agent_avatar' => 'MAGIC/' . $authorization->getOrganizationCode() . '/default/bot.png',
-            'flow' => $this->loadPresetConfig('document', ['modelName' => $modelName]),
+            'agent_avatar' => 'MAGIC/' . $authorization->getOrganizationCode() . '/default/agent.png',
+            'flow' => $this->loadPresetConfig('document', ['modelName' => $modelName])['flow'],
         ];
 
         // 调用通用初始化方法
