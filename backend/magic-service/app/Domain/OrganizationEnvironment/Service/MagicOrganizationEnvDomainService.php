@@ -201,12 +201,4 @@ class MagicOrganizationEnvDomainService
     {
         return $this->magicOrganizationsEnvironmentRepository->getAllOrganizationCodes();
     }
-
-    public function getOrganizationEnvironmentByTeamshareOrganizationCode(string $teamshareOrganizationCode, MagicEnvironmentEntity $magicEnvEntity): ?MagicOrganizationEnvEntity
-    {
-        return $this->magicOrganizationsEnvironmentRepository->getOrganizationEnvironmentByTeamshareOrganizationCode(
-            $teamshareOrganizationCode,
-            $magicEnvEntity
-        );
-    }
 }

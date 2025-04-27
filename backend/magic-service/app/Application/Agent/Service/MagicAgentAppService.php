@@ -845,9 +845,9 @@ class MagicAgentAppService extends AbstractAppService
         $loadPresetConfig = $this->loadPresetConfig('chat', ['modelName' => $modelName]);
         // 准备基本配置
         $config = [
-            'robot_name' => '麦吉助理',
-            'robot_description' => '我会回答你一切',
-            'robot_avatar' => 'MAGIC/' . $authorization->getOrganizationCode() . '/default/agent.png',
+            'agent_name' => '麦吉助理',
+            'agent_description' => '我会回答你一切',
+            'agent_avatar' => 'MAGIC/' . $authorization->getOrganizationCode() . '/default/agent.png',
             'flow' => $loadPresetConfig['flow'],
         ];
 
@@ -922,20 +922,11 @@ class MagicAgentAppService extends AbstractAppService
     #[Transactional]
     public function initAgentFromConfig(MagicUserAuthorization $authorization, array $config): MagicAgentEntity
     {
-        // 验证配置必要字段
-        if (empty($config['agent_name'])) {
-            ExceptionBuilder::throw(AgentErrorCode::VALIDATE_FAILED, 'agent.robot_name_required');
-        }
-
-        if (empty($config['flow'])) {
-            ExceptionBuilder::throw(AgentErrorCode::VALIDATE_FAILED, 'agent.flow_configuration_required');
-        }
-
         // 创建机器人
         $magicAgentDTO = new MagicAgentDTO();
         $magicAgentDTO->setAgentName($config['agent_name']);
         $magicAgentDTO->setAgentDescription($config['agent_description'] ?? '');
-        $magicAgentDTO->setAgentAvatar($config['agent_avatar'] ?? 'MAGIC/' . $authorization->getOrganizationCode() . '/default/bot.png');
+        $magicAgentDTO->setAgentAvatar($config['agent_avatar'] ?? 'MAGIC/' . $authorization->getOrganizationCode() . '/default/agent.png');
         $magicAgentDTO->setCurrentUserId($authorization->getId());
         $magicAgentDTO->setCurrentOrganizationCode($authorization->getOrganizationCode());
 
