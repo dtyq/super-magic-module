@@ -69,6 +69,13 @@ class KnowledgeBaseDocumentAppService extends AbstractKnowledgeAppService
 
         // 调用领域服务查询文档
         $entities = $this->knowledgeBaseDocumentDomainService->queries($dataIsolation, $query, $page);
+        // 兼容旧数据，新增默认文档
+        if (empty($entities['list'])) {
+            $knowledgeBaseEntity = $this->knowledgeBaseDomainService->show($dataIsolation, $query->getKnowledgeBaseCode());
+            $entity = $this->knowledgeBaseDocumentDomainService->getOrCreateDefaultDocument($dataIsolation, $knowledgeBaseEntity);
+            $entities['list'] = [$entity];
+            $entities['total'] = 1;
+        }
         $documentCodeFinalSyncStatusMap = $this->knowledgeBaseFragmentDomainService->getFinalSyncStatusByDocumentCodes(
             $dataIsolation,
             array_map(fn ($entity) => $entity->getCode(), $entities['list'])
