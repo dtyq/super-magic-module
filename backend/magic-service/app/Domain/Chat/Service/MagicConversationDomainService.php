@@ -272,8 +272,12 @@ class MagicConversationDomainService extends AbstractDomainService
             'created_at' => $time,
             'updated_at' => $time,
             'app_message_id' => $messageDTO->getAppMessageId(),
+            'extra' => [
+                'topic_id' => $topicId,
+            ],
         ];
         $seqEntity = SeqAssembler::getSeqEntity($seqData);
+        // seq 也加上 topicId
         $pushData = SeqAssembler::getClientSeqStruct($seqEntity)->toArray();
         // 直接推送消息给收件方
         $this->socketIO->of(ChatSocketIoNameSpace::Im->value)->to($receiveUserEntity->getMagicId())->compress(true)->emit(SocketEventType::Intermediate->value, $pushData);
