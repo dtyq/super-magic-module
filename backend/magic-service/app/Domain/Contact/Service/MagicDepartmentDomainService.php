@@ -199,6 +199,15 @@ class MagicDepartmentDomainService extends AbstractContactDomainService
         return $result;
     }
 
+    public function getOrganizationNameByCode(string $organizationCode): string
+    {
+        $entity = $this->departmentRepository->getDepartmentById('-1', $organizationCode);
+        if (empty($entity)) {
+            return '';
+        }
+        return $entity->getName();
+    }
+
     /**
      * 获取部门的所有子部门.
      * @param MagicDepartmentEntity[] $allDepartments
