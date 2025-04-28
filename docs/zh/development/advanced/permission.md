@@ -40,6 +40,15 @@ enum SuperPermissionEnum: string
     
     // 服务商的管理员
     case SERVICE_PROVIDER_ADMIN = 'service_provider_admin';
+
+    // 超级麦吉邀请使用用户
+    case SUPER_INVITE_USER = 'super_magic_invite_use_user';
+
+    // 超级麦吉看板管理人员
+    case SUPER_MAGIC_BOARD_ADMIN = 'super_magic_board_manager';
+
+    // 超级麦吉看板运营人员
+    case SUPER_MAGIC_ BOARD_OPERATOR = 'super_magic_board_operator';
 }
 ```
 

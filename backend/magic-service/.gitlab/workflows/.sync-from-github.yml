@@ -1,0 +1,73 @@
+# GitLab CI/CD 配置文件，用于从GitHub同步代码
+
+stages:
+  - sync
+
+sync-from-github:
+  stage: sync 
+  # 移除image，因为我们使用的是shell执行器，不是Docker
+  
+  # 当enterprise-master分支有变化时触发
+  
+  only:
+    - enterprise-master
+    - enterprise-pre-release
+    - enterprise-released
+  
+  # 也可以设置定时任务
+  # 在GitLab UI中配置Pipeline Schedule，例如每天执行一次
+  
+  variables:
+    GIT_STRATEGY: none  # 不自动克隆，我们将手动操作
+  
+  before_script:
+    # 检查必要工具是否安装
+    - which git || echo "Git is required"
+    - which curl || echo "Curl is required"
+    
+    # 配置Git
+    - git config --global user.name "GitLab CI"
+    - git config --global user.email "gitlab-ci@example.com"
+  
+  script:
+    # 创建工作目录并清理已存在的git配置
+    - rm -rf sync_repo
+    - mkdir -p sync_repo
+    - cd sync_repo
+    
+    # 配置GitHub访问
+    - |
+      if [ -n "$GITHUB_SSH_PRIVATE_KEY" ]; then
+        # 使用SSH方式
+        mkdir -p ~/.ssh
+        echo "$GITHUB_SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan github.com >> ~/.ssh/known_hosts
+        chmod 644 ~/.ssh/known_hosts
+        git clone git@github.com:dtyq/magic.git
+      else
+        # 使用HTTPS方式
+        git clone https://oauth2:${GITHUB_TOKEN}@github.com/dtyq/magic.git
+      fi
+    
+    # 获取GitHub的master分支
+    - git fetch github master
+    
+       # 使用oauth2:前缀的URL添加远程仓库
+    - git remote add gitlab https://oauth2:${GITLAB_TOKEN}@git.kkgroup.cn/dtyq/magic-test.git
+    
+      # 切换到本地master分支并合并GitHub的master
+    - git checkout master || git checkout -b master
+
+    # 获取GitLab的master分支
+    - git fetch gitlab master
+
+       # 从GitLab拉取当前主分支
+    - git pull gitlab master || echo "First time setup, continuing..."
+
+
+
+    - git merge FETCH_HEAD -m "Auto-sync from GitHub master" || echo "Nothing to merge"
+
+    # 推送到GitLab的master分支 - 使用oauth2认证方式
+    - git push -f https://oauth2:${GITLAB_TOKEN}@git.kkgroup.cn/dtyq/magic-test.git master  
