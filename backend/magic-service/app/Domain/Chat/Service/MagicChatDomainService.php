@@ -10,6 +10,7 @@ namespace App\Domain\Chat\Service;
 use App\Application\Chat\Event\Publish\MessagePushPublisher;
 use App\Domain\Chat\DTO\Message\JsonStreamMessageInterface;
 use App\Domain\Chat\DTO\Message\MessageInterface;
+use App\Domain\Chat\DTO\Message\Options\EditMessageOptions;
 use App\Domain\Chat\DTO\Message\StreamMessage\JsonStreamCachedDTO;
 use App\Domain\Chat\DTO\Message\StreamMessage\LLMStreamCachedDTO;
 use App\Domain\Chat\DTO\Message\StreamMessage\StreamMessageStatus;
@@ -822,7 +823,7 @@ class MagicChatDomainService extends AbstractDomainService
                 /** @var JsonStreamMessageInterface $messageContent */
                 $messageContent = $messageEntity->getContent();
                 // 防止 redis 缓存，重写 $messageContent
-                $messageContent = make($messageContent::class, $streamContent);
+                $messageContent = make($messageContent::class, [$streamContent]);
                 $messageEntity->setContent($messageContent);
                 co(function () use ($receiveSeqEntity, $messageContent) {
                     $receiveData = SeqAssembler::getClientJsonStreamSeqStruct($receiveSeqEntity, $messageContent->toArray())?->toArray(true);
@@ -869,31 +870,60 @@ class MagicChatDomainService extends AbstractDomainService
         }
     }
 
-    public function editMessage(MagicMessageEntity $messageEntity, MagicMessageEntity $oldMessageEntity): MagicMessageVersionEntity
+    public function editMessage(MagicMessageEntity $messageEntity): MagicMessageVersionEntity
     {
-        Db::beginTransaction();
+        // 防止并发编辑消息
+        $lockKey = 'magic_message:' . $messageEntity->getMagicMessageId();
+        $lockOwner = random_bytes(16);
+        $this->locker->mutexLock($lockKey, $lockOwner, 10);
         try {
-            // 如果这是消息的第一个版本，需要把以前的消息 copy 一份到 message_version 表中，方便审计
-            if (empty($oldMessageEntity->getCurrentVersionId())) {
-                $messageVersionEntity = (new MagicMessageVersionEntity())
-                    ->setMagicMessageId($oldMessageEntity->getMagicMessageId())
-                    ->setMessageContent(Json::encode($oldMessageEntity->getContent()->toArray()));
-                // 先把第一个版本的消息存入 message_version 表
-                $this->magicChatMessageVersionsRepository->createMessageVersion($messageVersionEntity);
+            // 编辑消息时，不创建新的 messageEntity，而是更新原消息.magicMessageId 不变
+            $oldMessageEntity = $this->getMessageByMagicMessageId($messageEntity->getMagicMessageId());
+            if ($oldMessageEntity === null) {
+                ExceptionBuilder::throw(ChatErrorCode::MESSAGE_NOT_FOUND);
             }
-            // 写入当前版本的消息
-            $messageVersionEntity = (new MagicMessageVersionEntity())
-                ->setMagicMessageId($messageEntity->getMagicMessageId())
-                ->setMessageContent(Json::encode($messageEntity->getContent()->toArray()));
-            $messageVersionEntity = $this->magicChatMessageVersionsRepository->createMessageVersion($messageVersionEntity);
-            // 更新消息的当前版本
-            $this->magicMessageRepository->updateMessageContentAndVersionId($messageEntity, $messageVersionEntity);
-            Db::commit();
-        } catch (Throwable $exception) {
-            Db::rollBack();
-            throw $exception;
+            Db::beginTransaction();
+            try {
+                // 如果这是消息的第一个版本，需要把以前的消息 copy 一份到 message_version 表中，方便审计
+                if (empty($oldMessageEntity->getCurrentVersionId())) {
+                    $messageVersionEntity = (new MagicMessageVersionEntity())
+                        ->setMagicMessageId($oldMessageEntity->getMagicMessageId())
+                        ->setMessageContent(Json::encode($oldMessageEntity->getContent()->toArray()));
+                    // 先把第一个版本的消息存入 message_version 表
+                    $this->magicChatMessageVersionsRepository->createMessageVersion($messageVersionEntity);
+                    // 初次编辑时，更新收发双发的消息初始 seq，标记消息已编辑，方便前端渲染
+                    $seqList = $this->magicSeqRepository->getSeqListByMagicMessageId($messageEntity->getMagicMessageId());
+                    foreach ($seqList as $seqData) {
+                        $extra = $seqData['extra'] ?? null;
+                        if (json_validate($extra)) {
+                            $extra = Json::decode($extra);
+                        } else {
+                            $extra = [];
+                        }
+                        $seqExtra = new SeqExtra($extra);
+                        $seqExtra->setEditMessageOptions(
+                            (new EditMessageOptions())->setMessageVersionId(null)->setMagicMessageId($messageEntity->getMagicMessageId())
+                        );
+                        // 这里要更新收发双方的 seq 各一次，且 $seqExtra 值可能不同，循环中更新 2 次数据库应该是能接受的。
+                        $this->magicSeqRepository->updateSeqExtra((string) $seqData['id'], $seqExtra);
+                    }
+                }
+                // 写入当前版本的消息
+                $messageVersionEntity = (new MagicMessageVersionEntity())
+                    ->setMagicMessageId($messageEntity->getMagicMessageId())
+                    ->setMessageContent(Json::encode($messageEntity->getContent()->toArray()));
+                $messageVersionEntity = $this->magicChatMessageVersionsRepository->createMessageVersion($messageVersionEntity);
+                // 更新消息的当前版本和消息内容，便于前端渲染
+                $this->magicMessageRepository->updateMessageContentAndVersionId($messageEntity, $messageVersionEntity);
+                Db::commit();
+            } catch (Throwable $exception) {
+                Db::rollBack();
+                throw $exception;
+            }
+            return $messageVersionEntity;
+        } finally {
+            $this->locker->release($lockKey, $lockOwner);
         }
-        return $messageVersionEntity;
     }
 
     /**

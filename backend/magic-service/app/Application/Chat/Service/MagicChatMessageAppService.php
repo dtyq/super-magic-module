@@ -244,7 +244,7 @@ class MagicChatMessageAppService extends MagicSeqAppService
             $this->logger->error(sprintf(
                 'checkSendMessageAuth error:%s senderSeqDTO:%s',
                 $exception->getMessage(),
-                Json::encode($senderSeqDTO->toArray())
+                json_encode($senderSeqDTO)
             ));
             throw $exception;
         }
@@ -701,17 +701,12 @@ PROMPT;
         $extra = $senderSeqDTO->getExtra();
         $editMessageOptions = $extra?->getEditMessageOptions();
         if ($extra !== null && $editMessageOptions !== null && ! empty($editMessageOptions->getMagicMessageId())) {
-            // 编辑消息的场景，magicMessageId 不变
-            $magicMessageId = $editMessageOptions->getMagicMessageId();
-            $senderMessageDTO->setMagicMessageId($magicMessageId);
-            // 编辑消息时，不创建新的 messageEntity，而是更新原消息
-            $messageEntity = $this->magicChatDomainService->getMessageByMagicMessageId($magicMessageId);
-            if ($messageEntity === null) {
-                ExceptionBuilder::throw(ChatErrorCode::MESSAGE_NOT_FOUND);
-            }
-            $messageVersionEntity = $this->magicChatDomainService->editMessage($senderMessageDTO, $messageEntity);
+            $senderMessageDTO->setMagicMessageId($editMessageOptions->getMagicMessageId());
+            $messageVersionEntity = $this->magicChatDomainService->editMessage($senderMessageDTO);
             $editMessageOptions->setMessageVersionId($messageVersionEntity->getVersionId());
             $senderSeqDTO->setExtra($extra->setEditMessageOptions($editMessageOptions));
+            // 再查一次 $messageEntity ，避免重复创建
+            $messageEntity = $this->magicChatDomainService->getMessageByMagicMessageId($senderMessageDTO->getMagicMessageId());
         }
 
         // 流式消息的场景
