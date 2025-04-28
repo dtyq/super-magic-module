@@ -176,7 +176,7 @@ class MagicFlowExecuteAppService extends AbstractFlowAppService
 
     public function apiParamCall(MagicFlowApiChatDTO $apiChatDTO): array
     {
-        $apiChatDTO->validate();
+        $apiChatDTO->validate(false);
         $authorization = di(FlowOpenApiCheckInterface::class)->handle($apiChatDTO);
 
         $flowDataIsolation = $this->createFlowDataIsolation($authorization);
