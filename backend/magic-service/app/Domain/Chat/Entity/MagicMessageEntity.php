@@ -225,7 +225,11 @@ class MagicMessageEntity extends AbstractEntity
     public function setReceiveType(ConversationType|int $receiveType): static
     {
         if (is_int($receiveType)) {
-            $this->receiveType = ConversationType::tryFrom($receiveType);
+            $enumValue = ConversationType::tryFrom($receiveType);
+            if ($enumValue === null) {
+                throw new \InvalidArgumentException("Invalid value provided for ConversationType: {$receiveType}");
+            }
+            $this->receiveType = $enumValue;
         } else {
             $this->receiveType = $receiveType;
         }
