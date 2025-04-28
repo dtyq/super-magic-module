@@ -497,7 +497,7 @@ class KnowledgeBaseEntity extends AbstractKnowledgeBaseEntity
      */
     public function getRetrieveConfig(): ?RetrieveConfig
     {
-        return $this->retrieveConfig;
+        return $this->retrieveConfig ?? RetrieveConfig::createDefault();
     }
 
     /**
@@ -505,6 +505,7 @@ class KnowledgeBaseEntity extends AbstractKnowledgeBaseEntity
      */
     public function setRetrieveConfig(null|array|RetrieveConfig $retrieveConfig): void
     {
+        is_null($retrieveConfig) && $retrieveConfig = RetrieveConfig::createDefault();
         is_array($retrieveConfig) && $retrieveConfig = RetrieveConfig::fromArray($retrieveConfig);
         $this->retrieveConfig = $retrieveConfig;
     }
