@@ -349,6 +349,13 @@ class ModelGatewayMapper extends ModelMapper
         if (! $providerModel->isActive()) {
             ExceptionBuilder::throw(ServiceProviderErrorCode::ModelNotActive);
         }
+        // 如果当前模型是官方模型，则使用官方服务商
+        if ($providerModel->isOffice() && $providerModel->getModelParentId()) {
+            $providerModel = $serviceProviderDomainService->getModelById((string) $providerModel->getModelParentId());
+            if (! $providerModel->isActive()) {
+                ExceptionBuilder::throw(ServiceProviderErrorCode::ModelNotActive);
+            }
+        }
         // providerConfig 提供 host和 api-key，providerModel 提供具体要使用的模型接入点
         $providerConfig = $serviceProviderDomainService->getServiceProviderConfigByServiceProviderModel($providerModel);
         if (! $providerConfig || ! $providerConfig->isActive()) {
