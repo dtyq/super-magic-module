@@ -8,6 +8,7 @@ declare(strict_types=1);
 namespace App\Application\Agent\Service;
 
 use App\Application\Chat\Service\MagicUserContactAppService;
+use App\Application\Flow\Service\MagicFlowAIModelAppService;
 use App\Domain\Agent\Constant\MagicAgentQueryStatus;
 use App\Domain\Agent\Constant\MagicAgentReleaseStatus;
 use App\Domain\Agent\Constant\MagicAgentVersionStatus;
@@ -38,6 +39,8 @@ use App\ErrorCode\AgentErrorCode;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Infrastructure\Core\ValueObject\Page;
 use App\Interfaces\Authorization\Web\MagicUserAuthorization;
+use App\Interfaces\Flow\Assembler\Flow\MagicFlowAssembler;
+use App\Interfaces\Flow\DTO\Flow\MagicFlowDTO;
 use App\Interfaces\Kernel\Assembler\FileAssembler;
 use Dtyq\AsyncEvent\AsyncEventUtil;
 use Dtyq\CloudFile\Kernel\Struct\FileLink;
@@ -547,35 +550,6 @@ class MagicAgentAppService extends AbstractAppService
         $this->magicAgentVersionDomainService->updateAgentEnterpriseStatus($magicAgentVersionEntity->getId(), $status);
     }
 
-    public function updateBotMarketStatus(string $agentId, int $status, string $userId): void
-    {
-        /*
-         * // 校验
-         * if ($status !== MagicAgentVersionStatus::APP_MARKET_LISTED && $status !== MagicAgentVersionStatus::APP_MARKET_UNLISTED){
-         * ExceptionBuilder::throw(BotErrorCode::VALIDATE_FAILED, '发布到市场的状态只能是已上架或者未上架');
-         * }
-         * // 获取助理
-         * $magicBotEntity = $this->magicBotDomainService->getBotByUserId($botId, $userId);
-         *
-         * // 是否是自己的助理
-         * if ($magicBotEntity->getCreatedUid() !== $userId){
-         * ExceptionBuilder::throw(BotErrorCode::VALIDATE_FAILED, '非法操作');
-         *
-         * }
-         *
-         * // 获取助理版本
-         * $magicBotVersionEntity = $this->magicBotVersionDomainService->getById($magicBotEntity->getBotVersionId());
-         *
-         * // 校验状态是否允许被修改: APPROVAL_PASSED
-         * if ($magicBotVersionEntity->getApprovalStatus() !== MagicAgentVersionStatus::APPROVAL_PASSED){
-         * ExceptionBuilder::throw(BotErrorCode::VALIDATE_FAILED, '审核未通过,不允许修改状态');
-         * }
-         *
-         * // 修改版本
-         * $this->magicBotVersionDomainService->updateBotEnterpriseStatus($magicBotVersionEntity->getId(),$status);
-         */
-    }
-
     /**
      * @param MagicUserAuthorization $authenticatable
      */
@@ -829,6 +803,186 @@ class MagicAgentAppService extends AbstractAppService
                 $department->setName($departmentMap[$department->getId()]->getName());
             }
         }
+    }
+
+    public function initAgents(MagicUserAuthorization $authenticatable): void
+    {
+        $orgCode = $authenticatable->getOrganizationCode();
+        $userId = $authenticatable->getId();
+        $lockKey = 'agent:init_agents:' . $orgCode;
+
+        // 尝试获取锁，超时时间设置为60秒
+        if (! $this->redisLocker->mutexLock($lockKey, $userId, 60)) {
+            $this->logger->warning(sprintf('获取 initAgents 锁失败, orgCode: %s, userId: %s', $orgCode, $userId));
+            // 获取锁失败，可以选择直接返回或抛出异常，这里选择直接返回避免阻塞
+            return;
+        }
+
+        try {
+            $this->logger->info(sprintf('获取 initAgents 锁成功, 开始执行初始化, orgCode: %s, userId: %s', $orgCode, $userId));
+            $this->initChatAgent($authenticatable);
+            $this->initImageGenerationAgent($authenticatable);
+            $this->initDocAnalysisAgent($authenticatable);
+        } finally {
+            // 确保锁被释放
+            $this->redisLocker->release($lockKey, $userId);
+            $this->logger->info(sprintf('释放 initAgents 锁, orgCode: %s, userId: %s', $orgCode, $userId));
+        }
+    }
+
+    /**
+     * 为新注册的组织创建人初始化一个Chat.
+     *
+     * @param MagicUserAuthorization $authorization 用户授权信息
+     */
+    #[Transactional]
+    public function initChatAgent(Authenticatable $authorization): void
+    {
+        $service = di(MagicFlowAIModelAppService::class);
+        $model = $service->getEnabled($authorization);
+        $modelName = $model['list'][0]->getModelName();
+
+        $loadPresetConfig = $this->loadPresetConfig('chat', ['modelName' => $modelName]);
+        // 准备基本配置
+        $config = [
+            'agent_name' => '麦吉助理',
+            'agent_description' => '我会回答你一切',
+            'agent_avatar' => 'MAGIC/' . $authorization->getOrganizationCode() . '/default/agent.png',
+            'flow' => $loadPresetConfig['flow'],
+        ];
+
+        // 调用通用初始化方法
+        $this->initAgentFromConfig($authorization, $config);
+    }
+
+    /**
+     * 为新注册的组织创建人初始化一个文生图Agent.
+     *
+     * @param MagicUserAuthorization $authorization 用户授权信息
+     */
+    #[Transactional]
+    public function initImageGenerationAgent(Authenticatable $authorization): void
+    {
+        $service = di(MagicFlowAIModelAppService::class);
+        $models = $service->getEnabled($authorization);
+        $modelName = 'gtp4o';
+        if (! empty($models['list'])) {
+            $modelName = $models['list'][0]->getModelName();
+        }
+
+        $loadPresetConfig = $this->loadPresetConfig('generate_image', ['modelName' => $modelName]);
+        // 准备基本配置
+        $config = [
+            'agent_name' => '文生图助手',
+            'agent_description' => '一个强大的AI文本生成图像助手，可以根据您的描述创建精美图像。',
+            'agent_avatar' => 'MAGIC/' . $authorization->getOrganizationCode() . '/default/agent.png',
+            'flow' => $loadPresetConfig['flow'],
+            'instruct' => $loadPresetConfig['instructs'],
+        ];
+
+        // 调用通用初始化方法
+        $this->initAgentFromConfig($authorization, $config);
+    }
+
+    /**
+     * 为新注册的组织创建人初始化一个文档解析Agent.
+     *
+     * @param MagicUserAuthorization $authorization 用户授权信息
+     */
+    #[Transactional]
+    public function initDocAnalysisAgent(Authenticatable $authorization): void
+    {
+        $service = di(MagicFlowAIModelAppService::class);
+        $models = $service->getEnabled($authorization);
+        $modelName = 'gtp4o';
+        if (! empty($models['list'])) {
+            $modelName = $models['list'][0]->getModelName();
+        }
+
+        // 准备基本配置
+        $config = [
+            'agent_name' => '文档解析助手',
+            'agent_description' => '文档解析助手',
+            'agent_avatar' => 'MAGIC/' . $authorization->getOrganizationCode() . '/default/agent.png',
+            'flow' => $this->loadPresetConfig('document', ['modelName' => $modelName])['flow'],
+        ];
+
+        // 调用通用初始化方法
+        $this->initAgentFromConfig($authorization, $config);
+    }
+
+    /**
+     * 从配置文件初始化自定义Agent.
+     *
+     * @param $authorization MagicUserAuthorization 用户授权信息
+     * @param array $config 包含Agent配置的数组
+     * @return MagicAgentEntity 创建的机器人实体
+     * @throws Throwable 当配置无效或初始化失败时抛出异常
+     */
+    #[Transactional]
+    public function initAgentFromConfig(MagicUserAuthorization $authorization, array $config): MagicAgentEntity
+    {
+        // 创建机器人
+        $magicAgentDTO = new MagicAgentDTO();
+        $magicAgentDTO->setAgentName($config['agent_name']);
+        $magicAgentDTO->setAgentDescription($config['agent_description'] ?? '');
+        $magicAgentDTO->setAgentAvatar($config['agent_avatar'] ?? 'MAGIC/' . $authorization->getOrganizationCode() . '/default/agent.png');
+        $magicAgentDTO->setCurrentUserId($authorization->getId());
+        $magicAgentDTO->setCurrentOrganizationCode($authorization->getOrganizationCode());
+
+        $magicAgentEntity = $this->saveAgent($authorization, $magicAgentDTO);
+        if (isset($config['instruct'])) {
+            $this->magicAgentDomainService->saveInstruct($authorization->getOrganizationCode(), $magicAgentEntity->getId(), $config['instruct'], $authorization->getId());
+        }
+        // 创建Flow
+        $magicFLowDTO = new MagicFlowDTO($config['flow']);
+        $magicFlowAssembler = new MagicFlowAssembler();
+        $magicFlowDO = $magicFlowAssembler->createMagicFlowDO($magicFLowDTO);
+
+        // 创建版本
+        $agentVersionDTO = new MagicAgentVersionDTO();
+        $agentVersionDTO->setAgentId($magicAgentEntity->getId());
+        $agentVersionDTO->setVersionNumber('0.0.1');
+        $agentVersionDTO->setVersionDescription('初始版本');
+        $agentVersionDTO->setReleaseScope(MagicAgentReleaseStatus::PUBLISHED_TO_ENTERPRISE->value);
+        $agentVersionDTO->setCreatedUid($authorization->getId());
+
+        $this->releaseAgentVersion($authorization, $agentVersionDTO, $magicFlowDO);
+
+        return $magicAgentEntity;
+    }
+
+    /**
+     * 读取JSON文件并替换模板变量.
+     *
+     * @param string $filepath JSON文件路径
+     * @param array $variables 替换变量 ['modelName' => 'gpt-4', 'otherVar' => '其他值']
+     * @return null|array 解析后的数组或失败时返回null
+     */
+    public function readJsonToArray(string $filepath, array $variables = []): ?array
+    {
+        if (! file_exists($filepath)) {
+            return null;
+        }
+
+        $jsonContent = file_get_contents($filepath);
+        if ($jsonContent === false) {
+            return null;
+        }
+
+        // 替换模板变量
+        if (! empty($variables)) {
+            foreach ($variables as $key => $value) {
+                $jsonContent = str_replace("{{{$key}}}", $value, $jsonContent);
+            }
+        }
+
+        $data = json_decode($jsonContent, true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            return null;
+        }
+
+        return $data;
     }
 
     /**
@@ -1085,5 +1239,24 @@ class MagicAgentAppService extends AbstractAppService
         $magicAgentVersionEntity->setVisibilityConfig($agentVersionDTO->getVisibilityConfig());
 
         return $magicAgentVersionEntity;
+    }
+
+    /**
+     * 加载预设Agent配置.
+     *
+     * @param string $presetName 预设名称
+     * @param array $variables 替换变量
+     * @return array 配置数组
+     */
+    private function loadPresetConfig(string $presetName, array $variables = []): array
+    {
+        $presetPath = BASE_PATH . "/storage/agent/{$presetName}.txt";
+        $config = $this->readJsonToArray($presetPath, $variables);
+
+        if (empty($config)) {
+            ExceptionBuilder::throw(AgentErrorCode::VALIDATE_FAILED, "无法加载预设配置: {$presetName}");
+        }
+
+        return $config;
     }
 }

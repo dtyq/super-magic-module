@@ -14,11 +14,11 @@ use App\Domain\KnowledgeBase\Entity\ValueObject\DocType;
 use App\Domain\KnowledgeBase\Entity\ValueObject\DocumentFileVO;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeBaseDataIsolation;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeSyncStatus;
+use App\Domain\KnowledgeBase\Event\KnowledgeBaseDefaultDocumentSavedEvent;
 use App\Domain\KnowledgeBase\Event\KnowledgeBaseDocumentRemovedEvent;
 use App\Domain\KnowledgeBase\Event\KnowledgeBaseDocumentSavedEvent;
 use App\Domain\KnowledgeBase\Repository\Facade\KnowledgeBaseDocumentRepositoryInterface;
 use App\ErrorCode\FlowErrorCode;
-use App\Infrastructure\Core\Embeddings\EmbeddingGenerator\EmbeddingGenerator;
 use App\Infrastructure\Core\Embeddings\VectorStores\VectorStoreDriver;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Infrastructure\Core\ValueObject\Page;
@@ -32,7 +32,7 @@ use Hyperf\DbConnection\Db;
 readonly class KnowledgeBaseDocumentDomainService
 {
     public function __construct(
-        private KnowledgeBaseDocumentRepositoryInterface $knowledgeBaseDocumentRepository
+        private KnowledgeBaseDocumentRepositoryInterface $knowledgeBaseDocumentRepository,
     ) {
     }
 
@@ -50,7 +50,7 @@ readonly class KnowledgeBaseDocumentDomainService
 
     public function update(KnowledgeBaseDataIsolation $dataIsolation, KnowledgeBaseEntity $knowledgeBaseEntity, KnowledgeBaseDocumentEntity $documentEntity): KnowledgeBaseDocumentEntity
     {
-        $oldDocument = $this->show($dataIsolation, $documentEntity->getCode());
+        $oldDocument = $this->show($dataIsolation, $knowledgeBaseEntity->getCode(), $documentEntity->getCode());
         $this->prepareForUpdate($documentEntity, $oldDocument);
         return $this->knowledgeBaseDocumentRepository->update($dataIsolation, $documentEntity);
     }
@@ -68,9 +68,9 @@ readonly class KnowledgeBaseDocumentDomainService
     /**
      * 查看单个知识库文档详情.
      */
-    public function show(KnowledgeBaseDataIsolation $dataIsolation, string $documentCode, bool $selectForUpdate = false): KnowledgeBaseDocumentEntity
+    public function show(KnowledgeBaseDataIsolation $dataIsolation, string $knowledgeBaseCode, string $documentCode, bool $selectForUpdate = false): KnowledgeBaseDocumentEntity
     {
-        $document = $this->knowledgeBaseDocumentRepository->show($dataIsolation, $documentCode, $selectForUpdate);
+        $document = $this->knowledgeBaseDocumentRepository->show($dataIsolation, $knowledgeBaseCode, $documentCode, $selectForUpdate);
         if ($document === null) {
             ExceptionBuilder::throw(FlowErrorCode::KnowledgeValidateFailed, 'common.not_found', ['label' => 'document']);
         }
@@ -80,18 +80,18 @@ readonly class KnowledgeBaseDocumentDomainService
     /**
      * 删除知识库文档.
      */
-    public function destroy(KnowledgeBaseDataIsolation $dataIsolation, string $documentCode): void
+    public function destroy(KnowledgeBaseDataIsolation $dataIsolation, string $knowledgeBaseCode, string $documentCode): void
     {
         $documentEntity = null;
-        Db::transaction(function () use ($dataIsolation, $documentCode) {
+        Db::transaction(function () use ($dataIsolation, $documentCode, $knowledgeBaseCode) {
             // 首先删除文档下的所有片段
-            $this->destroyFragments($dataIsolation, $documentCode);
-            $documentEntity = $this->show($dataIsolation, $documentCode, true);
+            $this->destroyFragments($dataIsolation, $knowledgeBaseCode, $documentCode);
+            $documentEntity = $this->show($dataIsolation, $knowledgeBaseCode, $documentCode, true);
             // 然后删除文档本身
-            $this->knowledgeBaseDocumentRepository->destroy($dataIsolation, $documentCode);
+            $this->knowledgeBaseDocumentRepository->destroy($dataIsolation, $knowledgeBaseCode, $documentCode);
             // 更新字符数
             $deltaWordCount = -$documentEntity->getWordCount();
-            $this->updateWordCount($dataIsolation, $documentEntity->getCode(), $deltaWordCount);
+            $this->updateWordCount($dataIsolation, $knowledgeBaseCode, $documentEntity->getCode(), $deltaWordCount);
         });
         // 异步删除向量数据库片段
         ! is_null($documentEntity) && AsyncEventUtil::dispatch(new KnowledgeBaseDocumentRemovedEvent($documentEntity));
@@ -100,9 +100,9 @@ readonly class KnowledgeBaseDocumentDomainService
     /**
      * 重建知识库文档向量索引.
      */
-    public function rebuild(KnowledgeBaseDataIsolation $dataIsolation, string $documentCode, bool $force = false): void
+    public function rebuild(KnowledgeBaseDataIsolation $dataIsolation, string $knowledgeBaseCode, string $documentCode, bool $force = false): void
     {
-        $document = $this->show($dataIsolation, $documentCode);
+        $document = $this->show($dataIsolation, $knowledgeBaseCode, $documentCode);
 
         // 如果强制重建或者同步状态为失败，则重新同步
         if ($force || $document->getSyncStatus() === 2) { // 2 表示同步失败
@@ -116,12 +116,12 @@ readonly class KnowledgeBaseDocumentDomainService
         }
     }
 
-    public function updateWordCount(KnowledgeBaseDataIsolation $dataIsolation, string $documentCode, int $deltaWordCount): void
+    public function updateWordCount(KnowledgeBaseDataIsolation $dataIsolation, string $knowledgeBaseCode, string $documentCode, int $deltaWordCount): void
     {
         if ($deltaWordCount === 0) {
             return;
         }
-        $this->knowledgeBaseDocumentRepository->updateWordCount($dataIsolation, $documentCode, $deltaWordCount);
+        $this->knowledgeBaseDocumentRepository->updateWordCount($dataIsolation, $knowledgeBaseCode, $documentCode, $deltaWordCount);
     }
 
     /**
@@ -132,6 +132,14 @@ readonly class KnowledgeBaseDocumentDomainService
         return $this->knowledgeBaseDocumentRepository->getDocumentCountByKnowledgeBaseCode($dataIsolation, $knowledgeBaseCodes);
     }
 
+    /**
+     * @return array<string, string> array<文档code, 文档名>
+     */
+    public function getDocumentNamesByDocumentCodes(KnowledgeBaseDataIsolation $dataIsolation, string $knowledgeBaseCode, array $documentCodes): array
+    {
+        return $this->knowledgeBaseDocumentRepository->getDocumentNamesByDocumentCodes($dataIsolation, $knowledgeBaseCode, $documentCodes);
+    }
+
     public function changeSyncStatus(KnowledgeBaseDataIsolation $dataIsolation, KnowledgeBaseDocumentEntity $documentEntity): void
     {
         $this->knowledgeBaseDocumentRepository->changeSyncStatus($dataIsolation, $documentEntity);
@@ -140,13 +148,14 @@ readonly class KnowledgeBaseDocumentDomainService
     public function getOrCreateDefaultDocument(KnowledgeBaseDataIsolation $dataIsolation, KnowledgeBaseEntity $knowledgeBaseEntity): KnowledgeBaseDocumentEntity
     {
         // 尝试获取默认文档
-        $documentEntity = $this->knowledgeBaseDocumentRepository->show($dataIsolation, $knowledgeBaseEntity->getDefaultDocumentCode());
+        $defaultDocumentCode = $knowledgeBaseEntity->getDefaultDocumentCode();
+        $documentEntity = $this->knowledgeBaseDocumentRepository->show($dataIsolation, $knowledgeBaseEntity->getCode(), $defaultDocumentCode);
         if ($documentEntity) {
             return $documentEntity;
         }
         // 如果文档不存在，创建新的默认文档
         $documentEntity = (new KnowledgeBaseDocumentEntity())
-            ->setCode($knowledgeBaseEntity->getDefaultDocumentCode())
+            ->setCode($defaultDocumentCode)
             ->setName('未命名文档')
             ->setKnowledgeBaseCode($knowledgeBaseEntity->getCode())
             ->setCreatedUid($knowledgeBaseEntity->getCreator())
@@ -154,19 +163,24 @@ readonly class KnowledgeBaseDocumentDomainService
             ->setDocType(DocType::TXT->value)
             ->setSyncStatus(KnowledgeSyncStatus::Synced->value)
             ->setOrganizationCode($knowledgeBaseEntity->getOrganizationCode())
-            ->setEmbeddingModel(EmbeddingGenerator::defaultModel())
-            ->setFragmentConfig([])
+            ->setEmbeddingModel($knowledgeBaseEntity->getModel())
+            ->setEmbeddingConfig($knowledgeBaseEntity->getEmbeddingConfig())
+            ->setFragmentConfig($knowledgeBaseEntity->getFragmentConfig())
+            ->setRetrieveConfig($knowledgeBaseEntity->getRetrieveConfig())
             ->setWordCount(0)
             ->setVectorDb(VectorStoreDriver::default()->value);
-        return $this->knowledgeBaseDocumentRepository->restoreOrCreate($dataIsolation, $documentEntity);
+        $res = $this->knowledgeBaseDocumentRepository->restoreOrCreate($dataIsolation, $documentEntity);
+        $event = new KnowledgeBaseDefaultDocumentSavedEvent($knowledgeBaseEntity, $documentEntity);
+        AsyncEventUtil::dispatch($event);
+        return $res;
     }
 
     /**
      * 删除文档下的所有片段.
      */
-    private function destroyFragments(KnowledgeBaseDataIsolation $dataIsolation, string $documentCode): void
+    private function destroyFragments(KnowledgeBaseDataIsolation $dataIsolation, string $knowledgeBaseCode, string $documentCode): void
     {
-        $this->knowledgeBaseDocumentRepository->destroyFragmentsByDocumentCode($dataIsolation, $documentCode);
+        $this->knowledgeBaseDocumentRepository->destroyFragmentsByDocumentCode($dataIsolation, $knowledgeBaseCode, $documentCode);
     }
 
     /**
@@ -193,8 +207,12 @@ readonly class KnowledgeBaseDocumentDomainService
 
         $documentEntity->setUpdatedAt($documentEntity->getCreatedAt());
         $documentEntity->setUpdatedUid($documentEntity->getCreatedUid());
-        $extension = FileType::getType($documentFile->getFileLink()->getUrl());
-        $documentEntity->setDocType(DocType::fromExtension($extension)->value);
+        if ($documentFile) {
+            $extension = FileType::getType($documentFile->getFileLink()->getUrl());
+            $documentEntity->setDocType(DocType::fromExtension($extension)->value);
+        } else {
+            $documentEntity->setDocType(DocType::TXT->value);
+        }
         $documentEntity->setSyncStatus(0); // 0 表示未同步
     }
 
@@ -211,32 +229,11 @@ readonly class KnowledgeBaseDocumentDomainService
         $newDocument->setCreatedUid($oldDocument->getCreatedUid());
         $newDocument->setDocType($oldDocument->getDocType());
         $newDocument->setWordCount($oldDocument->getWordCount());
+        $newDocument->setSyncStatus($oldDocument->getSyncStatus());
+        $newDocument->setSyncStatusMessage($oldDocument->getSyncStatusMessage());
+        $newDocument->setSyncTimes($oldDocument->getSyncTimes());
 
         // 更新时间
         $newDocument->setUpdatedAt(date('Y-m-d H:i:s'));
-
-        // 如果文档内容或者配置变化，重置同步状态
-        if ($this->isContentOrConfigChanged($newDocument, $oldDocument)) {
-            $newDocument->setSyncStatus(0); // 0 表示未同步
-            $newDocument->setSyncStatusMessage('');
-            $newDocument->setSyncTimes(0);
-        } else {
-            $newDocument->setSyncStatus($oldDocument->getSyncStatus());
-            $newDocument->setSyncStatusMessage($oldDocument->getSyncStatusMessage());
-            $newDocument->setSyncTimes($oldDocument->getSyncTimes());
-        }
-    }
-
-    /**
-     * 判断文档内容或配置是否变化.
-     */
-    private function isContentOrConfigChanged(KnowledgeBaseDocumentEntity $newDocument, KnowledgeBaseDocumentEntity $oldDocument): bool
-    {
-        // 检查可能影响向量索引的字段是否变化
-        return $newDocument->getDocMetadata() != $oldDocument->getDocMetadata()
-            || $newDocument->getEmbeddingModel() !== $oldDocument->getEmbeddingModel()
-            || $newDocument->getVectorDb() !== $oldDocument->getVectorDb()
-            || $newDocument->getEmbeddingConfig() != $oldDocument->getEmbeddingConfig()
-            || $newDocument->getRetrieveConfig() != $oldDocument->getRetrieveConfig();
     }
 }

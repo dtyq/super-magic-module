@@ -12,7 +12,7 @@ namespace App\Domain\Flow\Entity\ValueObject\Query;
  */
 class KnowledgeBaseDocumentQuery extends Query
 {
-    protected ?string $knowledgeBaseCode = null;
+    protected string $knowledgeBaseCode;
 
     protected ?string $code = null;
 
@@ -35,12 +35,12 @@ class KnowledgeBaseDocumentQuery extends Query
      */
     protected ?array $codes = null;
 
-    public function getKnowledgeBaseCode(): ?string
+    public function getKnowledgeBaseCode(): string
     {
         return $this->knowledgeBaseCode;
     }
 
-    public function setKnowledgeBaseCode(?string $knowledgeBaseCode): self
+    public function setKnowledgeBaseCode(string $knowledgeBaseCode): self
     {
         $this->knowledgeBaseCode = $knowledgeBaseCode;
         return $this;

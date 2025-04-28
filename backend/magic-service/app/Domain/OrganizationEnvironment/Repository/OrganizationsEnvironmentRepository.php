@@ -88,6 +88,19 @@ readonly class OrganizationsEnvironmentRepository implements OrganizationsEnviro
         return array_column($result, 'magic_organization_code');
     }
 
+    public function getOrganizationEnvironmentByThirdPartyOrganizationCode(string $thirdPartyOrganizationCode, MagicEnvironmentEntity $magicEnvironmentEntity): ?MagicOrganizationEnvEntity
+    {
+        $magicOrganizationEnv = $this->magicEnvironments->newQuery()
+            ->whereIn('environment_id', $magicEnvironmentEntity->getRelationEnvIds())
+            ->where('origin_organization_code', $thirdPartyOrganizationCode)
+            ->first();
+
+        if ($magicOrganizationEnv === null) {
+            return null;
+        }
+        return MagicEnvironmentAssembler::getMagicOrganizationEnvEntity($magicOrganizationEnv->toArray());
+    }
+
     #[Cacheable(prefix: 'magic_organizations_environment', ttl: 60, value: '_#{magicOrganizationCode}')]
     private function getOrganizationEnvironmentByMagicOrganizationCodeArray(string $magicOrganizationCode): ?array
     {

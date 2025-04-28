@@ -14,7 +14,7 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::table('knowledge_bases', function (Blueprint $table) {
+        Schema::table('magic_flow_knowledge', function (Blueprint $table) {
             $table->string('icon')->default('')->comment('图标');
         });
     }
@@ -24,7 +24,7 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::table('knowledge_bases', function (Blueprint $table) {
+        Schema::table('magic_flow_knowledge', function (Blueprint $table) {
             $table->dropColumn('icon');
         });
     }
