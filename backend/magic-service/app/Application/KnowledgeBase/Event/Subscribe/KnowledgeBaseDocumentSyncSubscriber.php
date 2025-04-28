@@ -83,7 +83,7 @@ readonly class KnowledgeBaseDocumentSyncSubscriber implements ListenerInterface
                         ->setContent($text)
                         ->setCreator($documentEntity->getCreatedUid())
                         ->setModifier($documentEntity->getUpdatedUid());
-                    $knowledgeBaseDocumentEntity = $knowledgeBaseDocumentDomainService->show($dataIsolation, $fragmentEntity->getDocumentCode());
+                    $knowledgeBaseDocumentEntity = $knowledgeBaseDocumentDomainService->show($dataIsolation, $knowledge->getCode(), $fragmentEntity->getDocumentCode());
                     $knowledgeBaseEntity = $knowledgeBaseDomainService->show($dataIsolation, $fragmentEntity->getKnowledgeCode());
                     $knowledgeBaseFragmentDomainService->save($dataIsolation, $knowledgeBaseEntity, $knowledgeBaseDocumentEntity, $fragmentEntity);
                 }

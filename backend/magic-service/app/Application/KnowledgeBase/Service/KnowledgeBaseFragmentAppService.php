@@ -15,7 +15,9 @@ use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeRetrievalResult;
 use App\Domain\KnowledgeBase\Entity\ValueObject\Query\KnowledgeBaseFragmentQuery;
 use App\Infrastructure\Core\ValueObject\Page;
 use App\Infrastructure\Util\SSRF\Exception\SSRFException;
+use App\Interfaces\KnowledgeBase\Assembler\KnowledgeBaseFragmentAssembler;
 use App\Interfaces\KnowledgeBase\DTO\DocumentFileDTO;
+use App\Interfaces\KnowledgeBase\DTO\KnowledgeBaseFragmentDTO;
 use Qbhy\HyperfAuth\Authenticatable;
 
 class KnowledgeBaseFragmentAppService extends AbstractKnowledgeAppService
@@ -25,7 +27,7 @@ class KnowledgeBaseFragmentAppService extends AbstractKnowledgeAppService
         $dataIsolation = $this->createKnowledgeBaseDataIsolation($authorization);
         $this->checkKnowledgeBaseOperation($dataIsolation, 'w', $savingMagicFlowKnowledgeFragmentEntity->getKnowledgeCode(), $savingMagicFlowKnowledgeFragmentEntity->getDocumentCode());
         $savingMagicFlowKnowledgeFragmentEntity->setCreator($dataIsolation->getCurrentUserId());
-        $knowledgeBaseDocumentEntity = $this->knowledgeBaseDocumentDomainService->show($dataIsolation, $savingMagicFlowKnowledgeFragmentEntity->getDocumentCode());
+        $knowledgeBaseDocumentEntity = $this->knowledgeBaseDocumentDomainService->show($dataIsolation, $savingMagicFlowKnowledgeFragmentEntity->getKnowledgeCode(), $savingMagicFlowKnowledgeFragmentEntity->getDocumentCode());
         $knowledgeBaseEntity = $this->knowledgeBaseDomainService->show($dataIsolation, $savingMagicFlowKnowledgeFragmentEntity->getKnowledgeCode());
         return $this->knowledgeBaseFragmentDomainService->save($dataIsolation, $knowledgeBaseEntity, $knowledgeBaseDocumentEntity, $savingMagicFlowKnowledgeFragmentEntity);
     }
@@ -37,6 +39,10 @@ class KnowledgeBaseFragmentAppService extends AbstractKnowledgeAppService
     {
         $dataIsolation = $this->createKnowledgeBaseDataIsolation($authorization);
         $this->checkKnowledgeBaseOperation($dataIsolation, 'r', $query->getKnowledgeCode(), $query->getDocumentCode());
+        $knowledgeBaseEntity = $this->knowledgeBaseDomainService->show($dataIsolation, $query->getKnowledgeCode());
+        if ($knowledgeBaseEntity->getDefaultDocumentCode() === $query->getDocumentCode()) {
+            $query->setIsDefaultDocumentCode(true);
+        }
 
         return $this->knowledgeBaseFragmentDomainService->queries($dataIsolation, $query, $page);
     }
@@ -86,7 +92,7 @@ class KnowledgeBaseFragmentAppService extends AbstractKnowledgeAppService
     }
 
     /**
-     * @return array<KnowledgeBaseFragmentEntity>
+     * @return array<KnowledgeBaseFragmentDTO>
      */
     public function similarity(Authenticatable $authenticatable, string $knowledgeBaseCode, string $query): array
     {
@@ -104,9 +110,13 @@ class KnowledgeBaseFragmentAppService extends AbstractKnowledgeAppService
         $result = array_column($result, null, 'id');
         $fragmentIds = array_column($result, 'id');
         $fragmentEntities = $this->knowledgeBaseFragmentDomainService->getByIds($dataIsolation, $fragmentIds);
-        foreach ($fragmentEntities as $fragmentEntity) {
-            $fragmentEntity->setScore($result[(string) $fragmentEntity->getId()]->getScore());
+        $documentCodes = array_column($fragmentEntities, 'document_code');
+        $documentCodeNameMap = $this->knowledgeBaseDocumentDomainService->getDocumentNamesByDocumentCodes($dataIsolation, $knowledgeBaseCode, $documentCodes);
+        $dtoList = array_map(fn (KnowledgeBaseFragmentEntity $entity) => KnowledgeBaseFragmentAssembler::entityToDTO($entity), $fragmentEntities);
+        foreach ($dtoList as $dto) {
+            $dto->setScore($result[(string) $dto->getId()]->getScore())
+                ->setDocumentName($documentCodeNameMap[$dto->getDocumentCode()]);
         }
-        return $fragmentEntities;
+        return $dtoList;
     }
 }

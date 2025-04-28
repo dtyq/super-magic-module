@@ -9,6 +9,7 @@ namespace App\Application\KnowledgeBase\Service;
 
 use App\Domain\Flow\Entity\ValueObject\Query\KnowledgeBaseDocumentQuery;
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseDocumentEntity;
+use App\Domain\KnowledgeBase\Entity\ValueObject\Query\KnowledgeBaseFragmentQuery;
 use App\Infrastructure\Core\Embeddings\VectorStores\VectorStoreDriver;
 use App\Infrastructure\Core\ValueObject\Page;
 use App\Interfaces\KnowledgeBase\DTO\DocumentFileDTO;
@@ -67,6 +68,15 @@ class KnowledgeBaseDocumentAppService extends AbstractKnowledgeAppService
         // 验证知识库的权限
         $this->checkKnowledgeBaseOperation($dataIsolation, 'r', $query->getKnowledgeBaseCode(), $query->getCode());
 
+        // 兼容旧数据，新增默认文档
+        $fragmentQuery = new KnowledgeBaseFragmentQuery();
+        $fragmentQuery->setKnowledgeCode($query->getKnowledgeBaseCode());
+        $fragmentEntities = $this->knowledgeBaseFragmentDomainService->queries($dataIsolation, $fragmentQuery, new Page(1, 1));
+        if (! empty($fragmentEntities['list'])) {
+            $knowledgeBaseEntity = $this->knowledgeBaseDomainService->show($dataIsolation, $query->getKnowledgeBaseCode());
+            $this->knowledgeBaseDocumentDomainService->getOrCreateDefaultDocument($dataIsolation, $knowledgeBaseEntity);
+        }
+
         // 调用领域服务查询文档
         $entities = $this->knowledgeBaseDocumentDomainService->queries($dataIsolation, $query, $page);
         $documentCodeFinalSyncStatusMap = $this->knowledgeBaseFragmentDomainService->getFinalSyncStatusByDocumentCodes(
@@ -91,7 +101,7 @@ class KnowledgeBaseDocumentAppService extends AbstractKnowledgeAppService
         $this->checkKnowledgeBaseOperation($dataIsolation, 'r', $knowledgeBaseCode, $documentCode);
 
         // 获取文档
-        $entity = $this->knowledgeBaseDocumentDomainService->show($dataIsolation, $documentCode);
+        $entity = $this->knowledgeBaseDocumentDomainService->show($dataIsolation, $knowledgeBaseCode, $documentCode);
         $documentCodeFinalSyncStatusMap = $this->knowledgeBaseFragmentDomainService->getFinalSyncStatusByDocumentCodes($dataIsolation, [$documentCode]);
         isset($documentCodeFinalSyncStatusMap[$documentCode]) && $entity->setSyncStatus($documentCodeFinalSyncStatusMap[$documentCode]->value);
         return $entity;
@@ -106,6 +116,6 @@ class KnowledgeBaseDocumentAppService extends AbstractKnowledgeAppService
         $this->checkKnowledgeBaseOperation($dataIsolation, 'del', $knowledgeBaseCode, $documentCode);
 
         // 调用领域服务删除文档
-        $this->knowledgeBaseDocumentDomainService->destroy($dataIsolation, $documentCode);
+        $this->knowledgeBaseDocumentDomainService->destroy($dataIsolation, $knowledgeBaseCode, $documentCode);
     }
 }

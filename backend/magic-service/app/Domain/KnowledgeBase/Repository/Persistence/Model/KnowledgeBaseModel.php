@@ -43,7 +43,7 @@ class KnowledgeBaseModel extends AbstractModel
     use Snowflake;
     use SoftDeletes;
 
-    protected ?string $table = 'knowledge_bases';
+    protected ?string $table = 'magic_flow_knowledge';
 
     protected array $fillable = [
         'id', 'code', 'version', 'name', 'description', 'type', 'enabled', 'business_id', 'sync_status', 'sync_status_message', 'model', 'vector_db',

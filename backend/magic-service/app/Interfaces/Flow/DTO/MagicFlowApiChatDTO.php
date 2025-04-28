@@ -48,14 +48,16 @@ class MagicFlowApiChatDTO extends AbstractFlowDTO
 
     private array $shareOptions = [];
 
-    public function validate(): void
+    public function validate(bool $checkInput = true): void
     {
         if (empty($this->apiKey) && empty($this->authorization)) {
             ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'api-key or authorization is required');
         }
 
-        if ($this->getMessage() === '' && empty($this->getAttachments())) {
-            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'message or attachments is required');
+        if ($checkInput) {
+            if ($this->getMessage() === '' && empty($this->getAttachments())) {
+                ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'message or attachments is required');
+            }
         }
     }
 

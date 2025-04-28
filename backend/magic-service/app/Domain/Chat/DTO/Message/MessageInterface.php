@@ -12,6 +12,10 @@ use App\Domain\Chat\Entity\ValueObject\MessageType\ControlMessageType;
 
 /**
  * 聊天消息/控制消息都需要实现的接口.
+ *
+ * @method mixed getContent() 获取消息内容
+ * @method ?array getAttachments() 获取消息附件
+ * @method ?array getInstructs() 获取消息指令
  */
 interface MessageInterface
 {
