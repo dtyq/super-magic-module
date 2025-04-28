@@ -10,7 +10,11 @@ interface GroupCreateTipProps extends Omit<HTMLAttributes<HTMLDivElement>, "cont
 	content?: GroupCreateMessage
 }
 
-const GroupCreateTip = memo(({ content, className, onClick }: GroupCreateTipProps) => {
+const GroupCreateTip = memo(function GroupCreateTip({
+	content,
+	className,
+	onClick,
+}: GroupCreateTipProps) {
 	const { styles, cx } = useTipStyles()
 	const { t } = useTranslation("interface")
 

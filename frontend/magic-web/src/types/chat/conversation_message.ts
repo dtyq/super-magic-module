@@ -84,6 +84,8 @@ export interface ConversationMessageBase extends SeqMessageBase {
 	revoked?: boolean
 	/** 本地临时数据存储 */
 	temp_custom_data?: Record<string, unknown>
+	/** 是否本地删除 */
+	is_local_deleted?: boolean
 }
 
 /**

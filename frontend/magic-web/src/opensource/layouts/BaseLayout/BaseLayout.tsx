@@ -1,11 +1,9 @@
 import { Flex } from "antd"
-import { memo, useMemo, useRef } from "react"
-import { Outlet } from "react-router"
+import { memo, useRef } from "react"
 import { useNavigate } from "@/opensource/hooks/useNavigate"
 import { useMemoizedFn, useMount, useSize } from "ahooks"
 import { RoutePath } from "@/const/routes"
 import NetworkTip from "@/opensource/components/other/NetworkTip"
-import LoadingFallback from "@/opensource/components/fallback/LoadingFallback"
 import GlobalChatProvider from "@/opensource/providers/ChatProvider"
 import FlowProvider from "@/opensource/providers/FlowProvider"
 import AuthenticationProvider from "@/opensource/providers/AuthenticationProvider"
@@ -16,6 +14,7 @@ import Header from "./components/Header"
 import Sider from "./components/Sider"
 import { useStyles } from "./styles"
 import { useSideMenu } from "./components/Sider/hooks"
+import { useKeepAlive } from "@/opensource/hooks/router/useKeepAlive"
 
 const BaseLayout = observer(() => {
 	const siderRef = useRef<HTMLDivElement | null>(null)
@@ -25,20 +24,13 @@ const BaseLayout = observer(() => {
 
 	const pageMenuItems = useSideMenu()
 
+	const { Content } = useKeepAlive()
+
 	useMount(() => {
 		if (window.location.pathname === "/") {
 			navigate(RoutePath.Chat)
 		}
 	})
-
-	const Content = useMemo(
-		() => (
-			<LoadingFallback>
-				<Outlet />
-			</LoadingFallback>
-		),
-		[],
-	)
 
 	const handleClick = useMemoizedFn((e: React.MouseEvent<HTMLDivElement>) => {
 		const target = e.target as HTMLElement

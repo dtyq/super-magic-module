@@ -246,8 +246,7 @@ class ChatMessageApplyService {
 		ConversationService.updateLastReceiveMessage(message.conversation_id, {
 			time: message.message.send_time,
 			seq_id: message.seq_id,
-			type: message.message.type,
-			text: getSlicedText(message.message),
+			...getSlicedText(message.message, message.message.revoked),
 			topic_id: message.message.topic_id ?? "",
 		})
 

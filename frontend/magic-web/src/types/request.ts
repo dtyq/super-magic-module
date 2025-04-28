@@ -60,7 +60,7 @@ export interface PaginationResponse<D> {
 	page_token: string
 }
 
-export type SeqResponse<S = {}> = {
+export type SeqResponse<S = object> = {
 	/** 用户唯一 ID */
 	magic_id: string
 	/** 消息序列 ID */

@@ -104,6 +104,8 @@ const RichText = memo(
 						},
 						plugins: [],
 					})
+				} catch (error) {
+					console.error("RichText init error:", error, content)
 				} finally {
 					initializingRef.current = false
 				}

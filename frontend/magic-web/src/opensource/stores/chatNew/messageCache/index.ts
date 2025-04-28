@@ -43,7 +43,7 @@ class MessageCache {
 			this.removeLowestPriorityLRU()
 		}
 
-		const limitedMessages = cacheData?.messages?.slice(-this.maxMessages)
+		const limitedMessages = cacheData?.messages?.slice(0, this.maxMessages)
 
 		cacheData.messages = limitedMessages
 
@@ -94,21 +94,12 @@ class MessageCache {
 	/**
 	 * 增加多条消息
 	 */
-	public addMessages(
-		conversationId: string,
-		topicId: string,
-		data: MessagePage,
-		appendPage: boolean = false,
-	) {
+	public addMessages(conversationId: string, topicId: string, data: MessagePage) {
 		const conversation = this.cache.get(this.cacheKey(conversationId, topicId))
 		if (conversation) {
 			conversation.cacheData.messages.push(...data.messages)
 			conversation.cacheData.totalPages = data.totalPages
-			if (appendPage) {
-				conversation.cacheData.page = conversation.cacheData.page ?? 0 + (data.page ?? 0)
-			} else {
-				conversation.cacheData.page = data.page
-			}
+			conversation.cacheData.page = data.page
 		}
 	}
 

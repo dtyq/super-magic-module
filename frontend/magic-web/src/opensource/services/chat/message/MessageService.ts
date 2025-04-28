@@ -37,13 +37,12 @@ import MessageSeqIdService from "./MessageSeqIdService"
 import MessageCacheService from "./MessageCacheService"
 import ConversationBotDataService from "../conversation/ConversationBotDataService"
 import ConversationService from "../conversation/ConversationService"
-import { getSlicedText } from "../conversation/utils"
+import { getRevokedText, getSlicedText } from "../conversation/utils"
 import DotsService from "../dots/DotsService"
 import { userStore } from "@/opensource/models/user"
 import { UpdateSpec } from "dexie"
-
+import { t } from "i18next"
 const console = new Logger("MessageService", "blue")
-const BigPageSize = 10
 
 type SendData =
 	| Pick<TextConversationMessage, "type" | "text">
@@ -58,11 +57,6 @@ interface MessageData {
 	normalValue: string
 	onlyTextContent: boolean
 	files: any[]
-}
-
-// 计算新增的页码
-function calculatePageNumber(itemIndex: number, pageSize: number): number {
-	return Math.ceil(itemIndex / pageSize)
 }
 
 class MessageService {
@@ -153,8 +147,7 @@ class MessageService {
 				const serverMessages = await this.messagePullService.pullMessagesFromServer({
 					conversationId,
 					topicId,
-					// 需要多拉取一些才能保证数据完整性(如AI搜索消息), 统一设置为30
-					pageSize: BigPageSize,
+					pageSize: MessageStore.pageSize,
 					withoutSeqId: true,
 				})
 
@@ -165,8 +158,8 @@ class MessageService {
 					)
 
 					data = {
-						pageSize: BigPageSize,
-						totalPages: Math.ceil(serverMessages.length / BigPageSize),
+						pageSize: MessageStore.pageSize,
+						totalPages: Math.ceil(serverMessages.length / MessageStore.pageSize),
 						messages,
 					}
 
@@ -175,11 +168,10 @@ class MessageService {
 			}
 		}
 
-		// 设置当前页码
-		MessageStore.setPageConfig(
-			MessageStore.page + calculatePageNumber(data.messages.length, MessageStore.pageSize),
-			data.totalPages ?? 1,
-		)
+		console.log("messages init ====> ", data)
+
+		// 当前一定是第一页
+		MessageStore.setPageConfig(1, data.totalPages ?? 1)
 		MessageStore.setMessages(conversationId, topicId, data.messages ?? [])
 
 		// 获取未读的消息，发送已读回执
@@ -328,15 +320,14 @@ class MessageService {
 		const messages = await this.messagePullService.pullMessagesFromServer({
 			conversationId,
 			topicId,
-			// 需要多拉取一些才能保证数据完整性(如AI搜索消息), 统一设置为30
-			pageSize: BigPageSize,
+			pageSize: MessageStore.pageSize,
 			loadHistory,
 		})
 
 		if (messages && messages.length > 0) {
 			return {
-				pageSize: BigPageSize,
-				totalPages: Math.ceil(messages.length / BigPageSize),
+				pageSize: MessageStore.pageSize,
+				totalPages: Math.ceil(messages.length / MessageStore.pageSize),
 				messages: messages.map((item) => this.formatMessage(item, userStore.user.userInfo)),
 			}
 		}
@@ -378,7 +369,6 @@ class MessageService {
 				MessageStore.page + 1, // 下一页
 				MessageStore.pageSize,
 			)
-			console.log("getHistoryMessages by db  ====> ", data)
 
 			if (!data?.messages?.length) {
 				data = await this.pullMoreMessages(conversationId, topicId)
@@ -388,19 +378,12 @@ class MessageService {
 
 		// 会话变化，则不添加消息，增加到缓存区
 		if (conversationId !== MessageStore.conversationId || topicId !== MessageStore.topicId) {
-			if (data?.messages?.length) {
-				MessageCacheStore.addMessages(
-					conversationId,
-					topicId,
-					{
-						page: calculatePageNumber(data?.messages?.length, MessageStore.pageSize),
-						pageSize: data?.pageSize,
-						totalPages: data?.totalPages ?? 1,
-						messages: data?.messages ?? [],
-					},
-					true,
-				)
-			}
+			MessageCacheStore.addMessages(conversationId, topicId, {
+				page: MessageStore.page + 1,
+				pageSize: MessageStore.pageSize,
+				totalPages: data?.totalPages ?? 1,
+				messages: data?.messages ?? [],
+			})
 			return
 		}
 		if (data?.messages?.length) {
@@ -411,27 +394,7 @@ class MessageService {
 			}
 
 			MessageStore.addMessages(data.messages)
-			console.log(
-				"getHistoryMessages add messages page ====> ",
-				MessageStore.page,
-				data.messages.length,
-				calculatePageNumber(data.messages.length, MessageStore.pageSize),
-				data.totalPages,
-			)
-			MessageStore.setPageConfig(
-				MessageStore.page +
-					calculatePageNumber(data.messages.length, MessageStore.pageSize),
-				data.totalPages ?? 1,
-			)
-
-			// // 如果当前页码大于总页码，则没有更多消息
-			// if (
-			// 	MessageStore.page +
-			// 		calculatePageNumber(data.messages.length, MessageStore.pageSize) >=
-			// 	(data.totalPages ?? 1)
-			// ) {
-			// 	MessageStore.setHasMoreHistoryMessage(false)
-			// }
+			MessageStore.setPageConfig(MessageStore.page + 1, data.totalPages ?? 1)
 		} else {
 			MessageStore.setHasMoreHistoryMessage(false)
 		}
@@ -909,6 +872,15 @@ class MessageService {
 			})
 		}
 
+		// 如果最后一条消息是撤回的消息, 则更新内容
+		const conversation = conversationStore.getConversation(conversationId)
+		if (conversation && conversation.last_receive_message?.seq_id === messageId) {
+			ConversationService.updateLastReceiveMessage(conversationId, {
+				...conversation.last_receive_message,
+				...getRevokedText(),
+			})
+		}
+
 		// 获取消息，判断是否需要更新红点
 		this.getMessageFromDb(conversationId, messageId).then((message) => {
 			if (message) {
@@ -1000,8 +972,7 @@ class MessageService {
 				ConversationService.updateLastReceiveMessage(conversationId, {
 					time: lastMessage.message.send_time,
 					seq_id: lastMessage.message_id,
-					type: lastMessage.message.type,
-					text: getSlicedText(lastMessage.message),
+					...getSlicedText(lastMessage.message, lastMessage.revoked),
 					topic_id: lastMessage.message.topic_id ?? "",
 				})
 			} else {
@@ -1049,8 +1020,7 @@ class MessageService {
 			ConversationService.updateLastReceiveMessage(conversationId, {
 				time: updatedMessage.message.send_time,
 				seq_id: updatedMessage.message_id,
-				type: updatedMessage.message.type,
-				text: getSlicedText(updatedMessage.message),
+				...getSlicedText(updatedMessage.message, updatedMessage.revoked),
 				topic_id: updatedMessage.message.topic_id ?? "",
 			})
 		}

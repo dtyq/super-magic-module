@@ -19,7 +19,9 @@ class MessageDbService {
 	async removeMessage(conversationId: string, messageId: string) {
 		const table = await this.getMessageTable(conversationId)
 		if (table) {
-			table.delete(messageId)
+			table.update(messageId, {
+				"message.is_local_deleted": true,
+			})
 		}
 	}
 
@@ -186,6 +188,8 @@ class MessageDbService {
 		const query = table
 			.where("[message.topic_id+message.send_time]")
 			.between([topicId, Dexie.minKey], [topicId, Dexie.maxKey])
+			// 过滤本地删除的消息
+			.filter((message) => !message.message.is_local_deleted)
 
 		// 获取总数
 		const total = await query.count()
