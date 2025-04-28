@@ -189,6 +189,13 @@ class LLMChatNodeRunner extends AbstractLLMNodeRunner
                     }
                 }
             }
+        } else {
+            if ($userPrompt !== '') {
+                // 创建一个新的，在后续使用
+                $currentMessage = new UserMessage();
+                $currentMessage->setContent($userPrompt);
+                $memoryManager->addMessage($currentMessage);
+            }
         }
 
         $agent = $this->createAgent($executionData, $vertexResult, $paramsConfig, $memoryManager, $systemPrompt, $model);
