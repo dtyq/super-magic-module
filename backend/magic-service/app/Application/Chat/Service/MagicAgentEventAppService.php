@@ -29,7 +29,8 @@ class MagicAgentEventAppService implements AgentExecuteInterface
         if ($seqEntity->canTriggerFlow()) {
             $this->magicConversationDomainService->agentOperateConversationStatusV2(
                 ControlMessageType::StartConversationInput,
-                $seqEntity->getConversationId()
+                $seqEntity->getConversationId(),
+                $seqEntity->getExtra()?->getTopicId()
             );
         }
 
@@ -41,7 +42,8 @@ class MagicAgentEventAppService implements AgentExecuteInterface
         if ($seqEntity->canTriggerFlow()) {
             $this->magicConversationDomainService->agentOperateConversationStatusV2(
                 ControlMessageType::EndConversationInput,
-                $seqEntity->getConversationId()
+                $seqEntity->getConversationId(),
+                $seqEntity->getExtra()?->getTopicId()
             );
         }
     }

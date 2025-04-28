@@ -13,6 +13,8 @@ class ConversationEndInputMessage extends AbstractControlMessageStruct
 {
     protected string $conversationId = '';
 
+    protected ?string $topicId;
+
     public function getConversationId(): string
     {
         return $this->conversationId;
@@ -21,6 +23,16 @@ class ConversationEndInputMessage extends AbstractControlMessageStruct
     public function setConversationId(string $conversationId): void
     {
         $this->conversationId = $conversationId;
+    }
+
+    public function getTopicId(): ?string
+    {
+        return $this->topicId ?? null;
+    }
+
+    public function setTopicId(?string $topicId): void
+    {
+        $this->topicId = $topicId;
     }
 
     protected function setMessageType(): void
