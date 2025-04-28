@@ -230,6 +230,7 @@ class MagicFlowExportImportAppService
             'description' => $agent->getAgentDescription(),
             'flow_code' => $agent->getFlowCode(),
             'avatar' => $agent->getAgentAvatar(),
+            'instruct' => $agent->getInstructs(),
             // 可以根据需要添加其他助理信息
         ];
 
@@ -272,7 +273,7 @@ class MagicFlowExportImportAppService
 
         try {
             $savedAgent = $agentDomainService->saveAgent($agentEntity);
-
+            $agentDomainService->saveInstruct($dataIsolation->getCurrentOrganizationCode(), $savedAgent->getId(), $agentData['instruct']);
             return [
                 'agent_id' => $savedAgent->getId(),
                 'agent_name' => $savedAgent->getAgentName(),
@@ -527,6 +528,20 @@ class MagicFlowExportImportAppService
                 }
             }
 
+            // 递归处理节点参数中的表达式引用
+            if (isset($nodeData['params']) && is_array($nodeData['params'])) {
+                $this->updateExpressionReferences($nodeData['params'], $idMapping);
+            }
+
+            // 处理节点的input和output字段中的表达式引用
+            if (isset($nodeData['input']) && is_array($nodeData['input'])) {
+                $this->updateExpressionReferences($nodeData['input'], $idMapping);
+            }
+
+            if (isset($nodeData['output']) && is_array($nodeData['output'])) {
+                $this->updateExpressionReferences($nodeData['output'], $idMapping);
+            }
+
             // 处理节点连接关系（next_nodes）
             if (isset($nodeData['next_nodes']) && is_array($nodeData['next_nodes'])) {
                 $nextNodes = [];
@@ -555,10 +570,89 @@ class MagicFlowExportImportAppService
                     $edge['target'] = $newTargetId;
                 }
 
+                // 更新sourceHandle中可能包含的节点ID引用
+                if (isset($edge['sourceHandle']) && is_string($edge['sourceHandle'])) {
+                    foreach ($idMapping['nodes'] as $oldId => $newId) {
+                        // 使用正则表达式确保只替换完整的ID
+                        if (preg_match('/^' . preg_quote($oldId, '/') . '_/', $edge['sourceHandle'])) {
+                            $edge['sourceHandle'] = preg_replace('/^' . preg_quote($oldId, '/') . '/', $newId, $edge['sourceHandle']);
+                        }
+                    }
+                }
+
                 // 更新edge的ID（如果有）
                 if (isset($edge['id'])) {
                     $edge['id'] = IdGenerator::getUniqueId32();
                 }
+            }
+        }
+    }
+
+    /**
+     * 递归处理数组中的表达式引用
+     * 查找并更新所有包含节点ID的表达式字段.
+     */
+    private function updateExpressionReferences(array &$data, array $idMapping): void
+    {
+        // 检查是否是表达式结构
+        if (isset($data['type']) && $data['type'] === 'expression'
+            && isset($data['expression_value']) && is_array($data['expression_value'])) {
+            $this->processExpressionValue($data['expression_value'], $idMapping);
+        }
+
+        // 检查是否包含structure字段且是表达式类型
+        if (isset($data['structure']) && is_array($data['structure'])) {
+            if (isset($data['structure']['type']) && $data['structure']['type'] === 'expression') {
+                if (isset($data['structure']['expression_value']) && is_array($data['structure']['expression_value'])) {
+                    $this->processExpressionValue($data['structure']['expression_value'], $idMapping);
+                }
+            } else {
+                // 递归处理structure
+                $this->updateExpressionReferences($data['structure'], $idMapping);
+            }
+        }
+
+        // 遍历处理其他字段
+        foreach ($data as $key => &$value) {
+            if (is_array($value)) {
+                // 递归处理嵌套数组
+                $this->updateExpressionReferences($value, $idMapping);
+            } elseif (is_string($value)) {
+                // 检查是否是可能包含节点引用的字段
+                if (is_string($key) && (in_array($key, ['value', 'expression', 'reference']) || strpos($key, '_value') !== false)) {
+                    // 检查是否包含节点ID引用（格式如：nodeId.fieldName）
+                    foreach ($idMapping['nodes'] as $oldNodeId => $newNodeId) {
+                        // 使用正则表达式确保只替换完整的节点ID
+                        if (preg_match('/^' . preg_quote($oldNodeId, '/') . '\./', $value)) {
+                            $fieldName = substr($value, strlen($oldNodeId));
+                            $value = $newNodeId . $fieldName;
+                            break; // 找到匹配后退出循环
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * 处理表达式值数组
+     * 专门处理expression_value数组中的表达式项.
+     */
+    private function processExpressionValue(array &$expressionValue, array $idMapping): void
+    {
+        foreach ($expressionValue as &$exprItem) {
+            if (isset($exprItem['type']) && $exprItem['type'] === 'fields' && isset($exprItem['value']) && is_string($exprItem['value'])) {
+                // 处理fields类型的表达式引用
+                foreach ($idMapping['nodes'] as $oldNodeId => $newNodeId) {
+                    if (preg_match('/^' . preg_quote($oldNodeId, '/') . '\./', $exprItem['value'])) {
+                        $fieldName = substr($exprItem['value'], strlen($oldNodeId));
+                        $exprItem['value'] = $newNodeId . $fieldName;
+                        break; // 找到匹配后退出循环
+                    }
+                }
+            } elseif (is_array($exprItem)) {
+                // 递归处理可能嵌套的表达式项
+                $this->updateExpressionReferences($exprItem, $idMapping);
             }
         }
     }
