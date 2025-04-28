@@ -1,5 +1,5 @@
 import { observer, useLocalObservable } from "mobx-react-lite"
-import { useRef, useCallback, useEffect, lazy, Suspense, useLayoutEffect } from "react"
+import { useRef, useCallback, useEffect, useLayoutEffect } from "react"
 import { useMemoizedFn } from "ahooks"
 import MessageStore from "@/opensource/stores/chatNew/message"
 import MessageService from "@/opensource/services/chat/message/MessageService"
@@ -14,29 +14,15 @@ import { autorun } from "mobx"
 import { cx } from "antd-style"
 import { DomClassName } from "@/const/dom"
 import { debounce, throttle } from "lodash-es"
-import type {
-	GroupAddMemberMessage,
-	GroupCreateMessage,
-	GroupUsersRemoveMessage,
-	GroupUpdateMessage,
-	GroupDisbandMessage,
-} from "@/types/chat/control_message"
-import { ControlEventMessageType } from "@/types/chat"
 import { useFontSize } from "@/opensource/providers/AppearanceProvider/hooks"
 import AiConversationMessageLoading from "./components/AiConversationMessageLoading"
 import BackBottom from "./components/BackBottom"
-import RevokeTip from "./components/RevokeTip"
 import { useStyles } from "./styles"
-import GroupCreateTip from "./components/MessageFactory/components/GroupCreateTip"
-import GroupDisbandTip from "./components/MessageFactory/components/GroupDisbandTip"
-import GroupUpdateTip from "./components/MessageFactory/components/GroupUpdateTip"
-import GroupUsersRemoveTip from "./components/MessageFactory/components/GroupUsersRemoveTip"
-import InviteMemberTip from "./components/MessageFactory/components/InviteMemberTip"
-import MessageItem from "./components/MessageItem"
 import GroupSeenPanelStore, {
 	domClassName as GroupSeenPanelDomClassName,
 } from "@/opensource/stores/chatNew/groupSeenPanel"
 import { isMessageInView } from "./utils"
+import MessageRender from "./components/MessageRender"
 
 let canScroll = true
 let isScrolling = false
@@ -79,60 +65,61 @@ const ChatMessageList = observer(() => {
 		},
 	}))
 
-	const renderMessage = useMemoizedFn((message: any) => {
-		switch (message.type) {
-			case ControlEventMessageType.GroupAddMember:
-				return (
-					<InviteMemberTip
-						key={message.message_id}
-						content={message.message as GroupAddMemberMessage}
-					/>
-				)
-			case ControlEventMessageType.GroupCreate:
-				return (
-					<GroupCreateTip
-						key={message.message_id}
-						content={message.message as GroupCreateMessage}
-					/>
-				)
-			case ControlEventMessageType.GroupUsersRemove:
-				return (
-					<GroupUsersRemoveTip
-						key={message.message_id}
-						content={message.message as GroupUsersRemoveMessage}
-					/>
-				)
-			case ControlEventMessageType.GroupUpdate:
-				return (
-					<GroupUpdateTip
-						key={message.message_id}
-						content={message.message as GroupUpdateMessage}
-					/>
-				)
-			case ControlEventMessageType.GroupDisband:
-				return (
-					<GroupDisbandTip
-						key={message.message_id}
-						content={message.message as GroupDisbandMessage}
-					/>
-				)
-			default:
-				return (
-					<MessageItem
-						key={message.message_id}
-						message_id={message.message_id}
-						sender_id={message.sender_id}
-						name={message.name}
-						avatar={message.avatar}
-						is_self={message.is_self ?? false}
-						message={message.message}
-						unread_count={message.unread_count}
-						refer_message_id={message.refer_message_id}
-						revoked={message.revoked}
-					/>
-				)
-		}
-	})
+	// const renderMessage = useMemoizedFn((message: any) => {
+	// 	switch (message.type) {
+	// 		case ControlEventMessageType.GroupAddMember:
+	// 			return (
+	// 				<InviteMemberTip
+	// 					key={message.message_id}
+	// 					content={message.message as GroupAddMemberMessage}
+	// 				/>
+	// 			)
+	// 		case ControlEventMessageType.GroupCreate:
+	// 			return (
+	// 				<GroupCreateTip
+	// 					key={message.message_id}
+	// 					content={message.message as GroupCreateMessage}
+	// 				/>
+	// 			)
+	// 		case ControlEventMessageType.GroupUsersRemove:
+	// 			return (
+	// 				<GroupUsersRemoveTip
+	// 					key={message.message_id}
+	// 					content={message.message as GroupUsersRemoveMessage}
+	// 				/>
+	// 			)
+	// 		case ControlEventMessageType.GroupUpdate:
+	// 			return (
+	// 				<GroupUpdateTip
+	// 					key={message.message_id}
+	// 					content={message.message as GroupUpdateMessage}
+	// 				/>
+	// 			)
+	// 		case ControlEventMessageType.GroupDisband:
+	// 			return (
+	// 				<GroupDisbandTip
+	// 					key={message.message_id}
+	// 					content={message.message as GroupDisbandMessage}
+	// 				/>
+	// 			)
+	// 		default:
+	// 			return message.revoked ? (
+	// 				<RevokeTip key={message.message_id} senderUid={message.sender_id} />
+	// 			) : (
+	// 				<MessageItem
+	// 					key={message.message_id}
+	// 					message_id={message.message_id}
+	// 					sender_id={message.sender_id}
+	// 					name={message.name}
+	// 					avatar={message.avatar}
+	// 					is_self={message.is_self ?? false}
+	// 					message={message.message}
+	// 					unread_count={message.unread_count}
+	// 					refer_message_id={message.refer_message_id}
+	// 				/>
+	// 			)
+	// 	}
+	// })
 
 	const scrollToMessage = useMemoizedFn(
 		(
@@ -211,8 +198,8 @@ const ChatMessageList = observer(() => {
 		const { scrollTop, clientHeight, scrollHeight } = wrapperRef.current
 		const distance = Math.abs(scrollTop + clientHeight - scrollHeight)
 
-		state.setIsAtBottom(distance < 50)
-		canScroll = distance < 80
+		state.setIsAtBottom(distance < 100)
+		canScroll = distance < 100
 
 		const isScrollUp = lastScrollTop - scrollTop > 0
 		lastScrollTop = scrollTop
@@ -464,14 +451,14 @@ const ChatMessageList = observer(() => {
 					}}
 				>
 					{MessageStore.messages.map((message) => {
-						const item = renderMessage(message)
+						// const item = renderMessage(message)
 						return (
 							<div
 								id={message.message_id}
 								key={message.message_id}
 								style={{ willChange: "transform" }}
 							>
-								{item}
+								<MessageRender message={message} />
 							</div>
 						)
 					})}

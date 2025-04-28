@@ -240,8 +240,7 @@ class ConversationService {
 					this.updateLastReceiveMessage(conversation.id, {
 						time: lastMessage.message.send_time,
 						seq_id: lastMessage.message_id,
-						type: lastMessage.message.type,
-						text: getSlicedText(lastMessage.message),
+						...getSlicedText(lastMessage.message, lastMessage.revoked),
 						topic_id: lastMessage.message.topic_id ?? "",
 					})
 				} else {

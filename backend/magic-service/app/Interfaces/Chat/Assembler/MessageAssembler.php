@@ -210,7 +210,7 @@ class MessageAssembler
             ChatMessageType::Video => new VideosMessage($messageStructArray),
             ChatMessageType::Voice => new VoicesMessage($messageStructArray),
             ChatMessageType::RecordingSummary => new RecordingSummaryMessage($messageStructArray),
-            ChatMessageType::SuperAgentCard => make(SuperAgentMessageInterface::class, $messageStructArray),
+            ChatMessageType::SuperAgentCard => make(SuperAgentMessageInterface::class, ['messageStruct' => $messageStructArray]),
             default => new UnknowChatMessage()
         };
     }

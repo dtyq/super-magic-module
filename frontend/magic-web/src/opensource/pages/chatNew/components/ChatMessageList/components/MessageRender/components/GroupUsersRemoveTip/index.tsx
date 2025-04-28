@@ -9,7 +9,11 @@ interface GroupUsersRemoveTipProps extends Omit<HTMLAttributes<HTMLDivElement>, 
 	content?: GroupUsersRemoveMessage
 }
 
-const GroupUsersRemoveTip = memo(({ content, className, onClick }: GroupUsersRemoveTipProps) => {
+const GroupUsersRemoveTip = memo(function GroupUsersRemoveTip({
+	content,
+	className,
+	onClick,
+}: GroupUsersRemoveTipProps) {
 	const { styles, cx } = useTipStyles()
 	const { t } = useTranslation("interface")
 

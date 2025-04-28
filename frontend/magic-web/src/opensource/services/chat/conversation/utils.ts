@@ -25,31 +25,67 @@ export const getConversationGroupKey = (item: Conversation | ConversationFromSer
 }
 
 /**
+ * 获取撤回消息文本
+ * @returns 撤回消息文本
+ */
+export const getRevokedText = () => {
+	return {
+		type: ConversationMessageType.Text,
+		text: t("chat.messageRevoked", { ns: "interface" }),
+	}
+}
+
+/**
  * 获取消息文本
  * @param message 消息
  * @returns 消息文本
  */
-export const getSlicedText = (message: ConversationMessage) => {
+export const getSlicedText = (message: ConversationMessage, revoked: boolean = false) => {
+	if (revoked) {
+		return getRevokedText()
+	}
+
 	switch (message.type) {
 		case ConversationMessageType.Text:
-			return (message.text?.content ?? "").slice(0, 50)
+			return {
+				type: ConversationMessageType.Text,
+				text: (message.text?.content ?? "").slice(0, 50),
+			}
 		case ConversationMessageType.RichText:
-			return message.rich_text?.content ?? ""
+			return {
+				type: ConversationMessageType.RichText,
+				text: message.rich_text?.content ?? "",
+			}
 		case ConversationMessageType.Markdown:
-			return (message.markdown?.content ?? "").slice(0, 50)
+			return {
+				type: ConversationMessageType.Markdown,
+				text: (message.markdown?.content ?? "").slice(0, 50),
+			}
 		case ConversationMessageType.AggregateAISearchCard:
-			return (
-				message.aggregate_ai_search_card?.llm_response ??
-				t("chat.messageTextRender.aggregate_ai_search_card", { ns: "interface" })
-			).slice(0, 50)
+			return {
+				type: ConversationMessageType.AggregateAISearchCard,
+				text: (message.aggregate_ai_search_card?.llm_response ?? "").slice(0, 50),
+			}
 		case ConversationMessageType.MagicSearchCard:
-			return t("chat.messageTextRender.magic_search_card", { ns: "interface" })
+			return {
+				type: ConversationMessageType.MagicSearchCard,
+				text: t("chat.messageTextRender.magic_search_card", { ns: "interface" }),
+			}
 		case ConversationMessageType.Files:
-			return t("chat.messageTextRender.files", { ns: "interface" })
+			return {
+				type: ConversationMessageType.Files,
+				text: t("chat.messageTextRender.files", { ns: "interface" }),
+			}
 		case ConversationMessageType.AiImage:
 		case ConversationMessageType.HDImage:
-			return t("chat.messageTextRender.ai_image", { ns: "interface" })
+			return {
+				type: ConversationMessageType.AiImage,
+				text: t("chat.messageTextRender.ai_image", { ns: "interface" }),
+			}
 		default:
-			return ""
+			return {
+				type: ConversationMessageType.Text,
+				text: "",
+			}
 	}
 }

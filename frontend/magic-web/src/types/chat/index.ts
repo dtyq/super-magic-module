@@ -80,7 +80,7 @@ export type EventResponse<E extends EventType> = {
 /**
  * 控制事件类型
  */
-export const enum ControlEventMessageType {
+export enum ControlEventMessageType {
 	/** 打开（创建）会话 */
 	OpenConversation = "open_conversation",
 	/** 创建会话 */

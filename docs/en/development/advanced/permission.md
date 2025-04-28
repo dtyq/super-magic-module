@@ -40,6 +40,15 @@ enum SuperPermissionEnum: string
     
     // Service Provider Administrator
     case SERVICE_PROVIDER_ADMIN = 'service_provider_admin';
+
+    // Super Magic Invite Use User
+    case SUPER_INVITE_USER = 'super_magic_invite_use_user';
+
+    // Super Magic Board Administrator
+    case SUPER_MAGIC_BOARD_ADMIN = 'super_magic_board_manager';
+
+    // Super Magic Board Operator
+    case SUPER_MAGIC_ BOARD_OPERATOR = 'super_magic_board_operator';
 }
 ```
 

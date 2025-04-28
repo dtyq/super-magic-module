@@ -8,7 +8,11 @@ interface GroupDisbandTipProps extends Omit<HTMLAttributes<HTMLDivElement>, "con
 	content?: GroupDisbandMessage
 }
 
-const GroupDisbandTip = memo(({ content, className, onClick }: GroupDisbandTipProps) => {
+const GroupDisbandTip = memo(function GroupDisbandTip({
+	content,
+	className,
+	onClick,
+}: GroupDisbandTipProps) {
 	const { t } = useTranslation("interface")
 	const { styles, cx } = useTipStyles()
 

@@ -66,7 +66,6 @@ class ControlMessageApplyService {
 			ControlEventMessageType.GroupUpdate,
 			ControlEventMessageType.GroupUsersRemove,
 			ControlEventMessageType.GroupDisband,
-			ControlEventMessageType.RevokeMessage,
 			ControlEventMessageType.AddFriendSuccess,
 		].includes(message.message.type as ControlEventMessageType)
 	}

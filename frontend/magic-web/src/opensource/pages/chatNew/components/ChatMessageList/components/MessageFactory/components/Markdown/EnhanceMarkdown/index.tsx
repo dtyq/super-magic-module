@@ -1,10 +1,11 @@
 import Markdown from "react-markdown"
-import { memo, useMemo, useRef } from "react"
+import { Suspense, memo, useMemo, useRef } from "react"
 import { nanoid } from "nanoid"
 import MessageRenderProvider from "@/opensource/components/business/MessageRenderProvider"
 import { useFontSize } from "@/opensource/providers/AppearanceProvider/hooks"
 import { useStyles as useMarkdownStyles } from "./styles/markdown.style"
 import { useStreamStyles } from "./styles/stream.style"
+import BlockRenderFactory from "./factories/BlockRenderFactory"
 import type { MarkdownProps } from "./types"
 import { useMarkdownConfig, useCursorManager, useClassName } from "./hooks"
 
@@ -58,20 +59,38 @@ const EnhanceMarkdown = memo(function EnhanceMarkdown(props: MarkdownProps) {
 		classNameRef,
 	})
 
+	// 切割内容，分离oss-file文件
+	const blocks = useMemo(() => {
+		return BlockRenderFactory.getBlocks(content || "")
+	}, [content])
+
 	// 如果没有内容则不渲染
 	if (!content) return null
 
 	return (
 		<MessageRenderProvider hiddenDetail={hiddenDetail}>
-			<Markdown
-				className={combinedClassName}
-				rehypePlugins={markdownConfig.rehypePlugins}
-				remarkPlugins={markdownConfig.remarkPlugins}
-				components={markdownConfig.components}
-				{...otherProps}
-			>
-				{content}
-			</Markdown>
+			{blocks.map((block, index) => {
+				if (typeof block === "object" && block?.component) {
+					return (
+						<Suspense key={index} fallback={null}>
+							<block.component key={index} {...block.props} />
+						</Suspense>
+					)
+				}
+
+				return (
+					<Markdown
+						key={index}
+						className={combinedClassName}
+						rehypePlugins={markdownConfig.rehypePlugins}
+						remarkPlugins={markdownConfig.remarkPlugins}
+						components={markdownConfig.components}
+						{...otherProps}
+					>
+						{block as string}
+					</Markdown>
+				)
+			})}
 		</MessageRenderProvider>
 	)
 })

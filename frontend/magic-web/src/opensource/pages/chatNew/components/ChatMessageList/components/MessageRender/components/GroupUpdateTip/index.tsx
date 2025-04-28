@@ -9,7 +9,7 @@ interface GroupUpdateTipProps extends Omit<HTMLAttributes<HTMLDivElement>, "cont
 	content?: GroupUpdateMessage
 }
 
-const GroupUpdateTip = memo((props: GroupUpdateTipProps) => {
+const GroupUpdateTip = memo(function GroupUpdateTip(props: GroupUpdateTipProps) {
 	const { content, className, onClick } = props
 	const { styles, cx } = useTipStyles()
 	const { t } = useTranslation("interface")
