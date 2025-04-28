@@ -86,105 +86,115 @@ class LLMChatNodeRunner extends AbstractLLMNodeRunner
         // 加载记忆
         $memoryManager = $this->createMemoryManager($executionData, $vertexResult, $paramsConfig->getModelConfig(), $paramsConfig->getMessages(), $ignoreMessageIds);
 
-        $contentMessageId = $executionData->getTriggerData()->getMessageEntity()->getMagicMessageId();
-        $contentMessage = null;
-        // 尝试在记忆中找到 content 消息
-        foreach ($memoryManager->getMessages() as $message) {
-            if ($message->getIdentifier() === $contentMessageId) {
-                $contentMessage = $message;
-                break;
+        // 只有自动记忆需要处理以下多模态消息
+        if ($paramsConfig->getModelConfig()->isAutoMemory()) {
+            $contentMessageId = $executionData->getTriggerData()->getMessageEntity()->getMagicMessageId();
+            $contentMessage = null;
+            // 尝试在记忆中找到 content 消息
+            foreach ($memoryManager->getMessages() as $message) {
+                if ($message->getIdentifier() === $contentMessageId) {
+                    $contentMessage = $message;
+                    break;
+                }
             }
-        }
-        if ($userPrompt !== '') {
-            if ($userHasContent) {
-                if (! $contentMessage) {
-                    $contentMessage = new UserMessage();
-                    $contentMessage->setContent($userPrompt);
-                    $contentMessage->setIdentifier($contentMessageId);
-                    // 仅仅添加附件
-                    $imageUrls = $executionData->getTriggerData()->getAttachmentImageUrls();
-                    if ($imageUrls) {
-                        // 有content且有附件，添加文本和图片内容
-                        $contentMessage->addContent(UserMessageContent::text($userPrompt));
-                        foreach ($imageUrls as $imageUrl) {
-                            $contentMessage->addContent(UserMessageContent::imageUrl($imageUrl));
+            if ($userPrompt !== '') {
+                if ($userHasContent) {
+                    if (! $contentMessage) {
+                        $contentMessage = new UserMessage();
+                        $contentMessage->setContent($userPrompt);
+                        $contentMessage->setIdentifier($contentMessageId);
+                        // 仅仅添加附件
+                        $imageUrls = $executionData->getTriggerData()->getAttachmentImageUrls();
+                        if ($imageUrls) {
+                            // 有content且有附件，添加文本和图片内容
+                            $contentMessage->addContent(UserMessageContent::text($userPrompt));
+                            foreach ($imageUrls as $imageUrl) {
+                                $contentMessage->addContent(UserMessageContent::imageUrl($imageUrl));
+                            }
+                        }
+                        $contentMessage->setParams([
+                            'attachments' => $executionData->getTriggerData()->getAttachments(),
+                        ]);
+                        $memoryManager->addMessage($contentMessage);
+                    }
+                } else {
+                    // 创建一个新的，在后续使用
+                    $currentMessage = new UserMessage();
+                    $currentMessage->setContent($userPrompt);
+                    $memoryManager->addMessage($currentMessage);
+                }
+            }
+
+            // 处理当前的多模态消息 - 只有 content 的需要立刻调用去处理
+            /** @var null|UserMessage $contentMessage */
+            if ($contentMessage?->hasImageMultiModal() && $paramsConfig->getModelConfig()->isVision()) {
+                $currentModel = $model->getModelName();
+                $visionModel = $paramsConfig->getModelConfig()->getVisionModel();
+
+                // 只有 当前模型与视觉模型不一致，或者 当前模型不支持多模态 时。在视觉模型的工具中，当前模型等于视觉模型并且具有视觉能力，就不会产生死循环
+                if ($currentModel !== $visionModel || ! $model->getModelOptions()->isMultiModal()) {
+                    $multiModalLoglog = MultiModalBuilder::vision(
+                        executionData: $executionData,
+                        visionModel: $paramsConfig->getModelConfig()->getVisionModel()
+                    );
+                    if ($multiModalLoglog) {
+                        $contentMessage->setParams([
+                            'attachments' => $executionData->getTriggerData()->getAttachments(),
+                            'analysis_result' => $multiModalLoglog->getAnalysisResult(),
+                        ]);
+                    }
+                }
+            }
+
+            // 永远处理当前节点的历史附件消息
+            $magicMessageIds = [];
+            foreach ($memoryManager->getMessages() as $message) {
+                $magicMessageIds[] = $message->getIdentifier();
+            }
+            $multiModalLogs = di(MagicFlowMultiModalLogDomainService::class)->getByMessageIds($executionData->getDataIsolation(), $magicMessageIds, true);
+            foreach ($memoryManager->getMessages() as $message) {
+                if ($message instanceof UserMessage) {
+                    $multiModalLog = $multiModalLogs[$message->getIdentifier()] ?? null;
+                    if ($multiModalLog) {
+                        $visionResponse = $multiModalLog->getAnalysisResult();
+                    } else {
+                        $visionResponse = $message->getParams()['analysis_result'] ?? '';
+                    }
+                    /** @var AttachmentInterface[] $attachments */
+                    $attachments = $message->getParams()['attachments'] ?? [];
+                    $content = MultiModalContentFormatter::formatAllAttachments(
+                        $message->getContent(),
+                        $visionResponse,
+                        $attachments,
+                    );
+                    $lastMessage = clone $message;
+                    $message->setContent($content);
+                    $message->setContents(null);
+                    // 重新组织多模态
+                    if ($model->getModelOptions()->isMultiModal()) {
+                        $message->addContent(UserMessageContent::text($content));
+                        // 补充多模态
+                        $imageUrls = [];
+                        foreach ($lastMessage->getContents() ?? [] as $userContent) {
+                            if (! empty($userContent->getImageUrl())) {
+                                $imageUrls[] = $userContent->getImageUrl();
+                                $message->addContent(UserMessageContent::imageUrl($userContent->getImageUrl()));
+                            }
+                        }
+                        foreach ($attachments as $attachment) {
+                            if ($attachment->isImage() && ! in_array($attachment->getUrl(), $imageUrls)) {
+                                $message->addContent(UserMessageContent::imageUrl($attachment->getUrl()));
+                            }
                         }
                     }
-                    $contentMessage->setParams([
-                        'attachments' => $executionData->getTriggerData()->getAttachments(),
-                    ]);
-                    $memoryManager->addMessage($contentMessage);
                 }
-            } else {
+            }
+        } else {
+            if ($userPrompt !== '') {
                 // 创建一个新的，在后续使用
                 $currentMessage = new UserMessage();
                 $currentMessage->setContent($userPrompt);
                 $memoryManager->addMessage($currentMessage);
-            }
-        }
-
-        // 处理当前的多模态消息 - 只有 content 的需要立刻调用去处理
-        /** @var null|UserMessage $contentMessage */
-        if ($contentMessage?->hasImageMultiModal() && $paramsConfig->getModelConfig()->isVision()) {
-            $currentModel = $model->getModelName();
-            $visionModel = $paramsConfig->getModelConfig()->getVisionModel();
-
-            // 只有 当前模型与视觉模型不一致，或者 当前模型不支持多模态 时。在视觉模型的工具中，当前模型等于视觉模型并且具有视觉能力，就不会产生死循环
-            if ($currentModel !== $visionModel || ! $model->getModelOptions()->isMultiModal()) {
-                $multiModalLoglog = MultiModalBuilder::vision(
-                    executionData: $executionData,
-                    visionModel: $paramsConfig->getModelConfig()->getVisionModel()
-                );
-                if ($multiModalLoglog) {
-                    $contentMessage->setParams([
-                        'attachments' => $executionData->getTriggerData()->getAttachments(),
-                        'analysis_result' => $multiModalLoglog->getAnalysisResult(),
-                    ]);
-                }
-            }
-        }
-
-        // 永远处理当前节点的历史附件消息
-        $magicMessageIds = [];
-        foreach ($memoryManager->getMessages() as $message) {
-            $magicMessageIds[] = $message->getIdentifier();
-        }
-        $multiModalLogs = di(MagicFlowMultiModalLogDomainService::class)->getByMessageIds($executionData->getDataIsolation(), $magicMessageIds, true);
-        foreach ($memoryManager->getMessages() as $message) {
-            if ($message instanceof UserMessage) {
-                $multiModalLog = $multiModalLogs[$message->getIdentifier()] ?? null;
-                if ($multiModalLog) {
-                    $visionResponse = $multiModalLog->getAnalysisResult();
-                } else {
-                    $visionResponse = $message->getParams()['analysis_result'] ?? '';
-                }
-                /** @var AttachmentInterface[] $attachments */
-                $attachments = $message->getParams()['attachments'] ?? [];
-                $content = MultiModalContentFormatter::formatAllAttachments(
-                    $message->getContent(),
-                    $visionResponse,
-                    $attachments,
-                );
-                $lastMessage = clone $message;
-                $message->setContent($content);
-                $message->setContents(null);
-                // 重新组织多模态
-                if ($model->getModelOptions()->isMultiModal()) {
-                    $message->addContent(UserMessageContent::text($content));
-                    // 补充多模态
-                    $imageUrls = [];
-                    foreach ($lastMessage->getContents() ?? [] as $userContent) {
-                        if (! empty($userContent->getImageUrl())) {
-                            $imageUrls[] = $userContent->getImageUrl();
-                            $message->addContent(UserMessageContent::imageUrl($userContent->getImageUrl()));
-                        }
-                    }
-                    foreach ($attachments as $attachment) {
-                        if ($attachment->isImage() && ! in_array($attachment->getUrl(), $imageUrls)) {
-                            $message->addContent(UserMessageContent::imageUrl($attachment->getUrl()));
-                        }
-                    }
-                }
             }
         }
 
