@@ -574,8 +574,9 @@ class MagicFlowExportImportAppService
                 if (isset($edge['sourceHandle']) && is_string($edge['sourceHandle'])) {
                     foreach ($idMapping['nodes'] as $oldId => $newId) {
                         // 使用正则表达式确保只替换完整的ID
-                        if (preg_match('/^' . preg_quote($oldId, '/') . '_/', $edge['sourceHandle'])) {
-                            $edge['sourceHandle'] = preg_replace('/^' . preg_quote($oldId, '/') . '/', $newId, $edge['sourceHandle']);
+                        // 确保将$oldId转换为字符串
+                        if (preg_match('/^' . preg_quote((string) $oldId, '/') . '_/', $edge['sourceHandle'])) {
+                            $edge['sourceHandle'] = preg_replace('/^' . preg_quote((string) $oldId, '/') . '/', $newId, $edge['sourceHandle']);
                         }
                     }
                 }
