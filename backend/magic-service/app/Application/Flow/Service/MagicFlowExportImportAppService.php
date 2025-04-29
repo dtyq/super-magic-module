@@ -620,6 +620,11 @@ class MagicFlowExportImportAppService
             } elseif (is_string($value)) {
                 // 检查是否是可能包含节点引用的字段
                 if (is_string($key) && (in_array($key, ['value', 'expression', 'reference']) || strpos($key, '_value') !== false)) {
+                    // 跳过指令引用（instructions.*）
+                    if (strpos($value, 'instructions.') === 0) {
+                        continue;
+                    }
+
                     // 检查是否包含节点ID引用（格式如：nodeId.fieldName）
                     foreach ($idMapping['nodes'] as $oldNodeId => $newNodeId) {
                         // 使用正则表达式确保只替换完整的节点ID

@@ -932,7 +932,7 @@ class MagicAgentAppService extends AbstractAppService
 
         $magicAgentEntity = $this->saveAgent($authorization, $magicAgentDTO);
         if (isset($config['instruct'])) {
-            $this->magicAgentDomainService->saveInstruct($authorization->getOrganizationCode(), $magicAgentEntity->getId(), $config['instruct'], $authorization->getId());
+            $this->magicAgentDomainService->addInstruct($authorization->getOrganizationCode(), $magicAgentEntity->getId(), $config['instruct'], $authorization->getId());
         }
         // 创建Flow
         $magicFLowDTO = new MagicFlowDTO($config['flow']);

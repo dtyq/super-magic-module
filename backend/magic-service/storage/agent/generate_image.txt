@@ -1,264 +1,248 @@
 {
   "instructs": [
-                {
-                    "id": "735307271738195972",
-                    "items": [
-                        {
-                            "id": "735307271738195968",
-                            "name": "大模型",
-                            "type": 1,
-                            "values": [
-                                {
-                                    "id": "735307271738195969",
-                                    "name": "文生图 3.0",
-                                    "value": "high_aes_general_v30l_zt2i"
-                                },
-                                {
-                                    "id": "735307271738195971",
-                                    "name": "文生图 2.0",
-                                    "value": "high_aes_general_v21_L"
-                                },
-                                {
-                                    "id": "766306870959550464",
-                                    "name": "Midjourney-Fast",
-                                    "value": "fast"
-                                },
-                                {
-                                    "id": "766406683097059329",
-                                    "name": "Midjourney-Relax",
-                                    "value": "relax"
-                                },
-                                {
-                                    "id": "773697459563696128",
-                                    "name": "Midjourney-Turbo",
-                                    "value": "turbo"
-                                },
-                                {
-                                    "id": "773697459563696129",
-                                    "name": "Flux1-Dev",
-                                    "value": "flux1-dev"
-                                },
-                                {
-                                    "id": "773697459563696130",
-                                    "name": "Flux1-Schnell",
-                                    "value": "flux1-schnell"
-                                },
-                                {
-                                    "id": "773697459563696131",
-                                    "name": "Flux1-Pro",
-                                    "value": "flux1-pro"
-                                },
-                                {
-                                    "id": "773697459563696132",
-                                    "name": "GPT4o",
-                                    "value": "GPT4o"
-                                },
-                                {
-                                    "id": "773697459563696133",
-                                    "name": "通用2.0Pro-指令编辑（SeedEdit）",
-                                    "value": "byteedit_v2"
-                                }
-                            ],
-                            "residency": false,
-                            "send_directly": false,
-                            "instruction_type": 1
-                        },
-                        {
-                            "id": "735307707467657216",
-                            "name": "风格",
-                            "type": 1,
-                            "values": [
-                                {
-                                    "id": "735307707467657217",
-                                    "name": "人物摄影",
-                                    "value": "人物摄影"
-                                },
-                                {
-                                    "id": "735307707467657218",
-                                    "name": "电影写真",
-                                    "value": "电影写真"
-                                },
-                                {
-                                    "id": "735307707467657219",
-                                    "name": "中国风",
-                                    "value": "中国风"
-                                },
-                                {
-                                    "id": "735307707467657220",
-                                    "name": "动漫",
-                                    "value": "动漫"
-                                },
-                                {
-                                    "id": "735307707467657221",
-                                    "name": "3D渲染",
-                                    "value": "3D渲染"
-                                },
-                                {
-                                    "id": "735307707467657222",
-                                    "name": "水墨画",
-                                    "value": "水墨画"
-                                },
-                                {
-                                    "id": "735307707467657223",
-                                    "name": "油画",
-                                    "value": "油画"
-                                },
-                                {
-                                    "id": "735307707467657224",
-                                    "name": "古典",
-                                    "value": "古典"
-                                },
-                                {
-                                    "id": "735307707467657225",
-                                    "name": "水彩画",
-                                    "value": "水彩画"
-                                },
-                                {
-                                    "id": "735307707467657226",
-                                    "name": "卡通",
-                                    "value": "卡通"
-                                },
-                                {
-                                    "id": "735307707467657227",
-                                    "name": "平面插画",
-                                    "value": "平面插画"
-                                },
-                                {
-                                    "id": "735307707467657228",
-                                    "name": "风景",
-                                    "value": "风景"
-                                },
-                                {
-                                    "id": "735307707467657229",
-                                    "name": "手办",
-                                    "value": "手办"
-                                },
-                                {
-                                    "id": "735307707467657230",
-                                    "name": "抽象",
-                                    "value": "抽象"
-                                },
-                                {
-                                    "id": "735307707467657231",
-                                    "name": "油墨印刷",
-                                    "value": "油墨印刷"
-                                },
-                                {
-                                    "id": "735307707467657232",
-                                    "name": "毕加索",
-                                    "value": "毕加索"
-                                },
-                                {
-                                    "id": "735307707467657233",
-                                    "name": "赛博朋克",
-                                    "value": "赛博朋克"
-                                }
-                            ],
-                            "content": "[{\"type\":\"text\",\"text\":\"风格为：\"},{\"type\":\"quick-instruction\",\"attrs\":{\"value\":\"\",\"instruction\":null}},{\"type\":\"text\",\"text\":\" \"}]",
-                            "residency": false,
-                            "send_directly": false
-                        },
-                        {
-                            "id": "735307821988945920",
-                            "name": "比例",
-                            "type": 1,
-                            "values": [
-                                {
-                                    "id": "735307821988945921",
-                                    "name": "1比1正方形",
-                                    "value": "1:1"
-                                },
-                                {
-                                    "id": "735307821988945922",
-                                    "name": "2比3自拍",
-                                    "value": "2:3"
-                                },
-                                {
-                                    "id": "735307821988945923",
-                                    "name": "4比3 文章配图",
-                                    "value": "4:3"
-                                },
-                                {
-                                    "id": "735307821988945924",
-                                    "name": "9比16 手机壁纸",
-                                    "value": "9:16"
-                                },
-                                {
-                                    "id": "735307821988945925",
-                                    "name": "16比9 桌面壁纸",
-                                    "value": "16:9"
-                                }
-                            ],
-                            "content": "[{\"type\":\"text\",\"text\":\"比例为：\"},{\"type\":\"quick-instruction\",\"attrs\":{\"value\":\"\",\"instruction\":{\"id\":\"735307821988945920\",\"name\":\"比例\",\"type\":1,\"values\":[{\"id\":\"735307821988945921\",\"name\":\"1比1正方形\",\"value\":\"1:1\"},{\"id\":\"735307821988945922\",\"name\":\"2比3自拍\",\"value\":\"2:3\"},{\"id\":\"735307821988945923\",\"name\":\"4比3 文章配图\",\"value\":\"4:3\"},{\"id\":\"735307821988945924\",\"name\":\"9比16 手机壁纸\",\"value\":\"9:16\"},{\"id\":\"735307821988945925\",\"name\":\"16比9 桌面壁纸\",\"value\":\"16:9\"}],\"content\":\"[{\\\"type\\\":\\\"quick-instruction\\\",\\\"attrs\\\":{\\\"value\\\":\\\"\\\",\\\"instruction\\\":null}}]\",\"send_directly\":false}}},{\"type\":\"text\",\"text\":\" \"}]",
-                            "residency": false,
-                            "send_directly": false
-                        },
-                        {
-                            "id": "750051552050700289",
-                            "on": "提示词优化",
-                            "off": " ",
-                            "name": "提示词优化",
-                            "type": 2,
-                            "content": "[{\"type\":\"quick-instruction\",\"attrs\":{\"value\":\"\",\"instruction\":null}}]",
-                            "residency": true,
-                            "switch_on": false,
-                            "switch_off": true,
-                            "description": "该指令可以将提示词翻译成英文并且优化，因为Midjourney和Flux模型对英文更加支持，",
-                            "default_value": "off",
-                            "instruction_explanation": {
-                                "description": "该指令可以将提示词翻译成英文并且优化，因为Midjourney和Flux模型对英文更加支持，"
-                            }
-                        }
-                    ],
-                    "position": 2
-                },
-                {
-                    "id": "750442230089715713",
-                    "items": [
-                        {
-                            "id": "750442230089715714",
-                            "icon": "IconMoodHappy",
-                            "type": 1,
-                            "hidden": false,
-                            "residency": false,
-                            "display_type": 2
-                        },
-                        {
-                            "id": "750442230089715715",
-                            "icon": "IconFileUpload",
-                            "type": 2,
-                            "hidden": false,
-                            "residency": false,
-                            "display_type": 2
-                        },
-                        {
-                            "id": "750442230089715716",
-                            "icon": "IconMessage2Plus",
-                            "type": 3,
-                            "hidden": false,
-                            "residency": false,
-                            "display_type": 2
-                        },
-                        {
-                            "id": "750442230089715717",
-                            "icon": "IconClockPlay",
-                            "type": 4,
-                            "hidden": false,
-                            "residency": false,
-                            "display_type": 2
-                        },
-                        {
-                            "id": "750442230089715718",
-                            "icon": "IconMicrophone",
-                            "type": 5,
-                            "hidden": false,
-                            "residency": false,
-                            "display_type": 2
-                        }
-                    ],
-                    "position": 1
-                }
-            ],
+                   {
+                       "id": "735145931530702852",
+                       "items": [
+                           {
+                               "id": "735145931530702848",
+                               "name": "大模型",
+                               "type": 1,
+                               "values": [
+                                   {
+                                       "id": "735145931530702849",
+                                       "name": "文生图 3.0",
+                                       "value": "high_aes_general_v30l_zt2i"
+                                   },
+                                   {
+                                       "id": "735145931530702850",
+                                       "name": "文生图 2.0",
+                                       "value": "high_aes_general_v21_L"
+                                   },
+                                   {
+                                       "id": "735145931530702851",
+                                       "name": "Midjourney-Fast",
+                                       "value": "fast"
+                                   },
+                                   {
+                                       "id": "765956910724214784",
+                                       "name": "Midjourney-Relax",
+                                       "value": "relax"
+                                   },
+                                   {
+                                       "id": "775055114758365184",
+                                       "name": "Midjourney-Turbo",
+                                       "value": "turbo"
+                                   },
+                                   {
+                                       "id": "775055114758365185",
+                                       "name": "Flux1-Dev",
+                                       "value": "flux1-dev"
+                                   },
+                                   {
+                                       "id": "775055114758365186",
+                                       "name": "Flux1-Schnell",
+                                       "value": "flux1-schnell"
+                                   },
+                                   {
+                                       "id": "775055114758365187",
+                                       "name": "Flux1-Pro",
+                                       "value": "flux1-pro"
+                                   },
+                                   {
+                                       "id": "775055114758365188",
+                                       "name": "GPT4o",
+                                       "value": "GPT4o"
+                                   },
+                                   {
+                                       "id": "775055114758365189",
+                                       "name": "通用2.0Pro-指令编辑（SeedEdit）",
+                                       "value": "byteedit_v2"
+                                   }
+                               ],
+                               "residency": false,
+                               "send_directly": false,
+                               "instruction_type": 1
+                           },
+                           {
+                               "id": "735146339808428032",
+                               "name": "风格",
+                               "type": 1,
+                               "values": [
+                                   {
+                                       "id": "735146339808428033",
+                                       "name": "人物摄影",
+                                       "value": "人物摄影"
+                                   },
+                                   {
+                                       "id": "735146339808428034",
+                                       "name": "电影写真",
+                                       "value": "电影写真"
+                                   },
+                                   {
+                                       "id": "735146339808428035",
+                                       "name": "中国风",
+                                       "value": "中国风"
+                                   },
+                                   {
+                                       "id": "735146339808428036",
+                                       "name": "动漫",
+                                       "value": "动漫"
+                                   },
+                                   {
+                                       "id": "735146339808428037",
+                                       "name": "3D渲染",
+                                       "value": "3D渲染"
+                                   },
+                                   {
+                                       "id": "735146339808428038",
+                                       "name": "水墨画",
+                                       "value": "水墨画"
+                                   },
+                                   {
+                                       "id": "735146339808428039",
+                                       "name": "油画",
+                                       "value": "油画"
+                                   },
+                                   {
+                                       "id": "735146339808428040",
+                                       "name": "古典",
+                                       "value": "古典"
+                                   },
+                                   {
+                                       "id": "735146339808428041",
+                                       "name": "水彩画",
+                                       "value": "水彩画"
+                                   },
+                                   {
+                                       "id": "735146339808428042",
+                                       "name": "卡通",
+                                       "value": "卡通"
+                                   },
+                                   {
+                                       "id": "735146339808428043",
+                                       "name": "平面插画",
+                                       "value": "平面插画"
+                                   },
+                                   {
+                                       "id": "735146339808428044",
+                                       "name": "风景",
+                                       "value": "风景"
+                                   },
+                                   {
+                                       "id": "735146339808428045",
+                                       "name": "手办",
+                                       "value": "手办"
+                                   },
+                                   {
+                                       "id": "735146339808428046",
+                                       "name": "抽象",
+                                       "value": "抽象"
+                                   },
+                                   {
+                                       "id": "735146339808428047",
+                                       "name": "油墨印刷",
+                                       "value": "油墨印刷"
+                                   },
+                                   {
+                                       "id": "735146339808428048",
+                                       "name": "毕加索",
+                                       "value": "毕加索"
+                                   },
+                                   {
+                                       "id": "735146339808428049",
+                                       "name": "赛博朋克",
+                                       "value": "赛博朋克"
+                                   }
+                               ],
+                               "content": "[{\"type\":\"text\",\"text\":\"风格为：\"},{\"type\":\"quick-instruction\",\"attrs\":{\"value\":\"\",\"instruction\":null}},{\"type\":\"text\",\"text\":\" \"}]",
+                               "residency": false,
+                               "send_directly": false
+                           },
+                           {
+                               "id": "735146473908731904",
+                               "name": "比例",
+                               "type": 1,
+                               "values": [
+                                   {
+                                       "id": "735146473908731905",
+                                       "name": "1比1正方形",
+                                       "value": "1:1"
+                                   },
+                                   {
+                                       "id": "735146473908731906",
+                                       "name": "2比3自拍",
+                                       "value": "2:3"
+                                   },
+                                   {
+                                       "id": "735146473908731907",
+                                       "name": "4比3 文章配图",
+                                       "value": "4:3"
+                                   },
+                                   {
+                                       "id": "735146473908731908",
+                                       "name": "9比16 手机壁纸",
+                                       "value": "9:16"
+                                   },
+                                   {
+                                       "id": "735146473908731909",
+                                       "name": "16比9 桌面壁纸",
+                                       "value": "16:9"
+                                   }
+                               ],
+                               "content": "[{\"type\":\"text\",\"text\":\"比例为：\"},{\"type\":\"quick-instruction\",\"attrs\":{\"value\":\"\",\"instruction\":null}},{\"type\":\"text\",\"text\":\" \"}]",
+                               "residency": false,
+                               "send_directly": false
+                           }
+                       ],
+                       "position": 2
+                   },
+                   {
+                       "id": "750442229859028993",
+                       "items": [
+                           {
+                               "id": "750442229859028994",
+                               "icon": "IconMoodHappy",
+                               "type": 1,
+                               "hidden": false,
+                               "residency": false,
+                               "display_type": 2
+                           },
+                           {
+                               "id": "750442229859028995",
+                               "icon": "IconFileUpload",
+                               "type": 2,
+                               "hidden": false,
+                               "residency": false,
+                               "display_type": 2
+                           },
+                           {
+                               "id": "750442229859028996",
+                               "icon": "IconMessage2Plus",
+                               "type": 3,
+                               "hidden": false,
+                               "residency": false,
+                               "display_type": 2
+                           },
+                           {
+                               "id": "750442229859028997",
+                               "icon": "IconClockPlay",
+                               "type": 4,
+                               "hidden": false,
+                               "residency": false,
+                               "display_type": 2
+                           },
+                           {
+                               "id": "750442229859028998",
+                               "icon": "IconMicrophone",
+                               "type": 5,
+                               "hidden": false,
+                               "residency": false,
+                               "display_type": 2
+                           }
+                       ],
+                       "position": 1
+                   }
+               ],
 "flow":{
          "id": "MAGIC-FLOW-676b75b6c05ab0-89972724",
          "name": "麦吉创造",

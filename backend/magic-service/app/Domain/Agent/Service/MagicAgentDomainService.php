@@ -217,6 +217,13 @@ class MagicAgentDomainService
         return $instructs;
     }
 
+    public function addInstruct(string $organizationCode, string $agentId, array $instructs, $userId = ''): array
+    {
+        // 保存
+        $this->agentRepository->saveInstruct($organizationCode, $agentId, $instructs, $userId);
+        return $instructs;
+    }
+
     public function associateFlowWithAgent(string $agentId, string $flowCode): void
     {
         $this->agentRepository->updateFlowCode($agentId, $flowCode);
