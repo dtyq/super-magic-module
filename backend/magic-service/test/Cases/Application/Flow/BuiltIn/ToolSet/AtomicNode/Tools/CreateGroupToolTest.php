@@ -99,7 +99,7 @@ JSON, true));
 
 MARKDOWN,
 
-            'user_prompt' => '帮我给 李海清、蔡伦多、梁朋 创建一个用于解决门店打印机问题的工单群，群主是李海清，并且转发一下当前问题是什么到群里',
+            'user_prompt' => '帮我给 小明、小红、小刚 创建一个用于解决门店打印机问题的工单群，群主是小明，并且转发一下当前问题是什么到群里',
         ]);
         $runner->execute($vertexResult, $executionData);
 

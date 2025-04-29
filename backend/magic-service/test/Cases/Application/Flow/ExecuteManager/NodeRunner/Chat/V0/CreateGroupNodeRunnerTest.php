@@ -54,8 +54,8 @@ class CreateGroupNodeRunnerTest extends ExecuteManagerBaseTest
                     "args": null,
                     "member_value": [
                         {
-                            "id": "usi_516c3a162c868e6f02de247a10e59d05",
-                            "name": "廖炳为"
+                            "id": "usi_123456789abcdef123456789abcdef12",
+                            "name": "小刚"
                         }
                     ]
                 }
@@ -77,16 +77,16 @@ class CreateGroupNodeRunnerTest extends ExecuteManagerBaseTest
                     "args": null,
                     "member_value": [
                         {
-                            "id": "usi_eb3a4884d3dda84e9a8d8644e9365c2c",
-                            "name": "蔡伦多"
+                            "id": "usi_123456789abcdef123456789abcdef13",
+                            "name": "小红"
                         },
                         {
-                            "id": "usi_a450dd07688be6273b5ef112ad50ba7e",
-                            "name": "李海清"
+                            "id": "usi_123456789abcdef123456789abcdef14",
+                            "name": "小明"
                         },
                         {
-                            "id": "usi_516c3a162c868e6f02de247a10e59d05",
-                            "name": "廖炳为"
+                            "id": "usi_123456789abcdef123456789abcdef12",
+                            "name": "小刚"
                         }
                     ]
                 }
@@ -108,7 +108,7 @@ JSON,
         $executionData->saveNodeContext('9527', [
             'group_name' => '单测创建的测试群聊',
         ]);
-        $executionData->getTriggerData()->setAgentKey('7f183858974fe7d1d69346afd5f8db3f211de4c6310b37fee50a2b16349665c6');
+        $executionData->getTriggerData()->setAgentKey('1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef');
         $runner->execute($vertexResult, $executionData, []);
 
         $this->assertTrue($node->getNodeDebugResult()->isSuccess());
