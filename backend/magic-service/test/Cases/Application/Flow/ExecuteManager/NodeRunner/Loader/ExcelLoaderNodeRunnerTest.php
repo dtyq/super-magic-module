@@ -30,7 +30,7 @@ class ExcelLoaderNodeRunnerTest extends ExecuteManagerBaseTest
         $executionData = $this->createExecutionData();
         $executionData->saveNodeContext('9527', [
             'file_name' => '你好.xlsx',
-            'file_url' => 'https://teamshareos-app-public.tos-cn-beijing.volces.com/MAGIC/test/你好.xlsx',
+            'file_url' => 'https://example.tos-cn-beijing.volces.com/MAGIC/test/你好.xlsx',
         ]);
         $runner->execute($vertexResult, $executionData, []);
         $this->assertTrue($node->getNodeDebugResult()->isSuccess());
