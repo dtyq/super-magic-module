@@ -12,8 +12,8 @@ use App\Domain\Chat\DTO\Message\ChatMessage\Item\DeepSearch\QuestionItem;
 use App\Domain\Chat\DTO\Message\ChatMessage\Item\DeepSearch\SearchDetailItem;
 use App\Domain\Chat\DTO\Message\ChatMessage\Item\DeepSearch\SummaryItem;
 use App\Domain\Chat\DTO\Message\ChatMessage\Item\DeepSearch\WebSearchItem;
-use App\Domain\Chat\DTO\Message\JsonStreamMessageInterface;
 use App\Domain\Chat\DTO\Message\StreamMessage\StreamMessageTrait;
+use App\Domain\Chat\DTO\Message\StreamMessageInterface;
 use App\Domain\Chat\DTO\Message\TextContentInterface;
 use App\Domain\Chat\Entity\ValueObject\AggregateSearch\SearchDeepLevel;
 use App\Domain\Chat\Entity\ValueObject\MessageType\ChatMessageType;
@@ -21,7 +21,7 @@ use App\Domain\Chat\Entity\ValueObject\MessageType\ChatMessageType;
 /**
  * 聚合AI搜索的响应卡片消息.
  */
-class AggregateAISearchCardMessageV2 extends AbstractChatMessageStruct implements TextContentInterface, JsonStreamMessageInterface
+class AggregateAISearchCardMessageV2 extends AbstractChatMessageStruct implements TextContentInterface, StreamMessageInterface
 {
     use StreamMessageTrait;
 

@@ -15,7 +15,7 @@ class EditMessageOptions extends AbstractEntity
     protected string $magicMessageId;
 
     // 版本号id，发送方不用填写，服务端自动生成
-    protected string $messageVersionId;
+    protected ?string $messageVersionId;
 
     public function __construct(?array $data = [])
     {
@@ -40,7 +40,7 @@ class EditMessageOptions extends AbstractEntity
 
     public function setMessageVersionId(?string $messageVersionId): static
     {
-        isset($messageVersionId) && $this->messageVersionId = $messageVersionId;
+        $this->messageVersionId = $messageVersionId;
         return $this;
     }
 }

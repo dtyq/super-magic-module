@@ -20,6 +20,7 @@ use App\Domain\Chat\DTO\MessagesQueryDTO;
 use App\Domain\Chat\DTO\Request\ChatRequest;
 use App\Domain\Chat\DTO\Request\Common\MagicContext;
 use App\Domain\Chat\DTO\Response\ClientSequenceResponse;
+use App\Domain\Chat\DTO\Stream\CreateStreamSeqDTO;
 use App\Domain\Chat\DTO\UserGroupConversationQueryDTO;
 use App\Domain\Chat\Entity\Items\SeqExtra;
 use App\Domain\Chat\Entity\MagicChatFileEntity;
@@ -209,7 +210,7 @@ class MagicChatMessageAppService extends MagicSeqAppService
             ExceptionBuilder::throw(ChatErrorCode::CONVERSATION_NOT_FOUND);
         }
         // 判断会话的发起者是否是当前用户,并且不是ai
-        if ($conversationEntity->getUserId() !== $dataIsolation->getCurrentUserId() && $conversationEntity->getReceiveType() !== ConversationType::Ai) {
+        if ($conversationEntity->getReceiveType() !== ConversationType::Ai && $conversationEntity->getUserId() !== $dataIsolation->getCurrentUserId()) {
             ExceptionBuilder::throw(ChatErrorCode::CONVERSATION_NOT_FOUND);
         }
         // 会话是否已被删除
@@ -244,7 +245,7 @@ class MagicChatMessageAppService extends MagicSeqAppService
             $this->logger->error(sprintf(
                 'checkSendMessageAuth error:%s senderSeqDTO:%s',
                 $exception->getMessage(),
-                Json::encode($senderSeqDTO->toArray())
+                json_encode($senderSeqDTO)
             ));
             throw $exception;
         }
@@ -701,56 +702,74 @@ PROMPT;
         $extra = $senderSeqDTO->getExtra();
         $editMessageOptions = $extra?->getEditMessageOptions();
         if ($extra !== null && $editMessageOptions !== null && ! empty($editMessageOptions->getMagicMessageId())) {
-            // 编辑消息的场景，magicMessageId 不变
-            $magicMessageId = $editMessageOptions->getMagicMessageId();
-            $senderMessageDTO->setMagicMessageId($magicMessageId);
-            // 编辑消息时，不创建新的 messageEntity，而是更新原消息
-            $messageEntity = $this->magicChatDomainService->getMessageByMagicMessageId($magicMessageId);
-            if ($messageEntity === null) {
-                ExceptionBuilder::throw(ChatErrorCode::MESSAGE_NOT_FOUND);
-            }
-            $messageVersionEntity = $this->magicChatDomainService->editMessage($senderMessageDTO, $messageEntity);
+            $senderMessageDTO->setMagicMessageId($editMessageOptions->getMagicMessageId());
+            $messageVersionEntity = $this->magicChatDomainService->editMessage($senderMessageDTO);
             $editMessageOptions->setMessageVersionId($messageVersionEntity->getVersionId());
             $senderSeqDTO->setExtra($extra->setEditMessageOptions($editMessageOptions));
+            // 再查一次 $messageEntity ，避免重复创建
+            $messageEntity = $this->magicChatDomainService->getMessageByMagicMessageId($senderMessageDTO->getMagicMessageId());
         }
 
-        // 流式消息的场景
         if ($messageStruct instanceof StreamMessageInterface && $messageStruct->isStream()) {
-            [$senderSeqEntity, $messageEntity] = $this->magicChatDomainService->streamSendMessage($senderSeqDTO, $senderMessageDTO, $senderConversationEntity);
-        } else {
-            try {
-                Db::beginTransaction();
-                if (! isset($messageEntity)) {
-                    $messageEntity = $this->magicChatDomainService->createMagicMessageByAppClient($senderMessageDTO, $senderConversationEntity);
-                }
-                // 给自己的消息流生成序列,并确定消息的接收人列表
-                $senderSeqEntity = $this->magicChatDomainService->generateSenderSequenceByChatMessage($senderSeqDTO, $messageEntity, $senderConversationEntity);
-                // 避免 seq 表承载太多功能,加太多索引,因此将话题的消息单独写入到 topic_messages 表中
-                $this->magicChatDomainService->createTopicMessage($senderSeqEntity);
-                // 确定消息优先级
-                $receiveList = $senderSeqEntity->getReceiveList();
-                if ($receiveList === null) {
-                    $receiveUserCount = 0;
-                } else {
-                    $receiveUserCount = count($receiveList->getUnreadList());
-                }
-                $senderChatSeqCreatedEvent = $this->magicChatDomainService->getChatSeqCreatedEvent(
-                    $messageEntity->getReceiveType(),
-                    $senderSeqEntity->getSeqId(),
-                    $receiveUserCount
+            // 流式消息的场景
+            if ($messageStruct->getStreamOptions()->getStatus() === StreamMessageStatus::Start) {
+                // 如果是开始，调用 createAndSendStreamStartSequence 方法
+                $senderSeqEntity = $this->magicChatDomainService->createAndSendStreamStartSequence(
+                    (new CreateStreamSeqDTO())->setTopicId($extra->getTopicId())->setAppMessageId($senderMessageDTO->getAppMessageId()),
+                    $messageStruct,
+                    $senderConversationEntity
                 );
-                // 异步给收件方生成Seq并推送给收件方
-                # !!! 注意,事务中投递 mq,可能事务还没提交,mq消息就已被消费.
-                # 因此需要把投递 mq 放在操作的最后,并在消费 mq 的时候,查不到时延迟重试几次.
-                $this->magicChatDomainService->dispatchSeq($senderChatSeqCreatedEvent);
-                Db::commit();
-            } catch (Throwable $exception) {
-                Db::rollBack();
-                throw $exception;
+                $senderMessageId = $senderSeqEntity->getMessageId();
+                $magicMessageId = $senderSeqEntity->getMagicMessageId();
+            } else {
+                $streamCachedDTO = $this->magicChatDomainService->streamSendJsonMessage(
+                    $senderMessageDTO->getAppMessageId(),
+                    $senderMessageDTO->getContent()->toArray(true),
+                    $messageStruct->getStreamOptions()->getStatus()
+                );
+                $senderMessageId = $streamCachedDTO->getSenderMessageId();
+                $magicMessageId = $streamCachedDTO->getMagicMessageId();
             }
+            // 只在确定 $senderSeqEntity 和 $messageEntity，用于返回数据结构
+            $senderSeqEntity = $this->magicSeqDomainService->getSeqEntityByMessageId($senderMessageId);
+            $messageEntity = $this->magicChatDomainService->getMessageByMagicMessageId($magicMessageId);
+            // 将消息流返回给当前客户端! 但是还是会异步推送给用户的所有在线客户端.
+            return SeqAssembler::getClientSeqStruct($senderSeqEntity, $messageEntity)->toArray();
+        }
+
+        # 非流式消息
+        try {
+            Db::beginTransaction();
+            if (! isset($messageEntity)) {
+                $messageEntity = $this->magicChatDomainService->createMagicMessageByAppClient($senderMessageDTO, $senderConversationEntity);
+            }
+            // 给自己的消息流生成序列,并确定消息的接收人列表
+            $senderSeqEntity = $this->magicChatDomainService->generateSenderSequenceByChatMessage($senderSeqDTO, $messageEntity, $senderConversationEntity);
+            // 避免 seq 表承载太多功能,加太多索引,因此将话题的消息单独写入到 topic_messages 表中
+            $this->magicChatDomainService->createTopicMessage($senderSeqEntity);
+            // 确定消息优先级
+            $receiveList = $senderSeqEntity->getReceiveList();
+            if ($receiveList === null) {
+                $receiveUserCount = 0;
+            } else {
+                $receiveUserCount = count($receiveList->getUnreadList());
+            }
+            $senderChatSeqCreatedEvent = $this->magicChatDomainService->getChatSeqCreatedEvent(
+                $messageEntity->getReceiveType(),
+                $senderSeqEntity->getSeqId(),
+                $receiveUserCount
+            );
+            // 异步给收件方生成Seq并推送给收件方
+            # !!! 注意,事务中投递 mq,可能事务还没提交,mq消息就已被消费.
+            # 因此需要把投递 mq 放在操作的最后,并在消费 mq 的时候,查不到时延迟重试几次.
+            $this->magicChatDomainService->dispatchSeq($senderChatSeqCreatedEvent);
+            Db::commit();
+        } catch (Throwable $exception) {
+            Db::rollBack();
+            throw $exception;
         }
         // 异步推送消息给自己的其他设备
-        if (isset($senderChatSeqCreatedEvent) && $messageEntity->getSenderType() !== ConversationType::Ai) {
+        if ($messageEntity->getSenderType() !== ConversationType::Ai) {
             co(function () use ($senderChatSeqCreatedEvent) {
                 $this->magicChatDomainService->pushChatSequence($senderChatSeqCreatedEvent);
             });

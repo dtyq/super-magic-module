@@ -292,7 +292,7 @@ class ReplyMessageNodeRunner extends NodeRunner
         $senderUser = $executionData->getSenderEntities()['user'] ?? null;
         $receiveUserId = $senderUser?->getUserId() ?? $executionData->getOperator()->getUid();
 
-        $streamOptions = (new StreamOptions())->setStream(true)->setStreamAppMessageId($appMessageId)->setStatus(StreamMessageStatus::Start);
+        $streamOptions = (new StreamOptions())->setStream(true)->setStatus(StreamMessageStatus::Start);
         $messageContent = new TextMessage();
         $messageContent->setContent('');
         $messageContent->setStreamOptions($streamOptions);

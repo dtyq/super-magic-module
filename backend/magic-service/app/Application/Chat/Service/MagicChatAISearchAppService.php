@@ -14,6 +14,7 @@ use App\Domain\Chat\DTO\AISearch\Response\MagicAggregateSearchSummaryDTO;
 use App\Domain\Chat\DTO\Message\ChatMessage\AggregateAISearchCardMessage;
 use App\Domain\Chat\DTO\Message\StreamMessage\StreamMessageStatus;
 use App\Domain\Chat\DTO\Message\StreamMessage\StreamOptions;
+use App\Domain\Chat\DTO\Stream\CreateStreamSeqDTO;
 use App\Domain\Chat\Entity\Items\SeqExtra;
 use App\Domain\Chat\Entity\MagicConversationEntity;
 use App\Domain\Chat\Entity\MagicMessageEntity;
@@ -576,39 +577,37 @@ class MagicChatAISearchAppService extends AbstractAppService
          * @var ChatCompletionChoice $choice
          */
         foreach ($summarizeCompletionResponse as $index => $choice) {
-            if ($index === 0) {
-                $streamOptions->setStatus(StreamMessageStatus::Start);
-            } else {
-                $streamOptions->setStatus(StreamMessageStatus::Processing);
-            }
             /** @var AssistantMessage $assistantMessage */
             $assistantMessage = $choice->getMessage();
             $messageContent->setStreamOptions($streamOptions);
-            // 流式内容
-            if ($assistantMessage->hasReasoningContent()) {
-                // 思考内容
-                $streamContent = $assistantMessage->getReasoningContent();
-                $messageDTO->setContent(
-                    // 防 bug，清空总结，只发送思考内容
-                    $messageContent->setReasoningContent($streamContent)->setContent('')
+            if ($index === 0) {
+                $streamOptions->setStatus(StreamMessageStatus::Start);
+                // 创建一个 seq 用于渲染占位
+                $this->magicChatDomainService->createAndSendStreamStartSequence(
+                    (new CreateStreamSeqDTO())->setTopicId($dto->getTopicId())->setAppMessageId($dto->getAppMessageId()),
+                    $messageContent,
+                    $senderConversationEntity
                 );
             } else {
-                // 总结内容
-                $streamContent = $assistantMessage->getContent();
-                $messageDTO->setContent(
-                    // 防 bug，清空思考内容，只发送总结内容
-                    $messageContent->setContent($streamContent)->setReasoningContent(null)
-                );
-                // 累加流式内容，用作最后的返回
-                $summarizeStreamResponse .= $streamContent;
+                $streamOptions->setStatus(StreamMessageStatus::Processing);
             }
-            // 发送流式消息
-            $this->magicChatDomainService->streamSendMessage($senderSeqDTO, $messageDTO, $senderConversationEntity);
+            // 流式内容
+            if ($assistantMessage->hasReasoningContent()) {
+                // 发送思考内容
+                $this->magicChatDomainService->streamSendJsonMessage($senderSeqDTO->getAppMessageId(), [
+                    'reasoning_content' => $assistantMessage->getReasoningContent(),
+                ]);
+            } else {
+                // 总结内容
+                $this->magicChatDomainService->streamSendJsonMessage($senderSeqDTO->getAppMessageId(), [
+                    'content' => $assistantMessage->getContent(),
+                ]);
+                // 累加流式内容，用作最后的返回
+                $summarizeStreamResponse .= $assistantMessage->getContent();
+            }
         }
         // 发送结束
-        $streamOptions->setStatus(StreamMessageStatus::Completed);
-        $senderSeqDTO->setContent($messageContent->setContent('')->setStreamOptions($streamOptions));
-        $this->magicChatDomainService->streamSendMessage($senderSeqDTO, $messageDTO, $senderConversationEntity);
+        $this->magicChatDomainService->streamSendJsonMessage($senderSeqDTO->getAppMessageId(), [], StreamMessageStatus::Completed);
         $this->logger->info(sprintf('getSearchResults 生成总结，结束计时，耗时：%s 秒', microtime(true) - $start));
         $summaryDTO = new MagicAggregateSearchSummaryDTO();
         $summaryDTO->setLlmResponse($summarizeStreamResponse);

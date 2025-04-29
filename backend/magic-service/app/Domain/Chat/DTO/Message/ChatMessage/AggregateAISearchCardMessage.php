@@ -7,6 +7,7 @@ declare(strict_types=1);
 
 namespace App\Domain\Chat\DTO\Message\ChatMessage;
 
+use App\Domain\Chat\DTO\Message\LLMMessageInterface;
 use App\Domain\Chat\DTO\Message\StreamMessage\StreamMessageTrait;
 use App\Domain\Chat\DTO\Message\StreamMessageInterface;
 use App\Domain\Chat\DTO\Message\TextContentInterface;
@@ -18,7 +19,7 @@ use App\Domain\Chat\Entity\ValueObject\MessageType\ChatMessageType;
 /**
  * 聚合AI搜索的响应卡片消息.
  */
-class AggregateAISearchCardMessage extends AbstractChatMessageStruct implements TextContentInterface, StreamMessageInterface
+class AggregateAISearchCardMessage extends AbstractChatMessageStruct implements TextContentInterface, StreamMessageInterface, LLMMessageInterface
 {
     use StreamMessageTrait;
     use LLMMessageTrait;

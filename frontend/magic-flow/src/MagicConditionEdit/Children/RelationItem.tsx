@@ -134,7 +134,6 @@ export function RelationItem({
 											ns: "magicFlow",
 										},
 									)}
-									multiple={false}
 								/>
 							</div>
 						</div>

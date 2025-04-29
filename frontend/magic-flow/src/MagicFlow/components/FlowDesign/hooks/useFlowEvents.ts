@@ -107,7 +107,6 @@ export default function useFlowEvents ({ resetLastLayoutData, resetCanLayout, cu
 		resetLastLayoutData()
 		resetCanLayout()
 
-        flowEventBus.emit(FLOW_EVENTS.NODE_SELECTED, node.id)
 	})
 
 	flowDesignListener.useSubscription((event) => {
