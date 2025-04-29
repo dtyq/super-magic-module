@@ -15,6 +15,7 @@ use App\Domain\Chat\Entity\ValueObject\MessageType\ControlMessageType;
 use App\Domain\Contact\Entity\ValueObject\UserType;
 use App\Interfaces\Chat\Assembler\MessageAssembler;
 use Hyperf\Codec\Json;
+use InvalidArgumentException;
 
 /**
  * 消息的内容详情. 一条消息可能被多个会话/序列号关联，所以消息内容是独立的.
@@ -227,7 +228,7 @@ class MagicMessageEntity extends AbstractEntity
         if (is_int($receiveType)) {
             $enumValue = ConversationType::tryFrom($receiveType);
             if ($enumValue === null) {
-                throw new \InvalidArgumentException("Invalid value provided for ConversationType: {$receiveType}");
+                throw new InvalidArgumentException("Invalid value provided for ConversationType: {$receiveType}");
             }
             $this->receiveType = $enumValue;
         } else {

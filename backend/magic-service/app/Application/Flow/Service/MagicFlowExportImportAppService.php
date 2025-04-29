@@ -273,7 +273,7 @@ class MagicFlowExportImportAppService
 
         try {
             $savedAgent = $agentDomainService->saveAgent($agentEntity);
-            $agentDomainService->saveInstruct($dataIsolation->getCurrentOrganizationCode(), $savedAgent->getId(), $agentData['instruct']);
+            $agentDomainService->updateInstruct($dataIsolation->getCurrentOrganizationCode(), $savedAgent->getId(), $agentData['instruct'], $dataIsolation->getCurrentUserId(), false);
             return [
                 'agent_id' => $savedAgent->getId(),
                 'agent_name' => $savedAgent->getAgentName(),
@@ -574,8 +574,9 @@ class MagicFlowExportImportAppService
                 if (isset($edge['sourceHandle']) && is_string($edge['sourceHandle'])) {
                     foreach ($idMapping['nodes'] as $oldId => $newId) {
                         // 使用正则表达式确保只替换完整的ID
-                        if (preg_match('/^' . preg_quote($oldId, '/') . '_/', $edge['sourceHandle'])) {
-                            $edge['sourceHandle'] = preg_replace('/^' . preg_quote($oldId, '/') . '/', $newId, $edge['sourceHandle']);
+                        // 确保将$oldId转换为字符串
+                        if (preg_match('/^' . preg_quote((string) $oldId, '/') . '_/', $edge['sourceHandle'])) {
+                            $edge['sourceHandle'] = preg_replace('/^' . preg_quote((string) $oldId, '/') . '/', $newId, $edge['sourceHandle']);
                         }
                     }
                 }
@@ -620,6 +621,11 @@ class MagicFlowExportImportAppService
             } elseif (is_string($value)) {
                 // 检查是否是可能包含节点引用的字段
                 if (is_string($key) && (in_array($key, ['value', 'expression', 'reference']) || strpos($key, '_value') !== false)) {
+                    // 跳过指令引用（instructions.*）
+                    if (strpos($value, 'instructions.') === 0) {
+                        continue;
+                    }
+
                     // 检查是否包含节点ID引用（格式如：nodeId.fieldName）
                     foreach ($idMapping['nodes'] as $oldNodeId => $newNodeId) {
                         // 使用正则表达式确保只替换完整的节点ID
