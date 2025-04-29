@@ -40,7 +40,7 @@ class UserSearchNodeRunnerTest extends ExecuteManagerBaseTest
                     "expression_value": [
                         {
                             "type": "input",
-                            "value": "李海清",
+                            "value": "小明",
                             "name": "",
                             "args": null
                         }
@@ -61,7 +61,7 @@ class UserSearchNodeRunnerTest extends ExecuteManagerBaseTest
                     "expression_value": [
                         {
                             "type": "input",
-                            "value": "13226752962",
+                            "value": "13800138000",
                             "name": "",
                             "args": null
                         }
@@ -217,7 +217,7 @@ JSON,
                     "expression_value": [
                         {
                             "type": "input",
-                            "value": "王鑫滨",
+                            "value": "小华",
                             "name": "",
                             "args": null
                         }
@@ -238,7 +238,7 @@ JSON,
                     "expression_value": [
                         {
                             "type": "input",
-                            "value": "+8613763155510",
+                            "value": "+8613800138000",
                             "name": "",
                             "args": null
                         }

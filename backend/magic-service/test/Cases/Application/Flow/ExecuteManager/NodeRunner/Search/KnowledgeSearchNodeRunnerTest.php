@@ -40,7 +40,7 @@ class KnowledgeSearchNodeRunnerTest extends ExecuteManagerBaseTest
                     "expression_value": [
                         {
                             "type": "input",
-                            "value": "KNOWLEDGE-673722d1004132-45334396",
+                            "value": "KNOWLEDGE-123456789abcde1-12345678",
                             "name": "",
                             "args": null
                         }
@@ -61,7 +61,7 @@ class KnowledgeSearchNodeRunnerTest extends ExecuteManagerBaseTest
                     "expression_value": [
                         {
                             "type": "input",
-                            "value": "李海清",
+                            "value": "小明",
                             "name": "",
                             "args": null
                         }
@@ -139,7 +139,7 @@ JSON,
                     "expression_value": [
                         {
                             "type": "input",
-                            "value": "KNOWLEDGE-669e0c28254cb3-91113360",
+                            "value": "KNOWLEDGE-987654321abcde9-87654321",
                             "name": "",
                             "args": null
                         }
