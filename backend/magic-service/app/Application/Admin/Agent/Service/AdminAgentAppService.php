@@ -7,6 +7,7 @@ declare(strict_types=1);
 
 namespace App\Application\Admin\Agent\Service;
 
+use App\Application\Admin\Agent\Assembler\AgentAssembler;
 use App\Application\Admin\Agent\Service\Extra\Factory\ExtraDetailAppenderFactory;
 use App\Application\Kernel\AbstractKernelAppService;
 use App\Domain\Admin\Entity\AdminGlobalSettingsEntity;
@@ -19,10 +20,13 @@ use App\Domain\Admin\Service\AdminGlobalSettingsDomainService;
 use App\Domain\Agent\Entity\MagicAgentEntity;
 use App\Domain\Agent\Service\MagicAgentDomainService;
 use App\Domain\Agent\Service\MagicAgentVersionDomainService;
+use App\Domain\Contact\Service\MagicUserDomainService;
 use App\Domain\File\Service\FileDomainService;
+use App\Infrastructure\Core\PageDTO;
 use App\Interfaces\Admin\DTO\AgentGlobalSettingsDTO;
 use App\Interfaces\Admin\DTO\Extra\AbstractSettingExtraDTO;
 use App\Interfaces\Admin\DTO\Extra\Item\AgentItemDTO;
+use App\Interfaces\Admin\DTO\Request\QueryPageAgentDTO;
 use App\Interfaces\Admin\DTO\Response\GetPublishedAgentsResponseDTO;
 use App\Interfaces\Authorization\Web\MagicUserAuthorization;
 use Dtyq\CloudFile\Kernel\Struct\FileLink;
@@ -37,7 +41,72 @@ class AdminAgentAppService extends AbstractKernelAppService
         private readonly MagicAgentDomainService $magicAgentDomainService,
         private readonly MagicAgentVersionDomainService $magicAgentVersionDomainService,
         private readonly FileDomainService $fileDomainService,
+        private readonly MagicUserDomainService $userDomainService,
     ) {
+    }
+
+    /**
+     * 查询企业下的所有助理,条件查询：状态，创建人，搜索.
+     */
+    public function queriesAgents(MagicUserAuthorization $authorization, QueryPageAgentDTO $query): PageDTO
+    {
+        $magicAgentEntities = $this->magicAgentDomainService->queriesAgents($authorization->getOrganizationCode(), $query);
+        if (empty($magicAgentEntities)) {
+            return new PageDTO();
+        }
+        $magicAgentEntityCount = $this->magicAgentDomainService->queriesAgentsCount($authorization->getOrganizationCode(), $query);
+        // 获取所有的 avatar
+        $avatars = array_filter(array_column($magicAgentEntities, 'agent_avatar'), fn ($avatar) => ! empty($avatar));
+        $fileLinks = $this->fileDomainService->getLinks($authorization->getOrganizationCode(), $avatars);
+        // 获取助理创建人
+        $createdUids = array_column($magicAgentEntities, 'created_uid');
+        $createdUsers = $this->userDomainService->getUserByIdsWithoutOrganization($createdUids);
+        $agentVersionIds = array_filter(array_column($magicAgentEntities, 'agent_version_id'), fn ($agentVersionId) => $agentVersionId !== null);
+        $agentVersions = $this->magicAgentVersionDomainService->getAgentByIds($agentVersionIds);
+
+        // 构建创建人映射
+        $createdUserMap = [];
+        foreach ($createdUsers as $user) {
+            $createdUserMap[$user->getUserId()] = $user;
+        }
+
+        // 构建助理版本映射
+        $agentVersionMap = [];
+        foreach ($agentVersions as $version) {
+            $agentVersionMap[$version->getId()] = $version;
+        }
+
+        // 聚合数据
+        $items = [];
+        foreach ($magicAgentEntities as $agent) {
+            $adminAgentDTO = AgentAssembler::entityToDTO($agent);
+
+            // 设置头像
+            $avatar = $fileLinks[$agent->getAgentAvatar()] ?? null;
+            $adminAgentDTO->setAgentAvatar($avatar?->getUrl() ?? '');
+
+            // 设置创建人信息
+            $createdUser = $createdUserMap[$agent->getCreatedUid()] ?? null;
+            if ($createdUser) {
+                $adminAgentDTO->setCreatedName($createdUser->getNickname());
+            }
+
+            // 设置版本信息
+            $versionId = $agent->getAgentVersionId();
+            if ($versionId && isset($agentVersionMap[$versionId])) {
+                $version = $agentVersionMap[$versionId];
+                $adminAgentDTO->setReleaseScope($version->getReleaseScope());
+                $adminAgentDTO->setReviewStatus($version->getReviewStatus());
+                $adminAgentDTO->setApprovalStatus($version->getApprovalStatus());
+            }
+
+            $items[] = $adminAgentDTO;
+        }
+        $pageDTO = new PageDTO();
+        $pageDTO->setPage($query->getPage());
+        $pageDTO->setTotal($magicAgentEntityCount);
+        $pageDTO->setList($items);
+        return $pageDTO;
     }
 
     /**

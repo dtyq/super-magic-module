@@ -266,4 +266,16 @@ class MagicAgentVersionRepository implements MagicAgentVersionRepositoryInterfac
 
         return Db::select($query->toSql(), $query->getBindings());
     }
+
+    /**
+     * 根据ids获取助理版本.
+     * @return array<MagicAgentVersionEntity>
+     */
+    public function getAgentByIds(array $ids)
+    {
+        $model = $this->agentVersionModel::query()
+            ->whereIn('id', $ids)
+            ->get();
+        return MagicAgentVersionFactory::toEntities($model->toArray());
+    }
 }

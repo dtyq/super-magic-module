@@ -17,7 +17,7 @@ use Qbhy\HyperfAuth\AuthManager;
 class AdminAgentApi extends AbstractApi
 {
     public function __construct(
-        protected AdminAgentAppService $globalSettingsAppService,
+        protected AdminAgentAppService $adminAgentAppService,
         RequestInterface $request,
         AuthManager $authManager,
     ) {
@@ -33,7 +33,7 @@ class AdminAgentApi extends AbstractApi
         $pageSize = (int) $this->request->input('page_size', 20);
         $type = AgentFilterType::from((int) $this->request->input('type', AgentFilterType::ALL->value));
 
-        return $this->globalSettingsAppService->getPublishedAgents(
+        return $this->adminAgentAppService->getPublishedAgents(
             $this->getAuthorization(),
             $pageToken,
             $pageSize,

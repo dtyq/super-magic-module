@@ -21,6 +21,7 @@ use App\ErrorCode\AgentErrorCode;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Infrastructure\Core\ValueObject\Page;
 use App\Infrastructure\Util\Context\RequestContext;
+use App\Interfaces\Admin\DTO\Request\QueryPageAgentDTO;
 use Dtyq\AsyncEvent\AsyncEventUtil;
 use Hyperf\DbConnection\Db;
 
@@ -220,6 +221,20 @@ class MagicAgentDomainService
     public function associateFlowWithAgent(string $agentId, string $flowCode): void
     {
         $this->agentRepository->updateFlowCode($agentId, $flowCode);
+    }
+
+    /**
+     * 查询企业下的所有助理,条件查询：状态，创建人，搜索.
+     * @return array<MagicAgentEntity>
+     */
+    public function queriesAgents(string $organizationCode, QueryPageAgentDTO $queryPageAgentDTO): array
+    {
+        return $this->agentRepository->queriesAgents($organizationCode, $queryPageAgentDTO);
+    }
+
+    public function queriesAgentsCount(string $organizationCode, QueryPageAgentDTO $queryPageAgentDTO): int
+    {
+        return $this->agentRepository->queriesAgentsCount($organizationCode, $queryPageAgentDTO);
     }
 
     /**
