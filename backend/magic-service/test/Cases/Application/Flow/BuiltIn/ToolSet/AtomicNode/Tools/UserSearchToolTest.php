@@ -84,7 +84,7 @@ JSON, true));
         $executionData = $this->createExecutionData();
         $executionData->saveNodeContext('9527', [
             'system_prompt' => '当用户想要搜索人员时，调用 user_search 工具获取相关人员信息',
-            'user_prompt' => '我想找一下 开发部的李海清',
+            'user_prompt' => '我想找一下 开发部的小明',
         ]);
         $runner->execute($vertexResult, $executionData);
 

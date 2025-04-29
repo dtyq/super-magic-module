@@ -49,7 +49,7 @@ class ExecuteManagerBaseTest extends BaseTest
             conversationId: 'unit-test_' . uniqid(),
             executionType: $executionType,
         );
-        $executionData->setFlowCode('MAGIC-FLOW-67b2e4b33f6387-41654301', 'MAGIC-FLOW-VERSION-67b327300dbaa0-79023511', $operator->getUid());
+        $executionData->setFlowCode('MAGIC-FLOW-123456789abcde2-12345601', 'MAGIC-FLOW-VERSION-123456789abcde3-12345602', $operator->getUid());
         $executionData->setDebug(true);
         return $executionData;
     }
@@ -57,12 +57,12 @@ class ExecuteManagerBaseTest extends BaseTest
     protected function getOperator(): Operator
     {
         $operator = new Operator();
-        $operator->setUid('usi_a450dd07688be6273b5ef112ad50ba7e');
+        $operator->setUid('usi_123456789abcdef123456789abcdef14');
         $operator->setNickname('unit-test-nickname');
         $operator->setRealName('unit-test-real_name');
         $operator->setAvatar('unit-test-avatar');
         $operator->setOrganizationCode('DT001');
-        $operator->setMagicId('606446434040061952');
+        $operator->setMagicId('123456789012345680');
         return $operator;
     }
 }

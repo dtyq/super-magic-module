@@ -27,7 +27,7 @@ class ToolNodeRunnerTest extends ExecuteManagerBaseTest
     public function testRunByParameter()
     {
         $node = Node::generateTemplate(NodeType::Tool, [
-            'tool_id' => 'MAGIC-FLOW-6735ef77eb3086-30338119',
+            'tool_id' => 'MAGIC-FLOW-123456789abcde1-12345678',
             'mode' => 'parameter',
             'async' => false,
             'custom_system_input' => [
@@ -186,7 +186,7 @@ JSON, true)));
     public function testRunByLLM()
     {
         $node = Node::generateTemplate(NodeType::Tool, [
-            'tool_id' => 'MAGIC-FLOW-6735ef77eb3086-30338119',
+            'tool_id' => 'MAGIC-FLOW-123456789abcde1-12345678',
             'mode' => 'llm',
             'async' => false,
             'custom_system_input' => [
@@ -600,8 +600,8 @@ JSON, true)));
 
         $vertexResult = new VertexResult();
         $executionData = $this->createExecutionData(triggerType: TriggerType::ChatMessage, executionType: ExecutionType::IMChat);
-        $executionData->setOriginConversationId('715320715409252352');
-        $executionData->setTopicId('722527017175412737');
+        $executionData->setOriginConversationId('123456789012345678');
+        $executionData->setTopicId('123456789012345679');
         $executionData->saveNodeContext('9527', [
             'limit' => 20,
             'sort' => 'asc',
@@ -656,7 +656,7 @@ JSON, true)));
             "expression_value": [
                 {
                     "type": "input",
-                    "value": "我想找一下李海清",
+                    "value": "我想找一下小明",
                     "name": "",
                     "args": null
                 }
