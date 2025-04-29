@@ -1,9 +1,8 @@
 import { Form, DatePicker } from "antd"
 import { useMemoizedFn } from "ahooks"
 import MagicInput from "@dtyq/magic-flow/common/BaseUI/Input"
-import { useNodeConfigActions } from "@dtyq/magic-flow/MagicFlow/context/FlowContext/useFlow"
-import type { Moment } from "moment"
-import moment from "moment"
+import { useFlow } from "@dtyq/magic-flow/MagicFlow/context/FlowContext/useFlow"
+import dayjs, { Dayjs } from "dayjs"
 import { set, get } from "lodash-es"
 import { useCurrentNode } from "@dtyq/magic-flow/MagicFlow/nodes/common/context/CurrentNode/useCurrentNode"
 import { useMemo } from "react"
@@ -18,15 +17,15 @@ export default function MessageSearchV0() {
 	const { t } = useTranslation()
 	const [form] = Form.useForm()
 
-	const { updateNodeConfig } = useNodeConfigActions()
+	const { updateNodeConfig } = useFlow()
 
 	const { currentNode } = useCurrentNode()
 
 	const onValuesChange = useMemoizedFn((changeValues) => {
 		if (!currentNode) return
 		if (changeValues.time_range) {
-			const values = changeValues.time_range.map((time: Moment) => {
-				return moment(time).format("YYYY-MM-DD HH:mm:ss")
+			const values = changeValues.time_range.map((time: Dayjs) => {
+				return dayjs(time).format("YYYY-MM-DD HH:mm:ss")
 			})
 			set(currentNode, ["params"], {
 				...get(currentNode, ["params"]),
@@ -48,8 +47,8 @@ export default function MessageSearchV0() {
 		const { start_time, end_time, max_record } = currentNode?.params || {}
 		if (!start_time && !end_time) return currentNode?.params
 		const timeRange = [
-			moment(start_time, "YYYY-MM-DD HH:mm:ss") || null,
-			moment(end_time, "YYYY-MM-DD HH:mm:ss") || null,
+			dayjs(start_time, "YYYY-MM-DD HH:mm:ss") || null,
+			dayjs(end_time, "YYYY-MM-DD HH:mm:ss") || null,
 		]
 		return {
 			time_range: timeRange,

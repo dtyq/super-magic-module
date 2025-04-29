@@ -1,4 +1,3 @@
-import { MagicIcon } from "@/common/BaseUI/Icon"
 import brandOpenApi from "@/common/assets/brand-openai.png"
 import { IconCheck } from "@tabler/icons-react"
 import clsx from "clsx"
