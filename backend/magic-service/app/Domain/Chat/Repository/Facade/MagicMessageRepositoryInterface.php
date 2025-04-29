@@ -20,7 +20,7 @@ interface MagicMessageRepositoryInterface
 
     public function deleteByMagicMessageIds(array $magicMessageIds);
 
-    public function updateMessageContent(MagicMessageEntity $messageEntity, array $messageContent): void;
+    public function updateMessageContent(string $magicMessageId, array $messageContent): void;
 
     public function updateMessageContentAndVersionId(MagicMessageEntity $messageEntity, MagicMessageVersionEntity $magicMessageVersionEntity): void;
 }

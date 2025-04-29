@@ -2,7 +2,6 @@ import {
 	IconTextFile,
 	IconMarkdownFile,
 	IconPDFFile,
-	IconHtmlFile,
 	IconExcelFile,
 	IconDocxFile,
 	IconXMindFile,
@@ -24,16 +23,19 @@ export const fileTypesMap = {
 // 支持向量知识库嵌入的文件类型
 export const supportedFileTypes = Object.values(fileTypesMap)
 
-// 文件类型图标映射
-export const fileTypeIconsMap = {
-	[fileTypesMap.TXT]: <IconTextFile size={24} />,
-	[fileTypesMap.MD]: <IconMarkdownFile size={24} />,
-	[fileTypesMap.PDF]: <IconPDFFile size={24} />,
-	[fileTypesMap.XLSX]: <IconExcelFile size={24} />,
-	[fileTypesMap.XLS]: <IconExcelFile size={24} />,
-	[fileTypesMap.DOCX]: <IconDocxFile size={24} />,
-	[fileTypesMap.CSV]: <IconExcelFile size={24} />,
-	[fileTypesMap.XML]: <IconXMindFile size={24} />,
+// 获取文件类型图标
+export const getFileTypeIcon = (extension: string, size = 24) => {
+	const map = {
+		[fileTypesMap.TXT]: <IconTextFile size={size} />,
+		[fileTypesMap.MD]: <IconMarkdownFile size={size} />,
+		[fileTypesMap.PDF]: <IconPDFFile size={size} />,
+		[fileTypesMap.XLSX]: <IconExcelFile size={size} />,
+		[fileTypesMap.XLS]: <IconExcelFile size={size} />,
+		[fileTypesMap.DOCX]: <IconDocxFile size={size} />,
+		[fileTypesMap.CSV]: <IconExcelFile size={size} />,
+		[fileTypesMap.XML]: <IconXMindFile size={size} />,
+	}
+	return map[extension] || <IconOtherFile size={size} />
 }
 
 /** 文档同步状态映射 */
@@ -71,4 +73,40 @@ export enum DocumentOperationType {
 	ENABLE = "enable",
 	DISABLE = "disable",
 	DELETE = "delete",
+}
+
+/** 分段模式 */
+export enum SegmentationMode {
+	/** 通用模式 */
+	General = 1,
+	/** 父子分段 */
+	ParentChild = 2,
+}
+
+/** 父块模式 */
+export enum ParentBlockMode {
+	/** 段落 */
+	Paragraph = 1,
+	/** 全文 */
+	FullText = 2,
+}
+
+/** 文本预处理规则 */
+export enum TextPreprocessingRules {
+	/** 替换掉连续的空格、换行符和制表符 */
+	ReplaceSpaces = 1,
+	/** 删除所有 URL 和电子邮件地址 */
+	RemoveUrls = 2,
+}
+
+/** 检索方法 */
+export enum RetrievalMethod {
+	/** 语义检索 */
+	SemanticSearch = "semantic_search",
+	/** 全文检索 */
+	FullTextSearch = "full_text_search",
+	/** 混合检索 */
+	HybridSearch = "hybrid_search",
+	/** 图检索 */
+	GraphSearch = "graph_search",
 }

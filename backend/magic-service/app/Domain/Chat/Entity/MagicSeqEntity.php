@@ -355,6 +355,7 @@ final class MagicSeqEntity extends AbstractEntity
 
     public function canTriggerFlow(): bool
     {
-        return in_array($this->seqType, [ControlMessageType::AddFriendSuccess, ControlMessageType::OpenConversation], true);
+        // 如果是聊天消息，或者是加好友/打开会话窗口的控制消息，就能触发 flow
+        return $this->seqType instanceof ChatMessageType || in_array($this->seqType, [ControlMessageType::AddFriendSuccess, ControlMessageType::OpenConversation], true);
     }
 }

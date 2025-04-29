@@ -1,40 +1,41 @@
-import { IconLoader, IconCircleCheck, IconCircleX } from "@tabler/icons-react"
-import { Flex, Button, Spin } from "antd"
+import { IconCircleCheck, IconCircleX, IconAlertCircle } from "@tabler/icons-react"
+import { Flex, Spin } from "antd"
 import { useState, useEffect, useRef } from "react"
 import { LoadingOutlined } from "@ant-design/icons"
 import { useNavigate } from "@/opensource/hooks/useNavigate"
-
 import { RoutePath } from "@/const/routes"
 import { useMemoizedFn } from "ahooks"
 import { useTranslation } from "react-i18next"
-import { fileTypeIconsMap, documentSyncStatusMap } from "../../constant"
+import { documentSyncStatusMap } from "../../constant"
 import { useVectorKnowledgeEmbedStyles } from "./styles"
-import type { CreatedKnowledge } from "../Create"
 import { KnowledgeApi } from "@/apis"
 import type { Knowledge } from "@/types/knowledge"
-import DEFAULT_KNOWLEDGE_ICON from "@/assets/logos/knowledge-avatar.png"
+import KnowledgeContent from "./components/KnowledgeContent"
+import LoadingState from "./components/LoadingState"
 
-interface Props {
-	createdKnowledge: CreatedKnowledge
+interface VectorKnowledgeEmbedProps {
+	knowledgeBaseCode: string
 }
 
-export default function VectorKnowledgeEmbed({ createdKnowledge }: Props) {
+export default function VectorKnowledgeEmbed({ knowledgeBaseCode }: VectorKnowledgeEmbedProps) {
 	const { styles } = useVectorKnowledgeEmbedStyles()
 	const { t } = useTranslation("flow")
 	const navigate = useNavigate()
 
+	/** 知识库详情 */
+	const [createdKnowledge, setCreatedKnowledge] = useState<Knowledge.Detail>()
 	/** 是否嵌入完成 */
 	const [isEmbed, setIsEmbed] = useState(false)
 	/** 知识库文档列表 */
-	const [documentList, setDocumentList] = useState<Knowledge.EmbedDocumentDetail[]>(
-		createdKnowledge.fileList || [],
-	)
+	const [documentList, setDocumentList] = useState<Knowledge.EmbedDocumentDetail[]>([])
 	/** 轮询定时器引用 */
 	const timerRef = useRef<NodeJS.Timeout | null>(null)
+	/** 数据是否已加载 */
+	const [isLoading, setIsLoading] = useState(true)
 
 	/** 查看知识库 - 跳转至详情页 */
 	const handleViewKnowledge = useMemoizedFn(() => {
-		navigate(`${RoutePath.VectorKnowledgeDetail}?code=${createdKnowledge.code}`)
+		navigate(`${RoutePath.VectorKnowledgeDetail}?code=${knowledgeBaseCode}`)
 	})
 
 	/** 获取文档同步状态图标 */
@@ -52,17 +53,50 @@ export default function VectorKnowledgeEmbed({ createdKnowledge }: Props) {
 
 	/** 更新知识库文档列表的嵌入状态 */
 	const updateKnowledgeDocumentList = useMemoizedFn(async () => {
-		const res = await KnowledgeApi.getKnowledgeDocumentList({
-			code: createdKnowledge.code,
-		})
-		if (res) {
-			setDocumentList(res.list)
-			setIsEmbed(
-				res.list.length > 0 &&
-					res.list.every((item) => item.sync_status === documentSyncStatusMap.Success),
-			)
+		try {
+			const res = await KnowledgeApi.getKnowledgeDocumentList({
+				code: knowledgeBaseCode,
+			})
+			if (res) {
+				setDocumentList(res.list)
+				setIsEmbed(
+					res.list.length > 0 &&
+						res.list.every(
+							(item: Knowledge.EmbedDocumentDetail) =>
+								![
+									documentSyncStatusMap.Pending,
+									documentSyncStatusMap.Processing,
+								].includes(item.sync_status),
+						),
+				)
+			}
+		} catch (error) {
+			console.error("Failed to get document list:", error)
 		}
 	})
+
+	/**
+	 * 更新知识库详情
+	 */
+	const getKnowledgeDetail = useMemoizedFn(async (code: string) => {
+		try {
+			const res = await KnowledgeApi.getKnowledgeDetail(code)
+			if (res) {
+				setCreatedKnowledge(res)
+				setIsLoading(false) // 数据加载完成
+			}
+		} catch (error) {
+			console.error("获取知识库详情失败", error)
+			setIsLoading(false) // 即使出错也标记为加载完成
+		}
+	})
+
+	// 获取知识库详情
+	useEffect(() => {
+		if (knowledgeBaseCode) {
+			getKnowledgeDetail(knowledgeBaseCode)
+		}
+	}, [knowledgeBaseCode])
 
 	/** 开始轮询 */
 	const startPolling = useMemoizedFn(() => {
@@ -107,70 +141,22 @@ export default function VectorKnowledgeEmbed({ createdKnowledge }: Props) {
 
 	return (
 		<Flex vertical justify="space-between" className={styles.container}>
-			<div className={styles.header}>
-				<div className={styles.headerTitle}>{t("knowledgeDatabase.createdSuccess")}</div>
-				<Flex align="center" justify="space-between">
-					<div className={styles.knowledgeInfo}>
-						<img
-							className={styles.knowledgeIcon}
-							src={createdKnowledge.icon || DEFAULT_KNOWLEDGE_ICON}
-							alt=""
-						/>
-						<div className={styles.knowledgeDetail}>
-							<div className={styles.knowledgeLabel}>
-								{t("knowledgeDatabase.knowledgeName")}
-							</div>
-							<div className={styles.knowledgeName}>{createdKnowledge.name}</div>
-						</div>
-					</div>
-
-					<Button type="primary" onClick={handleViewKnowledge}>
-						{t("knowledgeDatabase.viewKnowledge")}
-					</Button>
-				</Flex>
-			</div>
-
-			<div className={styles.fileList}>
-				<div className={styles.fileListContent}>
-					{documentList.length > 0 ? (
-						<>
-							<div className={styles.statusSection}>
-								{isEmbed ? (
-									<div className={styles.statusInfo}>
-										<IconCircleCheck color="#32C436" size={24} />
-										<div>{t("knowledgeDatabase.vectoringCompleted")}</div>
-									</div>
-								) : (
-									<div className={styles.statusInfo}>
-										<IconLoader size={24} />
-										<div>{t("knowledgeDatabase.vectoringProcessing")}</div>
-									</div>
-								)}
-							</div>
-							<div>
-								{documentList.map((file) => (
-									<Flex
-										key={file.id}
-										align="center"
-										justify="space-between"
-										className={styles.fileItem}
-									>
-										<div className={styles.fileInfo}>
-											{fileTypeIconsMap[file.name.split(".").pop()!]}
-											<div>{file.name}</div>
-										</div>
-										<div>{getStatusIcon(file.sync_status)}</div>
-									</Flex>
-								))}
-							</div>
-						</>
-					) : (
-						<div className={styles.empty}>
-							<div>{t("knowledgeDatabase.noDocuments")}</div>
-						</div>
-					)}
+			{isLoading ? (
+				<LoadingState />
+			) : createdKnowledge ? (
+				<KnowledgeContent
+					createdKnowledge={createdKnowledge}
+					documentList={documentList}
+					isEmbed={isEmbed}
+					handleViewKnowledge={handleViewKnowledge}
+					getStatusIcon={getStatusIcon}
+				/>
+			) : (
+				<div className={styles.error}>
+					<IconAlertCircle color="#FF4D4F" size={36} />
+					<div>{t("knowledgeDatabase.loadError")}</div>
 				</div>
-			</div>
+			)}
 		</Flex>
 	)
 }

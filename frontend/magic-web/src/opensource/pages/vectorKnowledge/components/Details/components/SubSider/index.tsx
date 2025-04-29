@@ -3,12 +3,17 @@ import { useLocation } from "react-router-dom"
 import { useMemoizedFn } from "ahooks"
 import { IconChevronRight } from "@tabler/icons-react"
 import { useTranslation } from "react-i18next"
-import { useVectorKnowledgeSubSiderStyles } from "./styles"
 import type { Knowledge } from "@/types/knowledge"
 import DEFAULT_KNOWLEDGE_ICON from "@/assets/logos/knowledge-avatar.png"
+import { useVectorKnowledgeSubSiderStyles } from "./styles"
+import {
+	hasAdminRight,
+	ResourceTypes,
+} from "@/opensource/pages/flow/components/AuthControlButton/types"
+import AuthControlButton from "@/opensource/pages/flow/components/AuthControlButton/AuthControlButton"
 
 interface SubSiderProps {
-	setCurrentDetailPage: (page: "document" | "setting") => void
+	setCurrentDetailPage: (page: "document" | "setting" | "recallTest") => void
 	knowledgeDetail: Knowledge.Detail
 }
 
@@ -20,6 +25,7 @@ export default function SubSider({ setCurrentDetailPage, knowledgeDetail }: SubS
 	// 获取当前页面路径
 	const isDocument = location.pathname.includes("/document")
 	const isSetting = location.pathname.includes("/setting")
+	const isRecallTest = location.pathname.includes("/recall-test")
 
 	// 默认选中的菜单项
 	let defaultSelectedKey = "document"
@@ -27,11 +33,13 @@ export default function SubSider({ setCurrentDetailPage, knowledgeDetail }: SubS
 		defaultSelectedKey = "document"
 	} else if (isSetting) {
 		defaultSelectedKey = "setting"
+	} else if (isRecallTest) {
+		defaultSelectedKey = "recallTest"
 	}
 
 	// 菜单点击处理
 	const handleMenuClick = useMemoizedFn(({ key }: { key: string }) => {
-		setCurrentDetailPage(key as "document" | "setting")
+		setCurrentDetailPage(key as "document" | "setting" | "recallTest")
 	})
 
 	return (
@@ -49,6 +57,14 @@ export default function SubSider({ setCurrentDetailPage, knowledgeDetail }: SubS
 					<div className={styles.descLabel}>{t("knowledgeDatabase.descLabel")}</div>
 					<div className={styles.descContent}>{knowledgeDetail.description}</div>
 				</div>
+				<Flex align="center" gap={4} style={{ marginTop: 10 }}>
+					<AuthControlButton
+						className={styles.operationBtn}
+						resourceType={ResourceTypes.Knowledge}
+						resourceId={knowledgeDetail.id}
+						disabled={!hasAdminRight(knowledgeDetail.user_operation)}
+					/>
+				</Flex>
 			</div>
 			<Menu
 				className={styles.menu}
@@ -65,6 +81,19 @@ export default function SubSider({ setCurrentDetailPage, knowledgeDetail }: SubS
 								className={styles.menuItem}
 							>
 								<div>{t("knowledgeDatabase.documentTitle")}</div>
+								<IconChevronRight size={16} />
+							</Flex>
+						),
+					},
+					{
+						key: "recallTest",
+						label: (
+							<Flex
+								justify="space-between"
+								align="center"
+								className={styles.menuItem}
+							>
+								<div>{t("knowledgeDatabase.recallTest")}</div>
 								<IconChevronRight size={16} />
 							</Flex>
 						),

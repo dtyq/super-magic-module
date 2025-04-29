@@ -659,7 +659,7 @@ class MagicChatAISearchV2AppService extends AbstractAppService
         ?StreamMessageStatus $streamMessageStatus = null
     ): void {
         $this->magicChatDomainService->streamSendJsonMessage(
-            $dto->getMagicSeqEntity()->getSeqId(),
+            $dto->getAppMessageId(),
             $messageContent,
             $streamMessageStatus
         );

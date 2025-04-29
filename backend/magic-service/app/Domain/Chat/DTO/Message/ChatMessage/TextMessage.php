@@ -7,13 +7,14 @@ declare(strict_types=1);
 
 namespace App\Domain\Chat\DTO\Message\ChatMessage;
 
+use App\Domain\Chat\DTO\Message\LLMMessageInterface;
 use App\Domain\Chat\DTO\Message\StreamMessage\StreamMessageTrait;
 use App\Domain\Chat\DTO\Message\StreamMessageInterface;
 use App\Domain\Chat\DTO\Message\TextContentInterface;
 use App\Domain\Chat\DTO\Message\Trait\LLMMessageTrait;
 use App\Domain\Chat\Entity\ValueObject\MessageType\ChatMessageType;
 
-class TextMessage extends AbstractAttachmentMessage implements TextContentInterface, StreamMessageInterface
+class TextMessage extends AbstractAttachmentMessage implements TextContentInterface, StreamMessageInterface, LLMMessageInterface
 {
     use StreamMessageTrait;
     use LLMMessageTrait;

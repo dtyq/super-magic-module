@@ -1,12 +1,10 @@
-import React, { useMemo, useState } from "react"
+import React, { useEffect, useMemo, useState } from "react"
 import { useMemoizedFn, useUpdateEffect } from "ahooks"
 import type { Expression } from "@dtyq/magic-flow/MagicConditionEdit/types/expression"
 import { nanoid } from "nanoid"
 import { useCurrentNode } from "@dtyq/magic-flow/MagicFlow/nodes/common/context/CurrentNode/useCurrentNode"
 import type { ConditionInstance } from "@dtyq/magic-flow/MagicConditionEdit/index"
 import { set } from "lodash-es"
-// @ts-ignore
-import { useReactFlow } from "reactflow"
 import {
 	useFlowEdgesActions,
 	useNodeConfigActions,
@@ -16,14 +14,19 @@ import styles from "./index.module.less"
 import BranchItem from "./components/BranchItem"
 import addBranchTypeIfWithout, { BranchType } from "./helpers"
 import "./index.less"
+import { useFlowInstance } from "../../../context/FlowInstanceContext"
+import { v0Template } from "./template"
 
 export default function Branch() {
 	const { currentNode } = useCurrentNode()
 	const { deleteEdges } = useFlowEdgesActions()
-	const { getEdges } = useReactFlow()
+	const { flowInstance } = useFlowInstance()
 	const { notifyNodeChange } = useNodeConfigActions()
 	const [branchList, setBranchList] = useState(
-		addBranchTypeIfWithout(currentNode?.params?.branches),
+		addBranchTypeIfWithout(
+			// @ts-ignore
+			currentNode?.params?.branches || v0Template.params.branches,
+		) as Record<string, any>[],
 	)
 
 	// 创建一个存储所有元素 ref 的数组
@@ -72,7 +75,7 @@ export default function Branch() {
 
 		const branchToDelete = branchList[branchIndex]
 		const branchId = branchToDelete.branch_id
-        const edges = getEdges()
+		const edges = flowInstance.current?.getEdges() || []
 
 		// 1. 找到所有从该分支出发的边
 		const edgesToRemove = edges.filter(

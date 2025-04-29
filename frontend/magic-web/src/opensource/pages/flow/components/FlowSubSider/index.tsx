@@ -77,29 +77,21 @@ function FlowSubSider() {
 						},
 						extra: <MagicIcon component={IconChevronRight} />,
 					},
-					...(!isCommercial()
-						? [
-								{
-									id: replaceRouteParams(RoutePath.Flows, {
-										type: FlowRouteType.VectorKnowledge,
-									}),
-									title: t("vectorDatabase.name", { ns: "flow" }),
-									avatar: {
-										src: (
-											<MagicIcon
-												component={IconFileTextAi}
-												color="currentColor"
-											/>
-										),
-										style: {
-											background: "#32C436",
-											padding: 6,
-										},
-									},
-									extra: <MagicIcon component={IconChevronRight} />,
-								},
-						  ]
-						: []),
+
+					{
+						id: replaceRouteParams(RoutePath.Flows, {
+							type: FlowRouteType.VectorKnowledge,
+						}),
+						title: t("vectorDatabase.name", { ns: "flow" }),
+						avatar: {
+							src: <MagicIcon component={IconFileTextAi} color="currentColor" />,
+							style: {
+								background: "#32C436",
+								padding: 6,
+							},
+						},
+						extra: <MagicIcon component={IconChevronRight} />,
+					},
 				]}
 			/>
 		</SubSiderContainer>

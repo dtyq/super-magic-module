@@ -24,6 +24,8 @@ use App\Domain\Agent\Repository\Facade\MagicBotThirdPlatformChatRepositoryInterf
 use App\Domain\Agent\Repository\Persistence\MagicBotThirdPlatformChatRepository;
 use App\Domain\Authentication\Repository\Facade\AuthenticationRepositoryInterface;
 use App\Domain\Authentication\Repository\Implement\AuthenticationRepository;
+use App\Domain\Chat\DTO\Message\ChatMessage\SuperAgentMessageInterface;
+use App\Domain\Chat\DTO\Message\ChatMessage\UnknowChatMessage;
 use App\Domain\Chat\Event\Agent\AgentExecuteInterface;
 use App\Domain\Chat\Repository\Facade\MagicChatConversationRepositoryInterface;
 use App\Domain\Chat\Repository\Facade\MagicChatFileRepositoryInterface;
@@ -179,7 +181,7 @@ $dependencies = [
     OrganizationsPlatformRepositoryInterface::class => OrganizationsPlatformRepository::class,
     OpenPlatformConfigInterface::class => OpenPlatformConfigItem::class,
     MagicChatMessageVersionsRepositoryInterface::class => MagicMessageVersionsRepository::class,
-
+    SuperAgentMessageInterface::class => UnknowChatMessage::class,
     // socket-io的发布订阅改为rabbitmq实现,但是房间还是用redis
     AdapterInterface::class => RedisAdapter::class,
     SidProviderInterface::class => DistributedSidProvider::class,

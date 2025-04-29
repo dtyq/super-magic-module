@@ -20,7 +20,7 @@ interface UseDocumentOperationsProps {
 		name: string,
 		page: number,
 		pageSize: number,
-	) => Promise<void>
+	) => Promise<void> | void
 }
 
 export const useDocumentOperations = ({

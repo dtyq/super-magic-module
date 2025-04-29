@@ -35,6 +35,9 @@ export const useVectorKnowledgeSubSiderStyles = createStyles(({ css, isDarkMode,
 			-webkit-line-clamp: 3; /* 限制最多显示3行 */
 			-webkit-box-orient: vertical;
 		`,
+		operationBtn: css`
+			flex: 1;
+		`,
 		menu: css`
 			border: none !important;
 

@@ -1,6 +1,11 @@
 import type { KnowledgeStatus } from "@/opensource/pages/flow/nodes/KnowledgeSearch/v0/constants"
 import type { KnowledgeType } from "@/opensource/pages/flow/nodes/KnowledgeSearch/v0/types"
 import type { OperationTypes } from "@/opensource/pages/flow/components/AuthControlButton/types"
+import type {
+	FragmentConfig,
+	EmbeddingModelConfig,
+	RetrieveConfig,
+} from "@/opensource/pages/vectorKnowledge/types"
 
 /** 知识库相关类型 */
 export namespace Knowledge {
@@ -10,6 +15,9 @@ export namespace Knowledge {
 		description: string
 		icon: string
 		enabled: boolean
+		fragment_config?: FragmentConfig
+		embedding_config?: EmbeddingModelConfig
+		retrieve_config?: RetrieveConfig
 		document_files: {
 			name: string
 			key: string
@@ -46,6 +54,8 @@ export namespace Knowledge {
 		description: string
 		icon: string
 		enabled: boolean
+		embedding_config?: EmbeddingModelConfig
+		retrieve_config?: RetrieveConfig
 	}
 
 	/** 单个知识库详情 */
@@ -71,6 +81,9 @@ export namespace Knowledge {
 		expected_count: number
 		completed_count: number
 		user_operation: OperationTypes
+		fragment_config: FragmentConfig
+		embedding_config: EmbeddingModelConfig
+		retrieve_config: RetrieveConfig
 	}
 
 	/** 单个知识库列表项 */
@@ -163,19 +176,32 @@ export namespace Knowledge {
 		document_code: string
 	}
 
+	/** 分段预览 */
+	export interface SegmentPreviewParams {
+		fragment_config: FragmentConfig
+		document_file: {
+			name: string
+			key: string
+		}
+	}
+
 	/** 单个片段 */
 	export interface FragmentItem {
 		id: string
-		knowledge_code: string
+		knowledge_base_code: string
+		creator: string
+		modifier: string
+		created_at: string
+		updated_at: string
+		document_code: string
+		document_name: string
 		content: string
 		metadata: Record<string, string | number>
+		business_id: string
 		sync_status: number
 		sync_status_message: string
-		creator: string
-		created_at: string
-		modifier: string
-		updated_at: string
-		business_id: string
+		score: number
+		word_count: number
 	}
 
 	export type GetKnowledgeListParams = {
@@ -232,5 +258,77 @@ export namespace Knowledge {
 		vector_status: KnowledgeStatus
 		expected_num: number
 		completed_num: number
+	}
+
+	// 0: 文生图
+	// 1: 图生图
+	// 2: 图片增强
+	// 3: LLM大语言模型
+	// 4.嵌入模型
+	export interface GetActiveModelByCategoryParams {
+		category: "vlm" | "llm"
+		model_type: 0 | 1 | 2 | 3 | 4
+	}
+
+	export interface ServiceProvider {
+		alias: string
+		category: string
+		config: {
+			ak: string
+			api_key: string
+			api_version: string
+			deployment_name: string
+			proxy_url: string
+			region: string
+			sk: string
+			url: string
+		}
+		created_at: string
+		description: string
+		icon: string
+		id: string
+		is_models_enable: boolean
+		models: Model[]
+		name: string
+		provider_code: string
+		/**
+		 * 1- 普通 2-官方 3-自定义
+		 */
+		provider_type: number
+		service_provider_id: string
+		status: number
+		translate: string[]
+	}
+
+	export interface Model {
+		category: string
+		config: ModelConfig
+		created_at: string
+		description: string
+		icon: string
+		id: string
+		model_id: string
+		model_type: number
+		model_version: string
+		name: string
+		service_provider_config_id: string
+		sort: number
+		status: number
+		translate: {
+			name: {
+				en_US: string
+				zh_CN: string
+			}
+		}
+		visible_organizations: string[]
+	}
+
+	export interface ModelConfig {
+		max_tokens: null
+		support_deep_think: boolean
+		support_embedding: boolean
+		support_function: boolean
+		support_multi_modal: boolean
+		vector_size: number
 	}
 }
