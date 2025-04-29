@@ -244,7 +244,7 @@ class MagicAgentRepository extends AbstractRepository implements MagicAgentRepos
         return MagicAgentFactory::toEntities($result);
     }
 
-    public function saveInstruct(string $getOrganizationCode, string $agentId, array $instructs, $updatedUid = ''): void
+    public function updateInstruct(string $getOrganizationCode, string $agentId, array $instructs, $updatedUid = ''): void
     {
         $this->agentModel::query()
             ->where('id', $agentId)

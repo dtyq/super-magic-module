@@ -202,18 +202,19 @@ class MagicAgentDomainService
 
     /**
      * 保存助理的交互指令.
-     * @param mixed $userId
+     * @param string $userId
      */
-    public function saveInstruct(string $organizationCode, string $agentId, array $instructs, $userId = ''): array
+    public function updateInstruct(string $organizationCode, string $agentId, array $instructs, string $userId = '', bool $valid = true): array
     {
-        // 校验普通交互指令
-        InstructType::validateInstructs($instructs);
+        if ($valid) {
+            // 校验普通交互指令
+            InstructType::validateInstructs($instructs);
 
-        // 确保系统交互指令存在，如果缺少则补充
-        $instructs = SystemInstructType::ensureSystemInstructs($instructs);
-
+            // 确保系统交互指令存在，如果缺少则补充
+            $instructs = SystemInstructType::ensureSystemInstructs($instructs);
+        }
         // 保存
-        $this->agentRepository->saveInstruct($organizationCode, $agentId, $instructs, $userId);
+        $this->agentRepository->updateInstruct($organizationCode, $agentId, $instructs, $userId);
         return $instructs;
     }
 
@@ -228,6 +229,6 @@ class MagicAgentDomainService
     private function initSystemInstructs(string $organizationCode, string $agentId, string $userId): void
     {
         $systemInstructs = SystemInstructType::getDefaultInstructs();
-        $this->agentRepository->saveInstruct($organizationCode, $agentId, $systemInstructs, $userId);
+        $this->agentRepository->updateInstruct($organizationCode, $agentId, $systemInstructs, $userId);
     }
 }
