@@ -237,6 +237,10 @@ export const enum RequestUrl {
 	getUseableTeamshareDatabaseList = "/api/v2/magic/external-api/teamshare/knowledge/manageable",
 	/** 获取视觉理解模型数据源 */
 	getVisionModels = "/org/admin/service-providers/category",
+	/** 根据类型获取所有激活模型 */
+	getActiveModelByCategory = "/api/v1/admin/service-providers/by-category",
+	/** 获取官方重排模型列表 */
+	getRerankModels = "/api/v1/knowledge-base/providers/rerank/list",
 	/** 获取知识库向量化进度 */
 	getTeamshareKnowledgeProgress = "/api/v2/magic/external-api/teamshare/knowledge/manageable-progress",
 	/** 发起知识库的向量创建 */
@@ -280,6 +284,10 @@ export const enum RequestUrl {
 	updateKnowledgeDocument = "/api/v1/knowledge-bases/${knowledge_code}/documents/${document_code}",
 	/** 删除知识库的文档 */
 	deleteKnowledgeDocument = "/api/v1/knowledge-bases/${knowledge_code}/documents/${document_code}",
+	/** 分段预览 */
+	segmentPreview = "/api/v1/knowledge-bases/fragments/preview",
+	/** 召回测试 */
+	recallTest = "/api/v1/knowledge-bases/${knowledge_code}/fragments/similarity",
 	/** 创建片段 */
 	createFragment = "/api/v1/knowledge-bases/${knowledge-base-code}/documents/${document-code}/fragments",
 	/** 更新片段 */

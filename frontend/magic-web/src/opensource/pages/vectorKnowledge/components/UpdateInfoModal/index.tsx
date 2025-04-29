@@ -107,11 +107,14 @@ function UpdateInfoModal({ details, open, onClose, updateList }: UpdateInfoModal
 
 	useEffect(() => {
 		if (details) {
-			form.setFieldsValue({
-				name: details.name,
-				description: details.description,
+			// requestAnimationFrame 将表单更新推迟到下一个浏览器绘制帧，确保所有 DOM 元素都已完全渲染，表单字段已完成初始化。
+			requestAnimationFrame(() => {
+				form.setFieldsValue({
+					name: details.name,
+					description: details.description,
+				})
+				setImagePreviewUrl(details.icon)
 			})
-			setImagePreviewUrl(details.icon)
 		}
 	}, [details, form, open])
 
