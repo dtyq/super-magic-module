@@ -7,10 +7,14 @@ declare(strict_types=1);
 
 namespace App\Domain\Chat\DTO\Response;
 
+use App\Domain\Chat\DTO\Message\StreamMessage\StreamMessageStatus;
 use App\Domain\Chat\DTO\Message\StreamMessage\StreamOptions;
 use App\Domain\Chat\Entity\AbstractEntity;
 use Hyperf\Codec\Json;
 
+/**
+ * todo 为了兼容旧版流式消息，需要将 content/reasoning_content/status 字段放到最外层。
+ */
 class ClientJsonStreamSequenceResponse extends AbstractEntity
 {
     // 要更新目标 seqId 的内容
@@ -25,6 +29,48 @@ class ClientJsonStreamSequenceResponse extends AbstractEntity
     protected array $streams;
 
     protected ?StreamOptions $streamOptions;
+
+    protected ?string $content;
+
+    protected ?string $reasoningContent;
+
+    protected ?int $status;
+
+    public function getContent(): ?string
+    {
+        return $this->content ?? null;
+    }
+
+    public function setContent(?string $content): self
+    {
+        $this->content = $content;
+        return $this;
+    }
+
+    public function getReasoningContent(): ?string
+    {
+        return $this->reasoningContent ?? null;
+    }
+
+    public function setReasoningContent(?string $reasoningContent): self
+    {
+        $this->reasoningContent = $reasoningContent;
+        return $this;
+    }
+
+    public function getStatus(): ?int
+    {
+        return $this->status ?? null;
+    }
+
+    public function setStatus(null|int|StreamMessageStatus $status): self
+    {
+        if ($status instanceof StreamMessageStatus) {
+            $status = $status->value;
+        }
+        $this->status = $status;
+        return $this;
+    }
 
     public function getTargetSeqId(): string
     {
@@ -74,7 +120,7 @@ class ClientJsonStreamSequenceResponse extends AbstractEntity
     {
         $data = Json::decode($this->toJsonString());
         if ($filterNull) {
-            $data = array_filter($data, static fn ($value) => $value !== null);
+            $data = array_filter($data, static fn ($value) => $value !== null && $value !== '');
         }
         return $data;
     }

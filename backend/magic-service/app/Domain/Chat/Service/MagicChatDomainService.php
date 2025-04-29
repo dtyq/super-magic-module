@@ -8,11 +8,9 @@ declare(strict_types=1);
 namespace App\Domain\Chat\Service;
 
 use App\Application\Chat\Event\Publish\MessagePushPublisher;
-use App\Domain\Chat\DTO\Message\JsonStreamMessageInterface;
 use App\Domain\Chat\DTO\Message\MessageInterface;
 use App\Domain\Chat\DTO\Message\Options\EditMessageOptions;
 use App\Domain\Chat\DTO\Message\StreamMessage\JsonStreamCachedDTO;
-use App\Domain\Chat\DTO\Message\StreamMessage\LLMStreamCachedDTO;
 use App\Domain\Chat\DTO\Message\StreamMessage\StreamMessageStatus;
 use App\Domain\Chat\DTO\Message\StreamMessage\StreamOptions;
 use App\Domain\Chat\DTO\Message\StreamMessageInterface;
@@ -678,108 +676,9 @@ class MagicChatDomainService extends AbstractDomainService
     }
 
     /**
-     * 流式发送消息,默认只推送增量消息，但是可以选择推送历史消息+增量消息.
-     */
-    public function streamSendMessage(
-        MagicSeqEntity $senderSeqDTO,
-        MagicMessageEntity $senderMessageDTO,
-        MagicConversationEntity $senderConversationEntity
-    ): array {
-        $senderMessageStruct = $senderMessageDTO->getContent();
-        if (! $senderMessageStruct instanceof StreamMessageInterface) {
-            ExceptionBuilder::throw(ChatErrorCode::STREAM_MESSAGE_NOT_FOUND);
-        }
-        $streamOptions = $senderMessageStruct->getStreamOptions();
-        $streamAppMessageId = $streamOptions->getStreamAppMessageId();
-        // 自旋锁,避免数据竞争。另外还需要一个定时任务扫描 redis ，对于超时的流式消息，更新数据库。
-        $lockKey = 'magic_stream_message:' . $streamAppMessageId;
-        $lockOwner = random_bytes(16);
-        $this->locker->spinLock($lockKey, $lockOwner);
-        try {
-            $cachedStreamMessageKey = $this->getStreamMessageCacheKey($streamAppMessageId);
-            // 处理 appMessageId，避免 appMessageId 为空
-            $appMsgId = $senderSeqDTO->getAppMessageId() ?: $senderMessageDTO->getAppMessageId();
-            $senderSeqDTO->setAppMessageId($appMsgId);
-            $senderMessageDTO->setAppMessageId($appMsgId);
-            // 只推送增量消息
-            $reasoningContent = $senderMessageStruct->getReasoningContent();
-            $content = $senderMessageStruct->getContent();
-            if ($streamOptions->getStatus() === StreamMessageStatus::Start) {
-                $messageEntity = $this->createMagicMessageByAppClient($senderMessageDTO, $senderConversationEntity);
-                // 给自己的消息流生成序列,并确定消息的接收人列表
-                $senderSeqEntity = $this->generateSenderSequenceByChatMessage($senderSeqDTO, $messageEntity, $senderConversationEntity);
-                // 立即给收件方生成 seq
-                $receiveSeqEntity = $this->generateReceiveSequenceByChatMessage($senderSeqEntity, $messageEntity);
-                // 发件方的话题消息
-                $this->createTopicMessage($senderSeqEntity);
-                // 收件方的话题消息
-                $this->createTopicMessage($receiveSeqEntity);
-                $streamCachedDTO = (new LLMStreamCachedDTO())
-                    ->setSenderMessageId($senderSeqEntity->getMessageId())
-                    ->setReceiveMessageId($receiveSeqEntity->getMessageId())
-                    ->setReasoningContent($reasoningContent)
-                    ->setContent($content)
-                    ->setStatus(StreamMessageStatus::Start)
-                    ->setLastUpdateDatabaseTime(time());
-                $this->redis->setex($cachedStreamMessageKey, 600, Json::encode($streamCachedDTO));
-            } elseif ($streamOptions->getStatus() === StreamMessageStatus::Processing) {
-                $streamCachedDTO = $this->getStreamCachedDTO($streamAppMessageId);
-                /** @var MagicMessageEntity $messageEntity */
-                [$senderSeqEntity, $messageEntity, $receiveSeqEntity] = $this->getStreamMessage(
-                    $streamCachedDTO->getSenderMessageId(),
-                    $streamCachedDTO->getReceiveMessageId()
-                );
-                // 如果思考和正文都为空，直接返回
-                if (($reasoningContent === '' || $reasoningContent === null) && $content === '') {
-                    return [$senderSeqEntity, $messageEntity];
-                }
-                // 缓存流式消息，用于最后返回
-                $streamCachedDTO->setReasoningContent($streamCachedDTO->getReasoningContent() . $reasoningContent);
-                $streamCachedDTO->setContent($streamCachedDTO->getContent() . $content);
-                // 如果距离上次落库超过 3 秒，本次更新数据库
-                if (time() - $streamCachedDTO->getLastUpdateDatabaseTime() >= 3) {
-                    $this->updateStreamMessageContent($messageEntity, $streamCachedDTO, $streamOptions);
-                    $streamCachedDTO->setLastUpdateDatabaseTime(time());
-                }
-                // 更新需要缓存的内容
-                $this->redis->setex($cachedStreamMessageKey, 600, Json::encode($streamCachedDTO));
-            } else {
-                // 更新 messageEntity
-                $streamCachedDTO = $this->getStreamCachedDTO($streamAppMessageId);
-                /** @var MagicMessageEntity $messageEntity */
-                [$senderSeqEntity, $messageEntity, $receiveSeqEntity] = $this->getStreamMessage(
-                    $streamCachedDTO->getSenderMessageId(),
-                    $streamCachedDTO->getReceiveMessageId()
-                );
-                $this->updateStreamMessageContent($messageEntity, $streamCachedDTO, $streamOptions);
-                $this->redis->del($cachedStreamMessageKey);
-            }
-            // 前端渲染需要：如果是流式开始是，推一个普通 seq 给前端，用于渲染占位
-            if ($streamOptions->getStatus() === StreamMessageStatus::Start) {
-                $receiveData = SeqAssembler::getClientSeqStruct($receiveSeqEntity, $messageEntity)->toArray();
-                $this->socketIO->of(ChatSocketIoNameSpace::Im->value)->to($receiveSeqEntity->getObjectId())->compress(true)->emit(SocketEventType::Chat->value, $receiveData);
-            } elseif ($streamOptions->getStatus() === StreamMessageStatus::Processing) {
-                // 平滑字符推送
-                $this->smoothTypewriterEffect($content, $reasoningContent, $messageEntity, $receiveSeqEntity, $streamOptions);
-            } elseif ($streamOptions->getStatus() === StreamMessageStatus::Completed) {
-                // 如果是结束状态，直接推送全量记录
-                // 及时给调用方返回结果
-                co(function () use ($streamOptions, $receiveSeqEntity, $messageEntity) {
-                    // 睡 1 秒，避免前端渲染过快
-                    // sleep(1);
-                    $receiveData = SeqAssembler::getClientStreamSeqStruct($streamOptions, $receiveSeqEntity, $messageEntity)?->toArray(true);
-                    $receiveData && $this->socketIO->of(ChatSocketIoNameSpace::Im->value)->to($receiveSeqEntity->getObjectId())->compress(true)->emit(SocketEventType::Stream->value, $receiveData);
-                });
-            }
-            return [$senderSeqEntity, $messageEntity];
-        } finally {
-            $this->locker->release($lockKey, $lockOwner);
-        }
-    }
-
-    /**
-     * 流式发送Json消息,每次更新 json 的某个字段消息。
-     * 使用本机内存进行消息缓存，提升大 json 读写性能。
+     * 1.需要先调用 createAndSendStreamStartSequence 创建一个 seq ，然后再调用 streamSendJsonMessage 发送消息.
+     * 2.流式发送Json消息,每次更新 json 的某个字段消息。
+     * 3.使用本机内存进行消息缓存，提升大 json 读写性能。
      * @todo 如果要对外提供流式 api，需要改为 redis 缓存，以支持断线重连。
      *
      *  支持一次推送多个字段的流式消息，如果 json 层级较深，使用 field_1.*.field_2 作为 key。 其中 * 是指数组的下标。
@@ -791,56 +690,41 @@ class MagicChatDomainService extends AbstractDomainService
      *  ]
      */
     public function streamSendJsonMessage(
-        string $seqId,
+        string $appMessageId,
         array $thisTimeStreamMessages,
         ?StreamMessageStatus $streamMessageStatus = null
-    ): array {
+    ): JsonStreamCachedDTO {
         // 自旋锁,避免数据竞争。另外还需要一个定时任务扫描 redis ，对于超时的流式消息，更新数据库。
-        $lockKey = 'magic_stream_message:' . $seqId;
+        $lockKey = 'magic_stream_message:' . $appMessageId;
         $lockOwner = random_bytes(16);
         $this->locker->spinLock($lockKey, $lockOwner);
         try {
-            $cachedStreamMessageKey = $this->getStreamMessageCacheKey($seqId);
+            $cachedStreamMessageKey = $this->getStreamMessageCacheKey($appMessageId);
             // 处理 appMessageId，避免 appMessageId 为空
-            $oldJsonStreamCachedData = $this->getCacheStreamData($cachedStreamMessageKey);
-            if ($oldJsonStreamCachedData === null || empty($oldJsonStreamCachedData->getSenderMessageId()) || empty($oldJsonStreamCachedData->getReceiveMessageId())) {
+            $jsonStreamCachedData = $this->getCacheStreamData($cachedStreamMessageKey);
+            if ($appMessageId === '' || $jsonStreamCachedData === null || empty($jsonStreamCachedData->getSenderMessageId()) || empty($jsonStreamCachedData->getReceiveMessageId())) {
                 ExceptionBuilder::throw(ChatErrorCode::STREAM_MESSAGE_NOT_FOUND);
             }
+
             if ($streamMessageStatus === StreamMessageStatus::Completed) {
-                $streamContent = $oldJsonStreamCachedData->getContent();
+                $streamContent = $jsonStreamCachedData->getContent();
                 // 更新状态为已完成
                 $streamContent['stream_options']['status'] = StreamMessageStatus::Completed->value;
-                $senderMessageId = $oldJsonStreamCachedData->getSenderMessageId();
-                $receiveMessageId = $oldJsonStreamCachedData->getReceiveMessageId();
-                // 给 $messageStreamContent 增加流式参数，便于 debug
-                [$senderSeqEntity, $messageEntity, $receiveSeqEntity] = $this->getStreamMessage(
-                    $senderMessageId,
-                    $receiveMessageId
-                );
-                $this->updateDatabaseMessageContent($messageEntity, $streamContent);
+                $this->updateDatabaseMessageContent($jsonStreamCachedData->getMagicMessageId(), $streamContent);
                 $this->memoryDriver->delete($cachedStreamMessageKey);
                 // 如果是结束状态，直接推送全量记录
-                /** @var JsonStreamMessageInterface $messageContent */
-                $messageContent = $messageEntity->getContent();
-                // 防止 redis 缓存，重写 $messageContent
-                $messageContent = make($messageContent::class, [$streamContent]);
-                $messageEntity->setContent($messageContent);
-                co(function () use ($receiveSeqEntity, $messageContent) {
-                    $receiveData = SeqAssembler::getClientJsonStreamSeqStruct($receiveSeqEntity, $messageContent->toArray())?->toArray(true);
-                    $receiveData && $this->socketIO->of(ChatSocketIoNameSpace::Im->value)->to($receiveSeqEntity->getObjectId())->compress(true)->emit(SocketEventType::Stream->value, $receiveData);
+                co(function () use ($jsonStreamCachedData, $streamContent) {
+                    $receiveData = SeqAssembler::getClientJsonStreamSeqStruct($jsonStreamCachedData->getReceiveMessageId(), $streamContent)?->toArray(true);
+                    $receiveData && $this->socketIO->of(ChatSocketIoNameSpace::Im->value)
+                        ->to($jsonStreamCachedData->getReceiveMagicId())
+                        ->compress(true)
+                        ->emit(SocketEventType::Stream->value, $receiveData);
                 });
             } else {
-                // 默认就是正在流式中
-                $senderMessageId = $oldJsonStreamCachedData->getSenderMessageId();
-                $receiveMessageId = $oldJsonStreamCachedData->getReceiveMessageId();
-                /** @var MagicMessageEntity $messageEntity */
-                [$senderSeqEntity, $messageEntity, $receiveSeqEntity] = $this->getStreamMessage(
-                    $senderMessageId,
-                    $receiveMessageId
-                );
+                # 默认就是正在流式中
                 // 如果距离上次落库超过 3 秒，本次更新数据库
                 $newJsonStreamCachedDTO = (new JsonStreamCachedDTO());
-                $lastUpdateDatabaseTime = $oldJsonStreamCachedData->getLastUpdateDatabaseTime() ?? 0;
+                $lastUpdateDatabaseTime = $jsonStreamCachedData->getLastUpdateDatabaseTime() ?? 0;
                 if (time() - $lastUpdateDatabaseTime >= 3) {
                     $needUpdateDatabase = true;
                     $newJsonStreamCachedDTO->setLastUpdateDatabaseTime(time());
@@ -848,26 +732,28 @@ class MagicChatDomainService extends AbstractDomainService
                     $needUpdateDatabase = false;
                 }
 
-                $newJsonStreamCachedDTO->setSenderMessageId($senderSeqEntity->getMessageId())
-                    ->setReceiveMessageId($receiveSeqEntity->getMessageId())
-                    ->setContent($thisTimeStreamMessages);
+                $newJsonStreamCachedDTO->setContent($thisTimeStreamMessages);
                 // 合并缓存与本次新增的内容
                 $this->updateCacheStreamData($cachedStreamMessageKey, $newJsonStreamCachedDTO);
+
                 if ($needUpdateDatabase) {
                     // 省点事，减少数据合并，只把之前的数据落库
-                    $this->updateDatabaseMessageContent($messageEntity, $oldJsonStreamCachedData->getContent());
+                    $this->updateDatabaseMessageContent($jsonStreamCachedData->getMagicMessageId(), $jsonStreamCachedData->getContent());
                 }
                 // 准备WebSocket推送数据并发送
-                $receiveData = SeqAssembler::getClientJsonStreamSeqStruct($receiveSeqEntity, $thisTimeStreamMessages)?->toArray(true);
+                $receiveData = SeqAssembler::getClientJsonStreamSeqStruct($jsonStreamCachedData->getReceiveMessageId(), $thisTimeStreamMessages)?->toArray(true);
                 // 推送消息给接收方
                 if ($receiveData) {
-                    $this->socketIO->of(ChatSocketIoNameSpace::Im->value)->to($receiveSeqEntity->getObjectId())->compress(true)->emit(SocketEventType::Stream->value, $receiveData);
+                    $this->socketIO->of(ChatSocketIoNameSpace::Im->value)
+                        ->to($jsonStreamCachedData->getReceiveMagicId())
+                        ->compress(true)
+                        ->emit(SocketEventType::Stream->value, $receiveData);
                 }
             }
-            return [$senderSeqEntity, $messageEntity];
         } finally {
             $this->locker->release($lockKey, $lockOwner);
         }
+        return $jsonStreamCachedData;
     }
 
     public function editMessage(MagicMessageEntity $messageEntity): MagicMessageVersionEntity
@@ -995,7 +881,7 @@ class MagicChatDomainService extends AbstractDomainService
         Db::beginTransaction();
         try {
             // 检查是否支持流式推送的消息类型
-            if (! $messageStruct instanceof JsonStreamMessageInterface && ! $messageStruct instanceof StreamMessageInterface) {
+            if (! $messageStruct instanceof StreamMessageInterface || $messageStruct->getStreamOptions() === null) {
                 ExceptionBuilder::throw(ChatErrorCode::STREAM_MESSAGE_NOT_FOUND);
             }
             // 由于数据库设计有问题，会话表没有记录 user 的 type，因此这里需要查询一遍发件方用户信息
@@ -1004,6 +890,10 @@ class MagicChatDomainService extends AbstractDomainService
             if ($senderUserEntity === null) {
                 ExceptionBuilder::throw(UserErrorCode::USER_NOT_EXIST);
             }
+            // 流式开始时，在流式选项里记录 stream_app_message_id 给前端使用
+            /** @var StreamOptions $streamOptions */
+            $streamOptions = $messageStruct->getStreamOptions();
+            $streamOptions->setStreamAppMessageId($createStreamSeqDTO->getAppMessageId());
             $time = date('Y-m-d H:i:s');
             // 一条消息会出现在两个人的会话窗口里(群聊时出现在几千人的会话窗口id里),所以直接不存了,需要会话窗口id时再根据收件人/发件人id去 magic_user_conversation 取
             $messageData = [
@@ -1040,14 +930,20 @@ class MagicChatDomainService extends AbstractDomainService
             $this->createTopicMessage($receiveSeqEntity);
             // 前端渲染需要：如果是流式开始时，推一个普通 seq 给前端，用于渲染占位
             $receiveData = SeqAssembler::getClientSeqStruct($receiveSeqEntity, $messageEntity)->toArray();
-            $this->socketIO->of(ChatSocketIoNameSpace::Im->value)->to($receiveSeqEntity->getObjectId())->compress(true)->emit(SocketEventType::Chat->value, $receiveData);
-            $cachedStreamMessageKey = $this->getStreamMessageCacheKey($senderSeqEntity->getSeqId());
+            $this->socketIO->of(ChatSocketIoNameSpace::Im->value)
+                ->to($receiveSeqEntity->getObjectId())
+                ->compress(true)
+                ->emit(SocketEventType::Chat->value, $receiveData);
+            // 缓存流式消息
+            $cachedStreamMessageKey = $this->getStreamMessageCacheKey($createStreamSeqDTO->getAppMessageId());
             $jsonStreamCachedDTO = (new JsonStreamCachedDTO())
                 ->setSenderMessageId($senderSeqEntity->getMessageId())
                 ->setReceiveMessageId($receiveSeqEntity->getMessageId())
                 ->setLastUpdateDatabaseTime(time())
                 // 只初始化不写入具体内容，后续会根据流式消息的状态进行更新
-                ->setContent(['stream_options.status' => StreamMessageStatus::Start->value]);
+                ->setContent(['stream_options.status' => StreamMessageStatus::Start->value])
+                ->setMagicMessageId($receiveSeqEntity->getMagicMessageId())
+                ->setReceiveMagicId($receiveSeqEntity->getObjectId());
             $this->updateCacheStreamData($cachedStreamMessageKey, $jsonStreamCachedDTO);
             Db::commit();
         } catch (Throwable $exception) {
@@ -1089,7 +985,7 @@ class MagicChatDomainService extends AbstractDomainService
         foreach ($jsonContent as $key => $value) {
             // 如果值是字符串，取出旧值进行拼接
             if (is_string($value)) {
-                $value = Arr::get($memoryCacheContent, $key, $value) . $value;
+                $value = Arr::get($memoryCacheContent, $key) . $value;
             } elseif (is_array($value)) {
                 // 数组合并
                 $data = [];
@@ -1135,61 +1031,9 @@ class MagicChatDomainService extends AbstractDomainService
         return new JsonStreamCachedDTO($memoryCache);
     }
 
-    /**
-     * 因为前端已支持平滑渲染，后端尽快推流就好.
-     */
-    private function smoothTypewriterEffect(
-        string $content,
-        ?string $reasoningContent,
-        MagicMessageEntity $messageEntity,
-        MagicSeqEntity $receiveSeqEntity,
-        StreamOptions $streamOptions
-    ): void {
-        /** @var StreamMessageInterface $messageStruct */
-        $messageStruct = $messageEntity->getContent();
-
-        // 检查是否有实际内容需要推送（注意：字符串'0'是有效内容）
-        if ($reasoningContent !== '' && $reasoningContent !== null) {
-            $messageStruct->setContent('');
-            $messageStruct->setReasoningContent($reasoningContent);
-        } else {
-            $messageStruct->setContent($content);
-            $messageStruct->setReasoningContent(null);
-        }
-        // 设置流式选项
-        $messageStruct->setStreamOptions(
-            new StreamOptions([
-                'status' => StreamMessageStatus::Processing,
-                'stream' => true,
-            ])
-        );
-        $messageEntity->setContent($messageStruct);
-        // 准备WebSocket推送数据并发送
-        $receiveData = SeqAssembler::getClientStreamSeqStruct($streamOptions, $receiveSeqEntity, $messageEntity)?->toArray(true);
-        // 推送消息给接收方
-        if ($receiveData) {
-            $this->socketIO->of(ChatSocketIoNameSpace::Im->value)->to($receiveSeqEntity->getObjectId())->compress(true)->emit(SocketEventType::Stream->value, $receiveData);
-        }
-    }
-
-    private function updateStreamMessageContent(MagicMessageEntity $messageEntity, LLMStreamCachedDTO $streamCachedDTO, StreamOptions $streamOptions): void
+    private function updateDatabaseMessageContent(string $magicMessageId, array $messageStreamContent)
     {
-        $updateMessageEntity = clone $messageEntity;
-        /** @var StreamMessageInterface $messageStruct */
-        $messageStruct = $updateMessageEntity->getContent();
-        // 把全量的流式消息内容更新到 messageEntity
-        $messageStruct->setContent($streamCachedDTO->getContent())
-            ->setReasoningContent($streamCachedDTO->getReasoningContent())
-            ->setStreamOptions(new StreamOptions([
-                'status' => $streamOptions->getStatus(),
-                'stream' => true,
-            ]));
-        $this->magicMessageRepository->updateMessageContent($updateMessageEntity, $messageStruct->toArray());
-    }
-
-    private function updateDatabaseMessageContent(MagicMessageEntity $messageEntity, array $messageStreamContent)
-    {
-        $this->magicMessageRepository->updateMessageContent($messageEntity, $messageStreamContent);
+        $this->magicMessageRepository->updateMessageContent($magicMessageId, $messageStreamContent);
     }
 
     /**
@@ -1267,43 +1111,8 @@ class MagicChatDomainService extends AbstractDomainService
         return $unreadList;
     }
 
-    private function getStreamCachedDTO(string $appMessageId): LLMStreamCachedDTO
-    {
-        $streamMessageKey = $this->getStreamMessageCacheKey($appMessageId);
-        $streamOptionsData = $this->redis->get($streamMessageKey);
-        if (empty($streamOptionsData)) {
-            ExceptionBuilder::throw(ChatErrorCode::STREAM_MESSAGE_NOT_FOUND);
-        }
-        $streamOptionsData = Json::decode($streamOptionsData);
-        return new LLMStreamCachedDTO($streamOptionsData);
-    }
-
     private function getStreamMessageCacheKey(string $appMessageId): string
     {
         return 'cached_magic_stream_message:' . $appMessageId;
-    }
-
-    private function getStreamMessage(string $messageId, string $receiveMessageId): array
-    {
-        if (empty($messageId)) {
-            ExceptionBuilder::throw(ChatErrorCode::STREAM_SEQUENCE_ID_NOT_FOUND);
-        }
-        $senderSeqEntity = $this->getSeqEntityByMessageId($messageId);
-        if ($senderSeqEntity === null) {
-            ExceptionBuilder::throw(ChatErrorCode::STREAM_SEQUENCE_ID_NOT_FOUND);
-        }
-        $messageEntity = $this->getMessageByMagicMessageId($senderSeqEntity->getMagicMessageId());
-        if ($messageEntity === null) {
-            ExceptionBuilder::throw(ChatErrorCode::STREAM_MESSAGE_NOT_FOUND);
-        }
-        $messageStruct = $messageEntity->getContent();
-        if ((! $messageStruct instanceof StreamMessageInterface) && (! $messageStruct instanceof JsonStreamMessageInterface)) {
-            ExceptionBuilder::throw(ChatErrorCode::STREAM_MESSAGE_NOT_FOUND);
-        }
-        if (empty($receiveMessageId)) {
-            ExceptionBuilder::throw(ChatErrorCode::STREAM_RECEIVE_MESSAGE_ID_NOT_FOUND);
-        }
-        $receiveSeqEntity = $this->getSeqEntityByMessageId($receiveMessageId);
-        return [$senderSeqEntity, $messageEntity, $receiveSeqEntity];
     }
 }

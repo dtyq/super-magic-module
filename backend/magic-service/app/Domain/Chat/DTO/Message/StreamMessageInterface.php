@@ -8,11 +8,13 @@ declare(strict_types=1);
 namespace App\Domain\Chat\DTO\Message;
 
 use App\Domain\Chat\DTO\Message\StreamMessage\StreamOptions;
+use Hyperf\Contract\Arrayable;
+use JsonSerializable;
 
 /**
  * 流式推送大模型的响应消息.
  */
-interface StreamMessageInterface extends LLMMessageInterface
+interface StreamMessageInterface extends JsonSerializable, Arrayable
 {
     // 消息是否是流式消息
     public function isStream(): bool;
