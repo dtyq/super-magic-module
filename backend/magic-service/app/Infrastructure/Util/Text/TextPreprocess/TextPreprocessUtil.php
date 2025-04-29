@@ -7,6 +7,7 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Util\Text\TextPreprocess;
 
+use App\Infrastructure\Util\Text\TextPreprocess\Strategy\ExcelHeaderConcatTextPreprocessStrategy;
 use App\Infrastructure\Util\Text\TextPreprocess\Strategy\RemoveUrlEmailTextPreprocessStrategy;
 use App\Infrastructure\Util\Text\TextPreprocess\Strategy\ReplaceWhitespaceTextPreprocessStrategy;
 use App\Infrastructure\Util\Text\TextPreprocess\Strategy\TextPreprocessStrategyInterface;
@@ -23,6 +24,12 @@ class TextPreprocessUtil
      */
     public static function preprocess(array $rules, string $text): string
     {
+        // 如果有EXCEL_HEADER_CONCAT 需要先执行，并且删除EXCEL_HEADER_CONCAT规则
+        $excelHeaderConcatRule = array_filter($rules, fn (TextPreprocessRule $rule) => $rule === TextPreprocessRule::EXCEL_HEADER_CONCAT);
+        if (count($excelHeaderConcatRule) > 0) {
+            $text = di(ExcelHeaderConcatTextPreprocessStrategy::class)->preprocess($text);
+            $rules = array_filter($rules, fn (TextPreprocessRule $rule) => $rule !== TextPreprocessRule::EXCEL_HEADER_CONCAT);
+        }
         foreach ($rules as $rule) {
             /** @var ?TextPreprocessStrategyInterface $strategy */
             $strategy = match ($rule) {

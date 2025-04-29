@@ -16,6 +16,8 @@ use App\Infrastructure\Core\File\Parser\Driver\Interfaces\TextFileParserDriverIn
 use App\Infrastructure\Core\File\Parser\Driver\Interfaces\WordFileParserDriverInterface;
 use App\Infrastructure\Util\SSRF\Exception\SSRFException;
 use App\Infrastructure\Util\SSRF\SSRFUtil;
+use App\Infrastructure\Util\Text\TextPreprocess\TextPreprocessUtil;
+use App\Infrastructure\Util\Text\TextPreprocess\ValueObject\TextPreprocessRule;
 use Hyperf\Redis\Redis;
 use Symfony\Component\Mime\MimeTypes;
 
@@ -65,6 +67,10 @@ class FileParser
                 default => ExceptionBuilder::throw(FlowErrorCode::ExecuteFailed, 'flow.node.loader.unsupported_file_type', ['file_extension' => $extension]),
             };
             $res = $interface->parse($tempFile, $fileUrl, $extension);
+            // 如果是csv、xlsx、xls文件，需要进行额外处理
+            if (in_array($extension, ['csv', 'xlsx', 'xls'])) {
+                $res = TextPreprocessUtil::preprocess([TextPreprocessRule::EXCEL_HEADER_CONCAT], $res);
+            }
 
             // 设置缓存
             $this->redis->set($cacheKey, $res, 600);
