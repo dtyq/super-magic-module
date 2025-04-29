@@ -560,130 +560,6 @@ JSON, true)));
         $this->assertTrue($node->getNodeDebugResult()->isSuccess());
     }
 
-    public function testRunTeamshareSearch()
-    {
-        $node = Node::generateTemplate(NodeType::LLM, json_decode(<<<'JSON'
-{
-    "model": "gpt-4o-global",
-    "system_prompt": {
-        "id": "component-66470a8b547b2",
-        "version": "1",
-        "type": "value",
-        "structure": {
-            "type": "expression",
-            "expression_value": null,
-            "const_value": null
-        }
-    },
-    "user_prompt": {
-        "id": "component-66470a8b548c4",
-        "version": "1",
-        "type": "value",
-        "structure": {
-            "type": "expression",
-            "const_value": null,
-            "expression_value": [
-                {
-                    "type": "fields",
-                    "value": "9527.content",
-                    "name": "",
-                    "args": null
-                }
-            ]
-        }
-    },
-    "model_config": {
-        "temperature": 0.5,
-        "max_record": 10
-    },
-    "knowledge_config": {
-        "operator": "developer",
-        "knowledge_list": [
-            {
-                "knowledge_code": "KNOWLEDGE-6752c21e3bbd89-90685108",
-                "knowledge_type": 2,
-                "business_id": "723588072258363392",
-                "name": "大大大知识库",
-                "description": "大大大知识库",
-                "vector_status": 2,
-                "expected_num": 1,
-                "completed_num": 1
-            },
-            {
-                "knowledge_code": "KNOWLEDGE-67518bba55ee16-22194111",
-                "knowledge_type": 2,
-                "business_id": "723254841109164032",
-                "name": "再来一个测试的知识库",
-                "description": "再来一个测试的知识库",
-                "vector_status": 2,
-                "expected_num": 1,
-                "completed_num": 1
-            },
-            {
-                "knowledge_code": "KNOWLEDGE-6751891b38f851-20729986",
-                "knowledge_type": 2,
-                "business_id": "723252068682571776",
-                "name": "李海清的知识库",
-                "description": "李海清的知识库",
-                "vector_status": 2,
-                "expected_num": 1,
-                "completed_num": 1
-            }
-        ],
-        "limit": 3,
-        "score": 0.4
-    }
-}
-JSON
-            , true));
-
-        $output = new NodeOutput();
-        $output->setForm(ComponentFactory::fastCreate(json_decode(<<<'JSON'
-{
-    "id": "component-662617c744ed6",
-    "version": "1",
-    "type": "form",
-    "structure": {
-        "type": "object",
-        "key": "root",
-        "sort": 0,
-        "title": "root节点",
-        "description": "",
-        "required": [
-            "text"
-        ],
-        "value": null,
-        "items": null,
-        "properties": {
-            "text": {
-                "type": "string",
-                "key": "text",
-                "sort": 0,
-                "title": "文本",
-                "description": "",
-                "required": null,
-                "value": null,
-                "items": null,
-                "properties": null
-            }
-        }
-    }
-}
-JSON, true)));
-        $node->setOutput($output);
-
-        $runner = NodeRunnerFactory::make($node);
-        $vertexResult = new VertexResult();
-        $executionData = $this->createExecutionData();
-        $executionData->saveNodeContext('9527', [
-            'content' => '帮我在所有知识库中查询 我与地坛相关的内容',
-        ]);
-        $runner->execute($vertexResult, $executionData, []);
-
-        var_dump($vertexResult->getResult());
-        $this->assertIsArray($vertexResult->getResult());
-    }
-
     public function testRunImage()
     {
         $node = Node::generateTemplate(NodeType::LLM, json_decode(<<<'JSON'
@@ -731,7 +607,7 @@ JSON
         $runner = NodeRunnerFactory::make($node);
         $vertexResult = new VertexResult();
         $executionData = $this->createExecutionData();
-        $executionData->getTriggerData()->addAttachment(new ExternalAttachment('https://teamshareos-app-public.tos-cn-beijing.volces.com/MAGIC/test/a8eb01e6fc604e8f30521f7e3b4df449.jpeg'));
+        $executionData->getTriggerData()->addAttachment(new ExternalAttachment('https://example.tos-cn-beijing.volces.com/MAGIC/test/a8eb01e6fc604e8f30521f7e3b4df449.jpeg'));
         $executionData->saveNodeContext('9527', [
             'content' => '这里面有什么颜色',
         ]);
@@ -787,7 +663,7 @@ JSON
         $runner = NodeRunnerFactory::make($node);
         $vertexResult = new VertexResult();
         $executionData = $this->createExecutionData();
-        $executionData->getTriggerData()->addAttachment(new ExternalAttachment('https://teamshareos-app-public.tos-cn-beijing.volces.com/MAGIC/test/a8eb01e6fc604e8f30521f7e3b4df449.jpeg'));
+        $executionData->getTriggerData()->addAttachment(new ExternalAttachment('https://example.tos-cn-beijing.volces.com/MAGIC/test/a8eb01e6fc604e8f30521f7e3b4df449.jpeg'));
         $executionData->saveNodeContext('9527', [
             'content' => '这里面有什么颜色',
         ]);

@@ -31,7 +31,7 @@ class LoaderNodeRunnerTest extends ExecuteManagerBaseTest
         $executionData = $this->createExecutionData();
         $executionData->saveNodeContext('9527', [
             'file_name' => 'demo.php',
-            'file_url' => 'https://teamshareos-app-public.tos-cn-beijing.volces.com/MAGIC/test/demo.php',
+            'file_url' => 'https://example.tos-cn-beijing.volces.com/MAGIC/test/demo.php',
         ]);
         $runner->execute($vertexResult, $executionData, []);
         $this->assertTrue($node->getNodeDebugResult()->isSuccess());
@@ -46,7 +46,7 @@ class LoaderNodeRunnerTest extends ExecuteManagerBaseTest
         $executionData = $this->createExecutionData();
         $executionData->saveNodeContext('9527', [
             'file_name' => '出师表.pdf',
-            'file_url' => 'https://teamshareos-app-public.tos-cn-beijing.volces.com/MAGIC/test/出师表.pdf',
+            'file_url' => 'https://example.tos-cn-beijing.volces.com/MAGIC/test/出师表.pdf',
         ]);
         $runner->execute($vertexResult, $executionData, []);
         $this->assertTrue($node->getNodeDebugResult()->isSuccess());
@@ -60,7 +60,7 @@ class LoaderNodeRunnerTest extends ExecuteManagerBaseTest
         $executionData = $this->createExecutionData();
         $executionData->saveNodeContext('9527', [
             'file_name' => '你好.xlsx',
-            'file_url' => 'https://teamshareos-app-public.tos-cn-beijing.volces.com/MAGIC/test/你好.xlsx',
+            'file_url' => 'https://example.tos-cn-beijing.volces.com/MAGIC/test/你好.xlsx',
         ]);
         $runner->execute($vertexResult, $executionData, []);
         $this->assertTrue($node->getNodeDebugResult()->isSuccess());
@@ -74,7 +74,7 @@ class LoaderNodeRunnerTest extends ExecuteManagerBaseTest
         $executionData = $this->createExecutionData();
         $executionData->saveNodeContext('9527', [
             'file_name' => '测试.csv',
-            'file_url' => 'https://teamshareos-app-public.tos-cn-beijing.volces.com/MAGIC/test/测试.csv',
+            'file_url' => 'https://example.tos-cn-beijing.volces.com/MAGIC/test/测试.csv',
         ]);
         $runner->execute($vertexResult, $executionData, []);
         $this->assertTrue($node->getNodeDebugResult()->isSuccess());
@@ -88,7 +88,7 @@ class LoaderNodeRunnerTest extends ExecuteManagerBaseTest
         $executionData = $this->createExecutionData();
         $executionData->saveNodeContext('9527', [
             'file_name' => '出师表.txt',
-            'file_url' => 'https://teamshareos-app-public.tos-cn-beijing.volces.com/MAGIC/test/出师表.txt',
+            'file_url' => 'https://example.tos-cn-beijing.volces.com/MAGIC/test/出师表.txt',
         ]);
         $runner->execute($vertexResult, $executionData, []);
         $this->assertTrue($node->getNodeDebugResult()->isSuccess());
@@ -117,7 +117,7 @@ class LoaderNodeRunnerTest extends ExecuteManagerBaseTest
         $executionData = $this->createExecutionData();
         $executionData->saveNodeContext('9527', [
             'file_name' => '出师表.doc',
-            'file_url' => 'https://teamshareos-app-public.tos-cn-beijing.volces.com/MAGIC/test/出师表.doc',
+            'file_url' => 'https://example.tos-cn-beijing.volces.com/MAGIC/test/出师表.doc',
         ]);
         $runner->execute($vertexResult, $executionData, []);
         $this->assertTrue($node->getNodeDebugResult()->isSuccess());
