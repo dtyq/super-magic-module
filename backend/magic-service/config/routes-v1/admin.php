@@ -49,5 +49,7 @@ Router::addGroup('/api/v1/admin', static function () {
 
     Router::addGroup('/agents', static function () {
         Router::get('/published', [AdminAgentApi::class, 'getPublishedAgents']);
+        Router::post('/queries', [AdminAgentApi::class, 'queriesAgents']);
+        Router::get('/{agentId}', [AdminAgentApi::class, 'getAgentDetail']);
     }, ['middleware' => [RequestContextMiddleware::class]]);
 });

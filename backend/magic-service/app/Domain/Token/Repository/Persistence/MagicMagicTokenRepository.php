@@ -29,7 +29,7 @@ class MagicMagicTokenRepository implements MagicTokenRepositoryInterface
     {
         $token = $this->token::query()
             ->where('type', $tokenDTO->getType()->value)
-            ->where('token', $tokenDTO->getToken())
+//            ->where('token', $tokenDTO->getToken())
             ->where('expired_at', '>', date('Y-m-d H:i:s'))
             ->orderBy('id', 'desc');
         $token = Db::select($token->toSql(), $token->getBindings())[0] ?? null;

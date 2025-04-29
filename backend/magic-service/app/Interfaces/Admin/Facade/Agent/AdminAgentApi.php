@@ -8,7 +8,10 @@ declare(strict_types=1);
 namespace App\Interfaces\Admin\Facade\Agent;
 
 use App\Application\Admin\Agent\Service\AdminAgentAppService;
+use App\Application\Permission\Service\OperationPermissionAppService;
 use App\Domain\Admin\Entity\ValueObject\AgentFilterType;
+use App\Interfaces\Admin\DTO\Request\QueryPageAgentDTO;
+use App\Interfaces\Authorization\Web\MagicUserAuthorization;
 use Dtyq\ApiResponse\Annotation\ApiResponse;
 use Hyperf\HttpServer\Contract\RequestInterface;
 use Qbhy\HyperfAuth\AuthManager;
@@ -18,6 +21,7 @@ class AdminAgentApi extends AbstractApi
 {
     public function __construct(
         protected AdminAgentAppService $adminAgentAppService,
+        protected OperationPermissionAppService $permissionAppService,
         RequestInterface $request,
         AuthManager $authManager,
     ) {
@@ -39,5 +43,24 @@ class AdminAgentApi extends AbstractApi
             $pageSize,
             $type
         );
+    }
+
+    public function queriesAgents(RequestInterface $request)
+    {
+        /**
+         * @var MagicUserAuthorization $authenticatable
+         */
+        $authenticatable = $this->getAuthorization();
+        $queryPageAgentDTO = new QueryPageAgentDTO($request->all());
+        return $this->adminAgentAppService->queriesAgents($authenticatable, $queryPageAgentDTO);
+    }
+
+    public function getAgentDetail(RequestInterface $request, string $agentId)
+    {
+        /**
+         * @var MagicUserAuthorization $authenticatable
+         */
+        $authenticatable = $this->getAuthorization();
+        return $this->adminAgentAppService->getAgentDetail($authenticatable, $agentId);
     }
 }
