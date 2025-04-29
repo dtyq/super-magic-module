@@ -1584,7 +1584,7 @@
                }
              },
              "params": {
-               "model": "gpt-4o-global",
+               "model": "{{modelName}}",
                "system_prompt": {
                  "id": "component-677633dfaf2fc",
                  "version": "1",
