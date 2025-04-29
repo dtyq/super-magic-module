@@ -729,7 +729,7 @@ class MagicAgentAppService extends AbstractAppService
         // 助理是否有权限
         $this->getAgentOperation($this->createPermissionDataIsolation($authorization), $agentId)->validate('w', $agentId);
 
-        return $this->magicAgentDomainService->saveInstruct($authorization->getOrganizationCode(), $agentId, $instructs, $authorization->getId());
+        return $this->magicAgentDomainService->updateInstruct($authorization->getOrganizationCode(), $agentId, $instructs, $authorization->getId());
     }
 
     public function getInstruct(string $agentId): array
@@ -932,7 +932,7 @@ class MagicAgentAppService extends AbstractAppService
 
         $magicAgentEntity = $this->saveAgent($authorization, $magicAgentDTO);
         if (isset($config['instruct'])) {
-            $this->magicAgentDomainService->addInstruct($authorization->getOrganizationCode(), $magicAgentEntity->getId(), $config['instruct'], $authorization->getId());
+            $this->magicAgentDomainService->updateInstruct($authorization->getOrganizationCode(), $magicAgentEntity->getId(), $config['instruct'], $authorization->getId());
         }
         // 创建Flow
         $magicFLowDTO = new MagicFlowDTO($config['flow']);

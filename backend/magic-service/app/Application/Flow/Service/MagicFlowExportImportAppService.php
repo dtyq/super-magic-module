@@ -273,7 +273,7 @@ class MagicFlowExportImportAppService
 
         try {
             $savedAgent = $agentDomainService->saveAgent($agentEntity);
-            $agentDomainService->saveInstruct($dataIsolation->getCurrentOrganizationCode(), $savedAgent->getId(), $agentData['instruct']);
+            $agentDomainService->updateInstruct($dataIsolation->getCurrentOrganizationCode(), $savedAgent->getId(), $agentData['instruct'], $dataIsolation->getCurrentUserId(), false);
             return [
                 'agent_id' => $savedAgent->getId(),
                 'agent_name' => $savedAgent->getAgentName(),

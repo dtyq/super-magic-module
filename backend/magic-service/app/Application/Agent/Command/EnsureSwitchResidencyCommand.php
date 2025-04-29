@@ -76,7 +76,7 @@ class EnsureSwitchResidencyCommand extends HyperfCommand
                 // 如果指令有变化，保存更新
                 if ($hasChanges) {
                     if (! $isDryRun) {
-                        $this->agentRepository->saveInstruct(
+                        $this->agentRepository->updateInstruct(
                             $agent['organization_code'],
                             $agent['id'],
                             $instructs

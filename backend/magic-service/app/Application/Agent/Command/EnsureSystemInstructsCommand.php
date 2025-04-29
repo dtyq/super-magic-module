@@ -56,7 +56,7 @@ class EnsureSystemInstructsCommand extends HyperfCommand
 
                 // 如果指令有变化，保存更新
                 if ($newInstructs !== $instructs) {
-                    $this->agentRepository->saveInstruct(
+                    $this->agentRepository->updateInstruct(
                         $agent['organization_code'],
                         $agent['id'],
                         $newInstructs
