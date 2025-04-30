@@ -59,7 +59,14 @@ export function registerRoutes(): Array<RouteObject> {
 	/** 超级麦吉 - 工作区 */
 	const SuperMagicWorkspace = lazy(() => import("@/opensource/pages/superMagic/pages/Workspace"))
 
+	/** 超级麦吉分享(不需要登录) */
+	const SuperMagicShare = lazy(() => import("@/opensource/pages/share"))
+
 	return [
+		{
+			path: RoutePath.SuperMagicShare,
+			element: <SuperMagicShare />,
+		},
 		{
 			path: "/",
 			element: <BaseLayout />,

@@ -55,4 +55,5 @@ export const enum RoutePath {
 	/** 超级麦吉 */
 	SuperMagic = "/super-magic/workspace",
 	SuperMagicWorkspace = "/super-magic/workspace",
+	SuperMagicShare = "/share/:shareId",
 }
