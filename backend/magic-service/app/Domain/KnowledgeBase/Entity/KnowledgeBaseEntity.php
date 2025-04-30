@@ -487,8 +487,10 @@ class KnowledgeBaseEntity extends AbstractKnowledgeBaseEntity
 
     public function setEmbeddingConfig(?array $embeddingConfig): self
     {
-        $this->embeddingConfig = $embeddingConfig;
         isset($embeddingConfig['model_id']) && $this->model = $embeddingConfig['model_id'];
+        // 兼容旧配置，初始化默认嵌入配置
+        is_null($embeddingConfig) && $embeddingConfig = ['model_id' => $this->model];
+        $this->embeddingConfig = $embeddingConfig;
         return $this;
     }
 

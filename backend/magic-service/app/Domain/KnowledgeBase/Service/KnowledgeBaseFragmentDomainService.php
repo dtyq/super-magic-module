@@ -24,6 +24,7 @@ use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Infrastructure\Core\ValueObject\Page;
 use App\Infrastructure\Util\Odin\TextSplitter\TokenTextSplitter;
 use App\Infrastructure\Util\Text\TextPreprocess\TextPreprocessUtil;
+use App\Infrastructure\Util\Text\TextPreprocess\ValueObject\TextPreprocessRule;
 use Dtyq\AsyncEvent\AsyncEventUtil;
 use Exception;
 use Hyperf\DbConnection\Annotation\Transactional;
@@ -161,8 +162,12 @@ readonly class KnowledgeBaseFragmentDomainService
     public function processFragmentsByContent(KnowledgeBaseDataIsolation $dataIsolation, string $content, FragmentConfig $fragmentConfig): array
     {
         // todo 目前只有默认分段，后续要补充父子分段逻辑
+        $selectedFragmentConfig = $fragmentConfig->getNormal();
+        $preprocessRule = $selectedFragmentConfig->getTextPreprocessRule();
         // 先进行预处理
-        $content = TextPreprocessUtil::preprocess($fragmentConfig->getNormal()->getTextPreprocessRule(), $content);
+        // 需要过滤REPLACE_WHITESPACE规则，REPLACE_WHITESPACE规则在分段后进行处理
+        $filterPreprocessRule = array_filter($preprocessRule, fn (TextPreprocessRule $rule) => $rule !== TextPreprocessRule::REPLACE_WHITESPACE);
+        $content = TextPreprocessUtil::preprocess($filterPreprocessRule, $content);
 
         // 再进行分段
         $normalFragmentConfig = $fragmentConfig->getNormal();
@@ -170,9 +175,17 @@ readonly class KnowledgeBaseFragmentDomainService
             chunkSize: $normalFragmentConfig->getSegmentRule()->getChunkSize(),
             chunkOverlap: $normalFragmentConfig->getSegmentRule()->getChunkOverlap(),
             fixedSeparator: $normalFragmentConfig->getSegmentRule()->getSeparator(),
+            preserveSeparator: true,
         );
 
         $fragments = $splitter->splitText($content);
+
+        // 需要额外进行处理的规则
+        if (in_array(TextPreprocessRule::REPLACE_WHITESPACE, $preprocessRule)) {
+            foreach ($fragments as &$fragment) {
+                $fragment = TextPreprocessUtil::preprocess([TextPreprocessRule::REPLACE_WHITESPACE], $fragment);
+            }
+        }
 
         // 过滤掉空字符串
         return array_values(array_filter($fragments, function ($fragment) {
