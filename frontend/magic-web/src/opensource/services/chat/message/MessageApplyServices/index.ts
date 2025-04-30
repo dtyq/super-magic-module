@@ -8,6 +8,8 @@ import ChatMessageApplyService from "./ChatMessageApplyServices"
 import ControlMessageApplyService from "./ControlMessageApplyService"
 import messageSeqIdService from "../MessageSeqIdService"
 import ConversationService from "../../conversation/ConversationService"
+import pubsub from "@/utils/pubsub"
+import { ConversationMessageType } from "@/types/chat/conversation_message"
 
 type ApplyMessageOptions = {
 	isHistoryMessage?: boolean
@@ -125,6 +127,9 @@ class MessageApplyService {
 				break
 			case ChatMessageApplyService.isChatMessage(message):
 				ChatMessageApplyService.apply(message, options)
+				break
+			case message?.message?.type === ConversationMessageType.SuperMagic:
+				pubsub.publish("super_magic_new_message", message)
 				break
 			default:
 				// 检查是否有自定义处理器可以处理该消息

@@ -1,0 +1,112 @@
+html {
+    font-size: 14px!important;
+}
+
+.univer-component-wrapper {
+  position: relative;
+  border: 1px solid #f0f0f0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.univer-container {
+  width: 100%;
+  height: 100%;
+}
+
+.univer-error {
+  padding: 20px;
+  text-align: center;
+  color: #ff4d4f;
+  background-color: #fff2f0;
+  border: 1px solid #ffccc7;
+  border-radius: 4px;
+}
+
+.univer-error h3 {
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.univer-error p {
+  margin: 0;
+  font-size: 14px;
+}
+
+/* Mock 组件的样式 */
+.file-preview {
+  padding: 20px;
+  text-align: center;
+}
+
+.excel-preview-placeholder {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.excel-preview-placeholder th,
+.excel-preview-placeholder td {
+  border: 1px solid #e8e8e8;
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.excel-preview-placeholder th {
+  background-color: #fafafa;
+  font-weight: 500;
+}
+
+.excel-preview-placeholder tr:nth-child(even) {
+  background-color: #fafafa;
+}
+
+.ppt-preview {
+  padding: 20px;
+  text-align: center;
+}
+
+.slide-thumbnails {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.slide-thumbnail {
+  width: 160px;
+  height: 90px;
+  border: 1px solid #e8e8e8;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #fafafa;
+}
+
+.doc-preview {
+  padding: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.doc-header {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.doc-content {
+  padding: 20px;
+  border: 1px solid #e8e8e8;
+  border-radius: 4px;
+  background: white;
+  white-space: pre-wrap;
+  line-height: 1.5;
+} 
+
+.univer-workbench-container-header {
+    &>section {
+        display: none;
+    }
+}

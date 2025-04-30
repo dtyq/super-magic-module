@@ -2,6 +2,7 @@ import type { RouteObject } from "react-router"
 import { lazy } from "react"
 import { RoutePath } from "@/const/routes"
 import BaseLayout from "@/opensource/layouts/BaseLayout"
+import { Navigate } from "react-router-dom"
 
 export function registerRoutes(): Array<RouteObject> {
 	/** 404页面 */
@@ -55,6 +56,9 @@ export function registerRoutes(): Array<RouteObject> {
 	/** 全局设置 */
 	const Settings = lazy(() => import("../pages/settings/Settings.page"))
 
+	/** 超级麦吉 - 工作区 */
+	const SuperMagicWorkspace = lazy(() => import("@/opensource/pages/superMagic/pages/Workspace"))
+
 	return [
 		{
 			path: "/",
@@ -67,6 +71,10 @@ export function registerRoutes(): Array<RouteObject> {
 				{
 					path: RoutePath.Chat,
 					element: <ChatNew />,
+				},
+				{
+					path: RoutePath.SuperMagic,
+					element: <SuperMagicWorkspace />,
 				},
 				{
 					path: RoutePath.Contacts,
