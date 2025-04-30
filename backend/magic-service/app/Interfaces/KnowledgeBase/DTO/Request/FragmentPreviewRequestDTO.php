@@ -26,7 +26,7 @@ class FragmentPreviewRequestDTO extends AbstractRequestDTO
             'fragment_config' => 'required|array',
             'fragment_config.mode' => 'required|integer|in:1,2',
             'fragment_config.normal' => 'required_if:fragment_config.mode,1|array',
-            'fragment_config.normal.text_preprocess_rule' => 'required_if:fragment_config.mode,1|array',
+            'fragment_config.normal.text_preprocess_rule' => 'array',
             'fragment_config.normal.text_preprocess_rule.*' => 'required|integer|in:1,2',
             'fragment_config.normal.segment_rule' => 'required_if:fragment_config.mode,1|array',
             'fragment_config.normal.segment_rule.separator' => 'required_if:fragment_config.mode,1|string',
@@ -42,7 +42,7 @@ class FragmentPreviewRequestDTO extends AbstractRequestDTO
             'fragment_config.parent_child.parent_segment_rule' => 'required_if:fragment_config.mode,2|array',
             'fragment_config.parent_child.parent_segment_rule.separator' => 'required_if:fragment_config.mode,2|string',
             'fragment_config.parent_child.parent_segment_rule.chunk_size' => 'required_if:fragment_config.mode,2|integer|min:1',
-            'fragment_config.parent_child.text_preprocess_rule' => 'required_if:fragment_config.mode,2|array',
+            'fragment_config.parent_child.text_preprocess_rule' => 'array',
             'fragment_config.parent_child.text_preprocess_rule.*' => 'required|integer|in:1,2',
         ];
     }

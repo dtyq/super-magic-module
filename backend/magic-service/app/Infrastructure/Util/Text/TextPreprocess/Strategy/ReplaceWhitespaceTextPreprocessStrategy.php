@@ -11,13 +11,7 @@ class ReplaceWhitespaceTextPreprocessStrategy extends AbstractTextPreprocessStra
 {
     public function preprocess(string $content): string
     {
-        // 替换连续的换行符为单个换行符
-        $content = preg_replace('/\n+/', "\n", $content);
-
-        // 替换连续的制表符为单个制表符
-        $content = preg_replace('/\t+/', "\t", $content);
-
-        // 替换连续的空格为单个空格
-        return preg_replace('/ +/', ' ', $content);
+        // 替换连续的空白字符(换行符、制表符、空格)
+        return preg_replace('/[\s\n\t]+/', '', $content);
     }
 }

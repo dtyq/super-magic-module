@@ -10,6 +10,7 @@ namespace App\Infrastructure\Util\Odin\TextSplitter;
 use Exception;
 use Hyperf\Context\Context;
 use Hyperf\Odin\TextSplitter\TextSplitter;
+use Throwable;
 use Yethee\Tiktoken\Encoder;
 use Yethee\Tiktoken\EncoderProvider;
 
@@ -47,6 +48,11 @@ class TokenTextSplitter extends TextSplitter
     private Encoder $defaultEncoder;
 
     /**
+     * @var bool 分割后的文本保留分隔符
+     */
+    private bool $preserveSeparator = false;
+
+    /**
      * @param null|callable $tokenizer token计算函数
      * @param null|array $separators 备选分隔符列表
      * @throws Exception
@@ -57,7 +63,8 @@ class TokenTextSplitter extends TextSplitter
         int $chunkOverlap = 200,
         string $fixedSeparator = "\n\n",
         ?array $separators = null,
-        bool $keepSeparator = false
+        bool $keepSeparator = false,
+        bool $preserveSeparator = false
     ) {
         $this->chunkSize = $chunkSize;
         $this->chunkOverlap = $chunkOverlap;
@@ -65,6 +72,7 @@ class TokenTextSplitter extends TextSplitter
         $this->separators = $separators ?? ["\n\n", "\n", '。', ' ', ''];
         $this->tokenizer = $tokenizer ?? $this->getDefaultTokenizer();
         $this->keepSeparator = $keepSeparator;
+        $this->preserveSeparator = $preserveSeparator;
         parent::__construct($chunkSize, $chunkOverlap, $keepSeparator);
     }
 
@@ -83,7 +91,17 @@ class TokenTextSplitter extends TextSplitter
         }
 
         // 使用固定分隔符进行初始分割
-        $chunks = $this->fixedSeparator ? explode($this->fixedSeparator, $text) : [$text];
+        if ($this->fixedSeparator) {
+            $chunks = explode($this->fixedSeparator, $text);
+            if ($this->preserveSeparator) {
+                // 保留分隔符
+                $chunks = array_map(function ($chunk, $index) use ($chunks) {
+                    return $index < count($chunks) - 1 ? $chunk . $this->fixedSeparator : $chunk;
+                }, $chunks, array_keys($chunks));
+            }
+        } else {
+            $chunks = [$text];
+        }
 
         // 计算每个chunk的token长度
         $chunksLengths = array_map(function ($chunk) {
@@ -147,14 +165,15 @@ class TokenTextSplitter extends TextSplitter
      * @param string $text 要分割的文本
      * @return array 分割后的文本块数组
      */
-    private function recursiveSplitText(string $text): array
+    private function recursiveSplitText(string $text, int $separatorBeginIndex = 0): array
     {
         $finalChunks = [];
         $separator = end($this->separators);
         $newSeparators = [];
 
-        // 查找合适的分隔符
-        foreach ($this->separators as $i => $sep) {
+        // 查找合适的分隔符, 从$separatorBeginIndex开始
+        for ($i = $separatorBeginIndex; $i < count($this->separators); $i++) {
+            $sep = $this->separators[$i];
             if ($sep === '') {
                 $separator = $sep;
                 break;
@@ -165,12 +184,29 @@ class TokenTextSplitter extends TextSplitter
                 break;
             }
         }
+        $separatorBeginIndex = $i + 1;
 
         // 使用选定的分隔符分割文本
         if ($separator !== '') {
-            $splits = $separator === ' ' ? preg_split('/\s+/', $text) : explode($separator, $text);
+            if ($separator === ' ') {
+                $splits = preg_split('/\s+/', $text);
+            } else {
+                $splits = explode($separator, $text);
+                if ($this->preserveSeparator) {
+                    // 保留分隔符
+                    $splits = array_map(function ($split, $index) use ($splits, $separator) {
+                        return $index < count($splits) - 1 ? $split . $separator : $split;
+                    }, $splits, array_keys($splits));
+                }
+            }
         } else {
-            $splits = mb_str_split($text);
+            // 如果没有找到合适的分隔符，使用兜底规则：按固定长度分割
+            $chunkSize = $this->chunkSize / 2; // 使用较小的块大小
+            $length = mb_strlen($text);
+            $splits = [];
+            for ($i = 0; $i < $length; $i += $chunkSize) {
+                $splits[] = mb_substr($text, $i, $chunkSize);
+            }
         }
 
         // 过滤空字符串
@@ -208,7 +244,7 @@ class TokenTextSplitter extends TextSplitter
                     } else {
                         $finalChunks = array_merge(
                             $finalChunks,
-                            $this->recursiveSplitText($split)
+                            $this->recursiveSplitText($split, $separatorBeginIndex)
                         );
                     }
                 }
@@ -258,11 +294,16 @@ class TokenTextSplitter extends TextSplitter
      */
     private function calculateTokenCount(string $text): int
     {
-        if (! isset($this->defaultEncoderProvider)) {
-            $this->defaultEncoderProvider = new EncoderProvider();
-            $this->defaultEncoder = $this->defaultEncoderProvider->getForModel('gpt-4');
+        try {
+            if (! isset($this->defaultEncoderProvider)) {
+                $this->defaultEncoderProvider = new EncoderProvider();
+                $this->defaultEncoder = $this->defaultEncoderProvider->getForModel('gpt-4');
+            }
+            return count($this->defaultEncoder->encode($text));
+        } catch (Throwable $e) {
+            // 如果计算token失败，返回一个估计值
+            return (int) ceil(mb_strlen($text) / 4);
         }
-        return count($this->defaultEncoder->encode($text));
     }
 
     private function getDefaultTokenizer(): callable
