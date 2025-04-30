@@ -15,7 +15,7 @@ import DeleteDangerModal from "@/opensource/components/business/DeleteDangerModa
 import useSWRInfinite from "swr/infinite"
 import MagicButton from "@/opensource/components/base/MagicButton"
 import { FlowApi, KnowledgeApi } from "@/apis"
-import { hasAdminRight } from "../../components/AuthControlButton/types"
+import { hasAdminRight, hasEditRight, hasViewRight } from "../../components/AuthControlButton/types"
 import { useDebounceSearch } from "../../hooks/useDebounceSearch"
 import type { Knowledge } from "@/types/knowledge"
 import { knowledgeType } from "@/opensource/pages/vectorKnowledge/constant"
@@ -406,33 +406,36 @@ export default function useFlowList({ flowType }: FlowListHooksProps) {
 	const getDropdownItems = useMemoizedFn((flow: MagicFlow.Flow | Knowledge.KnowledgeItem) => {
 		return (
 			<>
-				{flowType === FlowRouteType.VectorKnowledge && (
+				{flowType === FlowRouteType.VectorKnowledge &&
+					hasViewRight(flow.user_operation) && (
+						<MagicButton
+							justify="flex-start"
+							icon={<MagicIcon component={IconEye} size={20} color="currentColor" />}
+							size="large"
+							type="text"
+							block
+							onClick={() => {
+								goToKnowledgeDetail(flow.code)
+							}}
+						>
+							{t("flow.viewDetails")}
+						</MagicButton>
+					)}
+				{hasEditRight(flow.user_operation) && (
 					<MagicButton
 						justify="flex-start"
-						icon={<MagicIcon component={IconEye} size={20} color="currentColor" />}
+						icon={<MagicIcon component={IconEdit} size={20} color="currentColor" />}
 						size="large"
 						type="text"
 						block
 						onClick={() => {
-							goToKnowledgeDetail(flow.code)
+							setCurrentFlow(flow)
+							openAddOrUpdateFlow()
 						}}
 					>
-						{t("flow.viewDetails")}
+						{t("flow.changeInfo")}
 					</MagicButton>
 				)}
-				<MagicButton
-					justify="flex-start"
-					icon={<MagicIcon component={IconEdit} size={20} color="currentColor" />}
-					size="large"
-					type="text"
-					block
-					onClick={() => {
-						setCurrentFlow(flow)
-						openAddOrUpdateFlow()
-					}}
-				>
-					{t("flow.changeInfo")}
-				</MagicButton>
 				{hasAdminRight(flow.user_operation) && (
 					<MagicButton
 						justify="flex-start"
