@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket 客户端</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>WebSocket 客户端</h1>
+        
+        <!-- 连接配置 -->
+        <div class="connection-panel">
+            <div class="form-group">
+                <label for="serverUrl">服务器地址:</label>
+                <input type="text" id="serverUrl" value="ws://127.0.0.1:8002/ws">
+            </div>
+            <button id="connectBtn" class="btn primary">连接服务器</button>
+            <button id="sendInitBtn" class="btn secondary">发送初始化消息</button>
+            <div id="connectionStatus" class="status">未连接</div>
+        </div>
+        
+        <!-- 配置内容输入区域 -->
+        <div class="config-panel">
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="uploadConfig">初始化配置</button>
+            </div>
+            <div class="tab-content">
+                <div id="uploadConfig" class="tab-pane active">
+                    <div id="currentFileName" class="file-name-display"></div>
+                    <textarea id="uploadConfigContent" class="config-textarea" readonly placeholder="请上传配置文件，不提供默认配置。"></textarea>
+                    <div class="form-group file-upload-group">
+                        <label for="configFile">上传配置文件:</label>
+                        <input type="file" id="configFile" accept=".json">
+                        <p class="file-hint">上传完整的JSON格式初始化消息，包含message_id、type等字段。确保包含正确的sts_token_refresh和metadata字段，特别是storage_credentials相关配置，否则初始化将失败。系统会直接发送此内容。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 消息交互区域 -->
+        <div class="chat-container">
+            <!-- 消息显示区域 -->
+            <div id="messagesContainer" class="messages-container">
+                <div class="message-list" id="messageList"></div>
+            </div>
+            
+            <!-- 消息输入区域 -->
+            <div class="message-input-panel">
+                <textarea id="messageInput" placeholder="请输入消息..."></textarea>
+                
+                <!-- 模式切换开关 -->
+                <div class="mode-switch">
+                    <label>任务模式:</label>
+                    <div id="modeToggle" class="toggle-container">
+                        <div class="toggle-slider"></div>
+                        <div class="toggle-option plan">Plan 模式</div>
+                        <div class="toggle-option chat">Chat 模式</div>
+                    </div>
+                </div>
+                
+                <div class="button-group">
+                    <button id="historyBtn" class="btn secondary">历史消息</button>
+                    <button id="loadExampleBtn" class="btn secondary">加载示例文本</button>
+                    <button id="sendBtn" class="btn primary">发送消息</button>
+                    <button id="followUpBtn" class="btn secondary">发送追问</button>
+                    <button id="interruptBtn" class="btn danger">中断任务</button>
+                </div>
+                
+                <!-- 历史消息下拉框 -->
+                <div id="messageHistoryDropdown" class="history-dropdown">
+                    <!-- 历史消息项将通过JavaScript动态生成 -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="js/client.js"></script>
+</body>
+</html> 

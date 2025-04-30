@@ -1,0 +1,120 @@
+# 使用 Playwright 基础镜像
+FROM mcr.microsoft.com/playwright:v1.49.1-noble
+
+# 设置工作目录
+WORKDIR /build
+
+# 设置Python环境
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV TZ=Asia/Shanghai
+ENV TIKTOKEN_CACHE_DIR=/app/tiktoken_cache
+
+# 替换为中国的镜像源
+RUN sed -i 's/archive.ubuntu.com/mirrors.tuna.tsinghua.edu.cn/g' /etc/apt/sources.list && \
+    sed -i 's/security.ubuntu.com/mirrors.tuna.tsinghua.edu.cn/g' /etc/apt/sources.list
+
+# 安装必要的软件包，使用 --no-install-recommends 减小体积
+RUN --mount=type=cache,target=/var/cache/apt \
+    --mount=type=cache,target=/var/lib/apt \
+    apt-get update && apt-get install -y --no-install-recommends \
+    python3-pip \
+    python3-venv \
+    python3-full \
+    git \
+    vim \
+    patch \
+    tzdata \
+    ripgrep \
+    tree \
+    fontconfig \
+    fonts-wqy-zenhei \
+    fonts-wqy-microhei \
+    binutils \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* \
+    && ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+# 直接安装指定版本的Node.js和TypeScript
+RUN --mount=type=cache,target=/var/cache/apt \
+    --mount=type=cache,target=/var/lib/apt \
+    curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && \
+    apt-get install -y nodejs && \
+    npm config set registry https://registry.npmmirror.com && \
+    npm install -g typescript@5.8.3 && \
+    # 将Node.js版本固定到22.14.0
+    npm install -g n && \
+    n 22.14.0 && \
+    # 打印版本信息
+    echo "========== Node.js 版本信息 ==========" && \
+    node -v && \
+    echo "========== TypeScript 版本信息 ==========" && \
+    tsc -v
+
+# 设置 pip 镜像源
+RUN pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
+
+# 创建并激活虚拟环境
+RUN python3 -m venv /venv
+ENV PATH="/venv/bin:$PATH"
+
+# 创建 tiktoken 缓存目录
+RUN mkdir -p /app/tiktoken_cache && chmod 777 /app/tiktoken_cache
+
+# 安装 tiktoken
+RUN pip install tiktoken
+
+COPY scripts/preload_tiktoken.py /app/scripts/preload_tiktoken.py
+
+# 预加载 tiktoken 编码器
+RUN python /app/scripts/preload_tiktoken.py && \
+    ls -la /app/tiktoken_cache
+
+# 复制并安装项目依赖
+COPY requirements.txt .
+
+# 安装依赖，使用缓存挂载优化
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install -r requirements.txt
+
+# 安装沙箱环境依赖
+COPY requirements_sandbox.txt .
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install -r requirements_sandbox.txt
+
+# 创建matplotlib配置目录
+RUN mkdir -p /root/.config/matplotlib
+
+# 复制字体检查脚本
+COPY deploy/ /app/deploy/
+
+# 检查matplotlib字体（如果字体不是WenQuanYi，则构建失败）
+RUN python /app/deploy/configure_font.py
+RUN python /app/deploy/check_font.py
+
+# 更新环境变量路径
+ENV PATH="/usr/local/bin:${PATH}"
+
+COPY . .
+
+# 打包应用
+RUN pip install pyinstaller && \
+    python3 -c "from PyInstaller.utils.hooks import collect_data_files; print('Magika数据文件列表:\\n' + '\\n'.join(str(x) for x in collect_data_files('magika')))" && \
+    pyinstaller app.spec
+
+# 预先启动应用一次，让其解压资源，然后立即退出
+RUN ./dist/main/main extract-pyinstaller && echo "资源文件已提前解压完成"
+
+WORKDIR /app
+
+RUN cp -r /build/dist/main/* /app
+RUN rm -rf /build
+
+# 获取Git commit ID并保存到环境变量
+ARG GIT_COMMIT_ID="未知"
+ENV GIT_COMMIT_ID=${GIT_COMMIT_ID}
+
+EXPOSE 8000
+EXPOSE 8002
+
+CMD ["./main", "start", "ws-server"]
