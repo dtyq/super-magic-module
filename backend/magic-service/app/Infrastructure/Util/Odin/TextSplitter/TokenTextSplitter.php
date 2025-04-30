@@ -84,21 +84,11 @@ class TokenTextSplitter extends TextSplitter
      */
     public function splitText(string $text): array
     {
-        // 检测并转换编码
-        $encoding = $this->detectEncoding($text);
-        if ($encoding !== 'UTF-8') {
-            $text = mb_convert_encoding($text, 'UTF-8', $encoding);
-        }
+        $text = $this->ensureUtf8Encoding($text);
 
         // 使用固定分隔符进行初始分割
         if ($this->fixedSeparator) {
-            $chunks = explode($this->fixedSeparator, $text);
-            if ($this->preserveSeparator) {
-                // 保留分隔符
-                $chunks = array_map(function ($chunk, $index) use ($chunks) {
-                    return $index < count($chunks) - 1 ? $chunk . $this->fixedSeparator : $chunk;
-                }, $chunks, array_keys($chunks));
-            }
+            $chunks = $this->splitBySeparator($text, $this->fixedSeparator);
         } else {
             $chunks = [$text];
         }
@@ -160,6 +150,98 @@ class TokenTextSplitter extends TextSplitter
     }
 
     /**
+     * 使用指定分隔符分割文本.
+     */
+    private function splitBySeparator(string $text, string $separator): array
+    {
+        if ($separator === ' ') {
+            $chunks = preg_split('/\s+/', $text);
+        } else {
+            $chunks = explode($separator, $text);
+            if ($this->preserveSeparator) {
+                $chunks = $this->preserveSeparator($chunks, $separator);
+            }
+        }
+        return array_values(array_filter($chunks, function ($chunk) {
+            return $chunk !== '' && $chunk !== "\n";
+        }));
+    }
+
+    /**
+     * 处理分隔符，将分隔符拼接到每个分块的前面（除了第一个）.
+     */
+    private function preserveSeparator(array $chunks, string $separator): array
+    {
+        return array_map(function ($chunk, $index) use ($separator) {
+            return $index > 0 ? $separator . $chunk : $chunk;
+        }, $chunks, array_keys($chunks));
+    }
+
+    /**
+     * 检测并转换文本编码
+     */
+    private function ensureUtf8Encoding(string $text): string
+    {
+        $encoding = $this->detectEncoding($text);
+        if ($encoding !== 'UTF-8') {
+            return mb_convert_encoding($text, 'UTF-8', $encoding);
+        }
+        return $text;
+    }
+
+    /**
+     * 按固定长度分割文本.
+     */
+    private function splitByFixedLength(string $text): array
+    {
+        $chunkSize = $this->chunkSize / 2; // 使用较小的块大小
+        $length = mb_strlen($text);
+        $splits = [];
+        for ($i = 0; $i < $length; $i += $chunkSize) {
+            $splits[] = mb_substr($text, $i, $chunkSize);
+        }
+        return $splits;
+    }
+
+    /**
+     * 处理无分隔符的文本分割.
+     */
+    private function handleNoSeparatorSplits(array $splits, array $splitLengths): array
+    {
+        $finalChunks = [];
+        $currentPart = '';
+        $currentLength = 0;
+        $overlapPart = '';
+        $overlapLength = 0;
+
+        foreach ($splits as $i => $split) {
+            $splitLength = $splitLengths[$i];
+
+            if ($currentLength + $splitLength <= $this->chunkSize - $this->chunkOverlap) {
+                $currentPart .= $split;
+                $currentLength += $splitLength;
+            } elseif ($currentLength + $splitLength <= $this->chunkSize) {
+                $currentPart .= $split;
+                $currentLength += $splitLength;
+                $overlapPart .= $split;
+                $overlapLength += $splitLength;
+            } else {
+                $finalChunks[] = $currentPart;
+                $currentPart = $overlapPart . $split;
+                $currentLength = $splitLength + $overlapLength;
+                $overlapPart = '';
+                $overlapLength = 0;
+            }
+        }
+
+        if ($currentPart !== '') {
+            $finalChunks[] = $currentPart;
+        }
+
+        return $finalChunks;
+    }
+
+    /**
      * 递归分割文本.
      *
      * @param string $text 要分割的文本
@@ -172,7 +254,7 @@ class TokenTextSplitter extends TextSplitter
         $newSeparators = [];
 
         // 查找合适的分隔符, 从$separatorBeginIndex开始
-        for ($i = $separatorBeginIndex; $i < count($this->separators); $i++) {
+        for ($i = $separatorBeginIndex; $i < count($this->separators); ++$i) {
             $sep = $this->separators[$i];
             if ($sep === '') {
                 $separator = $sep;
@@ -184,35 +266,14 @@ class TokenTextSplitter extends TextSplitter
                 break;
             }
         }
-        $separatorBeginIndex = $i + 1;
+        $separatorBeginIndex = min($i + 1, count($this->separators));
 
         // 使用选定的分隔符分割文本
         if ($separator !== '') {
-            if ($separator === ' ') {
-                $splits = preg_split('/\s+/', $text);
-            } else {
-                $splits = explode($separator, $text);
-                if ($this->preserveSeparator) {
-                    // 保留分隔符
-                    $splits = array_map(function ($split, $index) use ($splits, $separator) {
-                        return $index < count($splits) - 1 ? $split . $separator : $split;
-                    }, $splits, array_keys($splits));
-                }
-            }
+            $splits = $this->splitBySeparator($text, $separator);
         } else {
-            // 如果没有找到合适的分隔符，使用兜底规则：按固定长度分割
-            $chunkSize = $this->chunkSize / 2; // 使用较小的块大小
-            $length = mb_strlen($text);
-            $splits = [];
-            for ($i = 0; $i < $length; $i += $chunkSize) {
-                $splits[] = mb_substr($text, $i, $chunkSize);
-            }
+            $splits = $this->splitByFixedLength($text);
         }
-
-        // 过滤空字符串
-        $splits = array_values(array_filter($splits, function ($s) {
-            return $s !== '' && $s !== "\n";
-        }));
 
         // 计算每个split的token长度
         $splitLengths = array_map(function ($split) {
@@ -255,35 +316,7 @@ class TokenTextSplitter extends TextSplitter
                 $finalChunks = array_merge($finalChunks, $mergedText);
             }
         } else {
-            // 处理无分隔符的情况
-            $currentPart = '';
-            $currentLength = 0;
-            $overlapPart = '';
-            $overlapLength = 0;
-
-            foreach ($splits as $i => $split) {
-                $splitLength = $splitLengths[$i];
-
-                if ($currentLength + $splitLength <= $this->chunkSize - $this->chunkOverlap) {
-                    $currentPart .= $split;
-                    $currentLength += $splitLength;
-                } elseif ($currentLength + $splitLength <= $this->chunkSize) {
-                    $currentPart .= $split;
-                    $currentLength += $splitLength;
-                    $overlapPart .= $split;
-                    $overlapLength += $splitLength;
-                } else {
-                    $finalChunks[] = $currentPart;
-                    $currentPart = $overlapPart . $split;
-                    $currentLength = $splitLength + $overlapLength;
-                    $overlapPart = '';
-                    $overlapLength = 0;
-                }
-            }
-
-            if ($currentPart !== '') {
-                $finalChunks[] = $currentPart;
-            }
+            $finalChunks = $this->handleNoSeparatorSplits($splits, $splitLengths);
         }
 
         return $finalChunks;
