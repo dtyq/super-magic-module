@@ -14,6 +14,7 @@ import {
 	IconUserSquareRounded,
 } from "@tabler/icons-react"
 import { RoutePath } from "@/const/routes"
+import SuperMagicIcon from "@/opensource/pages/superMagic/assets/svg/tabler-icon-super-magic.svg"
 import { isCommercial } from "@/utils/env"
 import MagicLogo from "@/opensource/components/MagicLogo"
 import { LogoType } from "@/opensource/components/MagicLogo/LogoType"
@@ -27,7 +28,6 @@ interface MagicMenuItemType extends MenuItemType {
 export function useSideMenu() {
 	const { t } = useTranslation("interface")
 	const { styles } = useSideMenuStyle()
-
 	return useMemo<Array<Array<MagicMenuItemType>>>(() => {
 		const imMenu: Array<MagicMenuItemType> = [
 			{
@@ -41,6 +41,14 @@ export function useSideMenu() {
 				hidden: false,
 				label: t("sider.message"),
 				key: RoutePath.Chat,
+			},
+			{
+				icon: (
+					<img src={SuperMagicIcon} alt="" className={styles.navIcon} />
+				),
+				hidden: false,
+				label: t("sider.superMagic"),
+				key: RoutePath.SuperMagic,
 			},
 			{
 				icon: (

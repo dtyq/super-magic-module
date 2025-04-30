@@ -11,6 +11,7 @@ import {
 	ConversationMessageType,
 	HDImageDataType,
 } from "@/types/chat/conversation_message"
+import pubsub from "@/utils/pubsub"
 import type { SeqResponse } from "@/types/request"
 
 // 导入新的服务
@@ -170,6 +171,7 @@ class ChatMessageApplyService {
 
 		switch (message.message.type) {
 			case ConversationMessageType.Text:
+				pubsub.publish("super_magic_new_message", message)
 				StreamMessageApplyService.recordMessageInfo(
 					message as SeqResponse<ConversationMessage>,
 				)

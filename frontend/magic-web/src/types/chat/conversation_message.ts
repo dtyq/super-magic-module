@@ -49,6 +49,9 @@ export const enum ConversationMessageType {
 
 	/** 录音纪要 */
 	RecordingSummary = "recording_summary",
+
+	/** 超级麦吉消息 */
+	SuperMagic = "general_agent_card",
 }
 
 /**
@@ -87,6 +90,12 @@ export interface ConversationMessageBase extends SeqMessageBase {
 	/** 是否本地删除 */
 	is_local_deleted?: boolean
 }
+
+export interface SuperMagicContent {
+	type: ConversationMessageType.SuperMagic
+	content: string
+}
+
 
 /**
  * 消息附件

@@ -3,6 +3,7 @@ import type { User } from "../user"
 import type {
 	AggregateAISearchCardConversationMessage,
 	ConversationMessage,
+	SuperMagicContent
 } from "./conversation_message"
 import type {
 	HideConversationMessage,
@@ -138,3 +139,4 @@ export type CMessage =
 	| HideConversationMessage
 	| AggregateAISearchCardConversationMessage<true>
 	| AddFriendSuccessMessage
+	| SuperMagicContent

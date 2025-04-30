@@ -1,0 +1,312 @@
+import MagicFileIcon from "@/opensource/components/base/MagicFileIcon"
+import MagicIcon from "@/opensource/components/base/MagicIcon"
+import UploadAction from "@/opensource/components/base/UploadAction"
+import { useUpload } from "@/opensource/hooks/useUploadFiles"
+import type { FileData } from "@/opensource/pages/chatNew/components/MessageEditor/MagicInput/components/InputFiles/types"
+import { genFileData } from "@/opensource/pages/chatNew/components/MessageEditor/MagicInput/components/InputFiles/utils"
+import { formatFileSize } from "@/utils/string"
+import { IconFileUpload, IconSend, IconX, IconSparkles, IconSchool } from "@tabler/icons-react"
+import { useDebounceFn, useMemoizedFn } from "ahooks"
+import TaskIcon from "@/opensource/pages/superMagic/assets/svg/task_mode.svg"
+import { Button, Input, message, Tooltip } from "antd"
+import { cx } from "antd-style"
+import type { TextAreaRef } from "antd/es/input/TextArea"
+import React, { useCallback, useMemo, useRef, useState } from "react"
+import { useTranslation } from "react-i18next"
+import InterruptSvg from "../../assets/svg/interrupt.svg"
+import type { FileItem } from "../../pages/Workspace/types"
+import TaskList from "../TaskList"
+import { useStyles } from "./styles"
+
+export interface MessagePanelProps {
+	onSendMessage?: (content: string, options?: any) => void
+	fileList?: FileItem[]
+	setFileList?: (fileList: any[]) => void
+	taskData?: any
+	className?: string
+	textAreaWrapperClassName?: string
+	containerRef?: React.RefObject<HTMLDivElement>
+	showLoading?: boolean
+	selectedThreadInfo?: any
+	isEmptyStatus?: boolean
+}
+
+const MessagePanel: React.FC<MessagePanelProps> = ({
+	onSendMessage,
+	fileList,
+	setFileList,
+	taskData,
+	className,
+	textAreaWrapperClassName,
+	containerRef,
+	showLoading,
+	selectedThreadInfo,
+	isEmptyStatus,
+}) => {
+	const { styles } = useStyles()
+	const textAreaRef = useRef<TextAreaRef>(null)
+	const [inputValue, setInputValue] = React.useState("")
+	const [composition, setComposition] = React.useState(false)
+	const [inputMode, setInputMode] = useState<"chat" | "plan">("plan")
+	const { t } = useTranslation("interface")
+	const { TextArea } = Input
+
+	const { upload, reportFiles } = useUpload<FileData>({
+		storageType: "private",
+	})
+	// 附件上传
+	const onFileChange = useMemoizedFn(async (files: FileList) => {
+		const newFiles = Array.from(files).map(genFileData)
+		const { fullfilled } = await upload(newFiles)
+
+		// 检查是否所有文件都上传成功
+		if (fullfilled.length !== newFiles.length) {
+			message.error(t("file.uploadFail"))
+			return null
+		}
+		const data = fullfilled.map(({ value }) => ({
+			file_key: value.key,
+			file_name: value.name,
+			file_size: value.size,
+			file_extension: value?.name?.split(".").pop(),
+		}))
+		const res = await reportFiles(data)
+		setFileList?.(res)
+		return null
+	})
+	const handleSend = useCallback(() => {
+		if (inputValue.trim()) {
+			const data = isEmptyStatus
+				? {
+						instructs: [{ value: inputMode }],
+				  }
+				: {}
+			onSendMessage?.(inputValue, data)
+			setInputValue("")
+			setFileList?.([])
+		}
+	}, [inputValue, inputMode, onSendMessage, setFileList, isEmptyStatus])
+
+	const onPressEnter = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+		if (composition) {
+			return
+		}
+		const { metaKey, shiftKey, ctrlKey } = event
+		event.preventDefault()
+		if (metaKey || ctrlKey || shiftKey) {
+			const textArea = textAreaRef.current?.resizableTextArea?.textArea
+			const cursorPosition = textArea?.selectionStart || 0
+			setInputValue((oldState) => {
+				const oldMessage = oldState || ""
+				return `${oldMessage.slice(0, cursorPosition)}\n${oldMessage.slice(cursorPosition)}`
+			})
+			setTimeout(() => {
+				textArea?.setSelectionRange(cursorPosition + 1, cursorPosition + 1, "none")
+				if (textArea?.value.length === cursorPosition + 1) {
+					textArea?.scrollBy({
+						behavior: "smooth",
+						top: Number.MAX_SAFE_INTEGER,
+					})
+				}
+			})
+		}
+		if (!metaKey && !shiftKey && !ctrlKey) {
+			handleSend?.()
+		}
+	}
+
+	const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+		setInputValue(e.target.value)
+	}
+
+	// 基本用法 - 自定义按钮触发上传
+	const handleFileChange = (files: FileList) => {
+		console.log("选择的文件:", files)
+		onFileChange(files)
+	}
+
+	const handleRemoveFile = (key: string | undefined) => {
+		const updatedFileList = fileList?.filter((file: any) => file.file_key !== key)
+		setFileList?.(updatedFileList || [])
+	}
+
+	// // 检查是否有任务处于waiting或running状态
+	// const hasRunningOrWaitingTask = () => {
+	// 	if (!taskData?.process || taskData.process.length === 0) return false
+	// 	return taskData.process.some(
+	// 		(item: any) => item.status === "waiting" || item.status === "running",
+	// 	)
+	// }
+	const { run: handleInterrupt } = useDebounceFn(
+		() => {
+			onSendMessage?.("终止任务", {
+				instructs: [{ value: "interrupt" }],
+			})
+			console.log("中断")
+		},
+		{ wait: 10000, leading: true, trailing: false },
+	)
+
+	const sendButtonDisabled = useMemo(() => {
+		if (inputValue.trim()?.length && selectedThreadInfo?.id) {
+			return false
+		}
+		return true
+	}, [inputValue, selectedThreadInfo])
+	const getFileType = (fileName: string) => {
+		const fileType = fileName.split(".").pop()
+		return fileType
+	}
+	const TaskIconComponent = () => {
+		return <img src={TaskIcon} alt="" />
+	}
+	return (
+		<div ref={containerRef} className={cx(styles.container, className)}>
+			<div className={styles.inputArea}>
+				{taskData?.process?.length > 0 && (
+					<div className={styles.taskListWrapper}>
+						<TaskList taskData={taskData} isInChat />
+					</div>
+				)}
+				<div className={styles.inputGroup}>
+					{!!fileList && fileList.length > 0 && (
+						<div className={styles.fileList}>
+							{fileList.map((file: FileItem) => (
+								<div key={file.file_id} className={styles.fileItem}>
+									<Tooltip
+										title={file.file_name}
+										placement="top"
+										mouseEnterDelay={0.5}
+									>
+										<div className={styles.fileItemContent}>
+											<MagicFileIcon
+												type={getFileType(file?.file_name || "")}
+												size={14}
+											/>
+											<span className={styles.fileName}>
+												{file.file_name}
+											</span>
+											<span className={styles.fileSize}>
+												{formatFileSize(file.file_size)}
+											</span>
+										</div>
+									</Tooltip>
+									<div
+										className={styles.deleteIcon}
+										onClick={() => handleRemoveFile(file.file_key)}
+									>
+										<MagicIcon
+											component={IconX}
+											size={10}
+											stroke={2}
+											style={{ stroke: "white" }}
+										/>
+									</div>
+								</div>
+							))}
+						</div>
+					)}
+
+					<div className={cx(styles.textAreaWrapper, textAreaWrapperClassName)}>
+						<TextArea
+							ref={textAreaRef}
+							autoSize={false}
+							value={inputValue}
+							onChange={handleInput}
+							onPressEnter={onPressEnter}
+							className={styles.textArea}
+							style={{ resize: "none" }}
+							placeholder={
+								showLoading
+									? "您可以继续和我对话来实时调整任务哦"
+									: "给超级麦吉一个任务..."
+							}
+							onCompositionStart={() => setComposition(true)}
+							onCompositionEnd={() => setComposition(false)}
+						/>
+					</div>
+
+					<div className={styles.toolBar}>
+						<div className={styles.toolBarLeft}>
+							{isEmptyStatus && (
+								<div className={styles.modeToggle}>
+									<Tooltip title="AI自主规划决策，并分步自动执行" placement="top">
+										<div
+											className={cx(
+												styles.modeToggleButton,
+												inputMode === "plan" &&
+													styles.modeToggleButtonActive,
+											)}
+											onClick={() => setInputMode("plan")}
+										>
+											{/* <MagicIcon
+												component={<TaskIconComponent />}
+												size={16}
+											/>{" "} */}
+											<img
+												src={TaskIcon}
+												alt=""
+												className={styles.taskIcon}
+											/>
+											任务
+										</div>
+									</Tooltip>
+									<Tooltip
+										title="AI 单步执行，人与AI多轮对话协同完成任务"
+										placement="top"
+									>
+										<div
+											className={cx(
+												styles.modeToggleButton,
+												inputMode === "chat" &&
+													styles.modeToggleButtonActive,
+											)}
+											onClick={() => setInputMode("chat")}
+										>
+											<MagicIcon component={IconSchool} size={16} /> 专业
+										</div>
+									</Tooltip>
+								</div>
+							)}
+							<UploadAction
+								multiple
+								onFileChange={handleFileChange}
+								handler={(trigger) => (
+									<Button
+										className={styles.toolBarButton}
+										onClick={trigger}
+										icon={<MagicIcon component={IconFileUpload} size={20} />}
+										type="text"
+									>
+										文件
+									</Button>
+								)}
+							/>
+						</div>
+						<div className={styles.toolBarRight}>
+							{showLoading && (
+								<span onClick={handleInterrupt} className={styles.interruptIcon}>
+									<img src={InterruptSvg} alt="" />
+								</span>
+							)}
+							<Button
+								disabled={sendButtonDisabled}
+								className={cx(
+									styles.sendButton,
+									sendButtonDisabled && styles.sendButtonDisabled,
+								)}
+								type="primary"
+								icon={<MagicIcon component={IconSend} size={20} />}
+								onClick={handleSend}
+							>
+								发送
+							</Button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	)
+}
+
+export default MessagePanel
