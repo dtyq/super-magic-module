@@ -1,0 +1,292 @@
+# GitLab CI/CD 配置文件，用于从GitHub同步代码
+
+stages:
+  - sync
+
+sync-from-github:
+  stage: sync 
+  # 移除image，因为我们使用的是shell执行器，不是Docker
+  
+  # 设置每30分钟执行一次
+  # CI_PIPELINE_SOURCE 是 GitLab CI/CD 的预定义变量，表示触发流水线的来源：
+  # - schedule: 由定时任务触发
+  # - web: 由 GitLab Web 界面手动触发
+  # - push: 由代码推送触发
+  # - merge_request_event: 由合并请求触发
+  # - api: 由 API 调用触发
+  # - external: 由外部 CI 服务触发
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+      when: always
+    - if: $CI_PIPELINE_SOURCE == "web"
+      when: always
+  
+  variables:
+    GIT_STRATEGY: none  # 不自动克隆，我们将手动操作
+  
+  before_script:
+    # 检查必要工具是否安装
+    - which git || echo "Git is required"
+    - which curl || echo "Curl is required"
+    
+    # 配置Git
+    - git config --global user.name "GitLab CI"
+    - git config --global user.email "gitlab-ci@example.com"
+  
+  script:
+    # 创建工作目录并清理已存在的git配置
+    - rm -rf sync_repo
+    - mkdir -p sync_repo
+    - cd sync_repo
+    
+    - git clone https://oauth2:${GITHUB_TOKEN}@github.com/dtyq/magic.git
+    - cd magic
+    - ls -la
+    
+    # 添加GitLab远程仓库
+    - git remote add gitlab https://oauth2:${GITLAB_TOKEN}@git.kkgroup.cn/dtyq/magic.git
+    
+    # 同步 master 分支
+    - echo "正在同步 master 分支..."
+    # 获取GitHub的master分支
+    - git fetch origin master
+    # 切换到本地master分支
+    - git checkout master || git checkout -b master
+    # 获取GitLab的master分支
+    - git fetch gitlab master
+    # 从GitLab拉取当前主分支
+    - git pull gitlab master || echo "First time setup, continuing..."
+    # 合并GitHub的master分支
+    - git merge origin/master -m "Auto-sync from GitHub master" || echo "Nothing to merge"
+    # 推送到GitLab的master分支
+    - git push -f gitlab master
+    
+    # 同步 released 分支
+    - echo "正在同步 released 分支..."
+    # 获取GitHub的released分支
+    - git fetch origin released || echo "GitHub released branch not found, skipping..."
+    # 切换到本地released分支
+    - git checkout released || git checkout -b released
+    # 获取GitLab的released分支
+    - git fetch gitlab released || true
+    # 从GitLab拉取当前released分支
+    - git pull gitlab released || echo "First time setup for released branch, continuing..."
+    # 合并GitHub的released分支
+    - git merge origin/released -m "Auto-sync from GitHub released" || echo "Nothing to merge in released"
+    # 推送到GitLab的released分支
+    - git push -f gitlab released
+    - echo "released 分支同步完成"
+
+# 公共规则配置，适用于下面的三个同步任务 
+.sync-rules:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "master"
+      when: always
+    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "pre-release"
+      when: always
+    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "released"
+      when: always
+    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "enterprise-master"
+      when: always
+    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "enterprise-pre-release"
+      when: always
+    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "enterprise-released"
+      when: always
+    - if: $CI_PIPELINE_SOURCE == "web"
+      when: always
+
+# 公共变量配置
+.sync-vars:
+  stage: sync
+  variables:
+    GIT_STRATEGY: none  # 不自动克隆，我们将手动操作
+
+# 公共前置脚本
+.common-before-script: &common-before-script
+  # 检查必要工具是否安装
+  - which git || echo "Git is required"
+  - which bc || echo "BC is required for time calculation"
+  
+  # 配置Git
+  - git config --global user.name "GitLab CI"
+  - git config --global user.email "gitlab-ci@example.com"
+  
+  # 初始化通用变量
+  - NOW=$(date +%s)
+  - CURRENT_BRANCH=$CI_COMMIT_REF_NAME
+  - echo "当前分支"
+  - echo $CURRENT_BRANCH
+  
+
+# 同步到 magic-service 仓库
+sync-to-service:
+  extends: 
+    - .sync-vars
+    - .sync-rules
+  before_script: *common-before-script
+  script:
+    # 创建工作目录并清理已存在的git配置
+    - MAIN_DIR="/tmp/magic-sync-service-magic"
+    - rm -rf $MAIN_DIR
+    - mkdir -p $MAIN_DIR
+    - cd $MAIN_DIR
+    
+    # 克隆源仓库
+    - git clone https://oauth2:${GITLAB_TOKEN}@git.kkgroup.cn/dtyq/magic.git
+    - ls -la
+    - cd magic
+    - git checkout $CURRENT_BRANCH
+
+    # 同步到 magic-service.git
+    - echo "同步到 magic-service 仓库..."
+    - TMP_DIR="/tmp/magic-sync-service"
+    - rm -rf $TMP_DIR
+    - mkdir -p $TMP_DIR
+    - cd $TMP_DIR
+    
+    # 克隆目标仓库
+    - git clone https://oauth2:${GITLAB_TOKEN}@git.kkgroup.cn/dtyq/magic-service.git
+    - cd magic-service
+    
+    # 获取默认分支名
+    - DEFAULT_BRANCH=$(git remote show origin | grep 'HEAD branch' | cut -d' ' -f5)
+    
+    # 检查分支是否存在，不存在则创建
+    - git checkout $DEFAULT_BRANCH
+    - git fetch origin $CURRENT_BRANCH || true
+    - echo "尝试切换到分支:"
+    - echo $CURRENT_BRANCH
+    - git checkout $CURRENT_BRANCH || git checkout -b $CURRENT_BRANCH
+    
+    # 复制 service 目录下的所有文件
+    - cp -a "$MAIN_DIR/magic/backend/magic-service/"* .
+    - cp -a "$MAIN_DIR/magic/backend/magic-service/.gitignore" ./
+    - cp -R "$MAIN_DIR/magic/backend/magic-service/.github" ./
+    - cp -R "$MAIN_DIR/magic/backend/magic-service/.php-cs-fixer.php" ./ || true
+    - cp -R "$MAIN_DIR/magic/backend/magic-service/.dockerignore" ./ || true
+    
+    # 添加并提交更改
+    - git add .
+    - git commit -m "chore-自动同步自 magic 仓库分支 " || echo "没有变更需要提交"
+
+    # 推送到目标仓库
+    - git push origin $CURRENT_BRANCH
+    
+    # 计算执行时间
+    - TIME=$(echo "$(date +%s) - $NOW" | bc)
+    - echo "同步 magic-service 完成，执行时间-秒 "
+    - echo $TIME
+
+# 同步到 magic-web 仓库
+sync-to-web:
+  extends: 
+    - .sync-vars
+    - .sync-rules
+  before_script: *common-before-script
+  script:
+    # 创建工作目录并清理已存在的git配置
+    - MAIN_DIR="/tmp/magic-sync-web-magic"
+    - rm -rf $MAIN_DIR
+    - mkdir -p $MAIN_DIR
+    - cd $MAIN_DIR
+    
+    # 克隆源仓库
+    - git clone https://oauth2:${GITLAB_TOKEN}@git.kkgroup.cn/dtyq/magic.git
+    - ls -la
+    - cd magic
+    - git checkout $CURRENT_BRANCH
+
+    # 同步到 magic-web.git
+    - echo "同步到 magic-web 仓库..."
+    - TMP_DIR="/tmp/magic-sync-web"
+    - rm -rf $TMP_DIR
+    - mkdir -p $TMP_DIR
+    - cd $TMP_DIR
+    
+    # 克隆目标仓库
+    - git clone https://oauth2:${GITLAB_TOKEN}@git.kkgroup.cn/dtyq/magic-web.git
+    - cd magic-web
+    
+    # 获取默认分支名
+    - DEFAULT_BRANCH=$(git remote show origin | grep 'HEAD branch' | cut -d' ' -f5)
+    
+    # 检查分支是否存在，不存在则创建
+    - git checkout $DEFAULT_BRANCH
+    - git fetch origin $CURRENT_BRANCH || true
+    - echo "尝试切换到分支:"
+    - echo $CURRENT_BRANCH
+    - git checkout $CURRENT_BRANCH || git checkout -b $CURRENT_BRANCH
+    
+    # 复制 web 目录下的所有文件
+    - cp -a "$MAIN_DIR/magic/frontend/magic-web/"* .
+    - cp -a "$MAIN_DIR/magic/frontend/magic-web/.gitignore" ./
+    - cp -R "$MAIN_DIR/magic/frontend/magic-web/.github" ./ || true
+    
+    # 添加并提交更改
+    - git add .
+    - git commit -m "chore-自动同步自 magic 仓库分支 " || echo "没有变更需要提交"
+
+    # 推送到目标仓库
+    - git push origin $CURRENT_BRANCH
+    
+    # 计算执行时间
+    - TIME=$(echo "$(date +%s) - $NOW" | bc)
+    - echo "同步 magic-web 完成，执行时间-秒 "
+    - echo $TIME
+
+# 同步到 magic-docs 仓库
+sync-to-docs:
+  extends: 
+    - .sync-vars
+    - .sync-rules
+  before_script: *common-before-script
+  script:
+    # 创建工作目录并清理已存在的git配置
+    - MAIN_DIR="/tmp/magic-sync-docs-magic"
+    - rm -rf $MAIN_DIR
+    - mkdir -p $MAIN_DIR
+    - cd $MAIN_DIR
+    
+    # 克隆源仓库
+    - git clone https://oauth2:${GITLAB_TOKEN}@git.kkgroup.cn/dtyq/magic.git
+    - ls -la
+    - cd magic
+    - git checkout $CURRENT_BRANCH
+
+    # 同步到 magic-docs.git
+    - echo "同步到 magic-docs 仓库..."
+    - TMP_DIR="/tmp/magic-sync-docs"
+    - rm -rf $TMP_DIR
+    - mkdir -p $TMP_DIR
+    - cd $TMP_DIR
+    
+    # 克隆目标仓库
+    - git clone https://oauth2:${GITLAB_TOKEN}@git.kkgroup.cn/dtyq/magic-docs.git
+    - cd magic-docs
+    
+    # 获取默认分支名
+    - DEFAULT_BRANCH=$(git remote show origin | grep 'HEAD branch' | cut -d' ' -f5)
+    
+    # 检查分支是否存在，不存在则创建
+    - git checkout $DEFAULT_BRANCH
+    - git fetch origin $CURRENT_BRANCH || true
+    - echo "尝试切换到分支:"
+    - echo $CURRENT_BRANCH
+    - git checkout $CURRENT_BRANCH || git checkout -b $CURRENT_BRANCH
+    
+    # 复制 docs 目录下的所有文件
+    - cp -a "$MAIN_DIR/magic/docs/"* .
+    - cp -a "$MAIN_DIR/magic/docs/.gitignore" ./ || true
+    - cp -a "$MAIN_DIR/magic/docs/.vitepress" ./ || true
+    
+    # 添加并提交更改
+    - git add .
+    - git commit -m "chore-自动同步自 magic 仓库分支 " || echo "没有变更需要提交"
+
+    # 推送到目标仓库
+    - git push origin $CURRENT_BRANCH
+    
+    # 计算执行时间
+    - TIME=$(echo "$(date +%s) - $NOW" | bc)
+    - echo "同步 magic-docs 完成，执行时间-秒 "
+    - echo $TIME
