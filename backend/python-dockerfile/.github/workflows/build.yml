@@ -20,7 +20,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  SERVICE_IMAGE: dtyq/super-magic
+  SERVICE_IMAGE: dtyq/super-magic-python-base-image
   BASE_IMAGE: mcr.microsoft.com/playwright:v1.49.1-noble
 
 jobs:
@@ -56,6 +56,6 @@ jobs:
             -t ${{ env.REGISTRY }}/${{ env.SERVICE_IMAGE }}:${TAG_VERSION} \
             -t ${{ env.REGISTRY }}/${{ env.SERVICE_IMAGE }}:latest \
             --build-arg IMAGE_NAME=${{ env.REGISTRY }}/${{ env.BASE_IMAGE }} \
-            -f ./Dockerfile.github \
+            -f ./Dockerfile \
             --push \
             ./

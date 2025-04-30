@@ -244,17 +244,68 @@ detect_public_ip() {
 # 运行IP检测和更新 / Run IP detection and update
 detect_public_ip
 
+# 检查Super Magic环境配置文件是否存在 / Check if Super Magic environment file exists
+check_super_magic_env() {
+    if [ ! -f .env_super_magic ]; then
+        if [ -f .env_super_magic.example ]; then
+            bilingual "错误：.env_super_magic 文件不存在！" "Error: .env_super_magic file does not exist!"
+            bilingual "请按照以下步骤进行操作：" "Please follow these steps:"
+            bilingual "1. 复制示例配置文件：cp .env_super_magic.example .env_super_magic" "1. Copy the example configuration file: cp .env_super_magic.example .env_super_magic"
+            bilingual "2. 编辑配置文件：vim .env_super_magic（或使用您喜欢的编辑器）" "2. Edit the configuration file: vim .env_super_magic (or use your preferred editor)"
+            bilingual "3. 配置所有必要的环境变量" "3. Configure all necessary environment variables"
+            bilingual "4. 再次运行此脚本" "4. Run this script again"
+            return 1
+        else
+            bilingual "错误：.env_super_magic 和 .env_super_magic.example 文件都不存在！" "Error: Both .env_super_magic and .env_super_magic.example files do not exist!"
+            bilingual "请联系系统管理员获取正确的配置文件。" "Please contact your system administrator for the correct configuration files."
+            return 1
+        fi
+    fi
+    return 0
+}
+
+# 询问是否安装Super Magic服务 / Ask if Super Magic service should be installed
+ask_super_magic() {
+    bilingual "是否安装Super Magic服务?" "Do you want to install Super Magic service?"
+    bilingual "1. 是，安装Super Magic服务" "1. Yes, install Super Magic service"
+    bilingual "2. 否，不安装Super Magic服务" "2. No, don't install Super Magic service"
+    read -p "$(bilingual "请输入选项编号 [1/2]: " "Please enter option number [1/2]: ")" SUPER_MAGIC_OPTION
+    
+    if [ "$SUPER_MAGIC_OPTION" = "1" ]; then
+        bilingual "您选择了安装Super Magic服务。" "You have chosen to install Super Magic service."
+        
+        # 检查.env_super_magic文件是否存在
+        # Check if .env_super_magic exists
+        if ! check_super_magic_env; then
+            exit 1
+        fi
+        
+        # 在docker-compose命令中添加super-magic配置文件
+        # Add super-magic profile to docker-compose commands
+        export MAGIC_USE_SUPER_MAGIC="--profile super-magic"
+        bilingual "Super Magic服务将被启动。" "Super Magic service will be started."
+    else
+        bilingual "您选择了不安装Super Magic服务。" "You have chosen not to install Super Magic service."
+        export MAGIC_USE_SUPER_MAGIC=""
+    fi
+}
+
+# 运行Super Magic安装询问 / Run Super Magic installation inquiry
+ask_super_magic
+
 # 显示帮助信息 / Show help information
 show_help() {
     bilingual "用法: $0 [命令]" "Usage: $0 [command]"
     echo ""
     bilingual "命令:" "Commands:"
-    bilingual "  start     启动服务(前台)" "  start     Start services in foreground"
-    bilingual "  stop      停止所有服务" "  stop      Stop all services"
-    bilingual "  daemon    后台启动服务" "  daemon    Start services in background"
-    bilingual "  restart   重启所有服务" "  restart   Restart all services"
-    bilingual "  status    显示服务状态" "  status    Show services status"
-    bilingual "  logs      显示服务日志" "  logs      Show services logs"
+    bilingual "  start             启动服务(前台)" "  start             Start services in foreground"
+    bilingual "  stop              停止所有服务" "  stop              Stop all services"
+    bilingual "  daemon            后台启动服务" "  daemon            Start services in background"
+    bilingual "  restart           重启所有服务" "  restart           Restart all services"
+    bilingual "  status            显示服务状态" "  status            Show services status"
+    bilingual "  logs              显示服务日志" "  logs              Show services logs"
+    bilingual "  super-magic       仅启动Super Magic服务(前台)" "  super-magic       Start only Super Magic service (foreground)"
+    bilingual "  super-magic-daemon 仅启动Super Magic服务(后台)" "  super-magic-daemon Start only Super Magic service (background)"
     echo ""
     bilingual "如果未提供命令，默认使用 'start'" "If no command is provided, 'start' will be used by default."
 }
@@ -262,37 +313,61 @@ show_help() {
 # 启动服务 / Start services
 start_services() {
     bilingual "正在前台启动服务..." "Starting services in foreground..."
-    docker-compose up
+    docker-compose $MAGIC_USE_SUPER_MAGIC up
 }
 
 # 停止服务 / Stop services
 stop_services() {
     bilingual "正在停止服务..." "Stopping services..."
-    docker-compose down
+    docker-compose $MAGIC_USE_SUPER_MAGIC down
 }
 
 # 后台启动服务 / Start services in background
 start_daemon() {
     bilingual "正在后台启动服务..." "Starting services in background..."
-    docker-compose up -d
+    docker-compose $MAGIC_USE_SUPER_MAGIC up -d
 }
 
 # 重启服务 / Restart services
 restart_services() {
     bilingual "正在重启服务..." "Restarting services..."
-    docker-compose restart
+    docker-compose $MAGIC_USE_SUPER_MAGIC restart
 }
 
 # 查看服务状态 / Show services status
 show_status() {
     bilingual "服务状态:" "Services status:"
-    docker-compose ps
+    docker-compose $MAGIC_USE_SUPER_MAGIC ps
 }
 
 # 查看服务日志 / Show services logs
 show_logs() {
     bilingual "显示服务日志:" "Showing services logs:"
-    docker-compose logs -f
+    docker-compose $MAGIC_USE_SUPER_MAGIC logs -f
+}
+
+# 仅启动Super Magic服务 / Start only Super Magic service
+start_super_magic() {
+    # 检查.env_super_magic文件是否存在
+    # Check if .env_super_magic exists
+    if ! check_super_magic_env; then
+        exit 1
+    fi
+
+    bilingual "正在前台启动Super Magic服务..." "Starting Super Magic service in foreground..."
+    docker-compose --profile super-magic up
+}
+
+# 后台仅启动Super Magic服务 / Start only Super Magic service in background
+start_super_magic_daemon() {
+    # 检查.env_super_magic文件是否存在
+    # Check if .env_super_magic exists
+    if ! check_super_magic_env; then
+        exit 1
+    fi
+
+    bilingual "正在后台启动Super Magic服务..." "Starting Super Magic service in background..."
+    docker-compose --profile super-magic up -d
 }
 
 # 处理命令行参数 / Handle command line arguments
@@ -314,6 +389,12 @@ case "$1" in
         ;;
     logs)
         show_logs
+        ;;
+    super-magic)
+        start_super_magic
+        ;;
+    super-magic-daemon)
+        start_super_magic_daemon
         ;;
     help|--help|-h)
         show_help
