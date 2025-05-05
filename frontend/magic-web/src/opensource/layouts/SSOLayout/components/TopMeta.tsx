@@ -1,4 +1,4 @@
-import MagicLogoBeta from "@/opensource/components/MagicLogo/MagicLogoNew"
+import MagicLogoNew from "@/opensource/components/MagicLogo/MagicLogoNew"
 import { Flex } from "antd"
 import { createStyles } from "antd-style"
 import { memo } from "react"
@@ -28,7 +28,7 @@ const TopMeta = memo(function TopMeta() {
 	const { t } = useTranslation("login")
 	return (
 		<Flex vertical align="center" justify="center" className={styles.container}>
-			<MagicLogoBeta className={styles.logo} />
+			<MagicLogoNew className={styles.logo} />
 			<div className={styles.hi}>{t("hi")}</div>
 			<span className={styles.welcome}>{t("welcome")}</span>
 		</Flex>

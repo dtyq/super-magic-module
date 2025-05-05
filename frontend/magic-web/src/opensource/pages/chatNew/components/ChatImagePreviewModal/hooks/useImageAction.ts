@@ -54,21 +54,18 @@ const useImageAction = (info?: PreviewFileInfo) => {
 	const updatePercent = useMemoizedFn(() => {
 		if (timerRef.current) return
 
-		timerRef.current = setInterval(
-			() => {
-				setProgress((prevProgress) => {
-					let step = Math.ceil(Math.random() * 5)
-					if (info?.oldFileId) {
-						clearInterval(timerRef.current!)
-						timerRef.current = null
-						return 100
-					}
-					step = prevProgress + step >= 99 ? 0 : step
-					return Math.min(prevProgress + step, 99)
-				})
-			},
-			50 + Math.random() * 1000,
-		)
+		timerRef.current = setInterval(() => {
+			setProgress((prevProgress) => {
+				let step = Math.ceil(Math.random() * 5)
+				if (info?.oldFileId) {
+					clearInterval(timerRef.current!)
+					timerRef.current = null
+					return 100
+				}
+				step = prevProgress + step >= 99 ? 0 : step
+				return Math.min(prevProgress + step, 99)
+			})
+		}, 50 + Math.random() * 1000)
 	})
 
 	const clearTimer = useMemoizedFn(() => {
@@ -79,6 +76,7 @@ const useImageAction = (info?: PreviewFileInfo) => {
 	})
 
 	useEffect(() => {
+		console.log("loading", loading)
 		if (!info?.useHDImage || !loading) {
 			setProgress(0)
 			setLoadingFalse()
@@ -90,6 +88,7 @@ const useImageAction = (info?: PreviewFileInfo) => {
 			setLoadingFalse()
 			clearTimer()
 		} else {
+			console.log("updatePercent")
 			updatePercent()
 		}
 
@@ -125,7 +124,7 @@ const useImageAction = (info?: PreviewFileInfo) => {
 										{
 											file_id: info?.fileId,
 										},
-									]
+								  ]
 								: [],
 						},
 					})

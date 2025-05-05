@@ -1,3 +1,6 @@
+/**
+ * 消息上下文菜单键
+ */
 export const enum MessageContextMenuKey {
 	Copy = "copy",
 	Forward = "forward",
@@ -11,8 +14,13 @@ export const enum MessageContextMenuKey {
 	Translate = "Translate",
 	Mulitiple = "Mulitiple",
 	Urgent = "Urgent",
+	CopyMessageId = "copyMessageId",
+	Edit = "edit",
 }
 
+/**
+ * 菜单项
+ */
 export interface MenuItem {
 	icon?: {
 		color: string

@@ -557,6 +557,8 @@
 		},
 		"read": "对方已读",
 		"recall": "撤回",
+		"copyMessageId": "复制ID",
+		"edit": "编辑",
 		"reply": "回复",
 		"resend": "重新发送",
 		"revoke_one_message": "撤回了一条消息",

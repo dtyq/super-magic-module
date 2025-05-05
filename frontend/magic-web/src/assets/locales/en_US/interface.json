@@ -557,6 +557,8 @@
 		},
 		"read": "Read",
 		"recall": "Recall",
+		"copyMessageId": "Copy ID",
+		"edit": "Edit",
 		"reply": "Reply",
 		"resend": "Resend",
 		"revoke_one_message": "Withdrawn a message",

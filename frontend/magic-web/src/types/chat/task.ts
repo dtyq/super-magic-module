@@ -1,7 +1,7 @@
 import type {
 	RepeatTypeMap,
 	Units,
-} from "@/opensource/pages/chatNew/components/MessageEditor/MagicInput/components/TimedTaskButton/components/CreateTask/constant"
+} from "@/opensource/pages/chatNew/components/MessageEditor/components/TimedTaskButton/components/CreateTask/constant"
 
 export interface ListData<T> {
 	total: number
