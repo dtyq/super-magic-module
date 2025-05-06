@@ -67,32 +67,6 @@ class FileApi extends AbstractApi
     }
 
     /**
-     * 获取文件URL列表.
-     *
-     * @param RequestContext $requestContext 请求上下文
-     * @return array 文件URL列表
-     * @throws BusinessException 如果参数无效则抛出异常
-     */
-    public function getFileUrls(RequestContext $requestContext): array
-    {
-        // 获取请求DTO
-        $dto = GetFileUrlsRequestDTO::fromRequest($this->request);
-        if (! empty($dto->getToken())) {
-            // 走令牌校验逻辑
-            return $this->workspaceAppService->getFileUrlsByAccessToken($dto->getFileIds(), $dto->getToken());
-        }
-        // 设置用户授权信息
-        $requestContext->setUserAuthorization(di(AuthManager::class)->guard(name: 'web')->user());
-        $userAuthorization = $requestContext->getUserAuthorization();
-
-        // 调用应用服务
-        return $this->workspaceAppService->getFileUrls(
-            $userAuthorization,
-            $dto->getFileIds()
-        );
-    }
-
-    /**
      * 刷新 STS Token.
      *
      * @param RequestContext $requestContext 请求上下文
