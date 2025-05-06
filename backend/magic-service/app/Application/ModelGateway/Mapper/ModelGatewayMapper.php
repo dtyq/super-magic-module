@@ -112,7 +112,7 @@ class ModelGatewayMapper extends ModelMapper
             return $odinModel->getModel();
         }
         // 最后一次尝试，从被预加载的模型中获取。注意，被预加载的模型是即将被废弃，后续需要迁移到管理后台
-        return $this->getChatModel($model);
+        return $this->getChatModel(strtolower($model));
     }
 
     /**
@@ -126,7 +126,7 @@ class ModelGatewayMapper extends ModelMapper
         if ($odinModel) {
             return $odinModel->getModel();
         }
-        return $this->getEmbeddingModel($model);
+        return $this->getEmbeddingModel(strtolower($model));
     }
 
     /**
