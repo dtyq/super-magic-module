@@ -248,6 +248,10 @@ class ModelGatewayMapper extends ModelMapper
     {
         $modelConfigs = di(ModelConfigDomainService::class)->getByModels(['all']);
         foreach ($modelConfigs as $modelConfig) {
+            // 如果 enabled 为 false，则跳过
+            if (! $modelConfig->isEnabled()) {
+                continue;
+            }
             // 为了兼容，同时注册 model 和 label。
             $modelEndpointId = $modelConfig->getModel();
             $modelType = $modelConfig->getName();
