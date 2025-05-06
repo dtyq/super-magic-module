@@ -23,7 +23,7 @@ return [
     'parameter_check_failure' => '参数校验失败',
     'version_can_only_be_enabled_after_approval' => '版本只有审批通过才可开启',
     'version_can_only_be_disabled_after_enabled' => '版本只有开启才可禁用',
-    'agent_empty' => '助理为空',
+    'agent_not_exist' => '助理不存在',
     'agent_status_disabled_cannot_publish' => '助理状态是禁用状态下不可发布',
     'agent_status_only_enable_or_disable' => '助理状态只可是启用或者禁用',
     'status_can_only_be_published_or_unpublished' => '发布到企业内部的状态只能是已发布或者未发布',

@@ -139,7 +139,7 @@ class MagicAgentRepository extends AbstractRepository implements MagicAgentRepos
 
         // 如果查询结果为空，抛出异常或返回 null，根据业务需求处理
         if (! $agent) {
-            ExceptionBuilder::throw(AgentErrorCode::VALIDATE_FAILED, 'agent.agent_empty');
+            ExceptionBuilder::throw(AgentErrorCode::VALIDATE_FAILED, 'agent.agent_not_exist');
         }
 
         return MagicAgentFactory::toEntity($agent->toArray());
@@ -168,7 +168,7 @@ class MagicAgentRepository extends AbstractRepository implements MagicAgentRepos
             ->first();
 
         if ($result === null) {
-            ExceptionBuilder::throw(AgentErrorCode::VALIDATE_FAILED, 'agent.agent_empty');
+            ExceptionBuilder::throw(AgentErrorCode::VALIDATE_FAILED, 'agent.agent_not_exist');
         }
         $agentArray = $result->toArray();
         return MagicAgentFactory::toEntity($result->toArray());
@@ -181,7 +181,7 @@ class MagicAgentRepository extends AbstractRepository implements MagicAgentRepos
             ->where('created_uid', $userId)
             ->first();
         if ($result === null) {
-            ExceptionBuilder::throw(AgentErrorCode::VALIDATE_FAILED, 'agent.agent_empty');
+            ExceptionBuilder::throw(AgentErrorCode::VALIDATE_FAILED, 'agent.agent_not_exist');
         }
 
         return MagicAgentFactory::toEntity($result->toArray());

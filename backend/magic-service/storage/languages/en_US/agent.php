@@ -23,7 +23,7 @@ return [
     'parameter_check_failure' => 'Parameter check failure',
     'version_can_only_be_enabled_after_approval' => 'Version can only be enabled after approval',
     'version_can_only_be_disabled_after_enabled' => 'Version can only be disabled after being enabled',
-    'agent_empty' => 'Agent is empty',
+    'agent_not_exist' => 'Agent is not exist',
     'agent_status_disabled_cannot_publish' => 'Agent status is disabled and cannot be published',
     'agent_status_only_enable_or_disable' => 'Agent status can only be enabled or disabled',
     'status_can_only_be_published_or_unpublished' => 'Status for publishing to the enterprise can only be published or unpublished',
