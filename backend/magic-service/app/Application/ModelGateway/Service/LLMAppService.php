@@ -17,6 +17,7 @@ use App\Domain\ModelGateway\Entity\ModelConfigEntity;
 use App\Domain\ModelGateway\Entity\MsgLogEntity;
 use App\Domain\ModelGateway\Entity\ValueObject\LLMDataIsolation;
 use App\ErrorCode\MagicApiErrorCode;
+use App\ErrorCode\ServiceProviderErrorCode;
 use App\Infrastructure\Core\Exception\BusinessException;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Infrastructure\Core\HighAvailability\DTO\EndpointResponseDTO;
@@ -27,10 +28,12 @@ use App\Infrastructure\ExternalAPI\ImageGenerateAPI\Model\MiracleVision\MiracleV
 use App\Infrastructure\ExternalAPI\ImageGenerateAPI\Model\MiracleVision\MiracleVisionModelResponse;
 use App\Infrastructure\ExternalAPI\ImageGenerateAPI\Request\MiracleVisionModelRequest;
 use App\Infrastructure\Util\Context\CoContext;
+use App\Infrastructure\Util\SSRF\Exception\SSRFException;
 use App\Infrastructure\Util\SSRF\SSRFUtil;
 use App\Interfaces\Authorization\Web\MagicUserAuthorization;
 use App\Interfaces\ModelGateway\Assembler\EndpointAssembler;
 use DateTime;
+use Exception;
 use Hyperf\Context\ApplicationContext;
 use Hyperf\DbConnection\Db;
 use Hyperf\Odin\Api\Response\ChatCompletionResponse;
@@ -108,10 +111,15 @@ class LLMAppService extends AbstractLLMAppService
         });
     }
 
-    public function imageGenerate(MagicUserAuthorization $authorization, string $modelVersion, string $modelId, array $data)
+    /**
+     * @throws Exception
+     */
+    public function imageGenerate(MagicUserAuthorization $authorization, string $modelVersion, string $modelId, array $data): array
     {
         $serviceProviderResponse = $this->serviceProviderDomainService->getServiceProviderConfig($modelVersion, $modelId, $authorization->getOrganizationCode());
-
+        if ($serviceProviderResponse === null) {
+            ExceptionBuilder::throw(ServiceProviderErrorCode::ModelNotFound);
+        }
         if ($serviceProviderResponse->getServiceProviderType() === ServiceProviderType::NORMAL) {
             $modelVersion = $serviceProviderResponse->getServiceProviderModelsEntity()->getModelVersion();
         }
@@ -125,7 +133,9 @@ class LLMAppService extends AbstractLLMAppService
         $imageGenerateRequest = ImageGenerateFactory::createRequestType($imageGenerateType, $data);
         $imageGenerateRequest->setGenerateNum($data['generate_num'] ?? 4);
         $serviceProviderConfig = $serviceProviderResponse->getServiceProviderConfig();
-
+        if ($serviceProviderConfig === null) {
+            ExceptionBuilder::throw(ServiceProviderErrorCode::ModelNotFound);
+        }
         $imageGenerateService = ImageGenerateFactory::create($imageGenerateType, $serviceProviderConfig);
 
         // 收集配置信息并处理敏感数据
@@ -145,6 +155,9 @@ class LLMAppService extends AbstractLLMAppService
         return $images;
     }
 
+    /**
+     * @throws SSRFException
+     */
     public function imageConvertHigh(MagicUserAuthorization $userAuthorization, string $url): string
     {
         $url = SSRFUtil::getSafeUrl($url, replaceIp: false);
@@ -157,6 +170,9 @@ class LLMAppService extends AbstractLLMAppService
         return $imageGenerateService->imageConvertHigh(new MiracleVisionModelRequest($url));
     }
 
+    /**
+     * @throws Exception
+     */
     public function imageConvertHighQuery(MagicUserAuthorization $userAuthorization, string $taskId): MiracleVisionModelResponse
     {
         $miracleVisionServiceProviderConfig = $this->serviceProviderDomainService->getMiracleVisionServiceProviderConfig(ImageGenerateModelType::MiracleVisionHightModelId->value, $userAuthorization->getOrganizationCode());
@@ -335,7 +351,12 @@ class LLMAppService extends AbstractLLMAppService
             return null;
         }
 
-        $highAvailable = $container->get(HighAvailabilityInterface::class);
+        try {
+            $highAvailable = $container->get(HighAvailabilityInterface::class);
+        } catch (Throwable) {
+            return null;
+        }
+
         if (! $highAvailable instanceof HighAvailabilityInterface) {
             return null;
         }
@@ -634,7 +655,7 @@ class LLMAppService extends AbstractLLMAppService
         defer(function () use ($modelVersion, $userId, $organizationCode) {
             $LLMDataIsolation = LLMDataIsolation::create($userId, $organizationCode);
 
-            $nickname = $this->magicUserDomainService->getUserById($userId)->getNickname();
+            $nickname = $this->magicUserDomainService->getUserById($userId)?->getNickname();
             $msgLog = new MsgLogEntity();
             $msgLog->setModel($modelVersion);
             $msgLog->setUserId($userId);
