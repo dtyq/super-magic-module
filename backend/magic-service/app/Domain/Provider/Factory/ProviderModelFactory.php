@@ -11,6 +11,7 @@ use App\Domain\Provider\Entity\ProviderModelEntity;
 use App\Domain\Provider\Entity\ValueObject\Category;
 use App\Domain\Provider\Entity\ValueObject\DisabledByType;
 use App\Domain\Provider\Entity\ValueObject\ModelType;
+use App\Domain\Provider\Entity\ValueObject\Status;
 use App\Domain\Provider\Repository\Persistence\Model\ProviderModelModel;
 
 class ProviderModelFactory
@@ -32,12 +33,12 @@ class ProviderModelFactory
             ->setCreatedAt($model->created_at)
             ->setUpdatedAt($model->updated_at)
             ->setOrganizationCode($model->organization_code)
-            ->setStatus($model->status)
+            ->setStatus(Status::from($model->status))
             ->setDisabledBy($model->disabled_by ? DisabledByType::from($model->disabled_by) : null)
             ->setTranslate($model->translate)
             ->setModelParentId($model->model_parent_id)
             ->setVisibleOrganizations($model->visible_organizations)
-            ->setIsOffice($model->is_office);
+            ->setIsOffice((bool) $model->is_office);
 
         return $entity;
     }

@@ -112,6 +112,7 @@ use App\Domain\OrganizationEnvironment\Repository\OrganizationsPlatformRepositor
 use App\Domain\Permission\Repository\Facade\OperationPermissionRepositoryInterface;
 use App\Domain\Permission\Repository\Persistence\OperationPermissionRepository;
 use App\Domain\Provider\Repository\Facade\ProviderConfigRepositoryInterface;
+use App\Domain\Provider\Repository\Facade\ProviderModelRepositoryInterface;
 use App\Domain\Provider\Repository\Facade\ProviderRepositoryInterface;
 use App\Domain\Provider\Repository\Persistence\ProviderConfigRepository;
 use App\Domain\Provider\Repository\Persistence\ProviderModelRepository;
@@ -225,7 +226,7 @@ $dependencies = [
     // provider
     ProviderRepositoryInterface::class => ProviderRepository::class,
     ProviderConfigRepositoryInterface::class => ProviderConfigRepository::class,
-    ProviderModelRepository::class => ProviderModelRepository::class,
+    ProviderModelRepositoryInterface::class => ProviderModelRepository::class,
 
     // magic-api
     ApplicationRepositoryInterface::class => ApplicationRepository::class,

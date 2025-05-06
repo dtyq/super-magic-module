@@ -11,6 +11,7 @@ use App\Domain\Provider\Entity\ValueObject\Category;
 use App\Domain\Provider\Entity\ValueObject\DisabledByType;
 use App\Domain\Provider\Entity\ValueObject\ModelConfigVO;
 use App\Domain\Provider\Entity\ValueObject\ModelType;
+use App\Domain\Provider\Entity\ValueObject\Status;
 use App\Infrastructure\Core\AbstractEntity;
 use DateTime;
 
@@ -44,7 +45,7 @@ class ProviderModelEntity extends AbstractEntity
 
     protected string $organizationCode = '';
 
-    protected int $status = 0;
+    protected Status $status;
 
     protected ?DisabledByType $disabledBy = null;
 
@@ -54,7 +55,7 @@ class ProviderModelEntity extends AbstractEntity
 
     protected array $visibleOrganizations = [];
 
-    protected int $isOffice = 0;
+    protected bool $isOffice = false;
 
     public function getId(): ?int
     {
@@ -214,12 +215,12 @@ class ProviderModelEntity extends AbstractEntity
         return $this;
     }
 
-    public function getStatus(): int
+    public function getStatus(): Status
     {
         return $this->status;
     }
 
-    public function setStatus(int $status): self
+    public function setStatus(Status $status): self
     {
         $this->status = $status;
         return $this;
@@ -269,12 +270,12 @@ class ProviderModelEntity extends AbstractEntity
         return $this;
     }
 
-    public function getIsOffice(): int
+    public function getIsOffice(): bool
     {
         return $this->isOffice;
     }
 
-    public function setIsOffice(int $isOffice): self
+    public function setIsOffice(bool $isOffice): self
     {
         $this->isOffice = $isOffice;
         return $this;
