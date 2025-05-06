@@ -12,7 +12,7 @@ use App\Domain\Provider\Entity\ValueObject\ProviderDataIsolation;
 use App\Domain\Provider\Entity\ValueObject\Query\ProviderQuery;
 use App\Domain\Provider\Factory\ProviderFactory;
 use App\Domain\Provider\Repository\Facade\ProviderRepositoryInterface;
-use App\Domain\Provider\Repository\Persistence\Model\ServiceProviderModel;
+use App\Domain\Provider\Repository\Persistence\Model\ProviderModel;
 use App\Infrastructure\Core\ValueObject\Page;
 
 class ProviderRepository extends ProviderAbstractRepository implements ProviderRepositoryInterface
@@ -21,9 +21,9 @@ class ProviderRepository extends ProviderAbstractRepository implements ProviderR
 
     public function getById(ProviderDataIsolation $dataIsolation, int $id): ?ProviderEntity
     {
-        $builder = $this->createBuilder($dataIsolation, ServiceProviderModel::query());
+        $builder = $this->createBuilder($dataIsolation, ProviderModel::query());
 
-        /** @var null|ServiceProviderModel $model */
+        /** @var null|ProviderModel $model */
         $model = $builder->where('id', $id)->first();
 
         if (! $model) {
@@ -35,9 +35,9 @@ class ProviderRepository extends ProviderAbstractRepository implements ProviderR
 
     public function getByCode(ProviderDataIsolation $dataIsolation, string $providerCode): ?ProviderEntity
     {
-        $builder = $this->createBuilder($dataIsolation, ServiceProviderModel::query());
+        $builder = $this->createBuilder($dataIsolation, ProviderModel::query());
 
-        /** @var null|ServiceProviderModel $model */
+        /** @var null|ProviderModel $model */
         $model = $builder->where('provider_code', $providerCode)->first();
 
         if (! $model) {
@@ -52,14 +52,7 @@ class ProviderRepository extends ProviderAbstractRepository implements ProviderR
      */
     public function queries(ProviderDataIsolation $dataIsolation, ProviderQuery $query, Page $page): array
     {
-        $builder = $this->createBuilder($dataIsolation, ServiceProviderModel::query());
-
-        if ($query->getKeyword()) {
-            $builder->where(function ($q) use ($query) {
-                $q->where('name', 'like', '%' . $query->getKeyword() . '%')
-                    ->orWhere('provider_code', 'like', '%' . $query->getKeyword() . '%');
-            });
-        }
+        $builder = $this->createBuilder($dataIsolation, ProviderModel::query());
 
         if ($query->getCategory()) {
             $builder->where('category', $query->getCategory()->value);
@@ -72,7 +65,7 @@ class ProviderRepository extends ProviderAbstractRepository implements ProviderR
         $result = $this->getByPage($builder, $page, $query);
 
         $list = [];
-        /** @var ServiceProviderModel $model */
+        /** @var ProviderModel $model */
         foreach ($result['list'] as $model) {
             $list[] = ProviderFactory::createEntity($model);
         }

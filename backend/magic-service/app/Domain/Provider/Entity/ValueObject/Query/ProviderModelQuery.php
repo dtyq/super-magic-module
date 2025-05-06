@@ -7,25 +7,11 @@ declare(strict_types=1);
 
 namespace App\Domain\Provider\Entity\ValueObject\Query;
 
-use App\Domain\Provider\Entity\ValueObject\Category;
 use App\Domain\Provider\Entity\ValueObject\Status;
 
-class ProviderQuery extends Query
+class ProviderModelQuery extends Query
 {
-    protected ?Category $category = null;
-
     protected ?Status $status = null;
-
-    public function getCategory(): ?Category
-    {
-        return $this->category;
-    }
-
-    public function setCategory(?Category $category): self
-    {
-        $this->category = $category;
-        return $this;
-    }
 
     public function getStatus(): ?Status
     {
