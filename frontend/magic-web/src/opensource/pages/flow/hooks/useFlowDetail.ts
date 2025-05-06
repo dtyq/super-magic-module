@@ -3,7 +3,7 @@
  */
 import { useFlowStore } from "@/opensource/stores/flow"
 import type { Bot } from "@/types/bot"
-import type { MagicFlow } from "@dtyq/magic-flow/MagicFlow/types/flow"
+import type { MagicFlow } from "@dtyq/magic-flow/dist/MagicFlow/types/flow"
 import { useMemoizedFn, useMount, useUpdateEffect } from "ahooks"
 import { useEffect, useState } from "react"
 import { useParams } from "react-router"

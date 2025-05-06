@@ -1,9 +1,9 @@
 import { useMemo } from "react"
 import { useMemoizedFn, useResetState, useUpdateEffect } from "ahooks"
-import type { MagicFlow } from "@dtyq/magic-flow/MagicFlow/types/flow"
-import { NodeTestingProvider } from "@dtyq/magic-flow/MagicFlow/context/NodeTesingContext/Provider"
+import type { MagicFlow } from "@dtyq/magic-flow/dist/MagicFlow/types/flow"
+import { NodeTestingProvider } from "@dtyq/magic-flow/dist/MagicFlow/context/NodeTesingContext/Provider"
 import { pick } from "lodash-es"
-import { getNodeVersion } from "@dtyq/magic-flow/MagicFlow/utils"
+import { getNodeVersion } from "@dtyq/magic-flow/dist/MagicFlow/utils"
 import { FlowApi } from "@/apis"
 import type { CustomFlowCtx } from "./Context"
 import { CustomFlowContext } from "./Context"
@@ -50,7 +50,7 @@ export const CustomFlowProvider = ({ children, testFlowResult, setCurrentFlow }:
 					...(dataSource.debug_data
 						? {
 								node_contexts: JSON.parse(dataSource.debug_data),
-							}
+						  }
 						: {}),
 				})
 				setTestingConfig({

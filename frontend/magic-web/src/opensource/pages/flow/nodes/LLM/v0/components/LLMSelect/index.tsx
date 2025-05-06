@@ -1,7 +1,7 @@
 import type { SelectProps } from "antd"
 import { IconAdjustmentsHorizontal, IconChevronDown } from "@tabler/icons-react"
 import { cx } from "antd-style"
-import TsSelect from "@dtyq/magic-flow/common/BaseUI/Select"
+import TsSelect from "@dtyq/magic-flow/dist/common/BaseUI/Select"
 import { useMemo } from "react"
 import { useTranslation } from "react-i18next"
 import type { LLMLabelTagType } from "./LLMLabel"

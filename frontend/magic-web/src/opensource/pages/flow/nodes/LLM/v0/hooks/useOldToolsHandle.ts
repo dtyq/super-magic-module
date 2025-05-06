@@ -4,7 +4,7 @@ import { useMemoizedFn } from "ahooks"
 import { cloneDeep, set } from "lodash-es"
 import type { UseableToolSet } from "@/types/flow"
 import { ComponentTypes } from "@/types/flow"
-import { useCurrentNode } from "@dtyq/magic-flow/MagicFlow/nodes/common/context/CurrentNode/useCurrentNode"
+import { useCurrentNode } from "@dtyq/magic-flow/dist/MagicFlow/nodes/common/context/CurrentNode/useCurrentNode"
 import { genDefaultComponent } from "@/opensource/pages/flow/utils/helpers"
 
 /**

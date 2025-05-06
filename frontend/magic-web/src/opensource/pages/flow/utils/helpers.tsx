@@ -1,37 +1,27 @@
 import { Switch } from "antd"
-import type { DataSourceOption } from "@dtyq/magic-flow/common/BaseUI/DropdownRenderer/Reference"
-import { Common } from "@dtyq/magic-flow/MagicConditionEdit/types/common"
-import MagicInput from "@dtyq/magic-flow/common/BaseUI/Input"
-import type { EXPRESSION_VALUE } from "@dtyq/magic-flow/MagicExpressionWidget/types"
-import { FormItemType, LabelTypeMap } from "@dtyq/magic-flow/MagicExpressionWidget/types"
-import type { MagicFlow } from "@dtyq/magic-flow/MagicFlow/types/flow"
-import type JSONSchema from "@dtyq/magic-flow/MagicJsonSchemaEditor/types/Schema"
-import { flowStore } from "@dtyq/magic-flow/MagicFlow/store/index"
-import type { NodeSchema } from "@dtyq/magic-flow/MagicFlow"
+import type { DataSourceOption } from "@dtyq/magic-flow/dist/common/BaseUI/DropdownRenderer/Reference"
+import { Common } from "@dtyq/magic-flow/dist/MagicConditionEdit/types/common"
+import MagicInput from "@dtyq/magic-flow/dist/common/BaseUI/Input"
+import type { EXPRESSION_VALUE } from "@dtyq/magic-flow/dist/MagicExpressionWidget/types"
+import { FormItemType, LabelTypeMap } from "@dtyq/magic-flow/dist/MagicExpressionWidget/types"
+import type { MagicFlow } from "@dtyq/magic-flow/dist/MagicFlow/types/flow"
+import type JSONSchema from "@dtyq/magic-flow/dist/MagicJsonSchemaEditor/types/Schema"
+import { flowStore } from "@dtyq/magic-flow/dist/MagicFlow/store/index"
+import type { NodeSchema } from "@dtyq/magic-flow/dist/MagicFlow"
 
 import type { Sheet } from "@/types/sheet"
 import { Schema } from "@/types/sheet"
-import {
-	get,
-	last,
-	isEmpty,
-	isObject,
-	isArray,
-	cloneDeep,
-	uniqBy,
-	set,
-	omitBy,
-} from "lodash-es"
+import { get, last, isEmpty, isObject, isArray, cloneDeep, uniqBy, set, omitBy } from "lodash-es"
 // @ts-ignore
 import SnowFlakeId from "snowflake-id"
 import i18next from "i18next"
 import { useFlowStore } from "@/opensource/stores/flow"
 import type { ComponentTypes, UseableToolSet } from "@/types/flow"
-import { getLatestNodeVersion } from "@dtyq/magic-flow/MagicFlow/utils"
+import { getLatestNodeVersion } from "@dtyq/magic-flow/dist/MagicFlow/utils"
 import { customNodeType } from "../constants"
 import { shadow, unshadow } from "./shadow"
-import { JsonSchemaEditorProps } from "@dtyq/magic-flow/MagicJsonSchemaEditor"
-import { getDefaultSchema } from "@dtyq/magic-flow/MagicJsonSchemaEditor/utils/SchemaUtils"
+import { JsonSchemaEditorProps } from "@dtyq/magic-flow/dist/MagicJsonSchemaEditor"
+import { getDefaultSchema } from "@dtyq/magic-flow/dist/MagicJsonSchemaEditor/utils/SchemaUtils"
 import { ContactApi } from "@/apis"
 import { UserType } from "@/types/user"
 

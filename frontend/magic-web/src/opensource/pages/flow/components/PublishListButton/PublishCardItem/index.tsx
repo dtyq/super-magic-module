@@ -1,7 +1,7 @@
 import type { FlowDraft } from "@/types/flow"
 import { Flex, Tooltip } from "antd"
 import EmptyIcon from "@/assets/logos/empty.svg"
-import type { MagicFlow } from "@dtyq/magic-flow/MagicFlow/types/flow"
+import type { MagicFlow } from "@dtyq/magic-flow/dist/MagicFlow/types/flow"
 import { useMemo } from "react"
 import { cx } from "antd-style"
 import MagicAvatar from "@/opensource/components/base/MagicAvatar"

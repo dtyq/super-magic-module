@@ -1,6 +1,6 @@
 import { Flex, Switch } from "antd"
 import { useMemoizedFn } from "ahooks"
-import type { MagicFlow } from "@dtyq/magic-flow/MagicFlow/types/flow"
+import type { MagicFlow } from "@dtyq/magic-flow/dist/MagicFlow/types/flow"
 import { memo, useMemo } from "react"
 import PromptCard from "@/opensource/pages/explore/components/PromptCard"
 import { IconCircleCheckFilled, IconAlertCircleFilled, IconTools } from "@tabler/icons-react"

@@ -1,5 +1,5 @@
 import type { Schema, Sheet} from "@/types/sheet";
-import type { WidgetExpressionValue } from "@dtyq/magic-flow/common/BaseUI/MagicExpressionWrap";
+import type { WidgetExpressionValue } from "@dtyq/magic-flow/dist/common/BaseUI/MagicExpressionWrap";
 
 export enum Time {
     TODAY = "today",
