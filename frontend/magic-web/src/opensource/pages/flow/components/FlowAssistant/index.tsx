@@ -19,7 +19,7 @@ import useFlowOperations from "./useFlowOperations"
 import useTestFunctions from "./useTestFunctions"
 import { useConfirmOperations } from "./hooks/useConfirmOperations"
 import { useSendAgentMessage } from "./hooks/useSendAgentMessage"
-import { MagicFlow } from "@dtyq/magic-flow/MagicFlow/types/flow"
+import { MagicFlow } from "@dtyq/magic-flow/dist/MagicFlow/types/flow"
 import { FlowApi } from "@/apis"
 
 // MD5生成函数

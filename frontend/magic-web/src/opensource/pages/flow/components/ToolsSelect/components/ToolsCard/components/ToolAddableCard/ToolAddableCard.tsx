@@ -4,7 +4,7 @@ import { ComponentTypes, FlowRouteType, type UseableToolSet } from "@/types/flow
 import MagicButton from "@/opensource/components/base/MagicButton"
 import { IconHelp, IconPlus, IconWindowMaximize } from "@tabler/icons-react"
 import DefaultToolIcon from "@/assets/logos/tool-avatar.png"
-import { useCurrentNode } from "@dtyq/magic-flow/MagicFlow/nodes/common/context/CurrentNode/useCurrentNode"
+import { useCurrentNode } from "@dtyq/magic-flow/dist/MagicFlow/nodes/common/context/CurrentNode/useCurrentNode"
 import { replaceRouteParams } from "@/utils/route"
 import { RoutePath } from "@/const/routes"
 import { genDefaultComponent } from "@/opensource/pages/flow/utils/helpers"
@@ -25,7 +25,6 @@ interface ToolAddableCardProps {
 	cardOpen: boolean
 	toolSet: UseableToolSet.Item
 }
-
 
 const ToolAddableCard = memo(
 	({

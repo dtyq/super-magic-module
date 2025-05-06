@@ -1,14 +1,14 @@
 import React, { useEffect, useMemo, useState } from "react"
 import { useMemoizedFn, useUpdateEffect } from "ahooks"
-import type { Expression } from "@dtyq/magic-flow/MagicConditionEdit/types/expression"
+import type { Expression } from "@dtyq/magic-flow/dist/MagicConditionEdit/types/expression"
 import { nanoid } from "nanoid"
-import { useCurrentNode } from "@dtyq/magic-flow/MagicFlow/nodes/common/context/CurrentNode/useCurrentNode"
-import type { ConditionInstance } from "@dtyq/magic-flow/MagicConditionEdit/index"
+import { useCurrentNode } from "@dtyq/magic-flow/dist/MagicFlow/nodes/common/context/CurrentNode/useCurrentNode"
+import type { ConditionInstance } from "@dtyq/magic-flow/dist/MagicConditionEdit/index"
 import { set } from "lodash-es"
 import {
 	useFlowEdgesActions,
 	useNodeConfigActions,
-} from "@dtyq/magic-flow/MagicFlow/context/FlowContext/useFlow"
+} from "@dtyq/magic-flow/dist/MagicFlow/context/FlowContext/useFlow"
 import usePrevious from "@/opensource/pages/flow/common/hooks/usePrevious"
 import styles from "./index.module.less"
 import BranchItem from "./components/BranchItem"

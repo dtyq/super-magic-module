@@ -1,7 +1,7 @@
 import KeyManagerButton from "@/opensource/pages/flow/components/KeyManager/KeyManagerButton"
 import { Button, Flex } from "antd"
 import { useBoolean } from "ahooks"
-import type { MagicFlow } from "@dtyq/magic-flow/MagicFlow/types/flow"
+import type { MagicFlow } from "@dtyq/magic-flow/dist/MagicFlow/types/flow"
 import { createStyles, cx } from "antd-style"
 import type { Knowledge } from "@/types/knowledge"
 

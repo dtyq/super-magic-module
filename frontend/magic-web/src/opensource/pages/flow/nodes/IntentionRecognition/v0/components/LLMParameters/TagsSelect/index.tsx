@@ -1,5 +1,5 @@
 import type { SelectProps } from "antd/lib/select"
-import MagicSelect from "@dtyq/magic-flow/common/BaseUI/Select"
+import MagicSelect from "@dtyq/magic-flow/dist/common/BaseUI/Select"
 import type React from "react"
 import { useState } from "react"
 

@@ -12,7 +12,7 @@ use App\Infrastructure\Core\Exception\BusinessException;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Infrastructure\Util\Context\RequestContext;
 use Dtyq\ApiResponse\Annotation\ApiResponse;
-use Dtyq\SuperMagic\Application\SuperAgent\Service\TopicAppService;
+use Dtyq\SuperMagic\Application\SuperAgent\Service\TopicTaskAppService;
 use Dtyq\SuperMagic\Application\SuperAgent\Service\WorkspaceAppService;
 use Dtyq\SuperMagic\Interfaces\SuperAgent\DTO\Request\GetFileUrlsRequestDTO;
 use Dtyq\SuperMagic\Interfaces\SuperAgent\DTO\Request\GetTaskFilesRequestDTO;
@@ -26,7 +26,7 @@ class TaskApi extends AbstractApi
     public function __construct(
         protected RequestInterface $request,
         protected WorkspaceAppService $workspaceAppService,
-        protected TopicAppService $topicAppService,
+        protected TopicTaskAppService $topicTaskAppService,
     ) {
     }
 
@@ -54,7 +54,7 @@ class TaskApi extends AbstractApi
         // 从请求中创建DTO
         $messageDTO = TopicTaskMessageDTO::fromArray($this->request->all());
         // 调用应用服务进行消息投递
-        return $this->workspaceAppService->deliverTopicTaskMessage($messageDTO);
+        return $this->topicTaskAppService->deliverTopicTaskMessage($messageDTO);
     }
 
     /**

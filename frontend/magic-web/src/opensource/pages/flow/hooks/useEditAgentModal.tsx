@@ -6,7 +6,7 @@ import AddOrUpdateAgent from "@/opensource/pages/explore/components/AddOrUpdateA
 import type { Bot } from "@/types/bot"
 import { useBoolean, useMemoizedFn } from "ahooks"
 import { useMemo } from "react"
-import type { MagicFlow } from "@dtyq/magic-flow/MagicFlow/types/flow"
+import type { MagicFlow } from "@dtyq/magic-flow/dist/MagicFlow/types/flow"
 
 type EditAgentModalProps = {
 	agent: Bot.Detail
