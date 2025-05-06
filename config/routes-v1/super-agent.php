@@ -10,6 +10,8 @@ use Dtyq\SuperMagic\Interfaces\SuperAgent\Facade\FileApi;
 use Dtyq\SuperMagic\Interfaces\SuperAgent\Facade\LogApi;
 use Dtyq\SuperMagic\Interfaces\SuperAgent\Facade\StatisticsApi;
 use Dtyq\SuperMagic\Interfaces\SuperAgent\Facade\WorkspaceApi;
+use Dtyq\SuperMagic\Interfaces\SuperAgent\Facade\TopicApi;
+use Dtyq\SuperMagic\Interfaces\SuperAgent\Facade\TaskApi;
 use Hyperf\HttpServer\Router\Router;
 use Dtyq\SuperMagic\Infrastructure\Utils\Middleware\RequestContextMiddlewareV2;
 
@@ -33,25 +35,25 @@ Router::addGroup('/api/v1/super-agent', static function () {
     // 话题相关
     Router::addGroup('/topics', static function () {
         // 获取话题详情
-        Router::get('/{id}', [WorkspaceApi::class, 'getTopic']);
+        Router::get('/{id}', [TopicApi::class, 'getTopic']);
         // 通过话题ID获取消息列表
-        Router::post('/{id}/messages', [WorkspaceApi::class, 'getMessagesByTopicId']);
+        Router::post('/{id}/messages', [TopicApi::class, 'getMessagesByTopicId']);
         // 保存话题
-        Router::post('/save', [WorkspaceApi::class, 'saveTopic']);
+        Router::post('/save', [TopicApi::class, 'saveTopic']);
         // 删除话题
-        Router::post('/delete', [WorkspaceApi::class, 'deleteTopic']);
+        Router::post('/delete', [TopicApi::class, 'deleteTopic']);
         // 智能重命名话题
-        Router::post('/rename', [WorkspaceApi::class, 'renameTopic']);
+        Router::post('/rename', [TopicApi::class, 'renameTopic']);
         // 获取沙箱的状态
-        Router::get('/{id}/sandbox', [WorkspaceApi::class, 'getSandboxStatus']);
+        Router::get('/{id}/sandbox', [TopicApi::class, 'getSandboxStatus']);
         // 获取沙箱的压缩包
-        Router::get('/{id}/sandbox/download', [WorkspaceApi::class, 'getSandboxDownloadUrl']);
+        Router::get('/{id}/sandbox/download', [TopicApi::class, 'getSandboxDownloadUrl']);
     });
 
     // 任务相关
     Router::addGroup('/tasks', static function () {
         // 获取任务下的附件列表
-        Router::get('/{id}/attachments', [WorkspaceApi::class, 'getTaskAttachments']);
+        Router::get('/{id}/attachments', [TaskApi::class, 'getTaskAttachments']);
     });
 
     // 账号相关（临时初始化使用）
@@ -88,14 +90,14 @@ Router::addGroup('/api/v1/super-agent', static function () {
 Router::addGroup('/api/v1/super-agent', static function () {
     // 获取话题的附件列表
     Router::addGroup('/topics', static function () {
-        Router::post('/{id}/attachments', [WorkspaceApi::class, 'getTopicAttachments']);
+        Router::post('/{id}/attachments', [TopicApi::class, 'getTopicAttachments']);
     });
     
     // 获取任务附件
-    Router::post('/tasks/get-file-url', [WorkspaceApi::class, 'getFileUrls']);
+    Router::post('/tasks/get-file-url', [TaskApi::class, 'getFileUrls']);
     // 投递消息
-    Router::post('/tasks/deliver-message', [WorkspaceApi::class, 'deliverMessage']);
-    
+    Router::post('/tasks/deliver-message', [TaskApi::class, 'deliverMessage']);
+
     // 文件相关
     Router::addGroup('/file', static function () {
         // 刷新 STS Token (提供 super - magic 使用， 通过 metadata 换取目录信息)

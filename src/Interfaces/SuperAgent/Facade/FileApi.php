@@ -8,18 +8,23 @@ declare(strict_types=1);
 namespace Dtyq\SuperMagic\Interfaces\SuperAgent\Facade;
 
 use App\ErrorCode\GenericErrorCode;
+use App\Infrastructure\Core\Exception\BusinessException;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Infrastructure\Util\Context\RequestContext;
 use Dtyq\ApiResponse\Annotation\ApiResponse;
 use Dtyq\SuperMagic\Application\SuperAgent\Service\FileProcessAppService;
+use Dtyq\SuperMagic\Application\SuperAgent\Service\WorkspaceAppService;
+use Dtyq\SuperMagic\Interfaces\SuperAgent\DTO\Request\GetFileUrlsRequestDTO;
 use Dtyq\SuperMagic\Interfaces\SuperAgent\DTO\Request\RefreshStsTokenRequestDTO;
 use Hyperf\HttpServer\Contract\RequestInterface;
+use Qbhy\HyperfAuth\AuthManager;
 
 #[ApiResponse('low_code')]
 class FileApi extends AbstractApi
 {
     public function __construct(
         private readonly FileProcessAppService $fileProcessAppService,
+        protected WorkspaceAppService $workspaceAppService,
         protected RequestInterface $request,
     ) {
     }
@@ -58,6 +63,32 @@ class FileApi extends AbstractApi
             $sandboxId,
             $organizationCode,
             null // 不传入topic_id,让服务层根据taskId自动获取
+        );
+    }
+
+    /**
+     * 获取文件URL列表.
+     *
+     * @param RequestContext $requestContext 请求上下文
+     * @return array 文件URL列表
+     * @throws BusinessException 如果参数无效则抛出异常
+     */
+    public function getFileUrls(RequestContext $requestContext): array
+    {
+        // 获取请求DTO
+        $dto = GetFileUrlsRequestDTO::fromRequest($this->request);
+        if (! empty($dto->getToken())) {
+            // 走令牌校验逻辑
+            return $this->workspaceAppService->getFileUrlsByAccessToken($dto->getFileIds(), $dto->getToken());
+        }
+        // 设置用户授权信息
+        $requestContext->setUserAuthorization(di(AuthManager::class)->guard(name: 'web')->user());
+        $userAuthorization = $requestContext->getUserAuthorization();
+
+        // 调用应用服务
+        return $this->workspaceAppService->getFileUrls(
+            $userAuthorization,
+            $dto->getFileIds()
         );
     }
 

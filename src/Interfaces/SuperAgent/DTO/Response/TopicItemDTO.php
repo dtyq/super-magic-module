@@ -33,6 +33,11 @@ class TopicItemDTO extends AbstractDTO
     protected string $taskStatus = '';
 
     /**
+     * @var string 用户id
+     */
+    protected string $userId = '';
+
+    /**
      * 从实体创建 DTO.
      */
     public static function fromEntity(TopicEntity $entity): self
@@ -89,6 +94,17 @@ class TopicItemDTO extends AbstractDTO
         return $this;
     }
 
+    public function setUserId(string $userId): self
+    {
+        $this->userId = $userId;
+        return $this;
+    }
+
+    public function getUserId(): string
+    {
+        return $this->userId;
+    }
+
     /**
      * 从数组创建DTO.
      */
@@ -99,6 +115,7 @@ class TopicItemDTO extends AbstractDTO
         $dto->chatTopicId = $data['chat_topic_id'] ?? '';
         $dto->topicName = $data['topic_name'] ?? $data['name'] ?? '';
         $dto->taskStatus = $data['task_status'] ?? $data['current_task_status'] ?? '';
+        $dto->userId = $data['user_id'] ?? '';
 
         return $dto;
     }
@@ -114,6 +131,7 @@ class TopicItemDTO extends AbstractDTO
             'chat_topic_id' => $this->chatTopicId,
             'topic_name' => $this->topicName,
             'task_status' => $this->taskStatus,
+            'user_id' => $this->userId,
         ];
     }
 }

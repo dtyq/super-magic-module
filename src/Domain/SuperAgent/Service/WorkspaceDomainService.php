@@ -25,7 +25,6 @@ use Dtyq\SuperMagic\Domain\SuperAgent\Repository\Facade\TaskRepositoryInterface;
 use Dtyq\SuperMagic\Domain\SuperAgent\Repository\Facade\TopicRepositoryInterface;
 use Dtyq\SuperMagic\Domain\SuperAgent\Repository\Facade\WorkspaceRepositoryInterface;
 use Exception;
-use Hyperf\DbConnection\Db;
 use RuntimeException;
 
 class WorkspaceDomainService

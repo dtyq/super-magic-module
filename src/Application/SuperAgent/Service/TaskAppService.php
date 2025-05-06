@@ -230,7 +230,7 @@ class TaskAppService extends AbstractAppService
                 $this->logger->info(sprintf('创建沙箱成功: %s', $sandboxId));
             } else {
                 // 否则使用话题 id 当沙箱id
-                $sandboxId = !empty($taskEntity->getSandboxId()) ? $taskEntity->getSandboxId() : (string) $taskEntity->getTopicId();
+                $sandboxId = ! empty($taskEntity->getSandboxId()) ? $taskEntity->getSandboxId() : (string) $taskEntity->getTopicId();
                 $isInitConfig = true;
             }
             $taskEntity->setSandboxId($sandboxId);
