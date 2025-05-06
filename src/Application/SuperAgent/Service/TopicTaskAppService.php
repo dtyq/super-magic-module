@@ -22,12 +22,14 @@ use Psr\Log\LoggerInterface;
 class TopicTaskAppService extends AbstractAppService
 {
     private readonly LoggerInterface $logger;
+
     public function __construct(
         protected LockerInterface $locker,
         protected LoggerFactory $loggerFactory,
     ) {
         $this->logger = $this->loggerFactory->get(get_class($this));
     }
+
     /**
      * 投递话题任务消息.
      *
