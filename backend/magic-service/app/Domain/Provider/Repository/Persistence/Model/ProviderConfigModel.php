@@ -27,7 +27,7 @@ use function Hyperf\Config\config;
  * @property string $alias
  * @property null|array $translate
  */
-class ServiceProviderConfigModel extends AbstractModel
+class ProviderConfigModel extends AbstractModel
 {
     use SoftDeletes;
 

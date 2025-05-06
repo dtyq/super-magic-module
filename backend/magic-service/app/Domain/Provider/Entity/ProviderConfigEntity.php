@@ -7,8 +7,8 @@ declare(strict_types=1);
 
 namespace App\Domain\Provider\Entity;
 
-use App\Domain\Provider\Entity\ValueObject\Provider\Status;
 use App\Domain\Provider\Entity\ValueObject\ProviderConfigVO;
+use App\Domain\Provider\Entity\ValueObject\Status;
 use App\Infrastructure\Core\AbstractEntity;
 use DateTime;
 
