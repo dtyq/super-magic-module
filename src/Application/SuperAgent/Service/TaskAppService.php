@@ -212,7 +212,7 @@ class TaskAppService extends AbstractAppService
             // 没有沙箱id，那么一定是首次任务
             $isFirstTaskMessage = empty($taskEntity->getSandboxId());
             // 判断是否为沙箱模式
-            $isSandboxMode = config('super-magic.sandbox.enabled', false);
+            $isSandboxMode = config('super-magic.sandbox.enabled', true);
             if ($isSandboxMode) {
                 /** @var bool $isInitConfig */
                 [$isInitConfig, $sandboxId] = $this->initSandbox($taskEntity->getSandboxId());
