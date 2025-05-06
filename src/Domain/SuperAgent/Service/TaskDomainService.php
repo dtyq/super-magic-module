@@ -73,7 +73,7 @@ class TaskDomainService
 
         // 如果指令是打断或者追问的情况下
         // 如果后续有其他情况变更，再从前端传 task_id
-        if ($instruction == ChatInstruction::Interrupted or $instruction == ChatInstruction::FollowUp) {
+        if ($instruction == ChatInstruction::Interrupted) {
             $taskList = $this->taskRepository->getTasksByTopicId($topicId, 1, 1, ['task_status' => TaskStatus::RUNNING]);
             if (empty($taskList['list'])) {
                 ExceptionBuilder::throw(GenericErrorCode::IllegalOperation, 'task.not_found');
