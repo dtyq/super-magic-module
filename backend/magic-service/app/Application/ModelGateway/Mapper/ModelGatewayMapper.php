@@ -62,7 +62,8 @@ class ModelGatewayMapper extends ModelMapper
 
         // 这里具有优先级的顺序来覆盖配置,后续统一迁移到管理后台
         $this->loadEnvModels();
-        $this->loadFlowModels();
+        // 屏蔽 flow model的加载，使用 ApiModels 平替
+        // $this->loadFlowModels();
         $this->loadApiModels();
     }
 
@@ -111,7 +112,7 @@ class ModelGatewayMapper extends ModelMapper
             return $odinModel->getModel();
         }
         // 最后一次尝试，从被预加载的模型中获取。注意，被预加载的模型是即将被废弃，后续需要迁移到管理后台
-        return parent::getChatModel($model);
+        return $this->getChatModel($model);
     }
 
     /**
@@ -125,7 +126,7 @@ class ModelGatewayMapper extends ModelMapper
         if ($odinModel) {
             return $odinModel->getModel();
         }
-        return parent::getEmbeddingModel($model);
+        return $this->getEmbeddingModel($model);
     }
 
     /**
@@ -153,8 +154,9 @@ class ModelGatewayMapper extends ModelMapper
          * @var AbstractModel $model
          */
         foreach ($this->models['chat'] as $name => $model) {
-            $this->attributes[$name] = new OdinModelAttributes(
-                key: $name,
+            $key = strtolower($name);
+            $this->attributes[$key] = new OdinModelAttributes(
+                key: $key,
                 name: $name,
                 label: $name,
                 icon: '',
@@ -163,12 +165,13 @@ class ModelGatewayMapper extends ModelMapper
                 owner: 'MagicOdin',
             );
             $this->logger->info('EnvModelRegister', [
-                'key' => $name,
+                'key' => $key,
                 'model' => $model->getModelName(),
                 'implementation' => get_class($model),
             ]);
         }
         foreach ($this->models['embedding'] as $name => $model) {
+            $name = strtolower($name);
             $this->attributes[$name] = new OdinModelAttributes(
                 key: $name,
                 name: $name,
@@ -192,10 +195,13 @@ class ModelGatewayMapper extends ModelMapper
         $modelConfigs = di(ModelConfigDomainService::class)->getByModels(['all']);
         foreach ($modelConfigs as $modelConfig) {
             $embedding = str_contains($modelConfig->getModel(), 'embedding');
-            $key = $modelConfig->getModel();
+            // 为了兼容，同时注册 model 和 label。
+            // 将 odin 需要的 key 转为小写，对外展示值不变。
+            $modelEndpointId = strtolower($modelConfig->getModel());
+            $modelType = strtolower($modelConfig->getName());
             try {
-                $this->addModel($key, [
-                    'model' => $modelConfig->getModel(),
+                $item = [
+                    'model' => $modelEndpointId,
                     'implementation' => $modelConfig->getImplementation(),
                     'config' => $modelConfig->getActualImplementationConfig(),
                     // 以前的配置表没有 embedding 相关的配置，所以这里默认都开启
@@ -206,12 +212,14 @@ class ModelGatewayMapper extends ModelMapper
                         'multi_modal' => ! $embedding,
                         'vector_size' => 0,
                     ],
-                ]);
+                ];
+                $this->addModel($modelEndpointId, $item);
+                $this->addModel($modelType, $item);
                 $this->addAttributes(
-                    key: $key,
+                    key: $modelEndpointId,
                     attributes: new OdinModelAttributes(
-                        key: $key,
-                        name: $key,
+                        key: $modelEndpointId,
+                        name: $modelConfig->getName(),
                         label: $modelConfig->getName(),
                         icon: '',
                         tags: [['type' => 1, 'value' => 'MagicAI']],
@@ -220,14 +228,14 @@ class ModelGatewayMapper extends ModelMapper
                     )
                 );
                 $this->logger->info('ApiModelRegister', [
-                    'key' => $key,
+                    'key' => $modelEndpointId,
                     'model' => $modelConfig->getModel(),
                     'label' => $modelConfig->getName(),
                     'implementation' => $modelConfig->getImplementation(),
                 ]);
             } catch (Throwable $exception) {
                 $this->logger->warning('ApiModelRegisterWarning', [
-                    'key' => $key,
+                    'key' => $modelEndpointId,
                     'model' => $modelConfig->getModel(),
                     'label' => $modelConfig->getName(),
                     'implementation' => $modelConfig->getImplementation(),
@@ -272,9 +280,11 @@ class ModelGatewayMapper extends ModelMapper
     /**
      * @param string $key 为了兼容历史数据，每个 flow_model_config 同时支持 model 和 model_name 的映射
      */
-    private function addFlowModelConfig(MagicFlowAIModelEntity $modelEntity, string $key)
+    private function addFlowModelConfig(MagicFlowAIModelEntity $modelEntity, string $key): void
     {
-        $this->addModel($modelEntity->getName(), [
+        $name = strtolower($modelEntity->getName());
+        $key = strtolower($key);
+        $this->addModel($name, [
             'model' => $key,
             'implementation' => $modelEntity->getImplementation(),
             'config' => $modelEntity->getActualImplementationConfig(),
@@ -287,10 +297,10 @@ class ModelGatewayMapper extends ModelMapper
             ],
         ]);
         $this->addAttributes(
-            key: $modelEntity->getName(),
+            key: $name,
             attributes: new OdinModelAttributes(
-                key: $modelEntity->getName(),
-                name: $modelEntity->getName(),
+                key: $name,
+                name: $name,
                 label: $modelEntity->getLabel(),
                 icon: $modelEntity->getIcon(),
                 tags: $modelEntity->getTags(),
@@ -313,7 +323,9 @@ class ModelGatewayMapper extends ModelMapper
         // 获取已持久化的配置
         $models = $this->getModels($type);
         foreach ($models as $name => $model) {
-            $list[$name] = new OdinModel(key: $name, model: $model, attributes: $this->attributes[$name]);
+            // 统一转换为小写
+            $key = strtolower($name);
+            $list[$key] = new OdinModel(key: $key, model: $model, attributes: $this->attributes[$key]);
         }
         // 加载 admin 配置的所有模型
         $providerConfigs = di(ServiceProviderDomainService::class)->getActiveModelsByOrganizationCode($organizationCode, ServiceProviderCategory::LLM);
@@ -396,9 +408,11 @@ class ModelGatewayMapper extends ModelMapper
         if (! $serviceProviderCode) {
             return null;
         }
-
+        // odin 内部统一使用小写，对外展示不变
+        $modelIdKey = strtolower($modelId);
+        $endpointName = strtolower($endpointName);
         return new OdinModel(
-            key: $modelId,// 用户侧只返回模型名称，不返回服务商侧的接入点名称
+            key: $modelIdKey,// 用户侧只返回模型名称，不返回服务商侧的接入点名称
             model: $this->createModel($endpointName, [
                 'model' => $endpointName,
                 'implementation' => $serviceProviderCode->getImplementation(),
@@ -412,7 +426,7 @@ class ModelGatewayMapper extends ModelMapper
                 ],
             ]),
             attributes: new OdinModelAttributes(
-                key: $modelId,
+                key: $modelIdKey,
                 name: $modelId, // 用户侧只返回模型名称，不返回服务商侧的接入点名称
                 label: $providerModelsEntity->getName(),
                 icon: $providerModelsEntity->getIcon(),
@@ -452,7 +466,8 @@ class ModelGatewayMapper extends ModelMapper
 
         // 获取实际的端点名称，优先使用模型配置中的model字段
         $endpoint = empty($item['model']) ? $model : $item['model'];
-
+        // 保存/查询时统一转小写
+        $endpoint = strtolower($endpoint);
         // 使用ModelFactory创建模型实例
         return ModelFactory::create(
             $implementation,
