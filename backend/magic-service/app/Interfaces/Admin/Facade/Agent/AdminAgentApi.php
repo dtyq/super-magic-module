@@ -103,6 +103,9 @@ class AdminAgentApi extends AbstractApi
 
     private function isInWhiteListForOrgization(): void
     {
+        /**
+         * @var MagicUserAuthorization $authentication
+         */
         $authentication = $this->getAuthorization();
         $phone = $this->getPhone($authentication->getId());
         if (! PermissionChecker::isOrganizationAdmin($authentication->getOrganizationCode(), $phone)) {
