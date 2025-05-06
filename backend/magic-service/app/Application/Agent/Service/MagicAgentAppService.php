@@ -163,7 +163,7 @@ class MagicAgentAppService extends AbstractAppService
     public function deleteAgentById(Authenticatable $authorization, string $id): bool
     {
         $this->getAgentOperation($this->createPermissionDataIsolation($authorization), $id)->validate('d', $id);
-        return $this->magicAgentDomainService->deleteAgentById($id);
+        return $this->magicAgentDomainService->deleteAgentById($id, $authorization->getOrganizationCode());
     }
 
     // 获取指定用户的助理

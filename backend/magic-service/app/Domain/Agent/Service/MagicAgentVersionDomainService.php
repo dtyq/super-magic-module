@@ -106,6 +106,18 @@ class MagicAgentVersionDomainService
     }
 
     /**
+     * 根据ids获取助理版本.
+     * @return array<MagicAgentVersionEntity>
+     */
+    public function getAgentByIds(array $ids): array
+    {
+        if (empty($ids)) {
+            return [];
+        }
+        return $this->agentVersionRepository->getAgentByIds($ids);
+    }
+
+    /**
      * @return MagicAgentVersionEntity[]
      */
     public function getReleaseAgentVersions(string $agentId): array
