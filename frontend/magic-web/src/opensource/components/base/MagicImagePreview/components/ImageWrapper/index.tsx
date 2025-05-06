@@ -1,13 +1,10 @@
 import { useMessageRenderContext } from "@/opensource/components/business/MessageRenderProvider/hooks"
-import { useBoolean, useMemoizedFn, useUpdateEffect } from "ahooks"
+import { useBoolean, useMemoizedFn } from "ahooks"
 import type React from "react"
 import { useState, memo, useMemo, useRef, useEffect } from "react"
-import { magic } from "@/enhance/magicElectron"
-import { isFunction, isString } from "lodash-es"
+import { isString } from "lodash-es"
 import { useTranslation } from "react-i18next"
 import { Skeleton } from "antd"
-import MessageFilePreviewService from "@/opensource/services/chat/message/MessageFilePreview"
-import MessageFilePreviewStore from "@/opensource/stores/chatNew/messagePreview"
 import useChatFileUrls from "@/opensource/hooks/chat/useChatFileUrls"
 import conversationStore from "@/opensource/stores/chatNew/conversation"
 import { observer } from "mobx-react-lite"
@@ -72,7 +69,6 @@ const ImageWrapper = observer((props: ImageWrapperProps) => {
 
 	const [error, { setTrue, setFalse }] = useBoolean(false)
 	const { currentConversation: conversation } = conversationStore
-	const { previewInfo } = MessageFilePreviewStore
 
 	const { data: urls, isLoading } = useChatFileUrls(
 		useMemo(() => {
@@ -137,33 +133,8 @@ const ImageWrapper = observer((props: ImageWrapperProps) => {
 		fileSize,
 	])
 
-	useUpdateEffect(() => {
-		// 使用高清图功能，如存在预览文件信息，fileInfo更新后存在旧文件id，需要更新预览文件信息
-		if (
-			previewInfo &&
-			fileInfo?.oldUrl &&
-			fileInfo?.useHDImage &&
-			previewInfo.fileId === fileInfo.oldFileId
-		) {
-			MessageFilePreviewService.setPreviewInfo(fileInfo)
-		}
-	}, [fileInfo])
-
-	const onClick = useMemoizedFn(async () => {
-		if (!messageId || !fileInfo) {
-			console.warn("messageId is undefined")
-			return
-		}
-		// !!! 这里的预览流程不能随便改，一旦更改要同步 magic.media.previewMedia 的逻辑，涉及到 electron 以及 /media 路由
-		if (isFunction(magic?.media?.previewMedia)) {
-			magic?.media?.previewMedia(fileInfo)
-		} else {
-			MessageFilePreviewService.setPreviewInfo(fileInfo)
-		}
-	})
-
 	const handleReloadImage = useMemoizedFn(() => {
-		props?.reload?.()
+		reload?.()
 		setFalse()
 	})
 
@@ -176,13 +147,16 @@ const ImageWrapper = observer((props: ImageWrapperProps) => {
 		onLoadInProps?.(e)
 	})
 
+	const fileInfoBase64 = useMemo(() => {
+		return fileInfo ? btoa(JSON.stringify(fileInfo)) : ""
+	}, [fileInfo])
+
 	const ImageNode = useMemo(() => {
 		if (fileInfo?.ext?.ext?.startsWith("svg") && fileInfo?.url) {
 			return (
 				<button
 					type="button"
 					className={cx(styles.button)}
-					onClick={onClick}
 					disabled={!fileInfo?.url}
 					draggable={false}
 				>
@@ -212,7 +186,7 @@ const ImageWrapper = observer((props: ImageWrapperProps) => {
 					ref={imageRef}
 					src={fileInfo?.url}
 					alt={alt ?? fileInfo?.fileName}
-					onClick={onClick}
+					data-file-info={fileInfoBase64}
 					className={cx(
 						styles.image,
 						{ [styles.longImage]: isLongImage },
@@ -233,10 +207,10 @@ const ImageWrapper = observer((props: ImageWrapperProps) => {
 		fileInfo?.ext?.ext,
 		fileInfo?.fileName,
 		fileInfo?.url,
+		fileInfoBase64,
 		isLoading,
 		isLongImage,
 		loader,
-		onClick,
 		onError,
 		onLoad,
 		rest,

@@ -1,8 +1,9 @@
 import KeyManagerButton from "@/opensource/pages/flow/components/KeyManager/KeyManagerButton"
 import { Button, Flex } from "antd"
 import { useBoolean } from "ahooks"
-import type { MagicFlow } from "@dtyq/magic-flow/MagicFlow/types/flow"
-import { createStyles } from "antd-style"
+import type { MagicFlow } from "@dtyq/magic-flow/dist/MagicFlow/types/flow"
+import { createStyles, cx } from "antd-style"
+import type { Knowledge } from "@/types/knowledge"
 
 const useStyles = createStyles(({ css }) => {
 	return {
@@ -23,11 +24,12 @@ const useStyles = createStyles(({ css }) => {
 
 type UseApiKeyProps = {
 	Icon?: boolean
-	flow: MagicFlow.Flow
+	flow: MagicFlow.Flow | Knowledge.Detail
 	isAgent: boolean
+	className?: string
 }
 
-export default function ApiKeyButton({ flow, Icon, isAgent }: UseApiKeyProps) {
+export default function ApiKeyButton({ flow, Icon, isAgent, className }: UseApiKeyProps) {
 	const [keyManagerOpen, { setTrue: openKeyManager, setFalse: closeKeyManager }] =
 		useBoolean(false)
 
@@ -36,7 +38,7 @@ export default function ApiKeyButton({ flow, Icon, isAgent }: UseApiKeyProps) {
 	return (
 		<>
 			{!Icon && (
-				<Button type="text" onClick={openKeyManager} className={styles.btn}>
+				<Button type="text" onClick={openKeyManager} className={cx(styles.btn, className)}>
 					API Key
 				</Button>
 			)}

@@ -1,0 +1,223 @@
+import { createStyles } from "antd-style"
+
+const useStyles = createStyles(({ token }) => ({
+	container: {
+		width: "100%",
+		height: "100%",
+		backgroundColor: token.colorBgLayout,
+		display: "flex",
+		flexDirection: "row",
+	},
+	workspacePanel: {
+		width: "250px",
+		height: "100%",
+		overflow: "hidden",
+		display: "flex",
+		flexDirection: "column",
+	},
+	messageList: {
+		flex: 1,
+	},
+	detailContainer: {
+		flex: 1,
+	},
+	threadContainer: {
+		flex: 1,
+		display: "flex",
+		gap: "6px",
+		flexDirection: "column",
+		overflow: "hidden",
+	},
+	section: {
+		flex: 1,
+		display: "flex",
+		flexDirection: "column",
+		overflow: "hidden",
+		minHeight: 0,
+		borderRadius: 8,
+		border: "1px solid rgba(28, 29, 35, 0.08)",
+		backgroundColor: "#FFF",
+	},
+	header: {
+		display: "flex",
+		justifyContent: "space-between",
+		alignItems: "center",
+		height: "40px",
+		padding: "0 10px",
+		borderBottom: `1px solid ${token.colorBorderSecondary}`,
+		flexShrink: 0,
+		color: token.colorTextSecondary,
+	},
+	titleContainer: {
+		display: "flex",
+		alignItems: "center",
+		gap: "10px",
+		fontWeight: 400,
+	},
+	iconButton: {
+		padding: 0,
+		width: "24px",
+		height: "24px",
+		display: "flex",
+		alignItems: "center",
+		justifyContent: "center",
+		color: "inherit",
+		"&>span": {
+			display: "flex",
+			alignItems: "center",
+		},
+	},
+	title: {
+		fontSize: "14px",
+		fontWeight: 500,
+		color: token.colorTextSecondary,
+	},
+	content: {
+		flex: 1,
+		overflow: "auto",
+		padding: "6px",
+		minHeight: 0,
+		display: "flex",
+		flexDirection: "column",
+	},
+	collapsed: {
+		maxHeight: 0,
+		padding: "0!important",
+		overflow: "hidden",
+	},
+	threadItem: {
+		display: "flex",
+		alignItems: "center",
+		justifyContent: "space-between",
+		height: "36px",
+		padding: "4px 8px 4px 4px",
+		borderRadius: "8px",
+		cursor: "pointer",
+		marginBottom: "4px",
+		"&:hover": {
+			backgroundColor: token.colorFillSecondary,
+		},
+	},
+	threadItemSelected: {
+		display: "flex",
+		alignItems: "center",
+		justifyContent: "space-between",
+		height: "36px",
+		padding: "4px 8px 4px 4px",
+		borderRadius: "8px",
+		cursor: "pointer",
+		backgroundColor: "#f0f6ff",
+		color: token.colorPrimary,
+		marginBottom: "4px",
+	},
+	threadItemMoreButton: {
+		color: token.colorTextSecondary,
+		width: "20px",
+		height: "20px",
+		marginLeft: "8px",
+	},
+	threadItemMoreButtonIcon: {
+		flex: "none",
+		color: "inherit",
+	},
+	threadTitle: {
+		display: "flex",
+		alignItems: "center",
+		gap: "8px",
+		flex: 1,
+		minWidth: 0,
+	},
+	threadTitleImage: {
+		flex: "none",
+	},
+	image: {
+		height: "100%",
+		maxHeight: "100%",
+		maxWidth: "100%",
+	},
+	fileItem: {
+		display: "flex",
+		alignItems: "center",
+		justifyContent: "space-between",
+		padding: "8px 12px",
+		borderRadius: "6px",
+		cursor: "pointer",
+		transition: "background-color 0.2s",
+		"&:hover": {
+			backgroundColor: token.colorFillSecondary,
+		},
+	},
+	fileTitle: {
+		display: "flex",
+		alignItems: "center",
+		gap: "8px",
+		flex: 1,
+		minWidth: 0,
+		color: token.colorTextSecondary,
+		".anticon": {
+			fontSize: "14px",
+		},
+	},
+	emptyText: {
+		padding: "16px",
+		textAlign: "center",
+		color: token.colorTextQuaternary,
+		fontSize: "14px",
+		display: "flex",
+		flexDirection: "column",
+		alignItems: "center",
+		flex: "auto",
+		overflow: "hidden",
+		justifyContent: "center",
+		paddingBottom: "20%",
+	},
+	emptyTextIcon: {
+		marginBottom: "16px",
+	},
+	ellipsis: {
+		overflow: "hidden",
+		textOverflow: "ellipsis",
+		whiteSpace: "nowrap",
+	},
+	inlineInput: {
+		margin: "0 4px",
+		flex: 1,
+	},
+	searchContainer: {
+		marginBottom: "6px",
+		flex: "none",
+	},
+	searchInput: {
+		fontSize: "14px",
+		".ant-input-prefix": {
+			marginRight: "8px",
+			color: token.colorTextQuaternary,
+		},
+	},
+	listContainer: {
+		flex: "auto",
+		overflow: "auto",
+	},
+	// 新建话题按钮样式
+	newTopicButton: {
+		display: "flex",
+		alignItems: "center",
+		justifyContent: "center",
+		height: "32px",
+		borderRadius: "8px",
+		border: `1px dashed ${token.colorBorder}`,
+		marginBottom: "8px",
+		cursor: "pointer",
+		color: token.colorTextSecondary,
+		// "&:hover": {
+		// 	color: token.colorPrimary,
+		// 	borderColor: token.colorPrimary,
+		// },
+		backgroundColor: token.colorBgLayout,
+	},
+	newTopicButtonIcon: {
+		marginRight: "8px",
+	},
+}))
+
+export default useStyles

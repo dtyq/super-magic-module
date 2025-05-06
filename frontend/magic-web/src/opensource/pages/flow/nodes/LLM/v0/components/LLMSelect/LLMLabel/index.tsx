@@ -1,7 +1,6 @@
 import { IconCheck } from "@tabler/icons-react"
-import brandOpenApi from "@dtyq/magic-flow/common/assets/brand-openai.png"
+import brandOpenApi from "@dtyq/magic-flow/dist/common/assets/brand-openai.png"
 import { createStyles, cx } from "antd-style"
-import { MagicIcon } from "@dtyq/magic-flow/common/BaseUI/Icon"
 
 import { Tooltip } from "antd"
 
@@ -115,11 +114,7 @@ export default function LLMLabel({
 								[styles.iconItem]: tag.type === LLMLabelTagType.Icon,
 							})}
 						>
-							{tag.type === LLMLabelTagType.Icon ? (
-								<MagicIcon name={tag.value} />
-							) : (
-								<span>{tag.value}</span>
-							)}
+							{tag.type === LLMLabelTagType.Icon ? null : <span>{tag.value}</span>}
 						</li>
 					))}
 				</ul>

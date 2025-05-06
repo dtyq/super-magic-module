@@ -7,14 +7,11 @@ declare(strict_types=1);
 
 namespace App\Interfaces\Chat\Assembler;
 
-use App\Domain\Chat\DTO\Message\ChatMessage\AggregateAISearchCardMessage;
 use App\Domain\Chat\DTO\Message\EmptyMessage;
 use App\Domain\Chat\DTO\Message\MessageInterface;
-use App\Domain\Chat\DTO\Message\StreamMessage\StreamOptions;
-use App\Domain\Chat\DTO\Message\StreamMessageInterface;
+use App\Domain\Chat\DTO\Message\StreamMessage\StreamMessageStatus;
 use App\Domain\Chat\DTO\Response\ClientJsonStreamSequenceResponse;
 use App\Domain\Chat\DTO\Response\ClientSequenceResponse;
-use App\Domain\Chat\DTO\Response\ClientStreamSequenceResponse;
 use App\Domain\Chat\DTO\Response\Common\ClientMessage;
 use App\Domain\Chat\DTO\Response\Common\ClientSequence;
 use App\Domain\Chat\Entity\Items\SeqExtra;
@@ -77,40 +74,35 @@ class SeqAssembler
     }
 
     /**
-     * 大模型响应流式消息的客户端 seq 结构.
-     */
-    public static function getClientStreamSeqStruct(
-        StreamOptions $streamOptions,
-        MagicSeqEntity $seqEntity,
-        ?MagicMessageEntity $messageEntity = null
-    ): ?ClientStreamSequenceResponse {
-        $messageContent = $messageEntity?->getContent();
-        if (! $messageContent instanceof StreamMessageInterface) {
-            return null;
-        }
-        $response = (new ClientStreamSequenceResponse())
-            ->setReasoningContent($messageContent->getReasoningContent())
-            ->setTargetSeqId($seqEntity->getSeqId())
-            ->setSeqId(null);
-        $content = $messageContent->getContent() ?? '';
-        // 有些消息的大模型响应字段不是 content，这里特殊处理
-        if ($messageContent instanceof AggregateAISearchCardMessage) {
-            $response->setLlmResponse($content);
-        } else {
-            $response->setContent($content);
-        }
-        $response->setStatus($streamOptions->getStatus());
-        return $response;
-    }
-
-    /**
      * Json 流式消息的客户端 seq 结构.
      */
     public static function getClientJsonStreamSeqStruct(
-        MagicSeqEntity $seqEntity,
+        string $seqId,
         ?array $thisTimeStreamMessages = null
     ): ?ClientJsonStreamSequenceResponse {
-        return (new ClientJsonStreamSequenceResponse())->setTargetSeqId($seqEntity->getSeqId())->setStreams($thisTimeStreamMessages);
+        // todo 为了兼容旧版流式消息，需要将 content/reasoning_content/status 字段放到最外层。
+        // todo 等前端上线后，就移除 content/reasoning_content/status 的多余推送
+        $response = (new ClientJsonStreamSequenceResponse())->setTargetSeqId($seqId);
+        $content = $thisTimeStreamMessages['content'] ?? null;
+        $reasoningContent = $thisTimeStreamMessages['reasoning_content'] ?? null;
+        // 强行删除 $streamOptions 中的stream_app_message_id/stream字段
+        unset($thisTimeStreamMessages['stream_options']['stream_app_message_id'], $thisTimeStreamMessages['stream_options']['stream']);
+        $streamOptions = $thisTimeStreamMessages['stream_options'] ?? null;
+        // 0 会被当做 false 处理，所以这里要判断是否为 null 或者 ''
+        if ($content !== null && $content !== '') {
+            $response->setContent($content);
+        }
+        if ($reasoningContent !== null && $reasoningContent !== '') {
+            // 以前的流程有 reasoning_content 时也会推送 content 为空字符串的数据
+            $response->setReasoningContent($reasoningContent);
+        }
+        if (isset($streamOptions['status'])) {
+            $response->setStatus($streamOptions['status']);
+        } else {
+            $response->setStatus(StreamMessageStatus::Processing);
+        }
+        $response->setStreams($thisTimeStreamMessages);
+        return $response;
     }
 
     /**

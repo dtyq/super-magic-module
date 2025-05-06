@@ -37,12 +37,12 @@ class ExcelFileParserDriver implements ExcelFileParserDriverInterface
             foreach ($sheetList as $sheetName) {
                 $content .= '##' . $sheetName . "\n";
                 $sheet = $excelFile->openSheet($sheetName, Excel::SKIP_EMPTY_ROW);
-                while (($row = $sheet->nextRow()) !== null) {
-                    // 暂时使用 csv 格式
-                    $csvRow = implode(',', array_map(fn ($cell) => strval($cell), $row));
+                $row = $sheet->nextRow();
+                while (! empty($row)) {
+                    $csvRow = implode(',', array_map(fn ($cell) => $this->formatCsvCell((string) $cell), $row));
                     $content .= $csvRow . "\n";
+                    $row = $sheet->nextRow();
                 }
-                /* @phpstan-ignore-next-line */
                 $content .= "\n";
             }
         } catch (Exception $e) {
@@ -68,7 +68,7 @@ class ExcelFileParserDriver implements ExcelFileParserDriverInterface
                     $rowData = [];
                     for ($col = 'A'; $col <= $highestColumn; ++$col) {
                         $cellValue = $worksheet->getCell($col . $row)->getValue();
-                        $rowData[] = strval($cellValue ?? '');
+                        $rowData[] = $this->formatCsvCell(strval($cellValue ?? ''));
                     }
                     $content .= implode(',', $rowData) . "\n";
                 }
@@ -78,5 +78,30 @@ class ExcelFileParserDriver implements ExcelFileParserDriverInterface
             ExceptionBuilder::throw(FlowErrorCode::ExecuteFailed, sprintf('Failed to read Excel file: %s', $e->getMessage()));
         }
         return $content;
+    }
+
+    /**
+     * 格式化CSV单元格内容，对特殊内容添加引号.
+     */
+    private function formatCsvCell(string $value): string
+    {
+        // 如果单元格内容为空，直接返回空字符串
+        if ($value === '') {
+            return '';
+        }
+
+        // 如果单元格内容包含以下任意字符，需要用引号包围
+        if (str_contains($value, ',')
+            || str_contains($value, '"')
+            || str_contains($value, "\n")
+            || str_contains($value, "\r")
+            || str_starts_with($value, ' ')
+            || str_ends_with($value, ' ')) {
+            // 转义双引号
+            $value = str_replace('"', '""', $value);
+            return '"' . $value . '"';
+        }
+
+        return $value;
     }
 }

@@ -16,6 +16,7 @@ export const useStyles = createStyles(
 				userSelect: "none",
 				height: "fit-content",
 				overflow: "hidden",
+				display: "block",
 			},
 			username: css`
 				font-size: 10px;
@@ -23,8 +24,12 @@ export const useStyles = createStyles(
 			`,
 			content: css`
 				max-height: 30px;
-				overflow-y: auto;
-				overflow-x: hidden;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: nowrap;
+				display: -webkit-box;
+				-webkit-line-clamp: 1;
+				-webkit-box-orient: vertical;
 			`,
 		}
 	},

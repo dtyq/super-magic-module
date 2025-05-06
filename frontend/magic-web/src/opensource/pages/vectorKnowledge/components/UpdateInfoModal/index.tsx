@@ -5,11 +5,11 @@ import { useForm } from "antd/es/form/Form"
 import MagicModal from "@/opensource/components/base/MagicModal"
 import { useEffect, useState } from "react"
 import MagicAvatar from "@/opensource/components/base/MagicAvatar"
-import type { FileData } from "@/opensource/pages/chatNew/components/MessageEditor/MagicInput/components/InputFiles/types"
+import type { FileData } from "@/opensource/pages/chatNew/components/MessageEditor/components/InputFiles/types"
 import UploadButton from "../Upload/UploadButton"
 import { createStyles } from "antd-style"
 import { useUpload } from "@/opensource/hooks/useUploadFiles"
-import { genFileData } from "@/opensource/pages/chatNew/components/MessageEditor/MagicInput/components/InputFiles/utils"
+import { genFileData } from "@/opensource/pages/chatNew/components/MessageEditor/components/InputFiles/utils"
 import { KnowledgeApi } from "@/apis"
 import type { Knowledge } from "@/types/knowledge"
 import type { FlowWithTools } from "@/opensource/pages/flow/list/hooks/useFlowList"
@@ -107,11 +107,14 @@ function UpdateInfoModal({ details, open, onClose, updateList }: UpdateInfoModal
 
 	useEffect(() => {
 		if (details) {
-			form.setFieldsValue({
-				name: details.name,
-				description: details.description,
+			// requestAnimationFrame 将表单更新推迟到下一个浏览器绘制帧，确保所有 DOM 元素都已完全渲染，表单字段已完成初始化。
+			requestAnimationFrame(() => {
+				form.setFieldsValue({
+					name: details.name,
+					description: details.description,
+				})
+				setImagePreviewUrl(details.icon)
 			})
-			setImagePreviewUrl(details.icon)
 		}
 	}, [details, form, open])
 

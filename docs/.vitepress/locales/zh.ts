@@ -44,6 +44,7 @@ export default {
                   link: '/zh/tutorial/basic/flow/what-is-flow',
                   items: [
                     { text: '搭建一个流程', link: '/zh/tutorial/basic/flow/build-a-flow' },
+                    { text: '通过http  api调用流程', link: '/zh/tutorial/basic/flow/use-flow-with-openai' },
                   ]
                 },
               ]
@@ -58,7 +59,13 @@ export default {
            
           ]
         },
-        
+        {
+          text: 'Magic API',
+          collapsed: false,
+          items: [
+            { text: 'Flow API', link: '/zh/tutorial/basic/open-api/flow-open-api' },
+          ]
+        },
         {
           text: '基础概念',
           collapsed: false,
@@ -150,7 +157,7 @@ export default {
           text: '快速启动',
           collapsed: false,
           items: [
-            { text: 'docker安装', link: '/zh/development/deploy/docker' },
+            { text: 'Docker 安装', link: '/zh/development/deploy/docker' },
           ]
         },
 

@@ -31,6 +31,7 @@ import { userStore } from "@/opensource/models/user"
 import LastConversationService from "./LastConversationService"
 import MessageReplyService from "../message/MessageReplyService"
 import groupInfoStore from "@/opensource/stores/groupInfo"
+import { fetchPaddingData } from "@/utils/request"
 
 /**
  * 会话服务
@@ -96,7 +97,13 @@ class ConversationService {
 	 * @param conversationList 会话列表
 	 */
 	refreshConversationData(conversationList: Conversation[]) {
-		ChatApi.getConversationList(conversationList.map((item) => item.id)).then(({ items }) => {
+		const ids = conversationList.map((item) => item.id)
+		return fetchPaddingData(({ page_token }) => {
+			return ChatApi.getConversationList(ids, {
+				page_token,
+				status: ConversationStatus.Normal,
+			})
+		}).then((items) => {
 			if (items.length) {
 				// 更新会话信息
 				this.updateConversations(items)
@@ -189,6 +196,10 @@ class ConversationService {
 			ConversationBotDataService.clearBotInfo()
 			// 清除Agent信息
 			ConversationTaskService.clearAgentInfo()
+
+			// 设置编辑器状态
+			EditorStore.setConversationId(conversation.id)
+			EditorStore.setTopicId(conversation.current_topic_id ?? "")
 
 			// 获取会话用户/群组信息
 			if (!conversation.isGroupConversation) {
@@ -303,6 +314,10 @@ class ConversationService {
 		// 获取机器人信息
 		return ChatApi.getAiAssistantBotInfo({ user_id: conversation.receive_id }).then(
 			async (botInfo) => {
+				if (!botInfo) {
+					console.error("botInfo is null, receive_id:", conversation.receive_id)
+					return
+				}
 				// 获取定时任务列表
 				ConversationTaskService.switchAgent(botInfo.root_id)
 				// 初始化快捷指令
@@ -349,8 +364,6 @@ class ConversationService {
 
 				const conversationList = conversations.map((item) => new Conversation(item))
 
-				this.refreshConversationData(conversationList)
-
 				conversationStore.setConversations(conversationList)
 
 				// 如果当前会话为空,或者不是当前组织的会话，则设置当前会话
@@ -372,8 +385,11 @@ class ConversationService {
 					this.calcSidebarConversations()
 				}
 
-				// 重新拉取一遍用户信息和群聊信息, 保证数据最新
-				this.refreshConversationReceiveData()
+				// 刷新会话数据
+				this.refreshConversationData(conversationList).then(() => {
+					// 重新拉取一遍用户信息和群聊信息, 保证数据最新
+					this.refreshConversationReceiveData()
+				})
 			},
 		)
 	}

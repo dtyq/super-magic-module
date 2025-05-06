@@ -18,14 +18,17 @@ use Hyperf\Odin\Api\Response\EmbeddingResponse;
 use Hyperf\Odin\Api\Response\TextCompletionResponse;
 use Hyperf\Odin\Contract\Api\ClientInterface;
 use Hyperf\Odin\Contract\Message\MessageInterface;
-use Hyperf\Odin\Contract\Model\EmbeddingInterface;
-use Hyperf\Odin\Contract\Model\ModelInterface;
+use Hyperf\Odin\Exception\LLMException\Configuration\LLMInvalidApiKeyException;
+use Hyperf\Odin\Exception\LLMException\Configuration\LLMInvalidEndpointException;
+use Hyperf\Odin\Exception\LLMException\Model\LLMEmbeddingNotSupportedException;
+use Hyperf\Odin\Exception\LLMException\Model\LLMFunctionCallNotSupportedException;
+use Hyperf\Odin\Exception\LLMException\Model\LLMModalityNotSupportedException;
 use Hyperf\Odin\Model\AbstractModel;
 use Hyperf\Odin\Model\Embedding;
 use Hyperf\Odin\Utils\ToolUtil;
 use Psr\Log\LoggerInterface;
 
-class MagicAILocalModel extends AbstractModel implements ModelInterface, EmbeddingInterface
+class MagicAILocalModel extends AbstractModel
 {
     private string $accessToken;
 
@@ -41,6 +44,9 @@ class MagicAILocalModel extends AbstractModel implements ModelInterface, Embeddi
         parent::__construct($this->model, $this->config, $this->logger);
     }
 
+    /**
+     * @throws LLMEmbeddingNotSupportedException
+     */
     public function embeddings(array|string $input, ?string $encoding_format = 'float', ?string $user = null, array $businessParams = []): EmbeddingResponse
     {
         $this->checkEmbeddingSupport();
@@ -53,6 +59,9 @@ class MagicAILocalModel extends AbstractModel implements ModelInterface, Embeddi
         return di(LLMAppService::class)->embeddings($sendMsgGPTDTO);
     }
 
+    /**
+     * @throws LLMEmbeddingNotSupportedException
+     */
     public function embedding(array|string $input, ?string $encoding_format = 'float', ?string $user = null, array $businessParams = []): Embedding
     {
         $response = $this->embeddings($input, $encoding_format, $user, $businessParams);
@@ -65,7 +74,9 @@ class MagicAILocalModel extends AbstractModel implements ModelInterface, Embeddi
     }
 
     /**
-     * @param MessageInterface[] $messages
+     * @param MessageInterface[] $messages 消息
+     * @throws LLMFunctionCallNotSupportedException
+     * @throws LLMModalityNotSupportedException
      */
     public function chatStream(
         array $messages,
@@ -83,7 +94,9 @@ class MagicAILocalModel extends AbstractModel implements ModelInterface, Embeddi
     }
 
     /**
-     * @param MessageInterface[] $messages
+     * @param MessageInterface[] $messages 消息
+     * @throws LLMFunctionCallNotSupportedException
+     * @throws LLMModalityNotSupportedException
      */
     public function chat(
         array $messages,
@@ -114,16 +127,15 @@ class MagicAILocalModel extends AbstractModel implements ModelInterface, Embeddi
         return di(LLMAppService::class)->chatCompletion($sendMsgGPTDTO);
     }
 
-    public function getModelName(): string
-    {
-        return $this->model;
-    }
-
     public function getVectorSize(): int
     {
         return $this->vectorSize;
     }
 
+    /**
+     * @throws LLMInvalidApiKeyException
+     * @throws LLMInvalidEndpointException
+     */
     protected function getClient(): ClientInterface
     {
         $config = $this->config;

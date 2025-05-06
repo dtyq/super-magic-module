@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo } from "react"
 import type {
 	AIImagesContentItem,
 	AIImagesContent,
@@ -10,7 +10,7 @@ import {
 	AIImagesDataType,
 } from "@/types/chat/conversation_message"
 import { useMemoizedFn } from "ahooks"
-import { Empty, message } from "antd"
+import { Empty, Flex, message } from "antd"
 import useSendMessage from "@/opensource/pages/chatNew/hooks/useSendMessage"
 import { useTranslation } from "react-i18next"
 import MessageFilePreviewStore from "@/opensource/stores/chatNew/messagePreview"
@@ -31,31 +31,34 @@ export interface MagicAiImagesProps {
 export type ResponseData = AIImagesContentItem & { old_file_id?: string }
 interface Response {
 	data: ResponseData[]
+	type: AIImagesDataType | HDImageDataType
 	isError: boolean
 }
 
 const MagicAiImages = observer(({ type, content, messageId }: MagicAiImagesProps) => {
-  const previewFileInfo = MessageFilePreviewStore.previewInfo
-  
-  const sendMessage = useSendMessage(messageId)
-  const {modal} = useApp()
+	const previewFileInfo = MessageFilePreviewStore.previewInfo
+
+	const sendMessage = useSendMessage(messageId)
+	const { modal } = useApp()
 
 	const { t } = useTranslation("interface")
 
-	const [currentType, setCurrentType] = useState<AIImagesDataType | HDImageDataType>()
-
-
-	const { data: parsedData, isError } = useMemo(() => {
+	const {
+		data: parsedData,
+		type: currentType,
+		isError,
+	} = useMemo(() => {
 		const response: Response = {
 			data: [],
+			type: AIImagesDataType.StartGenerate,
 			isError: false,
 		}
 		try {
 			if (!content) return response
-			setCurrentType(content?.type)
 			switch (type) {
 				case ConversationMessageType.AiImage:
 					response.data = (content as AIImagesContent).items
+					response.type = content?.type
 					break
 				case ConversationMessageType.HDImage:
 					const newData = content as HDImageContent
@@ -66,6 +69,7 @@ const MagicAiImages = observer(({ type, content, messageId }: MagicAiImagesProps
 							url: "",
 						},
 					]
+					response.type = content?.type
 					break
 				default:
 					break
@@ -73,7 +77,7 @@ const MagicAiImages = observer(({ type, content, messageId }: MagicAiImagesProps
 			return response
 		} catch (err) {
 			console.error("data parse error", err)
-			return { data: [], isError: true }
+			return { data: [], type: AIImagesDataType.Error, isError: true }
 		}
 	}, [content, type])
 

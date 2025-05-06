@@ -27,11 +27,11 @@ export type PreviewFileInfo = {
 }
 
 class MessageFilePreview {
-	setPreviewInfo(info: PreviewFileInfo, useHDImage: boolean = false) {
+	setPreviewInfo(info: PreviewFileInfo) {
 		if (!info.messageId || !info.url) return
 		info.conversationId = ConversationStore.currentConversation?.id
 
-		MessagePreviewStore.setPreviewInfo({ ...info, useHDImage })
+		MessagePreviewStore.setPreviewInfo(info)
 	}
 
 	clearPreviewInfo() {

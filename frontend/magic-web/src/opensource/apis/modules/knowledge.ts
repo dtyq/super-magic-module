@@ -133,6 +133,25 @@ export const generateKnowledgeApi = (fetch: HttpClient) => ({
 	},
 
 	/**
+	 * 分段预览
+	 */
+	segmentPreview(params: Knowledge.SegmentPreviewParams) {
+		return fetch.post<WithPage<Knowledge.FragmentItem[]>>(RequestUrl.segmentPreview, params)
+	},
+
+	/**
+	 * 召回测试
+	 */
+	recallTest(params: { knowledge_code: string; query: string }) {
+		return fetch.post<WithPage<Knowledge.FragmentItem[]>>(
+			genRequestUrl(RequestUrl.recallTest, {
+				knowledge_code: params.knowledge_code,
+			}),
+			{ query: params.query },
+		)
+	},
+
+	/**
 	 * 匹配知识库
 	 */
 	// matchKnowledge(params: Knowledge.MatchKnowledgeParams) {
@@ -240,5 +259,21 @@ export const generateKnowledgeApi = (fetch: HttpClient) => ({
 	 */
 	createTeamshareKnowledgeVector(params: Knowledge.CreateTeamshareKnowledgeVectorParams) {
 		return fetch.post<null>(RequestUrl.createTeamshareKnowledgeVector, params)
+	},
+
+	/**
+	 * 根据类型获取所有激活模型
+	 */
+	getActiveModelByCategory(params: Knowledge.GetActiveModelByCategoryParams) {
+		return fetch.get<Knowledge.ServiceProvider[]>(
+			genRequestUrl(RequestUrl.getActiveModelByCategory, {}, params),
+		)
+	},
+
+	/**
+	 * 获取官方重排模型列表
+	 */
+	getRerankModels() {
+		return fetch.get<Knowledge.ServiceProvider[]>(RequestUrl.getRerankModels)
 	},
 })

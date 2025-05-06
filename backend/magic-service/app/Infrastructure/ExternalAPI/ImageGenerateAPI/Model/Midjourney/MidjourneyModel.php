@@ -60,6 +60,8 @@ class MidjourneyModel extends AbstractDingTalkAlert implements ImageGenerate
             $prompt .= ' --no ' . $imageGenerateRequest->getNegativePrompt();
         }
 
+        $prompt .= ' --v 7.0';
+
         // 记录请求开始
         $this->logger->info('MJ文生图：开始生图', [
             'prompt' => $prompt,
@@ -201,7 +203,7 @@ class MidjourneyModel extends AbstractDingTalkAlert implements ImageGenerate
                     ExceptionBuilder::throw(ImageGenerateErrorCode::RESPONSE_FORMAT_ERROR);
                 }
 
-                $this->logger->debug('MJ文生图：轮询状态', [
+                $this->logger->info('MJ文生图：轮询状态', [
                     'jobId' => $jobId,
                     'status' => $result['status'],
                     'retryCount' => $retryCount,

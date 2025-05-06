@@ -2,7 +2,7 @@
  * 代码块相关的状态和方法
  */
 
-import { useCurrentNode } from "@dtyq/magic-flow/MagicFlow/nodes/common/context/CurrentNode/useCurrentNode"
+import { useCurrentNode } from "@dtyq/magic-flow/dist/MagicFlow/nodes/common/context/CurrentNode/useCurrentNode"
 import { useMemoizedFn } from "ahooks"
 import { cloneDeep, set } from "lodash-es"
 import type { FormInstance } from "antd"

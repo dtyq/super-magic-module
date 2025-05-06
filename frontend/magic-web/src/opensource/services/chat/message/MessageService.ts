@@ -17,6 +17,9 @@ import type {
 	TextConversationMessage,
 	ConversationMessageSend,
 	ConversationMessage,
+	ImageConversationMessage,
+	VideoConversationMessage,
+	HDImageMessage,
 } from "@/types/chat/conversation_message"
 import { EventType } from "@/types/chat"
 import { action, makeObservable, toJS } from "mobx"
@@ -41,7 +44,10 @@ import { getRevokedText, getSlicedText } from "../conversation/utils"
 import DotsService from "../dots/DotsService"
 import { userStore } from "@/opensource/models/user"
 import { UpdateSpec } from "dexie"
-import { t } from "i18next"
+import MessageFileService from "./MessageFileService"
+import { getStringSizeInBytes } from "@/opensource/utils/size"
+import { JSONContent } from "@tiptap/core"
+import ChatFileService from "../file/ChatFileService"
 const console = new Logger("MessageService", "blue")
 
 type SendData =
@@ -172,6 +178,7 @@ class MessageService {
 
 		// 当前一定是第一页
 		MessageStore.setPageConfig(1, data.totalPages ?? 1)
+		this.checkMessageAttachmentExpired(data.messages)
 		MessageStore.setMessages(conversationId, topicId, data.messages ?? [])
 
 		// 获取未读的消息，发送已读回执
@@ -392,11 +399,88 @@ class MessageService {
 			if (unreadMessages.length) {
 				this.sendReadReceipt(unreadMessages)
 			}
-
+			this.checkMessageAttachmentExpired(data.messages)
 			MessageStore.addMessages(data.messages)
 			MessageStore.setPageConfig(MessageStore.page + 1, data.totalPages ?? 1)
 		} else {
 			MessageStore.setHasMoreHistoryMessage(false)
+		}
+	}
+
+	/**
+	 * 检查消息附件是否过期
+	 */
+	checkMessageAttachmentExpired(messages: FullMessage[]) {
+		const expiredFiles = messages.reduce((prev, cur) => {
+			switch (cur.type) {
+				case ConversationMessageType.Files:
+					;(cur.message as FileConversationMessage).files?.attachments.forEach((file) => {
+						if (ChatFileService.checkFileExpired(file.file_id)) {
+							prev.push({ message_id: cur.message_id, file_id: file.file_id })
+						}
+					})
+					break
+				case ConversationMessageType.RichText:
+					;(cur.message as RichTextConversationMessage).rich_text?.attachments?.forEach(
+						(file) => {
+							if (ChatFileService.checkFileExpired(file.file_id)) {
+								prev.push({ message_id: cur.message_id, file_id: file.file_id })
+							}
+						},
+					)
+					break
+				case ConversationMessageType.Text:
+					;(cur.message as TextConversationMessage).text?.attachments?.forEach((file) => {
+						if (ChatFileService.checkFileExpired(file.file_id)) {
+							prev.push({ message_id: cur.message_id, file_id: file.file_id })
+						}
+					})
+					break
+				case ConversationMessageType.Markdown:
+					;(cur.message as MarkdownConversationMessage).markdown?.attachments?.forEach(
+						(file) => {
+							if (ChatFileService.checkFileExpired(file.file_id)) {
+								prev.push({ message_id: cur.message_id, file_id: file.file_id })
+							}
+						},
+					)
+					break
+				case ConversationMessageType.Image:
+					const fileId = (cur.message as ImageConversationMessage).image?.file_id
+					if (fileId && ChatFileService.checkFileExpired(fileId)) {
+						prev.push({ message_id: cur.message_id, file_id: fileId })
+					}
+					break
+				case ConversationMessageType.Video:
+					const videoId = (cur.message as VideoConversationMessage).video?.file_id
+					if (videoId && ChatFileService.checkFileExpired(videoId)) {
+						prev.push({ message_id: cur.message_id, file_id: videoId })
+					}
+					break
+				case ConversationMessageType.AiImage:
+					;(cur.message as AIImagesMessage).ai_image_card?.items?.forEach((item) => {
+						if (ChatFileService.checkFileExpired(item.file_id)) {
+							prev.push({ message_id: cur.message_id, file_id: item.file_id })
+						}
+					})
+					break
+				case ConversationMessageType.HDImage:
+					const hdImageId = (cur.message as HDImageMessage).image_convert_high_card
+						?.new_file_id
+					if (hdImageId && ChatFileService.checkFileExpired(hdImageId)) {
+						prev.push({ message_id: cur.message_id, file_id: hdImageId })
+					}
+					break
+				default:
+					break
+			}
+
+			return prev
+		}, [] as { message_id: string; file_id: string }[])
+
+		// 获取过期文件的url
+		if (expiredFiles.length) {
+			ChatFileService.fetchFileUrl(expiredFiles)
 		}
 	}
 
@@ -544,6 +628,87 @@ class MessageService {
 	 */
 	sendRecordMessage(conversationId: string, referMessageId: string, messageBase: SendData) {
 		this.formatAndSendMessage(conversationId, messageBase, referMessageId)
+	}
+
+	/**
+	 * 提取文本
+	 * @param jsonValue 富文本
+	 * @returns 文本
+	 */
+	extractText(jsonValue: JSONContent) {
+		if (!jsonValue) {
+			return ""
+		}
+		const text: string[] = []
+
+		const formatContent = (content: JSONContent) => {
+			content.forEach((item: JSONContent) => {
+				if (item.type === "text") {
+					text.push(item.text ?? "")
+				}
+
+				if (item.type === "image") {
+					try {
+						text.push(JSON.stringify(item.attrs))
+					} catch (error) {
+						text.push(JSON.stringify(item))
+					}
+				}
+
+				if (Array.isArray(item.content)) {
+					formatContent(item.content)
+				}
+			})
+		}
+
+		if (jsonValue.content) {
+			formatContent(jsonValue.content)
+		}
+
+		return text.join(`\n`)
+	}
+
+	/**
+	 * 判断文本是否超过限制大小
+	 * @param text 文本
+	 * @param limitKB 限制大小，默认20KB
+	 * @returns 是否超过限制
+	 */
+	isTextSizeOverLimit(text: string, limitKB = 20) {
+		return getStringSizeInBytes(text) > limitKB
+	}
+
+	public async sendLongMessage(
+		conversationId: string,
+		data: MessageData,
+		referMessageId?: string,
+	) {
+		const { normalValue, onlyTextContent, jsonValue, files } = data
+
+		let text = ""
+
+		// 纯文本直接走流程
+		if (onlyTextContent) {
+			text = normalValue ?? ""
+		} else {
+			text = this.extractText(jsonValue)
+		}
+
+		const reportRes = await MessageFileService.uploadFileByText(text)
+
+		return this.sendMessage(
+			conversationId,
+			{
+				normalValue: "",
+				onlyTextContent: true,
+				jsonValue: {
+					type: "doc",
+					content: [{ type: "paragraph", attrs: { suggestion: "" } }],
+				},
+				files: [...(reportRes as any[]), ...files],
+			},
+			referMessageId,
+		)
 	}
 
 	/**

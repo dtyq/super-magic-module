@@ -3,7 +3,7 @@ import usePrevious from "@/opensource/pages/flow/common/hooks/usePrevious"
 import { useFlowStore } from "@/opensource/stores/flow"
 import { replaceRouteParams } from "@/utils/route"
 import { Form, Tooltip } from "antd"
-import MagicExpressionWrap from "@dtyq/magic-flow/common/BaseUI/MagicExpressionWrap"
+import MagicExpressionWrap from "@dtyq/magic-flow/dist/common/BaseUI/MagicExpressionWrap"
 import { IconWindowMaximize } from "@tabler/icons-react"
 import { useMemo } from "react"
 import {

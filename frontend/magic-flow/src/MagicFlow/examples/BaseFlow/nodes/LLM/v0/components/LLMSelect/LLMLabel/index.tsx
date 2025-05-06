@@ -1,4 +1,3 @@
-import { MagicIcon } from "@/common/BaseUI/Icon"
 import brandOpenApi from "@/common/assets/brand-openai.png"
 import { IconCheck } from "@tabler/icons-react"
 import clsx from "clsx"
@@ -41,11 +40,7 @@ export default function LLMLabel({
 								[styles.iconItem]: tag.type === LLMLabelTagType.Icon,
 							})}
 						>
-							{tag.type === LLMLabelTagType.Icon ? (
-								<MagicIcon name={tag.value} />
-							) : (
-								<span>{tag.value}</span>
-							)}
+							{tag.type === LLMLabelTagType.Icon ? null : <span>{tag.value}</span>}
 						</li>
 					)
 				})}

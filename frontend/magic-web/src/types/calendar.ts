@@ -2,7 +2,7 @@ import type {
 	CalendarStatus,
 	ChangeScope,
 	EditScope,
-} from "@/pages/calendar/components/CalendarMain/components/NewEventConfigure/constant"
+} from "@/opensource/pages/calendar/components/CalendarMain/components/NewEventConfigure/constant"
 import type { EventRefiners } from "@fullcalendar/common"
 
 export interface CalendarEvent extends EventRefiners {}

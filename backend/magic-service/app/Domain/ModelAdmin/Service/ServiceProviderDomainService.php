@@ -160,8 +160,8 @@ class ServiceProviderDomainService
             if ($isOfficialProvider || ServiceProviderCategory::from($serviceProviderEntity->getCategory()) === ServiceProviderCategory::VLM) {
                 ExceptionBuilder::throw(ServiceProviderErrorCode::InvalidParameter);
             }
-            $this->serviceProviderModelsRepository->saveModels($serviceProviderModelsEntity);
         }
+        $this->serviceProviderModelsRepository->saveModels($serviceProviderModelsEntity);
         return $serviceProviderModelsEntity;
     }
 

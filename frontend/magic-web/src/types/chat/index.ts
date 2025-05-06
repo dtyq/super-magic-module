@@ -3,6 +3,7 @@ import type { User } from "../user"
 import type {
 	AggregateAISearchCardConversationMessage,
 	ConversationMessage,
+	SuperMagicContent
 } from "./conversation_message"
 import type {
 	HideConversationMessage,
@@ -119,6 +120,8 @@ export enum ControlEventMessageType {
 	GroupUpdate = "group_update",
 	/** 添加好友成功 */
 	AddFriendSuccess = "add_friend_success",
+	/** 编辑消息 */
+	EditMessage = "edit_message",
 }
 
 /**
@@ -138,3 +141,4 @@ export type CMessage =
 	| HideConversationMessage
 	| AggregateAISearchCardConversationMessage<true>
 	| AddFriendSuccessMessage
+	| SuperMagicContent

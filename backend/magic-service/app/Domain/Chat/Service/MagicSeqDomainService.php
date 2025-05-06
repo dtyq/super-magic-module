@@ -108,10 +108,18 @@ class MagicSeqDomainService extends AbstractDomainService
             // 如果是给AI的需要触发flow流程的控制消息，触发flow流程
             $agentUserEntity = $seqUserEntity; // 此时的 seqUserEntity 是 AI
             $agentAccountEntity = $this->magicAccountRepository->getAccountInfoByMagicId($agentUserEntity->getMagicId());
+            if ($agentAccountEntity === null) {
+                $this->logger->error('UserCallAgentEventError magic_id:{magic_id} ai not found', ['magic_id' => $agentUserEntity->getMagicId()]);
+                return;
+            }
             $senderUserEntity = null; // （人类）发送方的 user_entity
             if ($seqEntity->getConversationId()) {
                 // 这里的会话窗口是 ai自己的，那么对方是人类（也可能是另一个 ai，如果存在 ai 互撩的话）
                 $conversationEntity = $this->magicConversationRepository->getConversationById($seqEntity->getConversationId());
+                if ($conversationEntity === null) {
+                    $this->logger->error('UserCallAgentEventError magic_conversation_id:{magic_conversation_id} conversation not found', ['magic_conversation_id' => $seqEntity->getConversationId()]);
+                    return;
+                }
                 $senderUserEntity = $this->magicUserRepository->getUserById($conversationEntity->getReceiveId());
             } elseif ($seqEntity->getSeqType() === ControlMessageType::AddFriendSuccess) {
                 // 因为加好友没有会话窗口，所以需要根据消息的发送id查出对方的 user_entity
@@ -127,6 +135,7 @@ class MagicSeqDomainService extends AbstractDomainService
 
     /**
      * 对已经生成的seq,推送给seq的拥有者.
+     * @throws Throwable
      */
     public function pushChatSeq(MagicSeqEntity $selfSeqEntity, MagicUserEntity $userEntity, MagicMessageEntity $messageEntity): void
     {
@@ -299,7 +308,6 @@ class MagicSeqDomainService extends AbstractDomainService
         if (in_array($messageType, $ignoreTypes, true)) {
             return;
         }
-        $seqType = $seqEntity->getSeqType();
         if ($messageType instanceof ChatMessageType || $seqEntity->canTriggerFlow()) {
             // 获取用户的真名
             $senderAccountEntity = $this->magicAccountRepository->getAccountInfoByMagicId($senderUserEntity->getMagicId());
