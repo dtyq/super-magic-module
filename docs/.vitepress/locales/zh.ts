@@ -157,7 +157,7 @@ export default {
           text: '快速启动',
           collapsed: false,
           items: [
-            { text: 'docker安装', link: '/zh/development/deploy/docker' },
+            { text: 'Docker 安装', link: '/zh/development/deploy/docker' },
           ]
         },
 

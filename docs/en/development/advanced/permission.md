@@ -172,6 +172,8 @@ Tests cover the following aspects:
 6. Avoid adding too many users to permission lists to maintain simplicity and efficiency in permission management
 
 # PERMISSIONS Environment Variable Value
+
+```json
 {
   "global_admin": ["13800000001", "13800000002"],
   "flow_admin": ["13800000003", "13800000004", "13800000005"],
@@ -181,4 +183,5 @@ Tests cover the following aspects:
   "privilege_send_message": ["13800000012", "13800000013"],
   "magic_env_management": ["13800000014", "13800000015"],
   "service_provider_admin": ["13800000016", "13800000017"]
-} 
+}
+```
