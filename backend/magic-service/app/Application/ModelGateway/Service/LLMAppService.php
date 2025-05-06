@@ -27,6 +27,7 @@ use App\Infrastructure\ExternalAPI\ImageGenerateAPI\ImageGenerateModelType;
 use App\Infrastructure\ExternalAPI\ImageGenerateAPI\Model\MiracleVision\MiracleVisionModel;
 use App\Infrastructure\ExternalAPI\ImageGenerateAPI\Model\MiracleVision\MiracleVisionModelResponse;
 use App\Infrastructure\ExternalAPI\ImageGenerateAPI\Request\MiracleVisionModelRequest;
+use App\Infrastructure\ExternalAPI\MagicAIApi\MagicAILocalModel;
 use App\Infrastructure\Util\Context\CoContext;
 use App\Infrastructure\Util\SSRF\Exception\SSRFException;
 use App\Infrastructure\Util\SSRF\SSRFUtil;
@@ -213,7 +214,8 @@ class LLMAppService extends AbstractLLMAppService
                 'embedding' => $this->modelGatewayMapper->getOrganizationEmbeddingModel($modeId, $orgCode),
                 default => null
             };
-            if ($model === null) {
+            //  $model 不能是 MagicAILocalModel，会死循环。只能是 odin/model 的模型
+            if (! $model || $model instanceof MagicAILocalModel) {
                 $this->logger->error('Model not found', [
                     'request_model' => $proxyModelRequest->getModel(),
                     'organization_code' => $orgCode,
@@ -528,7 +530,6 @@ class LLMAppService extends AbstractLLMAppService
                 stop: $sendMsgDTO->getStop() ?? [],
                 frequencyPenalty: $sendMsgDTO->getFrequencyPenalty(),
                 presencePenalty: $sendMsgDTO->getPresencePenalty(),
-                businessParams: $sendMsgDTO->getBusinessParams()
             ),
             AbstractRequestDTO::METHOD_CHAT_COMPLETIONS => match ($sendMsgDTO->isStream()) {
                 true => $odinModel->chatStream(
@@ -539,7 +540,6 @@ class LLMAppService extends AbstractLLMAppService
                     tools: $tools,
                     frequencyPenalty: $sendMsgDTO->getFrequencyPenalty(),
                     presencePenalty: $sendMsgDTO->getPresencePenalty(),
-                    businessParams: $sendMsgDTO->getBusinessParams()
                 ),
                 default => $odinModel->chat(
                     messages: $messages,
@@ -549,7 +549,6 @@ class LLMAppService extends AbstractLLMAppService
                     tools: $tools,
                     frequencyPenalty: $sendMsgDTO->getFrequencyPenalty(),
                     presencePenalty: $sendMsgDTO->getPresencePenalty(),
-                    businessParams: $sendMsgDTO->getBusinessParams()
                 ),
             },
             default => ExceptionBuilder::throw(MagicApiErrorCode::MODEL_RESPONSE_FAIL, 'Unsupported call method'),
