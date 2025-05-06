@@ -26,7 +26,6 @@ use App\Infrastructure\ExternalAPI\ImageGenerateAPI\ImageGenerateModelType;
 use App\Infrastructure\ExternalAPI\ImageGenerateAPI\Model\MiracleVision\MiracleVisionModel;
 use App\Infrastructure\ExternalAPI\ImageGenerateAPI\Model\MiracleVision\MiracleVisionModelResponse;
 use App\Infrastructure\ExternalAPI\ImageGenerateAPI\Request\MiracleVisionModelRequest;
-use App\Infrastructure\ExternalAPI\MagicAIApi\MagicAILocalModel;
 use App\Infrastructure\Util\Context\CoContext;
 use App\Infrastructure\Util\SSRF\SSRFUtil;
 use App\Interfaces\Authorization\Web\MagicUserAuthorization;
@@ -198,7 +197,11 @@ class LLMAppService extends AbstractLLMAppService
                 'embedding' => $this->modelGatewayMapper->getOrganizationEmbeddingModel($modeId, $orgCode),
                 default => null
             };
-            if (! $model || $model instanceof MagicAILocalModel) {
+            if ($model === null) {
+                $this->logger->error('Model not found', [
+                    'request_model' => $proxyModelRequest->getModel(),
+                    'organization_code' => $orgCode,
+                ]);
                 ExceptionBuilder::throw(MagicApiErrorCode::MODEL_NOT_SUPPORT);
             }
 
