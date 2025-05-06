@@ -67,7 +67,6 @@ class TaskRepository implements TaskRepositoryInterface
                 $query->where($field, $value);
             }
         }
-        $query = $query->where('topic_id', $topicId);
         // 先获取总数
         $total = $query->count();
 
