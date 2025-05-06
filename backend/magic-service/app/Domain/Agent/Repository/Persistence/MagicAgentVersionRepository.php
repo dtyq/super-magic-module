@@ -158,7 +158,7 @@ class MagicAgentVersionRepository implements MagicAgentVersionRepositoryInterfac
         return $maxVersion->toArray()['version_number'];
     }
 
-    public function deleteByRootId(string $agentId): void
+    public function deleteByAgentId(string $agentId): void
     {
         // 查询指定 agent_id 和 user_id 下的最大版本号
         $this->agentVersionModel::query()

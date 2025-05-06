@@ -97,7 +97,7 @@ class MagicAgentDomainService
         Db::transaction(function () use ($id) {
             // 删除助理
             $this->agentRepository->deleteAgentById($id);
-            $this->agentVersionRepository->deleteByRootId($id);
+            $this->agentVersionRepository->deleteByAgentId($id);
         });
         return true;
     }
