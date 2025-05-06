@@ -98,4 +98,5 @@ return [
     'instruct_display_type_invalid' => '指令显示类型无效',
     'instruct_display_type_normal' => '普通',
     'instruct_display_type_system' => '系统',
+    'no_version' => '暂无版本',
 ];

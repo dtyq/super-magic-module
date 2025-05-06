@@ -45,6 +45,7 @@ use Dtyq\CloudFile\Kernel\Struct\FileLink;
 use Qbhy\HyperfAuth\Authenticatable;
 
 use function Hyperf\Collection\last;
+use function Hyperf\Translation\__;
 
 class AdminAgentAppService extends AbstractKernelAppService
 {
@@ -86,7 +87,7 @@ class AdminAgentAppService extends AbstractKernelAppService
         } else {
             $agentVersionEntity->setAgentName($agentEntity->getAgentName());
             $agentVersionEntity->setAgentDescription($agentEntity->getAgentDescription());
-            $agentVersionEntity->setVersionNumber('暂无版本');
+            $agentVersionEntity->setVersionNumber(__('agent.no_version'));
             $agentVersionEntity->setAgentAvatar($agentEntity->getAgentAvatar());
             $agentVersionEntity->setCreatedAt($agentEntity->getCreatedAt());
         }

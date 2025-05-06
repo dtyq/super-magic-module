@@ -98,4 +98,5 @@ return [
     'instruct_display_type_invalid' => 'Invalid instruction display type',
     'instruct_display_type_normal' => 'Normal',
     'instruct_display_type_system' => 'System',
+    'no_version' => 'no version',
 ];
