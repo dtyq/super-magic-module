@@ -5,9 +5,8 @@ declare(strict_types=1);
  * Copyright (c) The Magic , Distributed under the software license
  */
 
-namespace Dtyq\MagicSuper\Application\SuperAgent\Service;
+namespace Dtyq\SuperMagic\Application\SuperAgent\Service;
 
-use App\Application\Permission\Service\OrganizationAdminAppService;
 use App\Domain\Contact\Service\MagicUserDomainService;
 use Hyperf\HttpServer\Contract\RequestInterface;
 use Hyperf\Logger\LoggerFactory;
@@ -55,6 +54,7 @@ class ConfigAppService
 
             // 检查是否是邀请用户
             $isInviteUser = PermissionChecker::mobileHasPermission($userPhoneNumber, SuperPermissionEnum::SUPER_INVITE_USER);
+           
 
             // 检查是否是超级麦吉看板管理人员
             $isSuperMagicBoardManager = PermissionChecker::mobileHasPermission($userPhoneNumber, SuperPermissionEnum::SUPER_MAGIC_BOARD_ADMIN);
@@ -62,6 +62,13 @@ class ConfigAppService
             // 检查是否是超级麦吉看板运营人员
             $isSuperMagicBoardOperator = PermissionChecker::mobileHasPermission($userPhoneNumber, SuperPermissionEnum::SUPER_MAGIC_BOARD_OPERATOR);
         }
+
+        $this->logger->info('检查是否是特定用户', [
+            'isOrganizationAdmin' => $isOrganizationAdmin,
+            'isInviteUser' => $isInviteUser,
+            'isSuperMagicBoardManager' => $isSuperMagicBoardManager,
+            'isSuperMagicBoardOperator' => $isSuperMagicBoardOperator,
+        ]);
 
         if (!$isOrganizationAdmin && !$isInviteUser && !$isSuperMagicBoardManager && !$isSuperMagicBoardOperator) {
             // 根据header 判断返回中文还是英文
