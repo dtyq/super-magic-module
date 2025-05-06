@@ -7,9 +7,9 @@ declare(strict_types=1);
 
 namespace App\Domain\Provider\Entity;
 
-use App\Domain\Provider\Entity\ValueObject\Provider\Category;
-use App\Domain\Provider\Entity\ValueObject\Provider\ProviderType;
-use App\Domain\Provider\Entity\ValueObject\Provider\Status;
+use App\Domain\Provider\Entity\ValueObject\Category;
+use App\Domain\Provider\Entity\ValueObject\ProviderType;
+use App\Domain\Provider\Entity\ValueObject\Status;
 use App\Infrastructure\Core\AbstractEntity;
 use DateTime;
 

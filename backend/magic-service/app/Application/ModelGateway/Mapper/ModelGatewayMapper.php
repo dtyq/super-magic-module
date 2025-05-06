@@ -272,10 +272,23 @@ class ModelGatewayMapper extends ModelMapper
                 ];
                 $this->addModel($modelEndpointId, $item);
                 $this->addModel($modelType, $item);
+                // addAttributes 也要添加 2 次
                 $this->addAttributes(
                     key: $modelEndpointId,
                     attributes: new OdinModelAttributes(
                         key: $modelEndpointId,
+                        name: $modelType,
+                        label: $modelType,
+                        icon: '',
+                        tags: [['type' => 1, 'value' => 'MagicAI']],
+                        createdAt: $modelConfig->getCreatedAt(),
+                        owner: 'MagicAI',
+                    )
+                );
+                $this->addAttributes(
+                    key: $modelType,
+                    attributes: new OdinModelAttributes(
+                        key: $modelType,
                         name: $modelType,
                         label: $modelType,
                         icon: '',
