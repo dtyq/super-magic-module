@@ -8,8 +8,13 @@ declare(strict_types=1);
 namespace App\Interfaces\Admin\Facade\Agent;
 
 use App\Application\Admin\Agent\Service\AdminAgentAppService;
+use App\Application\Chat\Service\MagicAccountAppService;
+use App\Application\Chat\Service\MagicUserContactAppService;
 use App\Application\Permission\Service\OperationPermissionAppService;
 use App\Domain\Admin\Entity\ValueObject\AgentFilterType;
+use App\ErrorCode\UserErrorCode;
+use App\Infrastructure\Core\Exception\ExceptionBuilder;
+use App\Infrastructure\Util\Auth\PermissionChecker;
 use App\Interfaces\Admin\DTO\Request\QueryPageAgentDTO;
 use App\Interfaces\Authorization\Web\MagicUserAuthorization;
 use Dtyq\ApiResponse\Annotation\ApiResponse;
@@ -33,6 +38,7 @@ class AdminAgentApi extends AbstractApi
 
     public function getPublishedAgents()
     {
+        $this->isInWhiteListForOrgization();
         $pageToken = $this->request->input('page_token', '');
         $pageSize = (int) $this->request->input('page_size', 20);
         $type = AgentFilterType::from((int) $this->request->input('type', AgentFilterType::ALL->value));
@@ -47,6 +53,7 @@ class AdminAgentApi extends AbstractApi
 
     public function queriesAgents(RequestInterface $request)
     {
+        $this->isInWhiteListForOrgization();
         /**
          * @var MagicUserAuthorization $authenticatable
          */
@@ -57,6 +64,7 @@ class AdminAgentApi extends AbstractApi
 
     public function getAgentDetail(RequestInterface $request, string $agentId)
     {
+        $this->isInWhiteListForOrgization();
         /**
          * @var MagicUserAuthorization $authenticatable
          */
@@ -66,6 +74,7 @@ class AdminAgentApi extends AbstractApi
 
     public function getOrganizationAgentsCreators(RequestInterface $request)
     {
+        $this->isInWhiteListForOrgization();
         /**
          * @var MagicUserAuthorization $authenticatable
          */
@@ -75,10 +84,29 @@ class AdminAgentApi extends AbstractApi
 
     public function deleteAgent(RequestInterface $request, string $agentId)
     {
+        $this->isInWhiteListForOrgization();
         /**
          * @var MagicUserAuthorization $authenticatable
          */
         $authenticatable = $this->getAuthorization();
         $this->adminAgentAppService->deleteAgent($authenticatable, $agentId);
+    }
+
+    private function getPhone(string $userId)
+    {
+        $magicUserContactAppService = di(MagicUserContactAppService::class);
+        $user = $magicUserContactAppService->getByUserId($userId);
+        $magicAccountAppService = di(MagicAccountAppService::class);
+        $accountEntity = $magicAccountAppService->getAccountInfoByMagicId($user->getMagicId());
+        return $accountEntity->getPhone();
+    }
+
+    private function isInWhiteListForOrgization(): void
+    {
+        $authentication = $this->getAuthorization();
+        $phone = $this->getPhone($authentication->getId());
+        if (! PermissionChecker::isOrganizationAdmin($authentication->getOrganizationCode(), $phone)) {
+            ExceptionBuilder::throw(UserErrorCode::ORGANIZATION_NOT_AUTHORIZE);
+        }
     }
 }
