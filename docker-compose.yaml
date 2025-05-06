@@ -138,6 +138,7 @@ services:
     env_file:
       - .env
 
+
   # RabbitMQ 消息队列服务
   rabbitmq:
     image: rabbitmq:3.12-management-alpine
@@ -162,6 +163,23 @@ services:
       retries: 5
     env_file:
       - .env
+
+  # Super Magic 服务
+  super-magic:
+    image: super-magic
+    container_name: super-magic
+    #restart: always
+    profiles:
+      - super-magic
+    ports:
+      - "8080:8080"
+    # volumes:
+    #   - ./web:/app
+    networks:
+      - default
+    env_file:
+      - .env_super_magic
+
 
   # OpenSearch 搜索引擎服务
   opensearch:
