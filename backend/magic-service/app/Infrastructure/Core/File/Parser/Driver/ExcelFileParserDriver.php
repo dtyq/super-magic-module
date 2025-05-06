@@ -37,9 +37,11 @@ class ExcelFileParserDriver implements ExcelFileParserDriverInterface
             foreach ($sheetList as $sheetName) {
                 $content .= '##' . $sheetName . "\n";
                 $sheet = $excelFile->openSheet($sheetName, Excel::SKIP_EMPTY_ROW);
-                while (($row = $sheet->nextRow()) !== null) {
-                    $csvRow = implode(',', array_map(fn ($cell) => $this->formatCsvCell(strval($cell)), $row));
+                $row = $sheet->nextRow();
+                while (! empty($row)) {
+                    $csvRow = implode(',', array_map(fn ($cell) => $this->formatCsvCell((string) $cell), $row));
                     $content .= $csvRow . "\n";
+                    $row = $sheet->nextRow();
                 }
                 $content .= "\n";
             }
