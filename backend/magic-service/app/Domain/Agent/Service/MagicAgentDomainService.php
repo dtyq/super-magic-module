@@ -203,7 +203,6 @@ class MagicAgentDomainService
 
     /**
      * 保存助理的交互指令.
-     * @param string $userId
      */
     public function updateInstruct(string $organizationCode, string $agentId, array $instructs, string $userId = '', bool $valid = true): array
     {

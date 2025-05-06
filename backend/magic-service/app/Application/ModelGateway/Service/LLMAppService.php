@@ -507,6 +507,7 @@ class LLMAppService extends AbstractLLMAppService
                 stop: $sendMsgDTO->getStop() ?? [],
                 frequencyPenalty: $sendMsgDTO->getFrequencyPenalty(),
                 presencePenalty: $sendMsgDTO->getPresencePenalty(),
+                businessParams: $sendMsgDTO->getBusinessParams()
             ),
             AbstractRequestDTO::METHOD_CHAT_COMPLETIONS => match ($sendMsgDTO->isStream()) {
                 true => $odinModel->chatStream(
@@ -517,6 +518,7 @@ class LLMAppService extends AbstractLLMAppService
                     tools: $tools,
                     frequencyPenalty: $sendMsgDTO->getFrequencyPenalty(),
                     presencePenalty: $sendMsgDTO->getPresencePenalty(),
+                    businessParams: $sendMsgDTO->getBusinessParams()
                 ),
                 default => $odinModel->chat(
                     messages: $messages,
@@ -526,6 +528,7 @@ class LLMAppService extends AbstractLLMAppService
                     tools: $tools,
                     frequencyPenalty: $sendMsgDTO->getFrequencyPenalty(),
                     presencePenalty: $sendMsgDTO->getPresencePenalty(),
+                    businessParams: $sendMsgDTO->getBusinessParams()
                 ),
             },
             default => ExceptionBuilder::throw(MagicApiErrorCode::MODEL_RESPONSE_FAIL, 'Unsupported call method'),
