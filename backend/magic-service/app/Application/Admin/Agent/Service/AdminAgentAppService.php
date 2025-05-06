@@ -80,7 +80,7 @@ class AdminAgentAppService extends AbstractKernelAppService
         } else {
             $agentVersionEntity->setAgentName($agentEntity->getAgentName());
             $agentVersionEntity->setAgentDescription($agentEntity->getAgentDescription());
-            $agentVersionEntity->setVersionNumber('0.0.0');
+            $agentVersionEntity->setVersionNumber('暂无版本');
             $agentVersionEntity->setAgentAvatar($agentEntity->getAgentAvatar());
             $agentVersionEntity->setCreatedAt($agentEntity->getCreatedAt());
         }
