@@ -53,7 +53,10 @@ class KnowledgeBaseApi extends AbstractKnowledgeBaseApi
         $page = $this->createPage();
 
         $result = $this->knowledgeBaseAppService->queries($authorization, $query, $page);
-        $list = KnowledgeBaseAssembler::entitiesToListDTO($result['list'], $result['users']);
+        $codes = array_column($result['list'], 'code');
+        // 补充文档数量
+        $knowledgeBaseDocumentCountMap = $this->knowledgeBaseDocumentAppService->getDocumentCountByKnowledgeBaseCodes($authorization, $codes);
+        $list = KnowledgeBaseAssembler::entitiesToListDTO($result['list'], $result['users'], $knowledgeBaseDocumentCountMap);
         return new PageDTO($page->getPage(), $result['total'], $list);
     }
 
