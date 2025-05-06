@@ -22,6 +22,7 @@ use App\Domain\Agent\Entity\MagicAgentEntity;
 use App\Domain\Agent\Entity\MagicAgentVersionEntity;
 use App\Domain\Agent\Service\MagicAgentDomainService;
 use App\Domain\Agent\Service\MagicAgentVersionDomainService;
+use App\Domain\Contact\Entity\ValueObject\DataIsolation;
 use App\Domain\Contact\Entity\ValueObject\DataIsolation as ContactDataIsolation;
 use App\Domain\Contact\Service\MagicDepartmentDomainService;
 use App\Domain\Contact\Service\MagicDepartmentUserDomainService;
@@ -62,7 +63,7 @@ class AdminAgentAppService extends AbstractKernelAppService
 
     public function deleteAgent(MagicUserAuthorization $authenticatable, string $agentId)
     {
-        $this->magicAgentDomainService->deleteAgentById($agentId);
+        $this->magicAgentDomainService->deleteAgentById($agentId, $authenticatable->getOrganizationCode());
     }
 
     public function getAgentDetail(MagicUserAuthorization $authorization, string $agentId): AdminAgentDetailDTO
@@ -93,6 +94,42 @@ class AdminAgentAppService extends AbstractKernelAppService
         $adminAgentDetailDTO->setCreatedName($magicUserEntity->getNickname());
 
         return $adminAgentDetailDTO;
+    }
+
+    /**
+     * 获取企业下的所有助理创建者.
+     * @return array<array{user_id:string,nickname:string,avatar:string}>
+     */
+    public function getOrganizationAgentsCreators(MagicUserAuthorization $authorization): array
+    {
+        // 获取所有助理
+        $agentCreators = $this->magicAgentDomainService->getOrganizationAgentsCreators($authorization->getOrganizationCode());
+        $dataIsolation = DataIsolation::create($authorization->getOrganizationCode(), $authorization->getId());
+        $userMap = $this->userDomainService->getByUserIds($dataIsolation, $agentCreators);
+
+        // 收集用户头像key
+        $avatars = array_filter(array_map(function ($user) {
+            return $user->getAvatarUrl();
+        }, $userMap), fn ($avatar) => ! empty($avatar));
+
+        // 获取头像URL
+        $fileLinks = $this->fileDomainService->getLinks($authorization->getOrganizationCode(), $avatars);
+
+        $result = [];
+        foreach ($userMap as $user) {
+            $avatarKey = $user->getAvatarUrl();
+            $avatarUrl = '';
+            if (! empty($avatarKey) && isset($fileLinks[$avatarKey])) {
+                $avatarUrl = $fileLinks[$avatarKey]->getUrl();
+            }
+
+            $result[] = [
+                'user_id' => $user->getUserId(),
+                'nickname' => $user->getNickname(),
+                'avatar' => $avatarUrl,
+            ];
+        }
+        return $result;
     }
 
     /**

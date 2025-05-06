@@ -64,6 +64,15 @@ class AdminAgentApi extends AbstractApi
         return $this->adminAgentAppService->getAgentDetail($authenticatable, $agentId);
     }
 
+    public function getOrganizationAgentsCreators(RequestInterface $request)
+    {
+        /**
+         * @var MagicUserAuthorization $authenticatable
+         */
+        $authenticatable = $this->getAuthorization();
+        return $this->adminAgentAppService->getOrganizationAgentsCreators($authenticatable);
+    }
+
     public function deleteAgent(RequestInterface $request, string $agentId)
     {
         /**

@@ -89,15 +89,15 @@ class MagicAgentDomainService
         return $agent;
     }
 
-    public function deleteAgentById(string $id): bool
+    public function deleteAgentById(string $id, string $organizationCode): bool
     {
         if (empty($id)) {
             ExceptionBuilder::throw(AgentErrorCode::VALIDATE_FAILED);
         }
-        Db::transaction(function () use ($id) {
+        Db::transaction(function () use ($id, $organizationCode) {
             // 删除助理
-            $this->agentRepository->deleteAgentById($id);
-            $this->agentVersionRepository->deleteByAgentId($id);
+            $this->agentRepository->deleteAgentById($id, $organizationCode);
+            $this->agentVersionRepository->deleteByAgentId($id, $organizationCode);
         });
         return true;
     }
@@ -235,6 +235,15 @@ class MagicAgentDomainService
     public function queriesAgentsCount(string $organizationCode, QueryPageAgentDTO $queryPageAgentDTO): int
     {
         return $this->agentRepository->queriesAgentsCount($organizationCode, $queryPageAgentDTO);
+    }
+
+    /**
+     * 获取企业下的所有助理创建者.
+     * @return array<string>
+     */
+    public function getOrganizationAgentsCreators(string $organizationCode): array
+    {
+        return $this->agentRepository->getOrganizationAgentsCreators($organizationCode);
     }
 
     /**

@@ -125,9 +125,9 @@ class MagicAgentRepository extends AbstractRepository implements MagicAgentRepos
         return $builder->count();
     }
 
-    public function deleteAgentById(string $id): void
+    public function deleteAgentById(string $id, string $organizationCode): void
     {
-        $this->agentModel::query()->where('id', $id)->delete();
+        $this->agentModel::query()->where('id', $id)->where('organization_code', $organizationCode)->delete();
     }
 
     public function getAgentById(string $agentId): MagicAgentEntity
@@ -325,5 +325,21 @@ class MagicAgentRepository extends AbstractRepository implements MagicAgentRepos
             $query->where('status', $queryPageAgentDTO->getStatus());
         }
         return $query->count();
+    }
+
+    /**
+     * 获取企业下的所有助理创建者.
+     * @return array<string>
+     */
+    public function getOrganizationAgentsCreators(string $organizationCode): array
+    {
+        $query = $this->agentModel->newQuery()
+            ->where('organization_code', $organizationCode)
+            ->select('created_uid')
+            ->distinct();
+
+        return $query->get()
+            ->pluck('created_uid')
+            ->toArray();
     }
 }
