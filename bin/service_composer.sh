@@ -77,7 +77,14 @@ mkdir $TMP_DIR;
     # 复制 service 目录下的组件文件
     echo "${SERVICE_DIR}/${COMPOSE_NAME}"
     cp -a "${SERVICE_DIR}/${COMPOSE_NAME}"/* .
-    # cp -a "${SERVICE_DIR}/${COMPOSE_NAME}"/.gitignore .
+    # 判断是否存在 .gitignore 文件
+    if [ -f "${SERVICE_DIR}/${COMPOSE_NAME}/.gitignore" ]; then
+        cp -a "${SERVICE_DIR}/${COMPOSE_NAME}/.gitignore" .
+    fi
+    # 判断是否存在.github目录
+    if [ -d "${SERVICE_DIR}/${COMPOSE_NAME}/.github" ]; then
+        cp -R "${SERVICE_DIR}/${COMPOSE_NAME}/.github" .
+    fi
 
 
     # 添加并提交更改
