@@ -13,26 +13,37 @@ use App\Interfaces\Permission\DTO\ResourceAccessDTO;
 
 class AdminAgentDetailDTO extends AbstractDTO
 {
+    // 主键
     protected string $id;
 
+    // 助理名称
     protected string $agentName;
 
+    // 助理描述
     protected string $agentDescription;
 
+    // 助理创建人
     protected string $createdUid;
 
+    // 助理头像
     protected string $agentAvatar;
 
+    // 助理创建人昵称
     protected string $createdName;
 
+    // 版本号，如果没有版本号则为：暂无版本
     protected string $versionNumber;
 
+    // 启用状态
     protected int $status;
 
+    // 创建时间
     protected string $createdAt;
 
+    // 权限管控
     protected ResourceAccessDTO $resourceAccess;
 
+    // 助理可见性
     protected ?VisibilityConfig $visibilityConfig;
 
     public function getId(): string

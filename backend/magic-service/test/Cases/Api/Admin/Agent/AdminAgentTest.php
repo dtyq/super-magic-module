@@ -26,6 +26,5 @@ class AdminAgentTest extends BaseTest
         $magicUserAuthorization->setOrganizationCode($organizationCode);
         $service = di(AdminAgentAppService::class);
         $queriesAgents = $service->queriesAgents($magicUserAuthorization, new QueryPageAgentDTO());
-        var_dump($queriesAgents);
     }
 }

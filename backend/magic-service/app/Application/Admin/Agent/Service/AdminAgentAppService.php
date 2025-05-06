@@ -61,11 +61,17 @@ class AdminAgentAppService extends AbstractKernelAppService
     ) {
     }
 
+    /**
+     * 删除助理.
+     */
     public function deleteAgent(MagicUserAuthorization $authenticatable, string $agentId)
     {
         $this->magicAgentDomainService->deleteAgentById($agentId, $authenticatable->getOrganizationCode());
     }
 
+    /**
+     * 获取助理详情.
+     */
     public function getAgentDetail(MagicUserAuthorization $authorization, string $agentId): AdminAgentDetailDTO
     {
         $agentEntity = $this->magicAgentDomainService->getAgentById($agentId);
