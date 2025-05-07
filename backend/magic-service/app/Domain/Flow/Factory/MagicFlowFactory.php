@@ -21,10 +21,10 @@ class MagicFlowFactory
 {
     public static function modelToEntity(MagicFlowModel $magicFlowModel): MagicFlowEntity
     {
-        return self::arrayToEntity($magicFlowModel->toArray());
+        return self::arrayToEntity($magicFlowModel->toArray(), 'v0');
     }
 
-    public static function arrayToEntity(array $magicFlowArray): MagicFlowEntity
+    public static function arrayToEntity(array $magicFlowArray, string $defaultNodeVersion = ''): MagicFlowEntity
     {
         $magicFlowEntity = new MagicFlowEntity();
 
@@ -49,7 +49,7 @@ class MagicFlowFactory
         }
         $nodes = [];
         foreach ($magicFlowArray['nodes'] ?? [] as $nodeArr) {
-            $node = new Node($nodeArr['node_type'], $nodeArr['node_version'] ?? '');
+            $node = new Node($nodeArr['node_type'], $nodeArr['node_version'] ?? $defaultNodeVersion);
             $node->setNodeId($nodeArr['node_id']);
             $node->setDebug($nodeArr['debug'] ?? false);
             $node->setName($nodeArr['name']);

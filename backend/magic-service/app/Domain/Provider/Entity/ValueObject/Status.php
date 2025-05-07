@@ -19,4 +19,9 @@ enum Status: int
             self::Enabled => '启用',
         };
     }
+
+    public function isEnabled(): bool
+    {
+        return $this === self::Enabled;
+    }
 }

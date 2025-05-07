@@ -16,6 +16,12 @@ interface ProviderRepositoryInterface
 {
     public function getById(ProviderDataIsolation $dataIsolation, int $id): ?ProviderEntity;
 
+    /**
+     * @param array<int> $ids
+     * @return array<int, ProviderEntity> 返回以id为key的实体对象数组
+     */
+    public function getByIds(ProviderDataIsolation $dataIsolation, array $ids): array;
+
     public function getByCode(ProviderDataIsolation $dataIsolation, string $providerCode): ?ProviderEntity;
 
     /**
