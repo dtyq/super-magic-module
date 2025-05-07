@@ -7,6 +7,7 @@ declare(strict_types=1);
 
 namespace App\Application\ModelAdmin\Service;
 
+use App\Application\ModelGateway\Mapper\ModelGatewayMapper;
 use App\Application\ModelGateway\Service\LLMAppService;
 use App\Domain\File\Service\FileDomainService;
 use App\Domain\ModelAdmin\Constant\ModelType;
@@ -254,10 +255,14 @@ class ServiceProviderAppService
     private function embeddingConnectivityTest(string $modelId, MagicUserAuthorization $authorization): ConnectResponse
     {
         $connectResponse = new ConnectResponse();
-        $model = $this->serviceProviderDomainService->getServiceProviderConfig('', $modelId, $authorization->getOrganizationCode());
         /* @var ChatCompletionResponse $response */
         try {
-            $embedding = $model->createEmbedding();
+            $embedding = di(ModelGatewayMapper::class)->getEmbeddingModelProxy($modelId);
+            $embedding->embedding('test', businessParams: [
+                'organization_id' => $authorization->getOrganizationCode(),
+                'user_id' => $authorization->getId(),
+                'source_id' => 'connectivity_test',
+            ]);
             $embedding->embedding('test');
         } catch (Exception $exception) {
             $connectResponse->setStatus(false);

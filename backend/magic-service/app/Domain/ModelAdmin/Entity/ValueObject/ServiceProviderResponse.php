@@ -9,13 +9,7 @@ namespace App\Domain\ModelAdmin\Entity\ValueObject;
 
 use App\Domain\ModelAdmin\Constant\ServiceProviderCode;
 use App\Domain\ModelAdmin\Constant\ServiceProviderType;
-use App\Domain\ModelAdmin\Constant\Status;
 use App\Domain\ModelAdmin\Entity\ServiceProviderModelsEntity;
-use App\ErrorCode\FlowErrorCode;
-use App\Infrastructure\Core\Exception\ExceptionBuilder;
-use Hyperf\Odin\Contract\Model\EmbeddingInterface;
-use Hyperf\Odin\Factory\ModelFactory;
-use Hyperf\Odin\Model\ModelOptions;
 
 class ServiceProviderResponse
 {
@@ -82,24 +76,5 @@ class ServiceProviderResponse
         is_string($serviceProviderCode) && $serviceProviderCode = ServiceProviderCode::from($serviceProviderCode);
         $this->serviceProviderCode = $serviceProviderCode;
         return $this;
-    }
-
-    public function createEmbedding(): EmbeddingInterface
-    {
-        if ($this->getServiceProviderModelsEntity()->getStatus() !== Status::ACTIVE->value) {
-            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'flow.model.disabled', ['model_name' => $this->getServiceProviderModelsEntity()->getName()]);
-        }
-        $modelName = $this->getServiceProviderModelsEntity()->getName();
-        return ModelFactory::create(
-            $this->getServiceProviderCode()->getImplementation(),
-            $modelName,
-            $this->getServiceProviderCode()->getImplementationConfig($this->getServiceProviderConfig()),
-            new ModelOptions([
-                'embedding' => $this->getModelConfig()->isSupportEmbedding(),
-                'multi_modal' => $this->getModelConfig()->isSupportMultiModal(),
-                'function_call' => true,
-                'vector_size' => $this->getModelConfig()->getVectorSize(),
-            ])
-        );
     }
 }
