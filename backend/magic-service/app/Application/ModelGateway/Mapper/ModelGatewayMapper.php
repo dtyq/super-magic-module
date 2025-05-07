@@ -7,6 +7,9 @@ declare(strict_types=1);
 
 namespace App\Application\ModelGateway\Mapper;
 
+use App\Domain\Flow\Entity\ValueObject\FlowDataIsolation;
+use App\Domain\Flow\Entity\ValueObject\Query\MagicFlowAIModelQuery;
+use App\Domain\Flow\Service\MagicFlowAIModelDomainService;
 use App\Domain\ModelAdmin\Constant\ModelType;
 use App\Domain\ModelAdmin\Constant\ServiceProviderCategory;
 use App\Domain\ModelAdmin\Constant\ServiceProviderCode;
@@ -19,6 +22,7 @@ use App\Domain\ModelGateway\Service\ModelConfigDomainService;
 use App\ErrorCode\ServiceProviderErrorCode;
 use App\Infrastructure\Core\Contract\Model\RerankInterface;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
+use App\Infrastructure\Core\ValueObject\Page;
 use App\Infrastructure\ExternalAPI\MagicAIApi\MagicAILocalModel;
 use DateTime;
 use Hyperf\Contract\ConfigInterface;
@@ -57,7 +61,7 @@ class ModelGatewayMapper extends ModelMapper
 
         // 这里具有优先级的顺序来覆盖配置,后续统一迁移到管理后台
         $this->loadEnvModels();
-        // 屏蔽 flow model的加载，使用 ApiModels 平替
+        $this->loadFlowModels();
         $this->loadApiModels();
     }
 
@@ -100,7 +104,7 @@ class ModelGatewayMapper extends ModelMapper
      */
     public function getOrganizationChatModel(string $model, ?string $orgCode = null): ModelInterface
     {
-        // 从管理后台获取模型配置
+        // 优先从管理后台获取模型配置
         $odinModel = $this->getByAdmin($model, $orgCode);
         if ($odinModel) {
             return $odinModel->getModel();
@@ -140,68 +144,6 @@ class ModelGatewayMapper extends ModelMapper
         return $this->getModelsByType($organizationCode, 'embedding');
     }
 
-    /**
-     * 获取聊天模型实例,无视大小写.
-     */
-    public function getChatModel(string $model): ModelInterface
-    {
-        if ($model === '') {
-            $model = $this->defaultModel;
-        }
-
-        // 无视大小写,检查缓存
-        foreach ($this->models['chat'] as $key => $value) {
-            if (strtolower($key) === strtolower($model)) {
-                return $value;
-            }
-        }
-
-        // 如果模型未缓存，创建模型
-        $modelConfig = $this->config->get('odin.llm.models.' . $model);
-        if (empty($modelConfig)) {
-            throw new InvalidArgumentException(sprintf('Chat Model %s is not defined.', $model));
-        }
-
-        $this->addModel($model, $modelConfig);
-
-        if (! isset($this->models['chat'][$model])) {
-            throw new InvalidArgumentException(sprintf('Failed to create Chat Model %s.', $model));
-        }
-
-        return $this->models['chat'][$model];
-    }
-
-    /**
-     * 获取嵌入模型实例,无视大小写.
-     */
-    public function getEmbeddingModel(string $model): EmbeddingInterface
-    {
-        if ($model === '') {
-            $model = $this->defaultEmbeddingModel;
-        }
-
-        // 无视大小写,检查缓存
-        foreach ($this->models['embedding'] as $key => $value) {
-            if (strtolower($key) === strtolower($model)) {
-                return $value;
-            }
-        }
-
-        // 如果模型未缓存，创建模型
-        $modelConfig = $this->config->get('odin.llm.models.' . $model);
-        if (empty($modelConfig)) {
-            throw new InvalidArgumentException(sprintf('Embedding Model %s is not defined.', $model));
-        }
-
-        $this->addModel($model, $modelConfig);
-
-        if (! isset($this->models['embedding'][$model])) {
-            throw new InvalidArgumentException(sprintf('Failed to create Embedding Model %s.', $model));
-        }
-
-        return $this->models['embedding'][$model];
-    }
-
     protected function loadEnvModels(): void
     {
         // env 添加的模型增加上 attributes
@@ -210,8 +152,9 @@ class ModelGatewayMapper extends ModelMapper
          * @var AbstractModel $model
          */
         foreach ($this->models['chat'] as $name => $model) {
-            $this->attributes[$name] = new OdinModelAttributes(
-                key: $name,
+            $key = $name;
+            $this->attributes[$key] = new OdinModelAttributes(
+                key: $key,
                 name: $name,
                 label: $name,
                 icon: '',
@@ -226,8 +169,9 @@ class ModelGatewayMapper extends ModelMapper
             ]);
         }
         foreach ($this->models['embedding'] as $name => $model) {
-            $this->attributes[$name] = new OdinModelAttributes(
-                key: $name,
+            $key = $name;
+            $this->attributes[$key] = new OdinModelAttributes(
+                key: $key,
                 name: $name,
                 label: $name,
                 icon: '',
@@ -244,6 +188,65 @@ class ModelGatewayMapper extends ModelMapper
         }
     }
 
+    protected function loadFlowModels(): void
+    {
+        $query = new MagicFlowAIModelQuery();
+        $query->setEnabled(true);
+        $page = Page::createNoPage();
+        $dataIsolation = FlowDataIsolation::create()->disabled();
+        $list = di(MagicFlowAIModelDomainService::class)->queries($dataIsolation, $query, $page)['list'];
+        foreach ($list as $modelEntity) {
+            $key = $modelEntity->getName();
+            $model = $modelEntity->getModelName() ?: $modelEntity->getName();
+
+            try {
+                $this->addModel($key, [
+                    'model' => $model,
+                    'implementation' => $modelEntity->getImplementation(),
+                    'config' => $modelEntity->getActualImplementationConfig(),
+                    'model_options' => [
+                        'chat' => ! $modelEntity->isSupportEmbedding(),
+                        'function_call' => true,
+                        'embedding' => $modelEntity->isSupportEmbedding(),
+                        'multi_modal' => $modelEntity->isSupportMultiModal(),
+                        'vector_size' => $modelEntity->getVectorSize(),
+                    ],
+                ]);
+                $this->addAttributes(
+                    key: $key,
+                    attributes: new OdinModelAttributes(
+                        key: $key,
+                        name: $model,
+                        label: $modelEntity->getLabel(),
+                        icon: $modelEntity->getIcon(),
+                        tags: $modelEntity->getTags(),
+                        createdAt: $modelEntity->getCreatedAt(),
+                        owner: 'MagicAI',
+                    )
+                );
+
+                $this->logger->info('FlowModelRegister', [
+                    'key' => $key,
+                    'model_name' => $model,
+                    'name' => $modelEntity->getName(),
+                    'label' => $modelEntity->getLabel(),
+                    'implementation' => $modelEntity->getImplementation(),
+                    'display' => $modelEntity->isDisplay(),
+                ]);
+            } catch (Throwable $exception) {
+                $this->logger->warning('FlowModelRegisterWarning', [
+                    'key' => $key,
+                    'model_name' => $model,
+                    'name' => $modelEntity->getName(),
+                    'label' => $modelEntity->getLabel(),
+                    'implementation' => $modelEntity->getImplementation(),
+                    'display' => $modelEntity->isDisplay(),
+                    'error' => $exception->getMessage(),
+                ]);
+            }
+        }
+    }
+
     protected function loadApiModels(): void
     {
         $modelConfigs = di(ModelConfigDomainService::class)->getByModels(['all']);
@@ -252,62 +255,64 @@ class ModelGatewayMapper extends ModelMapper
             if (! $modelConfig->isEnabled()) {
                 continue;
             }
-            // 为了兼容，同时注册 model 和 label。
+
+            $key = $modelConfig->getModel();
             $modelEndpointId = $modelConfig->getModel();
-            $modelType = $modelConfig->getName();
             $embedding = str_contains($modelEndpointId, 'embedding');
+            $modelOptions = new ModelOptions([
+                'chat' => ! $embedding,
+                'function_call' => true,
+                'embedding' => $embedding,
+                'multi_modal' => false,
+                'vector_size' => 0,
+            ]);
+
+            $latestModel = null;
+            $lasestAttribute = null;
+            /** @var AbstractModel $historyModel */
+            foreach ($this->getModels($embedding ? 'embedding' : 'chat') as $historyKey => $historyModel) {
+                if ($historyModel->getModelName() === $modelEndpointId && $historyModel instanceof MagicAILocalModel) {
+                    $modelOptions = $historyModel->getModelOptions();
+                    $latestModel = $historyModel;
+                    $lasestAttribute = $this->attributes[$historyKey];
+                    break;
+                }
+            }
+
+            if ($latestModel && $lasestAttribute) {
+                $attribute = $lasestAttribute;
+            } else {
+                $attribute = new OdinModelAttributes(
+                    key: $key,
+                    name: $modelConfig->getType() ?: $modelConfig->getModel(),
+                    label: $modelConfig->getName() ?: $modelConfig->getModel(),
+                    icon: $lasestAttribute?->getIcon() ?: '',
+                    tags: [['type' => 1, 'value' => 'MagicAI']],
+                    createdAt: $modelConfig->getCreatedAt(),
+                    owner: 'MagicAI',
+                );
+            }
+
             try {
-                $item = [
+                $this->addModel($key, [
                     'model' => $modelEndpointId,
                     'implementation' => $modelConfig->getImplementation(),
                     'config' => $modelConfig->getActualImplementationConfig(),
-                    // 以前的配置表没有 embedding 相关的配置，所以这里默认都开启
-                    'model_options' => [
-                        'chat' => ! $embedding,
-                        'function_call' => true,
-                        'embedding' => $embedding,
-                        'multi_modal' => ! $embedding,
-                        'vector_size' => 0,
-                    ],
-                ];
-                $this->addModel($modelEndpointId, $item);
-                $this->addModel($modelType, $item);
-                // addAttributes 也要添加 2 次
-                $this->addAttributes(
-                    key: $modelEndpointId,
-                    attributes: new OdinModelAttributes(
-                        key: $modelEndpointId,
-                        name: $modelType,
-                        label: $modelType,
-                        icon: '',
-                        tags: [['type' => 1, 'value' => 'MagicAI']],
-                        createdAt: $modelConfig->getCreatedAt(),
-                        owner: 'MagicAI',
-                    )
-                );
-                $this->addAttributes(
-                    key: $modelType,
-                    attributes: new OdinModelAttributes(
-                        key: $modelType,
-                        name: $modelType,
-                        label: $modelType,
-                        icon: '',
-                        tags: [['type' => 1, 'value' => 'MagicAI']],
-                        createdAt: $modelConfig->getCreatedAt(),
-                        owner: 'MagicAI',
-                    )
-                );
+                    'model_options' => $modelOptions->toArray(),
+                ]);
+
+                $this->addAttributes($key, $attribute);
                 $this->logger->info('ApiModelRegister', [
-                    'key' => $modelEndpointId,
+                    'key' => $key,
                     'model' => $modelEndpointId,
-                    'label' => $modelType,
+                    'label' => $attribute->getLabel(),
                     'implementation' => $modelConfig->getImplementation(),
                 ]);
             } catch (Throwable $exception) {
                 $this->logger->warning('ApiModelRegisterWarning', [
-                    'key' => $modelEndpointId,
+                    'key' => $key,
                     'model' => $modelEndpointId,
-                    'label' => $modelType,
+                    'label' => $attribute->getLabel(),
                     'implementation' => $modelConfig->getImplementation(),
                     'error' => $exception->getMessage(),
                 ]);
