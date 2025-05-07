@@ -8,7 +8,7 @@ import conversationStore from "@/opensource/stores/chatNew/conversation"
 import { useUpload } from "@/opensource/hooks/useUploadFiles"
 import { ConversationMessageType } from "@/types/chat/conversation_message"
 import { IconFileUpload, IconLoaderQuarter } from "@tabler/icons-react"
-import { genFileData } from "../../../MessageEditor/MagicInput/components/InputFiles/utils"
+import { genFileData } from "../../../MessageEditor/components/InputFiles/utils"
 import { useStyles } from "./styles"
 
 /**

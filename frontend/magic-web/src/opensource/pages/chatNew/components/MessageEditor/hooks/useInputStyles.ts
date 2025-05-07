@@ -14,9 +14,7 @@ export const useModernStyles = createStyles(
 				background-color: ${isDarkMode
 					? token.magicColorScales.grey[0]
 					: token.magicColorUsages.white};
-				box-shadow:
-					0px 4px 14px 0px rgba(0, 0, 0, 0.1),
-					0px 0px 1px 0px rgba(0, 0, 0, 0.3);
+				box-shadow: 0px 4px 14px 0px rgba(0, 0, 0, 0.1), 0px 0px 1px 0px rgba(0, 0, 0, 0.3);
 				user-select: none;
 			`,
 			main: css`
@@ -146,6 +144,7 @@ export const useStandardStyles = createStyles(
 			referMessageSection: css`
 				background: ${token.magicColorUsages.fill[0]};
 				padding: 8px 12px;
+				width: 100%;
 			`,
 			referMessage: css`
 				opacity: 0.8;

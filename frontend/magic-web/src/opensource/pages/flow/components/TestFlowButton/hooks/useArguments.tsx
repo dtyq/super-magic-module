@@ -9,10 +9,10 @@ import { useEffect, useMemo, useState } from "react"
 import type { FormInstance } from "antd"
 import { Form } from "antd"
 import { getComponent } from "@/opensource/pages/flow/utils/helpers"
-import type { FormItemType } from "@dtyq/magic-flow/MagicExpressionWidget/types"
+import type { FormItemType } from "@dtyq/magic-flow/dist/MagicExpressionWidget/types"
 import { FlowType } from "@/types/flow"
-import type { MagicFlow } from "@dtyq/magic-flow/MagicFlow/types/flow"
-import type { MagicFlowInstance } from "@dtyq/magic-flow/MagicFlow"
+import type { MagicFlow } from "@dtyq/magic-flow/dist/MagicFlow/types/flow"
+import type { MagicFlowInstance } from "@dtyq/magic-flow/dist/MagicFlow"
 import { transformSchemaToDynamicFormItem } from "../helpers"
 
 export type DynamicFormItem = {

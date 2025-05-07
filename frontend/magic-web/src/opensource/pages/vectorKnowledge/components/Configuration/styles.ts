@@ -168,8 +168,19 @@ export const useVectorKnowledgeConfigurationStyles = createStyles(
 			documentSelect: {
 				minWidth: "200px",
 
+				[`.${prefixCls}-select-selector`]: {
+					background: "rgba(46, 47, 56, 0.05) !important",
+					border: "none !important",
+				},
+
 				[`.${prefixCls}-select-selection-item`]: {
 					fontSize: "12px",
+					fontWeight: "600",
+					color: "#1C1D23",
+				},
+
+				[`.${prefixCls}-select-arrow`]: {
+					color: "#1C1D23 !important",
 				},
 			},
 			estimatedSegments: css`

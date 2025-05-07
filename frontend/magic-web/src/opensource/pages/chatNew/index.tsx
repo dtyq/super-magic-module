@@ -11,13 +11,13 @@ import useNavigateConversationByAgentIdInSearchQuery from "./hooks/navigateConve
 import { useStyles } from "./styles"
 // import MagicConversation from "./components/MagicConversation"
 import ChatMessageList from "./components/ChatMessageList"
-import MessageEditor from "./components/MessageEditor"
 import Header from "./components/ChatHeader"
 import ChatImagePreviewModal from "./components/ChatImagePreviewModal"
 import DragFileSendTip from "./components/ChatMessageList/components/DragFileSendTip"
 import AiImageStartPage from "./components/AiImageStartPage"
 import { useMemoizedFn } from "ahooks"
 import EmptyConversationFallback from "./components/EmptyFallback"
+import MessageEditor from "./components/MessageEditor"
 
 const TopicExtraSection = lazy(() => import("./components/topic/ExtraSection"))
 const SettingExtraSection = lazy(() => import("./components/setting"))
@@ -41,7 +41,7 @@ const ChatNew = observer(() => {
 	const Main = () => {
 		// 如果开启了startPage，则显示startPage
 		if (ConversationBotDataService.startPage && interfaceStore.isShowStartPage) {
-			return <AiImageStartPage disabled={false} />
+			return <AiImageStartPage />
 		}
 
 		return (
@@ -78,11 +78,7 @@ const ChatNew = observer(() => {
 						max="50%"
 					>
 						<div className={styles.editor}>
-							<MessageEditor
-								disabled={false}
-								visible
-								// scrollControl={null}
-							/>
+							<MessageEditor visible sendWhenEnter />
 						</div>
 					</MagicSplitter.Panel>
 				</MagicSplitter>

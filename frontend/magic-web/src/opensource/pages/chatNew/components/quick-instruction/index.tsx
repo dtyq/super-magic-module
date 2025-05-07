@@ -59,8 +59,6 @@ const InstructionActions = observer(({ position, systemButtons }: InstructionSel
 	/** 指令列表 */
 	const instructions = ConversationBotDataService.getQuickInstructionsByPosition(position)
 
-	console.log("instructions", instructions)
-
 	if (!instructions || !instructions.items?.length) {
 		return null
 	}

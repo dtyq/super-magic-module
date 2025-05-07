@@ -1,5 +1,5 @@
-import type { NodeTestingCtx } from "@dtyq/magic-flow/MagicFlow/context/NodeTesingContext/Context"
-import type { MagicFlow } from "@dtyq/magic-flow/MagicFlow/types/flow"
+import type { NodeTestingCtx } from "@dtyq/magic-flow/dist/MagicFlow/context/NodeTesingContext/Context"
+import type { MagicFlow } from "@dtyq/magic-flow/dist/MagicFlow/types/flow"
 import type { Dispatch, SetStateAction } from "react"
 import React from "react"
 

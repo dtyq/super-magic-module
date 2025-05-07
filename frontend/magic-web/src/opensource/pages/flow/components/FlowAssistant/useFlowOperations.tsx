@@ -2,10 +2,10 @@ import { useRef } from "react"
 import { message as antdMessage } from "antd"
 import { useTranslation } from "react-i18next"
 import { useMemoizedFn } from "ahooks"
-import { MagicFlow } from "@dtyq/magic-flow/MagicFlow/types/flow"
+import { MagicFlow } from "@dtyq/magic-flow/dist/MagicFlow/types/flow"
 import { set } from "lodash-es"
 import { FlowApi } from "@/apis"
-import { getLatestNodeVersion } from "@dtyq/magic-flow/MagicFlow/utils"
+import { getLatestNodeVersion } from "@dtyq/magic-flow/dist/MagicFlow/utils"
 
 interface UseFlowOperationsProps {
 	flowInteractionRef: React.MutableRefObject<any>

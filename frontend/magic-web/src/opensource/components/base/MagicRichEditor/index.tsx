@@ -543,7 +543,12 @@ const MagicRichEditor = memo(
 					transform: translateY(0) !important;
 					line-height: 1.5em !important;
 				}
-				
+
+				p[data-suggestion] {
+					position: relative;
+					overflow: visible;
+				}
+
 				/* 恢复自动补全提醒样式 */
 				p[data-suggestion]::after {
 					color: #bfbfbf;

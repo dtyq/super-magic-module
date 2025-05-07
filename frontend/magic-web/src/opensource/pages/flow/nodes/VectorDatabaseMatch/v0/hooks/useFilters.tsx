@@ -3,7 +3,7 @@
  */
 
 import { Flex, Form } from "antd"
-import MagicSelect from "@dtyq/magic-flow/common/BaseUI/Select"
+import MagicSelect from "@dtyq/magic-flow/dist/common/BaseUI/Select"
 import { useMemo } from "react"
 import { useTranslation } from "react-i18next"
 import styles from "../VectorDatabaseMatch.module.less"

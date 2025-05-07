@@ -1,6 +1,6 @@
-import type Schema from "@dtyq/magic-flow/MagicJsonSchemaEditor/types/Schema"
-import DropdownCard from "@dtyq/magic-flow/common/BaseUI/DropdownCard"
-import JSONSchemaRenderer from "@dtyq/magic-flow/common/BaseUI/JSONSchemaRenderer"
+import type Schema from "@dtyq/magic-flow/dist/MagicJsonSchemaEditor/types/Schema"
+import DropdownCard from "@dtyq/magic-flow/dist/common/BaseUI/DropdownCard"
+import JSONSchemaRenderer from "@dtyq/magic-flow/dist/common/BaseUI/JSONSchemaRenderer"
 import { cx } from "antd-style"
 import styles from "./index.module.less"
 

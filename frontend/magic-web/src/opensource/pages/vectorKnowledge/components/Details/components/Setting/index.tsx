@@ -10,6 +10,7 @@ import SearchSettingsGroup from "../../../Configuration/components/SearchSetting
 import { RetrieveConfig } from "@/opensource/pages/vectorKnowledge/types"
 import { useEmbeddingModels } from "../../../Configuration/hooks/useEmbeddingModels"
 import type { Knowledge } from "@/types/knowledge"
+import { hasEditRight } from "@/opensource/pages/flow/components/AuthControlButton/types"
 
 interface Props {
 	knowledgeBase: Knowledge.Detail
@@ -89,12 +90,14 @@ export default function Setting({ knowledgeBase, updateKnowledgeDetail }: Props)
 					<div className={cx(styles.required, styles.settingLabel)}>
 						{t("knowledgeDatabase.icon")}
 					</div>
-					<ImageUpload
-						className={styles.settingValue}
-						previewIconUrl={iconPreviewUrl}
-						setPreviewIconUrl={setIconPreviewUrl}
-						setUploadIconUrl={setIconUploadUrl}
-					/>
+					{hasEditRight(knowledgeBase.user_operation) && (
+						<ImageUpload
+							className={styles.settingValue}
+							previewIconUrl={iconPreviewUrl}
+							setPreviewIconUrl={setIconPreviewUrl}
+							setUploadIconUrl={setIconUploadUrl}
+						/>
+					)}
 				</Flex>
 
 				{/* 知识库名称 */}
@@ -104,7 +107,10 @@ export default function Setting({ knowledgeBase, updateKnowledgeDetail }: Props)
 					</div>
 					<div className={styles.settingValue}>
 						<Form.Item name="name" noStyle>
-							<Input placeholder={t("knowledgeDatabase.namePlaceholder")} />
+							<Input
+								disabled={!hasEditRight(knowledgeBase.user_operation)}
+								placeholder={t("knowledgeDatabase.namePlaceholder")}
+							/>
 						</Form.Item>
 					</div>
 				</Flex>
@@ -116,6 +122,7 @@ export default function Setting({ knowledgeBase, updateKnowledgeDetail }: Props)
 						<Form.Item name="description" noStyle>
 							<Input.TextArea
 								rows={4}
+								disabled={!hasEditRight(knowledgeBase.user_operation)}
 								placeholder={t("knowledgeDatabase.descriptionPlaceholder")}
 							/>
 						</Form.Item>
@@ -129,7 +136,11 @@ export default function Setting({ knowledgeBase, updateKnowledgeDetail }: Props)
 					</div>
 					<div className={styles.settingValue}>
 						<Form.Item name="embedding_model_id" noStyle>
-							<Select style={{ width: "100%" }} options={embeddingModelOptions} />
+							<Select
+								style={{ width: "100%" }}
+								options={embeddingModelOptions}
+								disabled={!hasEditRight(knowledgeBase.user_operation)}
+							/>
 						</Form.Item>
 					</div>
 				</Flex>
@@ -146,19 +157,21 @@ export default function Setting({ knowledgeBase, updateKnowledgeDetail }: Props)
 				</Flex>
 
 				{/* 重置、保存按钮 */}
-				<Flex justify="end" gap={10}>
-					<Button className={styles.resetButton} onClick={handleReset}>
-						{t("common.reset")}
-					</Button>
-					<Button
-						disabled={!formName}
-						type="primary"
-						className={styles.saveButton}
-						onClick={handleSave}
-					>
-						{t("common.save")}
-					</Button>
-				</Flex>
+				{hasEditRight(knowledgeBase.user_operation) && (
+					<Flex justify="end" gap={10}>
+						<Button className={styles.resetButton} onClick={handleReset}>
+							{t("common.reset")}
+						</Button>
+						<Button
+							disabled={!formName}
+							type="primary"
+							className={styles.saveButton}
+							onClick={handleSave}
+						>
+							{t("common.save")}
+						</Button>
+					</Flex>
+				)}
 			</Flex>
 		</Form>
 	)
