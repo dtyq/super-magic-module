@@ -1,4 +1,4 @@
-import { NodeSchema } from "@dtyq/magic-flow/MagicFlow"
+import { NodeSchema } from "@dtyq/magic-flow/dist/MagicFlow"
 import React, { createContext, useContext, ReactNode } from "react"
 import { ComponentVersionMap } from "../../nodes"
 

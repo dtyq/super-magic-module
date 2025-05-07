@@ -34,6 +34,8 @@ class ConfigAppService
      */
     public function shouldRedirectToSuperMagic($userAuthorization): array
     {
+        // 获取部署ID
+        $deploymentId = config('super-magic.sandbox.deployment_id', '');
         $userId = $userAuthorization->getId();
         $organizationCode = $userAuthorization->getOrganizationCode();
 
@@ -74,9 +76,6 @@ class ConfigAppService
             // 根据header 判断返回中文还是英文
             $shouldRedirect = false;
         }
-
-           // 获取部署ID
-        $deploymentId = env('DEPLOYMENT_ID', '');
 
         // // 特定的部署ID列表，这些ID应该重定向到SuperMagic
         $redirectDeploymentIds = ['a2503897', 'a1565492'];

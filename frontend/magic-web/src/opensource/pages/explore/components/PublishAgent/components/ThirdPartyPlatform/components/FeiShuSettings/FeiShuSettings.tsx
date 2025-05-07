@@ -7,7 +7,7 @@ import MagicEllipseWithTooltip from "@/opensource/components/base/MagicEllipseWi
 import { IconCircleCheckFilled, IconCopy, IconPointFilled } from "@tabler/icons-react"
 import { cx } from "antd-style"
 import { env } from "@/utils/env"
-import { copyToClipboard } from "@dtyq/magic-flow/MagicFlow/utils"
+import { copyToClipboard } from "@dtyq/magic-flow/dist/MagicFlow/utils"
 import MagicButton from "@/opensource/components/base/MagicButton"
 import { useTranslation } from "react-i18next"
 import { ThirdPartyPlatformType } from "@/types/bot"
@@ -88,7 +88,9 @@ export default function FeiShuSettings({ open, onClose, subOpt }: FeiShuSettings
 	})
 
 	const feiShuAddr = useMemo(() => {
-		return `${env("MAGIC_GATEWAY_ADDRESS")}/magic-service/bot/third-platform/chat?key=${platformData.key}&platform=${ThirdPartyPlatformType.FeiShu}`
+		return `${env("MAGIC_GATEWAY_ADDRESS")}/magic-service/bot/third-platform/chat?key=${
+			platformData.key
+		}&platform=${ThirdPartyPlatformType.FeiShu}`
 	}, [platformData])
 
 	const onCopy = useMemoizedFn((str: string) => {

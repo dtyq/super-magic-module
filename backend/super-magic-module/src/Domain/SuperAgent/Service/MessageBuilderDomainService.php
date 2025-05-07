@@ -52,16 +52,16 @@ class MessageBuilderDomainService
             'upload_config' => $uploadCredential,
             'message_subscription_config' => [
                 'method' => 'POST',
-                'url' => env('APP_HOST') . '/api/v1/super-agent/tasks/deliver-message',
+                'url' => config('super-magic.sandbox.callback_host', '') . '/api/v1/super-agent/tasks/deliver-message',
                 'headers' => [
-                    'token' => env('SANDBOX_TOKEN'),
+                    'token' => config('super-magic.sandbox.token', ''),
                 ],
             ],
             'sts_token_refresh' => [
                 'method' => 'POST',
-                'url' => env('APP_HOST') . '/api/v1/super-agent/file/refresh-sts-token',
+                'url' => config('super-magic.sandbox.callback_host', '') . '/api/v1/super-agent/file/refresh-sts-token',
                 'headers' => [
-                    'token' => env('SANDBOX_TOKEN'),
+                    'token' => config('super-magic.sandbox.token', ''),
                 ],
             ],
             'metadata' => $metaDataArray,

@@ -158,11 +158,13 @@ class MagicAgentVersionRepository implements MagicAgentVersionRepositoryInterfac
         return $maxVersion->toArray()['version_number'];
     }
 
-    public function deleteByRootId(string $agentId): void
+    public function deleteByAgentId(string $agentId, string $organizationCode): void
     {
         // 查询指定 agent_id 和 user_id 下的最大版本号
         $this->agentVersionModel::query()
-            ->where('root_id', $agentId)->delete();
+            ->where('root_id', $agentId)
+            ->where('organization_code', $organizationCode)
+            ->delete();
     }
 
     public function getDefaultVersions(array $agentIds): void
@@ -265,5 +267,17 @@ class MagicAgentVersionRepository implements MagicAgentVersionRepositoryInterfac
         }
 
         return Db::select($query->toSql(), $query->getBindings());
+    }
+
+    /**
+     * 根据ids获取助理版本.
+     * @return array<MagicAgentVersionEntity>
+     */
+    public function getAgentByIds(array $ids)
+    {
+        $model = $this->agentVersionModel::query()
+            ->whereIn('id', $ids)
+            ->get();
+        return MagicAgentVersionFactory::toEntities($model->toArray());
     }
 }

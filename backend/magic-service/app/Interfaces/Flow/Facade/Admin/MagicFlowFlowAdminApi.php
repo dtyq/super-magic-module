@@ -165,7 +165,9 @@ class MagicFlowFlowAdminApi extends AbstractFlowAdminApi
      */
     public function changeEnable(string $flowId)
     {
-        $this->magicFlowAppService->changeEnable($this->getAuthorization(), $flowId);
+        // 从请求中获取enable参数，如果没有传递则不影响原有逻辑
+        $enable = $this->request->has('enable') ? (bool) $this->request->input('enable') : null;
+        $this->magicFlowAppService->changeEnable($this->getAuthorization(), $flowId, $enable);
     }
 
     /**

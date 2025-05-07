@@ -18,6 +18,7 @@ use App\ErrorCode\AgentErrorCode;
 use App\Infrastructure\Core\AbstractRepository;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Infrastructure\Core\ValueObject\Page;
+use App\Interfaces\Admin\DTO\Request\QueryPageAgentDTO;
 use Hyperf\Codec\Json;
 use Hyperf\DbConnection\Db;
 
@@ -124,9 +125,9 @@ class MagicAgentRepository extends AbstractRepository implements MagicAgentRepos
         return $builder->count();
     }
 
-    public function deleteAgentById(string $id): void
+    public function deleteAgentById(string $id, string $organizationCode): void
     {
-        $this->agentModel::query()->where('id', $id)->delete();
+        $this->agentModel::query()->where('id', $id)->where('organization_code', $organizationCode)->delete();
     }
 
     public function getAgentById(string $agentId): MagicAgentEntity
@@ -138,7 +139,7 @@ class MagicAgentRepository extends AbstractRepository implements MagicAgentRepos
 
         // 如果查询结果为空，抛出异常或返回 null，根据业务需求处理
         if (! $agent) {
-            ExceptionBuilder::throw(AgentErrorCode::VALIDATE_FAILED, 'agent.agent_empty');
+            ExceptionBuilder::throw(AgentErrorCode::VALIDATE_FAILED, 'agent.agent_not_exist');
         }
 
         return MagicAgentFactory::toEntity($agent->toArray());
@@ -167,7 +168,7 @@ class MagicAgentRepository extends AbstractRepository implements MagicAgentRepos
             ->first();
 
         if ($result === null) {
-            ExceptionBuilder::throw(AgentErrorCode::VALIDATE_FAILED, 'agent.agent_empty');
+            ExceptionBuilder::throw(AgentErrorCode::VALIDATE_FAILED, 'agent.agent_not_exist');
         }
         $agentArray = $result->toArray();
         return MagicAgentFactory::toEntity($result->toArray());
@@ -180,7 +181,7 @@ class MagicAgentRepository extends AbstractRepository implements MagicAgentRepos
             ->where('created_uid', $userId)
             ->first();
         if ($result === null) {
-            ExceptionBuilder::throw(AgentErrorCode::VALIDATE_FAILED, 'agent.agent_empty');
+            ExceptionBuilder::throw(AgentErrorCode::VALIDATE_FAILED, 'agent.agent_not_exist');
         }
 
         return MagicAgentFactory::toEntity($result->toArray());
@@ -274,5 +275,71 @@ class MagicAgentRepository extends AbstractRepository implements MagicAgentRepos
     public function updateFlowCode(string $agentId, string $flowCode)
     {
         $this->agentModel::query()->newQuery()->where('id', $agentId)->update(['flow_code' => $flowCode]);
+    }
+
+    /**
+     * 查询企业下的所有助理,条件查询：状态，创建人，搜索.
+     * @return array<MagicAgentEntity>
+     */
+    public function queriesAgents(string $organizationCode, QueryPageAgentDTO $queryPageAgentDTO): array
+    {
+        $query = $this->agentModel->newQuery()
+            ->where('organization_code', $organizationCode)
+            ->limit($queryPageAgentDTO->getPageSize())
+            ->offset($queryPageAgentDTO->getPage() - 1)
+            ->orderByDesc('id');
+
+        if ($queryPageAgentDTO->getCreatedUid()) {
+            $query->where('created_uid', $queryPageAgentDTO->getCreatedUid());
+        }
+
+        if ($queryPageAgentDTO->getQuery()) {
+            // 名称或者描述
+            $query->where('robot_name', 'like', "%{$queryPageAgentDTO->getQuery()}%")
+                ->orWhere('robot_description', 'like', "%{$queryPageAgentDTO->getQuery()}%");
+        }
+
+        if ($queryPageAgentDTO->getStatus()) {
+            $query->where('status', $queryPageAgentDTO->getStatus());
+        }
+        $result = Db::select($query->toSql(), $query->getBindings());
+        return MagicAgentFactory::toEntities($result);
+    }
+
+    public function queriesAgentsCount(string $organizationCode, QueryPageAgentDTO $queryPageAgentDTO): int
+    {
+        $query = $this->agentModel->newQuery()
+            ->where('organization_code', $organizationCode);
+
+        if ($queryPageAgentDTO->getCreatedUid()) {
+            $query->where('created_uid', $queryPageAgentDTO->getCreatedUid());
+        }
+
+        if ($queryPageAgentDTO->getQuery()) {
+            // 名称或者描述
+            $query->where('robot_name', 'like', "%{$queryPageAgentDTO->getQuery()}%")
+                ->orWhere('robot_description', 'like', "%{$queryPageAgentDTO->getQuery()}%");
+        }
+
+        if ($queryPageAgentDTO->getStatus()) {
+            $query->where('status', $queryPageAgentDTO->getStatus());
+        }
+        return $query->count();
+    }
+
+    /**
+     * 获取企业下的所有助理创建者.
+     * @return array<string>
+     */
+    public function getOrganizationAgentsCreators(string $organizationCode): array
+    {
+        $query = $this->agentModel->newQuery()
+            ->where('organization_code', $organizationCode)
+            ->select('created_uid')
+            ->distinct();
+
+        return $query->get()
+            ->pluck('created_uid')
+            ->toArray();
     }
 }

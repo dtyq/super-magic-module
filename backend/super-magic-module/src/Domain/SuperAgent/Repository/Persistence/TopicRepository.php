@@ -9,6 +9,7 @@ namespace Dtyq\SuperMagic\Domain\SuperAgent\Repository\Persistence;
 
 use App\Infrastructure\Util\IdGenerator\IdGenerator;
 use Dtyq\SuperMagic\Domain\SuperAgent\Entity\TopicEntity;
+use Dtyq\SuperMagic\Domain\SuperAgent\Entity\ValueObject\TaskStatus;
 use Dtyq\SuperMagic\Domain\SuperAgent\Repository\Facade\TopicRepositoryInterface;
 use Dtyq\SuperMagic\Domain\SuperAgent\Repository\Model\TopicModel;
 use Dtyq\SuperMagic\Domain\SuperAgent\Repository\Model\WorkspaceModel;
@@ -219,6 +220,17 @@ class TopicRepository implements TopicRepositoryInterface
                 'topic_count' => $topicCount,
             ],
         ];
+    }
+
+    public function updateTopicStatus(int $id, $taskId, TaskStatus $status): bool
+    {
+        return $this->model::query()
+            ->where('id', $id)
+            ->update([
+                'current_task_id' => $taskId,
+                'current_task_status' => $status->value,
+                'updated_at' => date('Y-m-d H:i:s'),
+            ]) > 0;
     }
 
     /**

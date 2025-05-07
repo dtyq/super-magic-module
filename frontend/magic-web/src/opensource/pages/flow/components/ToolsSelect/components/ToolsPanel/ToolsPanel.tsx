@@ -1,7 +1,7 @@
 import MagicModal from "@/opensource/components/base/MagicModal"
 import { Avatar, Checkbox, Flex, Select } from "antd"
 import { IconChevronDown } from "@tabler/icons-react"
-import SearchInput from "@dtyq/magic-flow/common/BaseUI/DropdownRenderer/SearchInput"
+import SearchInput from "@dtyq/magic-flow/dist/common/BaseUI/DropdownRenderer/SearchInput"
 import { resolveToString } from "@dtyq/es6-template-strings"
 import ToolsEmptyImage from "@/assets/logos/empty-tools.svg"
 import { useTranslation } from "react-i18next"
