@@ -25,10 +25,10 @@ if [[ $# -eq 0 ]]; then
 fi
 
 remote github git@github.com:dtyq/.github.git
-split "src/.github" "git@github.com:hyperf/.github.git"
+split "backend/.github" "git@github.com:dtyq/.github.git"
 
 for REPO in $REPOS ; do
-    remote $REPO git@github.com:hyperf/$REPO.git
+    remote $REPO git@github.com:dtyq/$REPO.git
 
-    split "src/$REPO" $REPO
+    split "backend/$REPO" $REPO
 done
