@@ -77,9 +77,6 @@ class ConfigAppService
             $shouldRedirect = false;
         }
 
-           // 获取部署ID
-        $deploymentId = env('DEPLOYMENT_ID', '');
-
         // // 特定的部署ID列表，这些ID应该重定向到SuperMagic
         $redirectDeploymentIds = ['a2503897', 'a1565492'];
 

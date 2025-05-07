@@ -27,6 +27,7 @@ use Hyperf\Codec\Json;
 use Hyperf\DbConnection\Db;
 use Random\RandomException;
 use RedisException;
+use Swow\Exception;
 use Throwable;
 
 use function Hyperf\Config\config;
@@ -222,8 +223,9 @@ class MagicAccountDomainService extends AbstractContactDomainService
             $result = $this->createUser($userDTO, $dataIsolation);
             Db::commit();
             return $result;
-        } catch (Throwable$exception) {
+        } catch (Exception $exception) {
             Db::rollBack();
+            $this->logger->error("aiRegister error: ". $exception->getMessage());
             throw $exception;
         }
     }
