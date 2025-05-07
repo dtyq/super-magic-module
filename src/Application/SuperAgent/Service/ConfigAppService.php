@@ -87,7 +87,9 @@ class ConfigAppService
         // // 首先检查组织编码是否在排除列表中
         if ($isOrganizationAdmin && in_array($deploymentId, $redirectDeploymentIds, true)) {
             $shouldRedirect = true;
-        } 
+        }else{
+            $shouldRedirect = false;
+        }
 
         $this->logger->info('检查是否重定向到SuperMagic', [
             'deployment_id' => $deploymentId,
