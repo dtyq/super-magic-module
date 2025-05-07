@@ -222,6 +222,17 @@ class TopicRepository implements TopicRepositoryInterface
         ];
     }
 
+    public function updateTopicStatus(int $id, $taskId, TaskStatus $status): bool
+    {
+        return $this->model::query()
+            ->where('id', $id)
+            ->update([
+                'current_task_id' => $taskId,
+                'current_task_status' => $status->value,
+                'updated_at' => date('Y-m-d H:i:s'),
+            ]) > 0;
+    }
+
     /**
      * 将数据库模型数据转换为实体数据.
      * @param array $modelData 模型数据
@@ -249,16 +260,5 @@ class TopicRepository implements TopicRepositoryInterface
     {
         // 处理连字符和下划线的情况
         return lcfirst(str_replace(' ', '', ucwords(str_replace(['_', '-'], ' ', $snake))));
-    }
-
-    public function updateTopicStatus(int $id,  $taskId, TaskStatus $status): bool
-    {
-        return $this->model::query()
-                ->where('id', $id)
-                ->update([
-                    'current_task_id' => $taskId,
-                    'current_task_status' => $status->value,
-                    'updated_at' => date('Y-m-d H:i:s'),
-                ]) > 0;
     }
 }

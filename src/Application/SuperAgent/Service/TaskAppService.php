@@ -22,6 +22,7 @@ use App\Infrastructure\Core\Exception\BusinessException;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Infrastructure\Util\Auth\PermissionChecker;
 use App\Infrastructure\Util\IdGenerator\IdGenerator;
+use App\Infrastructure\Util\Locker\LockerInterface;
 use App\Interfaces\Authorization\Web\MagicUserAuthorization;
 use Dtyq\SuperMagic\Domain\SuperAgent\Constant\TaskFileType;
 use Dtyq\SuperMagic\Domain\SuperAgent\Entity\TaskEntity;
@@ -38,11 +39,10 @@ use Dtyq\SuperMagic\Domain\SuperAgent\Service\WorkspaceDomainService;
 use Dtyq\SuperMagic\Infrastructure\ExternalAPI\Sandbox\Config\WebSocketConfig;
 use Dtyq\SuperMagic\Infrastructure\ExternalAPI\Sandbox\SandboxResult;
 use Dtyq\SuperMagic\Infrastructure\ExternalAPI\Sandbox\SandboxStruct;
-use Dtyq\SuperMagic\Infrastructure\ExternalAPI\Sandbox\Volcengine\SandboxService;
 // use Dtyq\BillingManager\Service\QuotaService;
+use Dtyq\SuperMagic\Infrastructure\ExternalAPI\Sandbox\Volcengine\SandboxService;
 use Dtyq\SuperMagic\Infrastructure\ExternalAPI\Sandbox\WebSocket\WebSocketSession;
 use Dtyq\SuperMagic\Interfaces\SuperAgent\DTO\TopicTaskMessageDTO;
-use App\Infrastructure\Util\Locker\LockerInterface;
 use Error;
 use Exception;
 use Hyperf\Codec\Json;
@@ -301,7 +301,7 @@ class TaskAppService extends AbstractAppService
         if (empty($sandboxId)) {
             $this->logger->warning('缺少有效的sandboxId，无法加锁保证消息顺序性', [
                 'message_id' => $messageDTO->getPayload()?->getMessageId(),
-                'message' => $messageDTO->toArray()
+                'message' => $messageDTO->toArray(),
             ]);
         }
 
@@ -312,10 +312,10 @@ class TaskAppService extends AbstractAppService
 
         try {
             // 如果有有效的sandboxId，尝试获取分布式互斥锁
-            if (!empty($sandboxId)) {
+            if (! empty($sandboxId)) {
                 $lockAcquired = $this->locker->mutexLock($lockKey, $lockOwner, $lockExpireSeconds);
-                
-                if (!$lockAcquired) {
+
+                if (! $lockAcquired) {
                     $this->logger->warning(sprintf(
                         '无法获取sandbox %s的锁，该sandbox可能有其他消息正在处理中，message_id: %s',
                         $sandboxId,
@@ -324,7 +324,7 @@ class TaskAppService extends AbstractAppService
                     // 可以选择将消息重新入队或实现延迟重试策略
                     return;
                 }
-                
+
                 $this->logger->debug(sprintf('已获取sandbox %s的锁，持有者: %s', $sandboxId, $lockOwner));
             }
 

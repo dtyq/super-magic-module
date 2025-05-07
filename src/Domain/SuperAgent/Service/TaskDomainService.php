@@ -158,12 +158,12 @@ class TaskDomainService
         $taskEntity->setSandboxId($sandboxId);
         $taskEntity->setTaskId($taskId);
         $taskEntity->setUpdatedAt(date('Y-m-d H:i:s'));
-        
+
         // 如果提供了错误信息，并且状态为ERROR，则设置错误信息
         if ($status === TaskStatus::ERROR && $errMsg !== null) {
             $taskEntity->setErrMsg($errMsg);
         }
-        
+
         $this->taskRepository->updateTask($taskEntity);
 
         // 3. 更新话题的相关信息
@@ -630,7 +630,7 @@ class TaskDomainService
      *
      * @param int $id 任务ID
      * @param TaskStatus $status 任务状态
-     * @param string|null $errMsg 错误信息，仅当状态为ERROR时有意义
+     * @param null|string $errMsg 错误信息，仅当状态为ERROR时有意义
      * @return bool 是否更新成功
      */
     public function updateTaskStatusByTaskId(int $id, TaskStatus $status, ?string $errMsg = null): bool
@@ -642,7 +642,7 @@ class TaskDomainService
     }
 
     /**
-     * 获取最近更新时间超过指定时间的任务列表
+     * 获取最近更新时间超过指定时间的任务列表.
      *
      * @param string $timeThreshold 时间阈值，如果任务的更新时间早于此时间，则会被包含在结果中
      * @param int $limit 返回结果的最大数量

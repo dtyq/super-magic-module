@@ -7,7 +7,6 @@ declare(strict_types=1);
 
 namespace Dtyq\SuperMagic\Application\SuperAgent\Crontab;
 
-use App\Domain\Contact\Entity\ValueObject\DataIsolation;
 use Dtyq\SuperMagic\Domain\SuperAgent\Entity\ValueObject\TaskStatus;
 use Dtyq\SuperMagic\Domain\SuperAgent\Service\TaskDomainService;
 use Dtyq\SuperMagic\Domain\SuperAgent\Service\TopicDomainService;
@@ -25,11 +24,10 @@ readonly class CheckTaskStatusTask
 {
     public function __construct(
         protected TaskDomainService $taskDomainService,
-        protected TopicDomainService  $topicDomainService,
+        protected TopicDomainService $topicDomainService,
         protected StdoutLoggerInterface $logger,
         protected SandboxInterface $sandboxService,
     ) {
-
     }
 
     /**
@@ -54,29 +52,29 @@ readonly class CheckTaskStatusTask
         try {
             // 获取3小时前的时间点
             $timeThreshold = date('Y-m-d H:i:s', strtotime('-7 hours'));
-            
+
             // 获取超时任务列表（更新时间超过3小时的任务，最多100条）
             $staleRunningTasks = $this->taskDomainService->getTasksExceedingUpdateTime($timeThreshold, 100);
-            
+
             if (empty($staleRunningTasks)) {
                 $this->logger->info('[CheckTaskStatusTask] 没有需要检查的超时任务');
                 return;
             }
-            
+
             $this->logger->info(sprintf('[CheckTaskStatusTask] 开始检查 %d 个超时任务的容器状态', count($staleRunningTasks)));
-            
+
             $updatedToRunningCount = 0;
             $updatedToErrorCount = 0;
-            
+
             foreach ($staleRunningTasks as $task) {
                 $sandboxId = $task->getSandboxId();
                 if (empty($sandboxId)) {
                     continue;
                 }
-                
+
                 // 每次循环后休眠0.1秒，避免请求过于频繁
                 usleep(100000); // 100000微秒 = 0.1秒
-                
+
                 // 调用SandboxService的getStatus接口获取容器状态
                 $result = $this->sandboxService->getStatus($sandboxId);
 
@@ -102,7 +100,7 @@ readonly class CheckTaskStatusTask
                 // 更新话题表
                 $this->topicDomainService->updateTopicStatus($task->getTopicId(), $task->getId(), TaskStatus::ERROR);
             }
-            
+
             $this->logger->info(sprintf(
                 '[CheckTaskStatusTask] 检查完成，共更新 %d 个任务为运行状态，%d 个任务为错误状态',
                 $updatedToRunningCount,

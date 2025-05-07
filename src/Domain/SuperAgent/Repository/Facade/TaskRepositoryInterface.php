@@ -50,9 +50,9 @@ interface TaskRepositoryInterface
      * 更新任务状态
      */
     public function updateTaskStatus(int $id, TaskStatus $status): bool;
-    
+
     /**
-     * 更新任务状态和错误信息
+     * 更新任务状态和错误信息.
      */
     public function updateTaskStatusAndErrMsg(int $id, TaskStatus $status, ?string $errMsg = null): bool;
 
@@ -60,9 +60,9 @@ interface TaskRepositoryInterface
      * 根据沙箱任务ID更新任务状态
      */
     public function updateTaskStatusByTaskId(int $id, TaskStatus $status): bool;
-    
+
     /**
-     * 根据沙箱任务ID更新任务状态和错误信息
+     * 根据沙箱任务ID更新任务状态和错误信息.
      */
     public function updateTaskStatusAndErrMsgByTaskId(int $id, TaskStatus $status, ?string $errMsg = null): bool;
 
@@ -113,9 +113,9 @@ interface TaskRepositoryInterface
      * @return array<TaskEntity> 任务实体列表
      */
     public function getTasksByStatus(TaskStatus $status): array;
-    
+
     /**
-     * 获取最近更新时间超过指定时间的任务列表
+     * 获取最近更新时间超过指定时间的任务列表.
      *
      * @param string $timeThreshold 时间阈值，如果任务的更新时间早于此时间，则会被包含在结果中
      * @param int $limit 返回结果的最大数量

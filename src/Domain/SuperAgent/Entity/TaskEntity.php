@@ -71,7 +71,7 @@ class TaskEntity extends AbstractEntity
     protected string $taskMode = 'chat';
 
     /**
-     * @var string|null 错误信息
+     * @var null|string 错误信息
      */
     protected ?string $errMsg = null;
 
@@ -321,7 +321,7 @@ class TaskEntity extends AbstractEntity
     }
 
     /**
-     * 获取错误信息
+     * 获取错误信息.
      */
     public function getErrMsg(): ?string
     {
@@ -329,7 +329,7 @@ class TaskEntity extends AbstractEntity
     }
 
     /**
-     * 设置错误信息
+     * 设置错误信息.
      */
     public function setErrMsg(?string $errMsg): self
     {
