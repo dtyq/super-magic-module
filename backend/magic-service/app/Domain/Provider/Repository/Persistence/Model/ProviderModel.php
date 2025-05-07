@@ -28,7 +28,7 @@ use Hyperf\Snowflake\Concern\Snowflake;
  * @property array $translate
  * @property string $remark
  */
-class ServiceProviderModel extends AbstractModel
+class ProviderModel extends AbstractModel
 {
     use SoftDeletes;
     use Snowflake;

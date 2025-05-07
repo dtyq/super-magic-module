@@ -7,9 +7,11 @@ declare(strict_types=1);
 
 namespace App\Domain\Chat\DTO\Response\Common;
 
+use App\Domain\Chat\DTO\Message\ChatMessage\UnknowChatMessage;
 use App\Domain\Chat\DTO\Message\MessageInterface;
 use App\Domain\Chat\Entity\AbstractEntity;
 use App\Interfaces\Chat\Assembler\MessageAssembler;
+use Throwable;
 
 /**
  * 客户端收到的消息结构体.
@@ -46,7 +48,12 @@ class ClientMessage extends AbstractEntity
     public function __construct(array $data)
     {
         if (! $data['content'] instanceof MessageInterface) {
-            $data['content'] = MessageAssembler::getMessageStructByArray($data['type'], $data['content']);
+            // 避免各种 bug 导致用户完全无法拉消息，这里做一下兜底
+            try {
+                $data['content'] = MessageAssembler::getMessageStructByArray($data['type'], $data['content']);
+            } catch (Throwable) {
+                $data['content'] = new UnknowChatMessage();
+            }
         }
         parent::__construct($data);
     }

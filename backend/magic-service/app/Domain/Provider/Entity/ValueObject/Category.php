@@ -5,18 +5,18 @@ declare(strict_types=1);
  * Copyright (c) The Magic , Distributed under the software license
  */
 
-namespace App\Domain\Provider\Entity\ValueObject\Provider;
+namespace App\Domain\Provider\Entity\ValueObject;
 
-enum Status: int
+enum Category: string
 {
-    case Disabled = 0;
-    case Enabled = 1;
+    case LLM = 'llm';
+    case VLM = 'vlm';
 
     public function label(): string
     {
         return match ($this) {
-            self::Disabled => '禁用',
-            self::Enabled => '启用',
+            self::LLM => '大模型',
+            self::VLM => '视觉模型',
         };
     }
 }
