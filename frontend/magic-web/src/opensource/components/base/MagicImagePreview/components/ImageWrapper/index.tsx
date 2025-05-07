@@ -92,6 +92,7 @@ const ImageWrapper = observer((props: ImageWrapperProps) => {
 	useEffect(() => {
 		const url = fileId && messageId ? urls?.[fileId]?.url : srcInProps
 		const oldUrl = oldFileId && messageId ? urls?.[oldFileId]?.url : undefined
+
 		if (imgExtension?.startsWith("svg")) {
 			setFileInfo({
 				url,
@@ -121,16 +122,16 @@ const ImageWrapper = observer((props: ImageWrapperProps) => {
 		}
 	}, [
 		conversation?.id,
-		imgExtension,
 		fileId,
-		oldFileId,
+		fileSize,
+		imgExtension,
 		index,
 		messageId,
+		oldFileId,
 		srcInProps,
 		standalone,
 		urls,
 		useHDImage,
-		fileSize,
 	])
 
 	const handleReloadImage = useMemoizedFn(() => {
@@ -148,7 +149,7 @@ const ImageWrapper = observer((props: ImageWrapperProps) => {
 	})
 
 	const fileInfoBase64 = useMemo(() => {
-		return fileInfo ? btoa(JSON.stringify(fileInfo)) : ""
+		return btoa(JSON.stringify(fileInfo ?? {}))
 	}, [fileInfo])
 
 	const ImageNode = useMemo(() => {
@@ -162,6 +163,7 @@ const ImageWrapper = observer((props: ImageWrapperProps) => {
 				>
 					<div
 						className={styles.image}
+						data-file-info={fileInfoBase64}
 						// eslint-disable-next-line react/no-danger
 						dangerouslySetInnerHTML={{ __html: fileInfo?.url }}
 					/>

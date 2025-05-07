@@ -401,9 +401,17 @@ const ChatMessageList = observer(() => {
 		if (target.tagName === "IMG" && target.classList.contains("magic-image")) {
 			const fileInfo = target.getAttribute("data-file-info")
 			if (fileInfo) {
-				const fileInfoObj = JSON.parse(atob(fileInfo))
-				// 如果是同一张图片，先重置状态
-				MessageFilePreview.setPreviewInfo(fileInfoObj)
+				try {
+					const fileInfoObj = JSON.parse(atob(fileInfo))
+					// 如果是同一张图片，先重置状态
+					MessageFilePreview.setPreviewInfo({
+						...fileInfoObj,
+						messageId,
+						conversationId: conversationStore.currentConversation?.id,
+					})
+				} catch (error) {
+					console.error("解析文件信息失败", error)
+				}
 			}
 		}
 

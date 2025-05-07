@@ -1001,6 +1001,10 @@ class MessageService {
 			MessageStore.topicId === message.message.topic_id
 		) {
 			const fullMessage = this.formatMessage(message, userStore.user.userInfo)
+
+			// 检查消息附件是否过期
+			this.checkMessageAttachmentExpired([fullMessage])
+
 			MessageStore.addReceivedMessage(fullMessage)
 			if (!fullMessage.is_self) this.sendReadReceipt([fullMessage])
 		} else {

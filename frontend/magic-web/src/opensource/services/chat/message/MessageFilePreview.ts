@@ -30,7 +30,6 @@ class MessageFilePreview {
 	setPreviewInfo(info: PreviewFileInfo) {
 		if (!info.messageId || !info.url) return
 		info.conversationId = ConversationStore.currentConversation?.id
-
 		MessagePreviewStore.setPreviewInfo(info)
 	}
 
