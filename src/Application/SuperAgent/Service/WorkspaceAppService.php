@@ -943,8 +943,10 @@ class WorkspaceAppService extends AbstractAppService
         DataIsolation $dataIsolation,
         string $workspaceName = AgentConstant::DEFAULT_WORKSPACE_NAME
     ): array {
+        $this->logger->info('开始初始化用户工作区');
         // 获取超级麦吉用户
         [$chatConversationId, $chatConversationTopicId] = $this->initMagicChatConversation($dataIsolation);
+        $this->logger->info(sprintf("初始化超级麦吉, chatConversationId=%s, chatConversationTopicId=%s", $chatConversationId, $chatConversationTopicId));
         // 新建工作区，绑定会话id
         $result = $this->workspaceDomainService->createWorkspace(
             $dataIsolation,

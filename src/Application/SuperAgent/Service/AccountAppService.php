@@ -18,15 +18,24 @@ use App\ErrorCode\GenericErrorCode;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Interfaces\Authorization\Web\MagicUserAuthorization;
 use Dtyq\SuperMagic\Domain\SuperAgent\Constant\AgentConstant;
+use Hyperf\Logger\LoggerFactory;
+use Psr\Log\LoggerInterface;
 
 class AccountAppService extends AbstractAppService
 {
+    protected LoggerInterface $logger;
+
     public function __construct(
         private readonly MagicAccountAppService $magicAccountAppService,
         private readonly MagicUserDomainService $userDomainService,
+        protected LoggerFactory $loggerFactory,
     ) {
+        $this->logger = $this->loggerFactory->get(get_class($this));
     }
 
+    /**
+     * @throws \Throwable
+     */
     public function initAccount(string $organizationCode): array
     {
         // 查询是否已经存在了超级麦吉账号，如果存在则不更新
@@ -51,7 +60,12 @@ class AccountAppService extends AbstractAppService
         $authorization = new MagicUserAuthorization();
         $authorization->setOrganizationCode($organizationCode);
         $authorization->setUserType(UserType::Human);
-        $userEntity = $this->magicAccountAppService->aiRegister($userDTO, $authorization, AgentConstant::SUPER_MAGIC_CODE, $accountDTO);
-        return $userEntity->toArray();
+        try {
+            $userEntity = $this->magicAccountAppService->aiRegister($userDTO, $authorization, AgentConstant::SUPER_MAGIC_CODE, $accountDTO);
+            return $userEntity->toArray();
+        } catch (\Throwable $e) {
+            $this->logger->error('初始化超级麦吉账号失败，原因：' . $e->getMessage());
+            throw $e;
+        }
     }
 }
