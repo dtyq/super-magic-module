@@ -139,7 +139,7 @@ class ProviderEntity extends AbstractEntity
 
     public function setTranslate(?array $translate): void
     {
-        $this->translate = $translate;
+        $this->translate = $translate ?? [];
     }
 
     public function getRemark(): string
