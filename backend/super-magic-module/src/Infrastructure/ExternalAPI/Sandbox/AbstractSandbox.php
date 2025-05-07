@@ -33,7 +33,7 @@ abstract class AbstractSandbox implements SandboxInterface
 
     protected function initializeClient(): void
     {
-        $this->baseUrl = config('super-magic.sandbox.gateway', true);
+        $this->baseUrl = config('super-magic.sandbox.gateway', '');
         $this->token = config('super-magic.sandbox.token', '');
         $this->enableSandbox = config('super-magic.sandbox.enabled', true);
         if (empty($this->baseUrl)) {
@@ -96,6 +96,9 @@ abstract class AbstractSandbox implements SandboxInterface
     protected function request(string $method, string $uri, array $options = []): SandboxResult
     {
         try {
+            // 初始化客户端
+            $this->initializeClient();
+
             $this->logger->info(sprintf(
                 '[Sandbox] Making request - method: %s, uri: %s, options: %s, base_uri: %s',
                 $method,
@@ -109,9 +112,6 @@ abstract class AbstractSandbox implements SandboxInterface
             } else {
                 $options['headers'] = ['token' => $this->token];
             }
-
-            // 初始化客户端
-            $this->initializeClient();
 
             $response = $this->client->request($method, $uri, $options);
             return $this->handleResponse($uri, $response);

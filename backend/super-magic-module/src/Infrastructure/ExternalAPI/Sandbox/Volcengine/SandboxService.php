@@ -15,12 +15,6 @@ class SandboxService extends AbstractSandbox
 {
     public function create(SandboxStruct $struct): SandboxResult
     {
-        $this->logger->info(sprintf(
-            '[Sandbox] Creating sandbox with params: %s, base_url: %s',
-            json_encode($struct->toArray(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
-            $this->baseUrl
-        ));
-
         $result = $this->request('POST', 'sandboxes', [
             'json' => $struct->toArray(),
         ]);
