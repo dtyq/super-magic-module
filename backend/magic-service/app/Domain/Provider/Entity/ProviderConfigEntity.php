@@ -16,7 +16,7 @@ class ProviderConfigEntity extends AbstractEntity
 {
     protected ?int $id = null;
 
-    protected int $serviceProviderId;
+    protected int $providerId;
 
     protected string $organizationCode;
 
@@ -42,14 +42,14 @@ class ProviderConfigEntity extends AbstractEntity
         $this->id = $id;
     }
 
-    public function getServiceProviderId(): int
+    public function getProviderId(): int
     {
-        return $this->serviceProviderId;
+        return $this->providerId;
     }
 
-    public function setServiceProviderId(int $serviceProviderId): void
+    public function setProviderId(int $providerId): void
     {
-        $this->serviceProviderId = $serviceProviderId;
+        $this->providerId = $providerId;
     }
 
     public function getOrganizationCode(): string

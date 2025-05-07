@@ -17,8 +17,6 @@ use App\Infrastructure\Core\ValueObject\Page;
 
 class ProviderRepository extends ProviderAbstractRepository implements ProviderRepositoryInterface
 {
-    protected bool $filterOrganizationCode = true;
-
     public function getById(ProviderDataIsolation $dataIsolation, int $id): ?ProviderEntity
     {
         $builder = $this->createBuilder($dataIsolation, ProviderModel::query());
@@ -31,6 +29,26 @@ class ProviderRepository extends ProviderAbstractRepository implements ProviderR
         }
 
         return ProviderFactory::createEntity($model);
+    }
+
+    /**
+     * @param array<int> $ids
+     * @return array<int, ProviderEntity> 返回以id为key的实体对象数组
+     */
+    public function getByIds(ProviderDataIsolation $dataIsolation, array $ids): array
+    {
+        $builder = $this->createBuilder($dataIsolation, ProviderModel::query());
+        $ids = array_values(array_unique($ids));
+
+        /** @var array<ProviderModel> $models */
+        $models = $builder->whereIn('id', $ids)->get();
+
+        $entities = [];
+        foreach ($models as $model) {
+            $entities[$model->id] = ProviderFactory::createEntity($model);
+        }
+
+        return $entities;
     }
 
     public function getByCode(ProviderDataIsolation $dataIsolation, string $providerCode): ?ProviderEntity

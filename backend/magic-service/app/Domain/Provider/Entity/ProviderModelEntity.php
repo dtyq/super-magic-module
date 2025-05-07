@@ -19,7 +19,7 @@ class ProviderModelEntity extends AbstractEntity
 {
     protected ?int $id = null;
 
-    protected int $serviceProviderConfigId;
+    protected int $providerConfigId;
 
     protected string $name = '';
 
@@ -68,14 +68,14 @@ class ProviderModelEntity extends AbstractEntity
         return $this;
     }
 
-    public function getServiceProviderConfigId(): int
+    public function getProviderConfigId(): int
     {
-        return $this->serviceProviderConfigId;
+        return $this->providerConfigId;
     }
 
-    public function setServiceProviderConfigId(int $serviceProviderConfigId): self
+    public function setProviderConfigId(int $providerConfigId): self
     {
-        $this->serviceProviderConfigId = $serviceProviderConfigId;
+        $this->providerConfigId = $providerConfigId;
         return $this;
     }
 
@@ -271,6 +271,11 @@ class ProviderModelEntity extends AbstractEntity
     }
 
     public function getIsOffice(): bool
+    {
+        return $this->isOffice;
+    }
+
+    public function isOffice(): bool
     {
         return $this->isOffice;
     }

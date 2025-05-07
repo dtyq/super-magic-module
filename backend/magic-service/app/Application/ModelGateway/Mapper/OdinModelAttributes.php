@@ -19,6 +19,7 @@ readonly class OdinModelAttributes
         private array $tags,
         private DateTime $createdAt,
         private string $owner,
+        private string $providerAlias = '',
     ) {
     }
 
@@ -57,6 +58,11 @@ readonly class OdinModelAttributes
         return $this->owner;
     }
 
+    public function getProviderAlias(): string
+    {
+        return $this->providerAlias;
+    }
+
     public function toArray(): array
     {
         return [
@@ -67,6 +73,7 @@ readonly class OdinModelAttributes
             'tags' => $this->tags,
             'created_at' => $this->createdAt->getTimestamp(),
             'owner' => $this->owner,
+            'provider_alias' => $this->providerAlias,
         ];
     }
 }
