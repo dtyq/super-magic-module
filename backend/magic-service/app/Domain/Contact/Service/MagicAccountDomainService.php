@@ -199,6 +199,7 @@ class MagicAccountDomainService extends AbstractContactDomainService
                     $userEntity->setDescription($userDTO->getDescription());
                     $this->userRepository->saveUser($userEntity);
                 }
+                Db::commit();
                 return $userEntity;
             }
             // 创建账号
@@ -226,6 +227,9 @@ class MagicAccountDomainService extends AbstractContactDomainService
         } catch (Exception $exception) {
             Db::rollBack();
             $this->logger->error("aiRegister error: ". $exception->getMessage());
+            throw $exception;
+        } catch (Throwable $exception) {
+            Db::rollBack();
             throw $exception;
         }
     }
