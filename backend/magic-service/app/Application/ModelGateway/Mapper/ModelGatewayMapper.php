@@ -438,7 +438,7 @@ class ModelGatewayMapper extends ModelMapper
             return null;
         }
         // 如果当前模型是官方模型，则使用官方服务商
-        if ($providerModel->isOffice() && $providerModel->getModelParentId()) {
+        if ($providerModel->getModelParentId() && $providerModel->getId() !== $providerModel->getModelParentId()) {
             $providerModel = di(ProviderModelDomainService::class)->getById($providerDataIsolation, $providerModel->getModelParentId());
             if (! $providerModel->getStatus()->isEnabled()) {
                 return null;
