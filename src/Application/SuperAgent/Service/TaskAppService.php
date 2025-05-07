@@ -39,6 +39,7 @@ use Dtyq\SuperMagic\Infrastructure\ExternalAPI\Sandbox\Config\WebSocketConfig;
 use Dtyq\SuperMagic\Infrastructure\ExternalAPI\Sandbox\SandboxResult;
 use Dtyq\SuperMagic\Infrastructure\ExternalAPI\Sandbox\SandboxStruct;
 use Dtyq\SuperMagic\Infrastructure\ExternalAPI\Sandbox\Volcengine\SandboxService;
+use App\Application\Kernel\SuperPermissionEnum;
 // use Dtyq\BillingManager\Service\QuotaService;
 use Dtyq\SuperMagic\Infrastructure\ExternalAPI\Sandbox\WebSocket\WebSocketSession;
 use Dtyq\SuperMagic\Interfaces\SuperAgent\DTO\TopicTaskMessageDTO;
@@ -109,66 +110,35 @@ class TaskAppService extends AbstractAppService
                     $userPhoneNumber
                 ));
 
-                $whitelistPhones = config('super-magic.phones', []);
-                $this->logger->info(sprintf(
-                    '检查用户白名单: %s',
-                    json_encode($whitelistPhones, JSON_UNESCAPED_UNICODE)
-                ));
-
-                /**
-                 * 检查是否是超级管理员 , 兼容旧版本代码
-                 * */
-                $isAdmin = true;
+               
+                $isOrganizationAdmin=false;
+                $isInviteUser=false;
+                $isSuperMagicBoardManager=false;
+                $isSuperMagicBoardOperator=false;
 
                 // 检查是否是组织拥有者或者管理员
-                // $this->logger->info(sprintf(
-                //     '检查是否是组织拥有者或者管理员1, 组织代码: %s, OrganizationAdminAppService: %s, getOrganizationAdminPhones: %s',
-                //     $dataIsolation->getCurrentOrganizationCode(),
-                //     class_exists(OrganizationAdminAppService::class) ? 'true' : 'false',
-                //     method_exists(OrganizationAdminAppService::class, 'getOrganizationAdminPhones') ? 'true' : 'false'
-                // ));
-
-                // if (class_exists(OrganizationAdminAppService::class)
-                //     && method_exists(OrganizationAdminAppService::class, 'getOrganizationAdminPhones')
-                // ) {
-                //     $OrganizationAdminAppService = make(OrganizationAdminAppService::class);
-                //     $phoneNumbers = $OrganizationAdminAppService->getOrganizationAdminPhones($dataIsolation->getCurrentOrganizationCode());
-
-                //     $isAdmin = in_array($userPhoneNumber, $phoneNumbers, true);
-
-                //     $this->logger->info(sprintf(
-                //         '检查是否是组织拥有者或者管理员2, 组织代码: %s, 手机号: %s,userPhoneNumber: %s, isAdmin: %s',
-                //         $dataIsolation->getCurrentOrganizationCode(),
-                //         json_encode($phoneNumbers, JSON_UNESCAPED_UNICODE),
-                //         $userPhoneNumber,
-                //         $isAdmin ? 'true' : 'false'
-                //     ));
-                // }
-
-                /*
-                 * 检查是否是超级管理员 , 新版开源代码
-                 * */
-
-                if (class_exists(PermissionChecker::class)
-                && method_exists(PermissionChecker::class, 'isAdmin')
-                ) {
+                if (class_exists(PermissionChecker::class) ){
                     $permissionChecker = make(PermissionChecker::class);
-                    $isAdmin = $permissionChecker->isAdmin($dataIsolation->getCurrentOrganizationCode(), $userPhoneNumber);
+                    $isOrganizationAdmin = $permissionChecker->isOrganizationAdmin($dataIsolation->getCurrentOrganizationCode(), $userPhoneNumber);
+
+                    // 检查是否是邀请用户
+                    $isInviteUser = PermissionChecker::mobileHasPermission($userPhoneNumber, SuperPermissionEnum::SUPER_INVITE_USER);
+
+                    // 检查是否是超级麦吉看板管理人员
+                    $isSuperMagicBoardManager = PermissionChecker::mobileHasPermission($userPhoneNumber, SuperPermissionEnum::SUPER_MAGIC_BOARD_ADMIN);
+
+                    // 检查是否是超级麦吉看板运营人员
+                    $isSuperMagicBoardOperator = PermissionChecker::mobileHasPermission($userPhoneNumber, SuperPermissionEnum::SUPER_MAGIC_BOARD_OPERATOR);
                 }
 
-                if (($userPhoneNumber === null || ! in_array($userPhoneNumber, $whitelistPhones, true)) && ! $isAdmin) {
+                if (!$isOrganizationAdmin && !$isInviteUser && !$isSuperMagicBoardManager && !$isSuperMagicBoardOperator) {
                     // 根据header 判断返回中文还是英文
                     ExceptionBuilder::throw(GenericErrorCode::IllegalOperation, '十分抱歉，目前您暂未获得内测资格。还请您密切留意我们发布的邀请内测相关信息，以便及时获取内测资格。');
                 }
 
                 // 获取配置的任务数量限制
-                $defaultTaskLimit = (int) config('super-magic.task_number_limit', 3);
+                $defaultTaskLimit = 3;
 
-                // 获取用户特定的任务数量限制
-                $userTaskLimits = config('super-magic.user_task_limits', []);
-                $taskNumberLimit = isset($userTaskLimits[$userPhoneNumber])
-                    ? (int) $userTaskLimits[$userPhoneNumber]
-                    : $defaultTaskLimit;
 
                 // 获取当前用户正在运行的任务数量@
                 $runningTasks = $this->taskRepository->getTasksByUserId($userId, ['task_status' => TaskStatus::RUNNING->value]);
@@ -182,8 +152,8 @@ class TaskAppService extends AbstractAppService
                         $uniqueRunningTasks[] = $task;
                     }
                 }
-                if (count($uniqueRunningTasks) > $taskNumberLimit) {
-                    ExceptionBuilder::throw(GenericErrorCode::IllegalOperation, '您正在执行的任务数量已达到上限（' . $taskNumberLimit . '个），请稍后再试');
+                if (count($uniqueRunningTasks) > $defaultTaskLimit) {
+                    ExceptionBuilder::throw(GenericErrorCode::IllegalOperation, '您正在执行的任务数量已达到上限（' . $defaultTaskLimit . '个），请稍后再试');
                 }
             }
 
@@ -212,7 +182,7 @@ class TaskAppService extends AbstractAppService
             // 没有沙箱id，那么一定是首次任务
             $isFirstTaskMessage = empty($taskEntity->getSandboxId());
             // 判断是否为沙箱模式
-            $isSandboxMode = config('super-magic.sandbox.enabled', true);
+            $isSandboxMode = config('super-magic.sandbox.enabled', false);
             if ($isSandboxMode) {
                 /** @var bool $isInitConfig */
                 [$isInitConfig, $sandboxId] = $this->initSandbox($taskEntity->getSandboxId());
