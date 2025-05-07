@@ -421,6 +421,7 @@ class ModelGatewayMapper extends ModelMapper
                 tags: [['type' => 1, 'value' => $providerEntity->getProviderCode()->value]],
                 createdAt: $providerEntity->getCreatedAt(),
                 owner: 'MagicAI',
+                providerAlias: $providerConfigEntity->getAlias() ?? $providerEntity->getName(),
             )
         );
     }
