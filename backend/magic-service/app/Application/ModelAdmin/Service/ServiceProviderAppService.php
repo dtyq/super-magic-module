@@ -82,7 +82,7 @@ class ServiceProviderAppService
         $serviceProviderConfigDTOs = $this->serviceProviderDomainService->getActiveModelsByOrganizationCode($organizationCode, $category);
 
         // 如果提供了modelTypes数组，则使用它进行过滤
-        if ($modelTypes !== null && ! empty($modelTypes)) {
+        if (! empty($modelTypes)) {
             $serviceProviderConfigDTOs = $this->filterServiceProvidersByModelTypes($serviceProviderConfigDTOs, $modelTypes);
         }
 
