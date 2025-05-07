@@ -172,6 +172,8 @@ vendor/bin/phpunit test/Cases/Infrastructure/Util/Auth/PermissionCheckerTest.php
 6. 避免在权限列表中添加过多用户，保持权限管理的简洁和高效 
 
 # PERMISSIONS 环境变量值
+
+```json
 {
   "global_admin": ["13800000001", "13800000002"],
   "flow_admin": ["13800000003", "13800000004", "13800000005"],
@@ -182,3 +184,4 @@ vendor/bin/phpunit test/Cases/Infrastructure/Util/Auth/PermissionCheckerTest.php
   "magic_env_management": ["13800000014", "13800000015"],
   "service_provider_admin": ["13800000016", "13800000017"]
 }
+```

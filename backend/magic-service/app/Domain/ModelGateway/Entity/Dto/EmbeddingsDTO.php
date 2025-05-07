@@ -72,9 +72,4 @@ class EmbeddingsDTO extends AbstractRequestDTO
     {
         return AbstractRequestDTO::METHOD_EMBEDDINGS;
     }
-
-    public function getBusinessParams(): array
-    {
-        return $this->businessParams;
-    }
 }

@@ -46,6 +46,11 @@ abstract class AbstractRequestDTO extends AbstractEntity implements ProxyModelRe
         $this->businessParams = $businessParams;
     }
 
+    public function getBusinessParams(): array
+    {
+        return $this->businessParams;
+    }
+
     public function getCallMethod(): string
     {
         return $this->callMethod;

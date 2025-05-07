@@ -2,7 +2,7 @@ import type { DefaultOptionType } from "antd/es/select"
 import type { Knowledge } from "@/types/knowledge"
 import { useTranslation } from "react-i18next"
 import { useMemoizedFn } from "ahooks"
-import MagicSelect from "@dtyq/magic-flow/common/BaseUI/Select"
+import MagicSelect from "@dtyq/magic-flow/dist/common/BaseUI/Select"
 
 interface UserKnowledgeSelectProps {
 	value?: Knowledge.KnowledgeDatabaseItem

@@ -1,5 +1,5 @@
-import type { MagicFlow } from "@dtyq/magic-flow/MagicFlow/types/flow"
-import type { MaterialGroup } from "@dtyq/magic-flow/MagicFlow/context/MaterialSourceContext/MaterialSourceContext"
+import type { MagicFlow } from "@dtyq/magic-flow/dist/MagicFlow/types/flow"
+import type { MaterialGroup } from "@dtyq/magic-flow/dist/MagicFlow/context/MaterialSourceContext/MaterialSourceContext"
 import { useEffect, useMemo, useState } from "react"
 import { useFlowStore } from "@/opensource/stores/flow"
 import { cloneDeep } from "lodash-es"

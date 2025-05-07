@@ -40,11 +40,7 @@ export default function LLMLabel({
 								[styles.iconItem]: tag.type === LLMLabelTagType.Icon,
 							})}
 						>
-							{tag.type === LLMLabelTagType.Icon ? (
-								<MagicIcon name={tag.value} />
-							) : (
-								<span>{tag.value}</span>
-							)}
+							{tag.type === LLMLabelTagType.Icon ? null : <span>{tag.value}</span>}
 						</li>
 					)
 				})}

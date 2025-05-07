@@ -7,8 +7,8 @@
     }
  */
 
-import MagicConditionEdit from "@dtyq/magic-flow/MagicConditionEdit"
-import type { Expression } from "@dtyq/magic-flow/MagicConditionEdit/types/expression"
+import MagicConditionEdit from "@dtyq/magic-flow/dist/MagicConditionEdit"
+import type { Expression } from "@dtyq/magic-flow/dist/MagicConditionEdit/types/expression"
 import { useMemoizedFn } from "ahooks"
 import { useMemo } from "react"
 

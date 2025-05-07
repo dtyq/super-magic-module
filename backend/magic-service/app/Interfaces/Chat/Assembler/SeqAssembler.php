@@ -80,24 +80,32 @@ class SeqAssembler
         string $seqId,
         ?array $thisTimeStreamMessages = null
     ): ?ClientJsonStreamSequenceResponse {
-        // todo 为了兼容旧版流式消息，需要将 content/reasoning_content/status 字段放到最外层。
-        // todo 等前端上线后，就移除 content/reasoning_content/status 的多余推送
-        $response = (new ClientJsonStreamSequenceResponse())->setTargetSeqId($seqId)->setStreams($thisTimeStreamMessages);
+        // todo 为了兼容旧版流式消息，需要将 content/reasoning_content/status/llm_response 字段放到最外层。
+        // todo 等前端上线后，就移除 content/reasoning_content/status/llm_response 的多余推送
+        $response = (new ClientJsonStreamSequenceResponse())->setTargetSeqId($seqId);
         $content = $thisTimeStreamMessages['content'] ?? null;
         $reasoningContent = $thisTimeStreamMessages['reasoning_content'] ?? null;
+        $llmResponse = $thisTimeStreamMessages['llm_response'] ?? null;
+        // 强行删除 $streamOptions 中的stream_app_message_id/stream字段
+        unset($thisTimeStreamMessages['stream_options']['stream_app_message_id'], $thisTimeStreamMessages['stream_options']['stream']);
+        $streamOptions = $thisTimeStreamMessages['stream_options'] ?? null;
         // 0 会被当做 false 处理，所以这里要判断是否为 null 或者 ''
         if ($content !== null && $content !== '') {
             $response->setContent($content);
+        }
+        if ($llmResponse !== null && $llmResponse !== '') {
+            $response->setLlmResponse($llmResponse);
         }
         if ($reasoningContent !== null && $reasoningContent !== '') {
             // 以前的流程有 reasoning_content 时也会推送 content 为空字符串的数据
             $response->setReasoningContent($reasoningContent);
         }
-        if (isset($thisTimeStreamMessages['stream_options']['status'])) {
-            $response->setStatus($thisTimeStreamMessages['stream_options']['status']);
+        if (isset($streamOptions['status'])) {
+            $response->setStatus($streamOptions['status']);
         } else {
             $response->setStatus(StreamMessageStatus::Processing);
         }
+        $response->setStreams($thisTimeStreamMessages);
         return $response;
     }
 

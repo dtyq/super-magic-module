@@ -35,7 +35,7 @@ interface MagicAgentRepositoryInterface
 
     public function getAgentsByUserIdCount(string $userId, string $agentName): int;
 
-    public function deleteAgentById(string $id);
+    public function deleteAgentById(string $id, string $organizationCode);
 
     public function getAgentById(string $agentId): MagicAgentEntity;
 }

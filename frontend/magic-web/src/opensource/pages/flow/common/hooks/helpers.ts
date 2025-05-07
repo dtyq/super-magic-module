@@ -1,6 +1,6 @@
-import { getNodeVersion, schemaToDataSource } from "@dtyq/magic-flow/MagicFlow/utils"
-import type { MagicFlow } from "@dtyq/magic-flow/MagicFlow/types/flow"
-import type { NodeVersionMap } from "@dtyq/magic-flow/common/context/NodeMap/Context"
+import { getNodeVersion, schemaToDataSource } from "@dtyq/magic-flow/dist/MagicFlow/utils"
+import type { MagicFlow } from "@dtyq/magic-flow/dist/MagicFlow/types/flow"
+import type { NodeVersionMap } from "@dtyq/magic-flow/dist/common/context/NodeMap/Context"
 import { customNodeType } from "../../constants"
 
 /** 生成循环体内特殊可引用项数据源 */

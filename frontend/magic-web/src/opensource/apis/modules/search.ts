@@ -2,7 +2,7 @@ import { genRequestUrl } from "@/utils/http"
 import { RequestUrl } from "../constant"
 import type { GlobalSearch } from "@/types/search"
 import type { WithPage } from "@/types/flow"
-import type { MagicFlow } from "@dtyq/magic-flow/MagicFlow/types/flow"
+import type { MagicFlow } from "@dtyq/magic-flow/dist/MagicFlow/types/flow"
 import type { HttpClient } from "../core/HttpClient"
 
 export const generateSearchApi = (fetch: HttpClient) => ({

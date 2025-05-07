@@ -67,6 +67,7 @@ class ControlMessageApplyService {
 			ControlEventMessageType.GroupUsersRemove,
 			ControlEventMessageType.GroupDisband,
 			ControlEventMessageType.AddFriendSuccess,
+			ControlEventMessageType.EditMessage,
 		].includes(message.message.type as ControlEventMessageType)
 	}
 
@@ -413,6 +414,8 @@ class ControlMessageApplyService {
 	applyDeleteTopicMessage(message: SeqResponse<DeleteTopicMessage>) {
 		chatTopicService.applyDeleteTopicMessage(message)
 	}
+
+	applyEditMessage(message: SeqResponse<EditMessage>) {}
 }
 
 export default new ControlMessageApplyService()

@@ -16,8 +16,8 @@ import { useBotStore } from "@/opensource/stores/bot"
 import { FlowRouteType } from "@/types/flow"
 import { BotApi } from "@/apis"
 import UploadButton from "../UploadButton"
-import { genFileData } from "@/opensource/pages/chatNew/components/MessageEditor/MagicInput/components/InputFiles/utils"
-import type { FileData } from "@/opensource/pages/chatNew/components/MessageEditor/MagicInput/components/InputFiles/types"
+import { genFileData } from "@/opensource/pages/chatNew/components/MessageEditor/components/InputFiles/utils"
+import type { FileData } from "@/opensource/pages/chatNew/components/MessageEditor/components/InputFiles/types"
 
 type AddOrUpdateAgentType = Pick<
 	Bot.BotItem,

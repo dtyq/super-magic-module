@@ -101,6 +101,7 @@ const MagicFiles = ({ data, messageId, display = true }: MagicFileProps) => {
 				src={fileUrls?.[dataFirst.file_id]?.url}
 				alt={dataFirst.file_name}
 				fileId={dataFirst.file_id}
+				messageId={messageId}
 			/>
 		)
 	}

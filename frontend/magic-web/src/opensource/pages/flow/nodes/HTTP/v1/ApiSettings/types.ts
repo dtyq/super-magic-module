@@ -1,5 +1,5 @@
 import type { HTTP } from "@/types/flow"
-import type { ExpressionSource } from "@dtyq/magic-flow/MagicExpressionWidget/types"
+import type { ExpressionSource } from "@dtyq/magic-flow/dist/MagicExpressionWidget/types"
 
 /** 参数配置的tab栏类型 */
 export enum ArgsTabType {
