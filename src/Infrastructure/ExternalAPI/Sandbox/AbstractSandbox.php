@@ -20,34 +20,25 @@ abstract class AbstractSandbox implements SandboxInterface
 
     protected LoggerInterface $logger;
 
-    protected string $baseUrl;
+    protected string $baseUrl = '';
 
-    protected string $token;
+    protected string $token = '';
 
     protected bool $enableSandbox = true;
 
     public function __construct(protected LoggerFactory $loggerFactory)
     {
         $this->logger = $loggerFactory->get('sandbox');
-        $this->initializeClient();
     }
 
     protected function initializeClient(): void
     {
-        $this->baseUrl = env('SANDBOX_GATEWAY', '');
-        $this->token = env('SANDBOX_TOKEN', '');
-        $this->enableSandbox = env('SANDBOX_ENABLE', true);
+        $this->baseUrl = config('super-magic.sandbox.gateway', true);
+        $this->token = config('super-magic.sandbox.token', '');
+        $this->enableSandbox = config('super-magic.sandbox.enabled', true);
         if (empty($this->baseUrl)) {
             throw new RuntimeException('SANDBOX_GATEWAY environment variable is not set');
         }
-
-        // 确保 base_uri 以 http:// 或 https:// 开头
-        if (! preg_match('~^https?://~i', $this->baseUrl)) {
-            $this->baseUrl = 'http://' . $this->baseUrl;
-        }
-
-        // 确保 base_uri 以 / 结尾
-        $this->baseUrl = rtrim($this->baseUrl, '/') . '/';
 
         $this->client = new Client([
             'base_uri' => $this->baseUrl,
@@ -118,6 +109,9 @@ abstract class AbstractSandbox implements SandboxInterface
             } else {
                 $options['headers'] = ['token' => $this->token];
             }
+
+            // 初始化客户端
+            $this->initializeClient();
 
             $response = $this->client->request($method, $uri, $options);
             return $this->handleResponse($uri, $response);

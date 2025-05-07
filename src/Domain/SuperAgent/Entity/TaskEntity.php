@@ -71,6 +71,11 @@ class TaskEntity extends AbstractEntity
     protected string $taskMode = 'chat';
 
     /**
+     * @var string|null 错误信息
+     */
+    protected ?string $errMsg = null;
+
+    /**
      * @var null|string 会话ID
      */
     protected ?string $conversationId = null;
@@ -114,6 +119,7 @@ class TaskEntity extends AbstractEntity
             'task_status' => $this->taskStatus,
             'work_dir' => $this->workDir,
             'task_mode' => $this->taskMode,
+            'err_msg' => $this->errMsg,
             'conversation_id' => $this->conversationId,
             'created_at' => $this->createdAt,
             'updated_at' => $this->updatedAt,
@@ -311,6 +317,23 @@ class TaskEntity extends AbstractEntity
     public function setTaskMode(string $taskMode): self
     {
         $this->taskMode = $taskMode;
+        return $this;
+    }
+
+    /**
+     * 获取错误信息
+     */
+    public function getErrMsg(): ?string
+    {
+        return $this->errMsg;
+    }
+
+    /**
+     * 设置错误信息
+     */
+    public function setErrMsg(?string $errMsg): self
+    {
+        $this->errMsg = $errMsg;
         return $this;
     }
 }

@@ -130,10 +130,10 @@ class TaskRepository implements TaskRepositoryInterface
     /**
      * 根据沙箱任务ID更新任务状态
      */
-    public function updateTaskStatusByTaskId(string $taskId, TaskStatus $status): bool
+    public function updateTaskStatusByTaskId(int $id, TaskStatus $status): bool
     {
         return $this->model::query()
-            ->where('task_id', $taskId)
+            ->where('id', $id)
             ->update([
                 'task_status' => $status->value,
                 'updated_at' => date('Y-m-d H:i:s'),
@@ -258,5 +258,68 @@ class TaskRepository implements TaskRepositoryInterface
             ->where('topic_id', $topicId)
             ->whereNull('deleted_at')  // 确保只更新未删除的任务
             ->update(['deleted_at' => $now]);
+    }
+
+    /**
+     * 更新任务状态和错误信息
+     */
+    public function updateTaskStatusAndErrMsg(int $id, TaskStatus $status, ?string $errMsg = null): bool
+    {
+        $updateData = [
+            'task_status' => $status->value,
+            'updated_at' => date('Y-m-d H:i:s'),
+        ];
+        
+        if ($errMsg !== null) {
+            $updateData['err_msg'] = $errMsg;
+        }
+        
+        return $this->model::query()
+            ->where('id', $id)
+            ->update($updateData) > 0;
+    }
+    
+    /**
+     * 根据沙箱任务ID更新任务状态和错误信息
+     */
+    public function updateTaskStatusAndErrMsgByTaskId(int $id, TaskStatus $status, ?string $errMsg = null): bool
+    {
+        $updateData = [
+            'task_status' => $status->value,
+            'updated_at' => date('Y-m-d H:i:s'),
+        ];
+        
+        if ($errMsg !== null) {
+            $updateData['err_msg'] = $errMsg;
+        }
+        
+        return $this->model::query()
+            ->where('id', $id)
+            ->update($updateData) > 0;
+    }
+    
+    /**
+     * 获取最近更新时间超过指定时间的任务列表
+     *
+     * @param string $timeThreshold 时间阈值，如果任务的更新时间早于此时间，则会被包含在结果中
+     * @param int $limit 返回结果的最大数量
+     * @return array<TaskEntity> 任务实体列表
+     */
+    public function getTasksExceedingUpdateTime(string $timeThreshold, int $limit = 100): array
+    {
+        $models = $this->model::query()
+            ->where('updated_at', '<', $timeThreshold)
+            ->whereIn('task_status', [TaskStatus::WAITING->value, TaskStatus::RUNNING->value])
+            ->whereNull('deleted_at')
+            ->orderBy('updated_at', 'asc')
+            ->limit($limit)
+            ->get();
+
+        $result = [];
+        foreach ($models as $model) {
+            $result[] = new TaskEntity($model->toArray());
+        }
+
+        return $result;
     }
 }

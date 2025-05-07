@@ -50,10 +50,9 @@ class TaskFileRepository implements TaskFileRepositoryInterface
      * @param int $page 页码
      * @param int $pageSize 每页数量
      * @param array $fileType 文件类型过滤
-     * @param string $storageType 存储类型
      * @return array{list: TaskFileEntity[], total: int} 文件列表和总数
      */
-    public function getByTopicId(int $topicId, int $page, int $pageSize, array $fileType = [], string $storageType = 'workspace'): array
+    public function getByTopicId(int $topicId, int $page, int $pageSize, array $fileType = []): array
     {
         $offset = ($page - 1) * $pageSize;
 
@@ -63,11 +62,6 @@ class TaskFileRepository implements TaskFileRepositoryInterface
         // 如果指定了文件类型数组且不为空，添加文件类型过滤条件
         if (! empty($fileType)) {
             $query->whereIn('file_type', $fileType);
-        }
-
-        // 如果指定了存储类型，添加存储类型过滤条件
-        if (! empty($storageType)) {
-            $query->where('storage_type', $storageType);
         }
 
         // 过滤已经被删除的， deleted_at 不为空
