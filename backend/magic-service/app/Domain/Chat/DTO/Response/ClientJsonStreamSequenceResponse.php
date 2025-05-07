@@ -30,11 +30,25 @@ class ClientJsonStreamSequenceResponse extends AbstractEntity
 
     protected ?StreamOptions $streamOptions;
 
+    /**
+     * @deprecated 为了兼容旧版流式消息，需要将 content/reasoning_content/status/llm_response 字段放到最外层
+     */
     protected ?string $content;
 
+    /**
+     * @deprecated 为了兼容旧版流式消息，需要将 content/reasoning_content/status/llm_response 字段放到最外层
+     */
     protected ?string $reasoningContent;
 
+    /**
+     * @deprecated 为了兼容旧版流式消息，需要将 content/reasoning_content/status/llm_response 字段放到最外层
+     */
     protected ?int $status;
+
+    /**
+     * @deprecated 为了兼容旧版流式消息，需要将 content/reasoning_content/status/llm_response 字段放到最外层
+     */
+    protected ?string $llmResponse;
 
     public function getContent(): ?string
     {
@@ -113,6 +127,17 @@ class ClientJsonStreamSequenceResponse extends AbstractEntity
     public function setStreamOptions(?StreamOptions $streamOptions): self
     {
         $this->streamOptions = $streamOptions;
+        return $this;
+    }
+
+    public function getLlmResponse(): ?string
+    {
+        return $this->llmResponse;
+    }
+
+    public function setLlmResponse(?string $llmResponse): self
+    {
+        $this->llmResponse = $llmResponse;
         return $this;
     }
 

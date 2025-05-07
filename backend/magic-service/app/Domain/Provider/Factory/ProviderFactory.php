@@ -8,15 +8,15 @@ declare(strict_types=1);
 namespace App\Domain\Provider\Factory;
 
 use App\Domain\Provider\Entity\ProviderEntity;
-use App\Domain\Provider\Entity\ValueObject\Provider\Category;
-use App\Domain\Provider\Entity\ValueObject\Provider\ProviderType;
-use App\Domain\Provider\Entity\ValueObject\Provider\Status;
-use App\Domain\Provider\Repository\Persistence\Model\ServiceProviderModel;
+use App\Domain\Provider\Entity\ValueObject\Category;
+use App\Domain\Provider\Entity\ValueObject\ProviderType;
+use App\Domain\Provider\Entity\ValueObject\Status;
+use App\Domain\Provider\Repository\Persistence\Model\ProviderModel;
 use DateTime;
 
 class ProviderFactory
 {
-    public static function createEntity(ServiceProviderModel $model): ProviderEntity
+    public static function createEntity(ProviderModel $model): ProviderEntity
     {
         $entity = new ProviderEntity();
         $entity->setId($model->id);

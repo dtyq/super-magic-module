@@ -31,3 +31,4 @@ docs/.vitepress/cache/
 docs/.vitepress/cache/deps/*
 volumes/
 node_modules
+.env_super_magic

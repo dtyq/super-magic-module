@@ -379,6 +379,10 @@ class TaskDomainService
             $taskFileEntity->setFileName($fileData['display_filename'] ?? $fileData['filename'] ?? '');
             $taskFileEntity->setFileExtension($fileData['file_extension'] ?? '');
             $taskFileEntity->setFileSize($fileData['file_size'] ?? 0);
+            // 更新存储类型，如果提供了的话
+            if (isset($fileData['storage_type'])) {
+                $taskFileEntity->setStorageType($fileData['storage_type']);
+            }
 
             return $this->taskFileRepository->updateById($taskFileEntity);
         }
@@ -406,6 +410,8 @@ class TaskDomainService
         $taskFileEntity->setFileName($fileData['display_filename'] ?? $fileData['filename'] ?? '');
         $taskFileEntity->setFileExtension($fileData['file_extension'] ?? '');
         $taskFileEntity->setFileSize($fileData['file_size'] ?? 0);
+        // 设置存储类型，默认为workspace
+        $taskFileEntity->setStorageType($fileData['storage_type'] ?? 'workspace');
 
         // 使用insertOrIgnore方法，如果已存在相同file_key和topic_id的记录，则返回已存在的实体
         $result = $this->taskFileRepository->insertOrIgnore($taskFileEntity);
@@ -465,6 +471,8 @@ class TaskDomainService
         $taskFileEntity->setFileExtension($fileData['file_extension'] ?? '');
         $taskFileEntity->setFileSize($fileData['file_size'] ?? 0);
         $taskFileEntity->setExternalUrl($fileData['external_url'] ?? '');
+        // 设置存储类型，默认为workspace
+        $taskFileEntity->setStorageType($fileData['storage_type'] ?? 'workspace');
 
         // 使用insertOrIgnore方法，如果已存在相同file_key和topic_id的记录，则返回已存在的实体
         $result = $this->taskFileRepository->insertOrIgnore($taskFileEntity);
@@ -494,12 +502,13 @@ class TaskDomainService
      * @param int $page 页码
      * @param int $pageSize 每页数量
      * @param array $fileType 文件类型过滤
+     * @param string $storageType 存储类型
      * @return array 附件列表和总数
      */
-    public function getTaskAttachmentsByTopicId(int $topicId, DataIsolation $dataIsolation, int $page = 1, int $pageSize = 20, array $fileType = []): array
+    public function getTaskAttachmentsByTopicId(int $topicId, DataIsolation $dataIsolation, int $page = 1, int $pageSize = 20, array $fileType = [], string $storageType = 'workspace'): array
     {
         // 调用TaskFileRepository获取文件列表
-        return $this->taskFileRepository->getByTopicId($topicId, $page, $pageSize, $fileType);
+        return $this->taskFileRepository->getByTopicId($topicId, $page, $pageSize, $fileType, $storageType);
         // 直接返回实体对象列表，让应用层处理URL获取
     }
 
