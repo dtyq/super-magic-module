@@ -79,13 +79,13 @@ class ConfigAppService
         $deploymentId = env('DEPLOYMENT_ID', '');
 
         // // 特定的部署ID列表，这些ID应该重定向到SuperMagic
-        $redirectDeploymentIds = ['a2503897', 'a1565492'];
+        //$redirectDeploymentIds = ['a2503897', 'a1565492'];
 
         // // 特定的组织编码列表，这些组织编码不应该重定向到SuperMagic
         //$excludedOrganizationCodes = ['41036eed2c3ada9fb8460883fcebba81', 'e43290d104d9a20c5589eb3d81c6b440'];
 
         // // 首先检查组织编码是否在排除列表中
-        if (in_array($deploymentId, $redirectDeploymentIds, true)) {
+        if ($isOrganizationAdmin && in_array($deploymentId, $redirectDeploymentIds, true)) {
             $shouldRedirect = true;
         } 
 
