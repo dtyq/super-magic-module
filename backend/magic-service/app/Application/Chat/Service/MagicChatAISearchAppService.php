@@ -588,6 +588,12 @@ class MagicChatAISearchAppService extends AbstractAppService
                     $messageContent,
                     $senderConversationEntity
                 );
+                // 推送一次 parent_id/id/type 数据，用于更新流式缓存，避免最终落库时，parent_id/id/type 数据丢失
+                $this->magicChatDomainService->streamSendJsonMessage($senderSeqDTO->getAppMessageId(), [
+                    'parent_id' => '0',
+                    'id' => $summaryMessageId,
+                    'type' => AggregateAISearchCardResponseType::LLM_RESPONSE,
+                ]);
             } else {
                 $streamOptions->setStatus(StreamMessageStatus::Processing);
             }
@@ -600,7 +606,7 @@ class MagicChatAISearchAppService extends AbstractAppService
             } else {
                 // 总结内容
                 $this->magicChatDomainService->streamSendJsonMessage($senderSeqDTO->getAppMessageId(), [
-                    'content' => $assistantMessage->getContent(),
+                    'llm_response' => $assistantMessage->getContent(),
                 ]);
                 // 累加流式内容，用作最后的返回
                 $summarizeStreamResponse .= $assistantMessage->getContent();

@@ -245,9 +245,7 @@ class TaskAppService extends AbstractAppService
             $this->logger->error(sprintf(
                 '初始化任务失败: %s',
                 $e->getMessage()
-            ), [
-                'exception' => $e,
-            ]);
+            ));
 
             $text = '系统繁忙，请稍后重试';
             if ($e->getCode() === GenericErrorCode::IllegalOperation->value) {

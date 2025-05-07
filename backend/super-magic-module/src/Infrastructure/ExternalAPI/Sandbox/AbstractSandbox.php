@@ -24,7 +24,7 @@ abstract class AbstractSandbox implements SandboxInterface
 
     protected string $token;
 
-    protected bool $enableSandbox = false;
+    protected bool $enableSandbox = true;
 
     public function __construct(protected LoggerFactory $loggerFactory)
     {
@@ -36,7 +36,7 @@ abstract class AbstractSandbox implements SandboxInterface
     {
         $this->baseUrl = env('SANDBOX_GATEWAY', '');
         $this->token = env('SANDBOX_TOKEN', '');
-        $this->enableSandbox = env('SANDBOX_ENABLE', false);
+        $this->enableSandbox = env('SANDBOX_ENABLE', true);
         if (empty($this->baseUrl)) {
             throw new RuntimeException('SANDBOX_GATEWAY environment variable is not set');
         }
