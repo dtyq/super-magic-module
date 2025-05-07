@@ -30,7 +30,7 @@ class ConfigAppService
     public function shouldRedirectToSuperMagic(): array
     {
         // 获取部署ID
-        $deploymentId = env('DEPLOYMENT_ID', '');
+        $deploymentId = config('super-magic.sandbox.deployment_id', '');
 
         // 获取组织编码
         $organizationCode = $this->request->header('organization_code', '');
