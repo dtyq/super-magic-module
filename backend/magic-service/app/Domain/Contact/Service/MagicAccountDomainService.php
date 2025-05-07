@@ -226,7 +226,7 @@ class MagicAccountDomainService extends AbstractContactDomainService
             return $result;
         } catch (Exception $exception) {
             Db::rollBack();
-            $this->logger->error("aiRegister error: ". $exception->getMessage());
+            $this->logger->error('aiRegister error: ' . $exception->getMessage());
             throw $exception;
         } catch (Throwable $exception) {
             Db::rollBack();
