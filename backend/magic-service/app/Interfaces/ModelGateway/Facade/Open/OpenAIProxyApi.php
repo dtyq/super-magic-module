@@ -28,6 +28,14 @@ class OpenAIProxyApi extends AbstractOpenApi
         $sendMsgGPTDTO = new CompletionDTO($requestData);
         $sendMsgGPTDTO->setAccessToken($this->getAccessToken());
         $sendMsgGPTDTO->setIps($this->getClientIps());
+
+        $headerConfigs = [];
+        foreach ($request->getHeaders() as $key => $value) {
+            $key = strtolower($key);
+            $headerConfigs[strtolower($key)] = $request->getHeader($key)[0] ?? '';
+        }
+        $sendMsgGPTDTO->setHeaderConfigs($headerConfigs);
+
         $response = $this->llmAppService->chatCompletion($sendMsgGPTDTO);
         if ($response instanceof ChatCompletionStreamResponse) {
             LLMAssembler::createStreamResponseByChatCompletionResponse($sendMsgGPTDTO, $response);

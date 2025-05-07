@@ -11,7 +11,19 @@ use App\Domain\Provider\Entity\ValueObject\Status;
 
 class ProviderConfigQuery extends Query
 {
+    protected ?array $ids = [];
+
     protected ?Status $status = null;
+
+    public function getIds(): ?array
+    {
+        return $this->ids;
+    }
+
+    public function setIds(?array $ids): void
+    {
+        $this->ids = $ids;
+    }
 
     public function getStatus(): ?Status
     {

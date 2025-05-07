@@ -25,4 +25,14 @@ enum ModelType: int
             self::EMBEDDING => '嵌入',
         };
     }
+
+    public function isLLM(): bool
+    {
+        return $this === self::LLM;
+    }
+
+    public function isEmbedding(): bool
+    {
+        return $this === self::EMBEDDING;
+    }
 }

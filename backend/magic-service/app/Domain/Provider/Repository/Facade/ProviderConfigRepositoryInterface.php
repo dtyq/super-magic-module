@@ -16,7 +16,13 @@ interface ProviderConfigRepositoryInterface
 {
     public function getById(ProviderDataIsolation $dataIsolation, int $id): ?ProviderConfigEntity;
 
-    public function getByServiceProviderId(ProviderDataIsolation $dataIsolation, int $serviceProviderId): ?ProviderConfigEntity;
+    /**
+     * @param array<int> $ids
+     * @return array<int, ProviderConfigEntity>
+     */
+    public function getByIds(ProviderDataIsolation $dataIsolation, array $ids): array;
+
+    public function getByProviderId(ProviderDataIsolation $dataIsolation, int $providerId): ?ProviderConfigEntity;
 
     /**
      * @return array{total: int, list: array<ProviderConfigEntity>}
