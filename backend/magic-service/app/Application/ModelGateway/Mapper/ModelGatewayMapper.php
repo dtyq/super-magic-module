@@ -429,6 +429,7 @@ class ModelGatewayMapper extends ModelMapper
     private function getByAdmin(string $model, ?string $orgCode = null): ?OdinModel
     {
         $providerDataIsolation = ProviderDataIsolation::create($orgCode ?? '');
+        $providerDataIsolation->setContainOfficialOrganization(true);
         if (is_null($orgCode)) {
             $providerDataIsolation->disabled();
         }
