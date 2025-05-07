@@ -34,6 +34,8 @@ class ConfigAppService
      */
     public function shouldRedirectToSuperMagic($userAuthorization): array
     {
+        // 获取部署ID
+        $deploymentId = config('super-magic.sandbox.deployment_id', '');
         $userId = $userAuthorization->getId();
         $organizationCode = $userAuthorization->getOrganizationCode();
 
