@@ -26,6 +26,15 @@ readonly class ProviderConfigDomainService
     }
 
     /**
+     * @param array<int> $ids
+     * @return array<ProviderConfigEntity>
+     */
+    public function getByIds(ProviderDataIsolation $dataIsolation, array $ids): array
+    {
+        return $this->serviceProviderConfigRepository->getByIds($dataIsolation, $ids);
+    }
+
+    /**
      * @return array{total: int, list: array<ProviderConfigEntity>}
      */
     public function queries(ProviderDataIsolation $dataIsolation, ProviderConfigQuery $query, Page $page): array

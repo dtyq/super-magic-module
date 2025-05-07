@@ -18,6 +18,8 @@ use App\Infrastructure\Core\ValueObject\Page;
 
 class ProviderModelRepository extends AbstractRepository implements ProviderModelRepositoryInterface
 {
+    protected bool $filterOrganizationCode = true;
+
     public function getById(ProviderDataIsolation $dataIsolation, int $id): ?ProviderModelEntity
     {
         $builder = $this->createBuilder($dataIsolation, ProviderModelModel::query());
@@ -33,6 +35,45 @@ class ProviderModelRepository extends AbstractRepository implements ProviderMode
     }
 
     /**
+     * 通过ID或ModelID查询模型，在id和model_id字段上使用OR条件
+     */
+    public function getByIdOrModelId(ProviderDataIsolation $dataIsolation, string $id): ?ProviderModelEntity
+    {
+        $builder = $this->createBuilder($dataIsolation, ProviderModelModel::query());
+
+        /** @var null|ProviderModelModel $model */
+        $model = $builder->where(function ($query) use ($id) {
+            $query->where('id', $id)
+                  ->orWhere('model_id', $id);
+        })->first();
+
+        if (! $model) {
+            return null;
+        }
+
+        return ProviderModelFactory::modelToEntity($model);
+    }
+
+    /**
+     * @param array<int> $ids
+     * @return array<int, ProviderModelEntity> 返回以id为key的实体对象数组
+     */
+    public function getByIds(ProviderDataIsolation $dataIsolation, array $ids): array
+    {
+        $builder = $this->createBuilder($dataIsolation, ProviderModelModel::query());
+
+        /** @var array<ProviderModelModel> $models */
+        $models = $builder->whereIn('id', $ids)->get();
+
+        $entities = [];
+        foreach ($models as $model) {
+            $entities[$model->id] = ProviderModelFactory::modelToEntity($model);
+        }
+
+        return $entities;
+    }
+
+    /**
      * @return array{total: int, list: array<ProviderModelEntity>}
      */
     public function queries(ProviderDataIsolation $dataIsolation, ProviderModelQuery $query, Page $page): array
@@ -41,6 +82,9 @@ class ProviderModelRepository extends AbstractRepository implements ProviderMode
 
         if ($query->getStatus()) {
             $builder->where('status', $query->getStatus()->value);
+        }
+        if ($query->getCategory()) {
+            $builder->where('category', $query->getCategory()->value);
         }
 
         $result = $this->getByPage($builder, $page, $query);

@@ -10,18 +10,18 @@ namespace App\Application\ModelGateway\Mapper;
 use App\Domain\Flow\Entity\ValueObject\FlowDataIsolation;
 use App\Domain\Flow\Entity\ValueObject\Query\MagicFlowAIModelQuery;
 use App\Domain\Flow\Service\MagicFlowAIModelDomainService;
-use App\Domain\ModelAdmin\Constant\ModelType;
-use App\Domain\ModelAdmin\Constant\ServiceProviderCategory;
-use App\Domain\ModelAdmin\Constant\ServiceProviderCode;
-use App\Domain\ModelAdmin\Entity\ServiceProviderConfigEntity;
-use App\Domain\ModelAdmin\Entity\ServiceProviderModelsEntity;
-use App\Domain\ModelAdmin\Entity\ValueObject\ServiceProviderConfigDTO;
-use App\Domain\ModelAdmin\Entity\ValueObject\ServiceProviderModelsDTO;
-use App\Domain\ModelAdmin\Service\ServiceProviderDomainService;
 use App\Domain\ModelGateway\Service\ModelConfigDomainService;
-use App\ErrorCode\ServiceProviderErrorCode;
+use App\Domain\Provider\Entity\ProviderConfigEntity;
+use App\Domain\Provider\Entity\ProviderEntity;
+use App\Domain\Provider\Entity\ProviderModelEntity;
+use App\Domain\Provider\Entity\ValueObject\Category;
+use App\Domain\Provider\Entity\ValueObject\ProviderDataIsolation;
+use App\Domain\Provider\Entity\ValueObject\Query\ProviderModelQuery;
+use App\Domain\Provider\Entity\ValueObject\Status;
+use App\Domain\Provider\Service\ProviderConfigDomainService;
+use App\Domain\Provider\Service\ProviderDomainService;
+use App\Domain\Provider\Service\ProviderModelDomainService;
 use App\Infrastructure\Core\Contract\Model\RerankInterface;
-use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Infrastructure\Core\ValueObject\Page;
 use App\Infrastructure\ExternalAPI\MagicAIApi\MagicAILocalModel;
 use DateTime;
@@ -335,94 +335,76 @@ class ModelGatewayMapper extends ModelMapper
         foreach ($models as $name => $model) {
             $list[$name] = new OdinModel(key: $name, model: $model, attributes: $this->attributes[$name]);
         }
-        // 加载 admin 配置的所有模型
-        $providerConfigs = di(ServiceProviderDomainService::class)->getActiveModelsByOrganizationCode($organizationCode, ServiceProviderCategory::LLM);
+
+        // 加载 provider 配置的所有模型
+        $providerDataIsolation = ProviderDataIsolation::create($organizationCode);
+        $providerModelQuery = new ProviderModelQuery();
+        $providerModelQuery->setStatus(Status::Enabled);
+        $providerModelQuery->setCategory(Category::LLM);
+        $providerModelData = di(ProviderModelDomainService::class)->queries($providerDataIsolation, $providerModelQuery, Page::createNoPage());
+        $providerConfigIds = [];
+        foreach ($providerModelData['list'] as $providerModel) {
+            $providerConfigIds[] = $providerModel->getProviderConfigId();
+        }
+        $providerConfigIds = array_unique($providerConfigIds);
+
+        // 获取 服务商 配置
+        $providerConfigs = di(ProviderConfigDomainService::class)->getByIds($providerDataIsolation, $providerConfigIds);
+        $providerIds = [];
         foreach ($providerConfigs as $providerConfig) {
-            if (! $providerConfig->isEnabled()) {
+            $providerIds[] = $providerConfig->getProviderId();
+        }
+
+        // 获取 服务商
+        $providers = di(ProviderDomainService::class)->getByIds($providerDataIsolation, $providerIds);
+
+        // 组装数据
+        foreach ($providerModelData['list'] as $providerModel) {
+            if (! $providerModel->getStatus()->isEnabled()) {
                 continue;
             }
-            foreach ($providerConfig->getModels() as $providerModel) {
-                if (! $providerModel->isActive()) {
-                    continue;
-                }
-
-                $model = $this->createModelByAdmin($providerConfig, $providerModel);
-                if (! $model) {
-                    continue;
-                }
-                $list[$model->getAttributes()->getKey()] = $model;
+            if (! $providerConfig = $providerConfigs[$providerModel->getProviderConfigId()] ?? null) {
+                continue;
             }
+            if (! $providerConfig->getStatus()->isEnabled()) {
+                continue;
+            }
+            if (! $provider = $providers[$providerConfig->getProviderId()] ?? null) {
+                continue;
+            }
+
+            // 创建配置
+            $model = $this->createModelByProvider($providerModel, $providerConfig, $provider);
+            $list[$model->getAttributes()->getKey()] = $model;
         }
 
         return $list;
     }
 
-    private function getByAdmin(string $model, ?string $orgCode = null): ?OdinModel
+    private function createModelByProvider(ProviderModelEntity $providerModelEntity, ProviderConfigEntity $providerConfigEntity, ProviderEntity $providerEntity): OdinModel
     {
-        $serviceProviderDomainService = di(ServiceProviderDomainService::class);
-        $providerModels = $serviceProviderDomainService->getOrganizationActiveModelsByIdOrType($model, $orgCode);
-        if (empty($providerModels)) {
-            return null;
-        }
-        // 获取第一个模型
-        $providerModel = $providerModels[0];
-        if (! $providerModel->isActive()) {
-            ExceptionBuilder::throw(ServiceProviderErrorCode::ModelNotActive);
-        }
-        // 如果当前模型是官方模型，则使用官方服务商
-        if ($providerModel->isOffice() && $providerModel->getModelParentId()) {
-            $providerModel = $serviceProviderDomainService->getModelById((string) $providerModel->getModelParentId());
-            if (! $providerModel->isActive()) {
-                ExceptionBuilder::throw(ServiceProviderErrorCode::ModelNotActive);
-            }
-        }
-        // providerConfig 提供 host和 api-key，providerModel 提供具体要使用的模型接入点
-        $providerConfig = $serviceProviderDomainService->getServiceProviderConfigByServiceProviderModel($providerModel);
-        if (! $providerConfig || ! $providerConfig->isActive()) {
-            ExceptionBuilder::throw(ServiceProviderErrorCode::ServiceProviderNotActive);
-        }
-        return $this->createModelByAdmin($providerConfig, $providerModel);
-    }
-
-    private function createModelByAdmin(ServiceProviderConfigDTO|ServiceProviderConfigEntity $providerConfigEntity, ServiceProviderModelsDTO|ServiceProviderModelsEntity $providerModelsEntity): ?OdinModel
-    {
-        if ($providerConfigEntity instanceof ServiceProviderConfigEntity) {
-            $serviceProviderCode = $providerConfigEntity->getProviderCode();
-        } else {
-            $serviceProviderCode = ServiceProviderCode::tryFrom($providerConfigEntity->getProviderCode());
-        }
-
         $chat = false;
         $functionCall = false;
         $multiModal = false;
         $embedding = false;
         $vectorSize = 0;
-        if ($providerModelsEntity->getModelType() === ModelType::LLM->value) {
+        if ($providerModelEntity->getModelType()->isLLM()) {
             $chat = true;
-            $functionCall = $providerModelsEntity->getConfig()->isSupportFunction();
-            $multiModal = $providerModelsEntity->getConfig()->isSupportMultiModal();
-        } elseif ($providerModelsEntity->getModelType() === ModelType::EMBEDDING->value) {
+            $functionCall = $providerModelEntity->getConfig()->isSupportFunction();
+            $multiModal = $providerModelEntity->getConfig()->isSupportMultiModal();
+        } elseif ($providerModelEntity->getModelType()->isEmbedding()) {
             $embedding = true;
-            $vectorSize = $providerModelsEntity->getConfig()->getVectorSize();
+            $vectorSize = $providerModelEntity->getConfig()->getVectorSize();
         }
 
-        // 服务商侧的接入点名称
-        $endpointName = $providerModelsEntity->getModelVersion();
-        $config = $providerConfigEntity->getConfig();
-        $modelVersion = $providerModelsEntity->getModelVersion();
-        // 模型列表接口，对外展示为模型的名称，如:gpt4o，而不是服务商侧的接入点名称：ep-volce-gpt4o
-        $modelId = $providerModelsEntity->getModelId();
-
-        if (! $serviceProviderCode) {
-            return null;
-        }
+        $key = $providerModelEntity->getModelId();
 
         return new OdinModel(
-            key: $modelId,// 用户侧只返回模型名称，不返回服务商侧的接入点名称
-            model: $this->createModel($endpointName, [
-                'model' => $endpointName,
-                'implementation' => $serviceProviderCode->getImplementation(),
-                'config' => $serviceProviderCode->getImplementationConfig($config, $modelVersion),
+            key: $key,
+            model: $this->createModel($providerModelEntity->getModelVersion(), [
+                'model' => $providerModelEntity->getModelVersion(),
+                'implementation' => $providerEntity->getProviderCode()->getImplementation(),
+                'config' => $providerEntity->getProviderCode()->getImplementationConfig($providerConfigEntity->getConfig(), $providerModelEntity->getModelVersion()),
                 'model_options' => [
                     'chat' => $chat,
                     'function_call' => $functionCall,
@@ -432,15 +414,47 @@ class ModelGatewayMapper extends ModelMapper
                 ],
             ]),
             attributes: new OdinModelAttributes(
-                key: $modelId,
-                name: $modelId, // 用户侧只返回模型名称，不返回服务商侧的接入点名称
-                label: $providerModelsEntity->getName(),
-                icon: $providerModelsEntity->getIcon(),
-                tags: [['type' => 1, 'value' => $serviceProviderCode->value]],
-                createdAt: new DateTime($providerModelsEntity->getCreatedAt()),
+                key: $key,
+                name: $providerModelEntity->getModelId(),
+                label: $providerModelEntity->getName(),
+                icon: $providerModelEntity->getIcon(),
+                tags: [['type' => 1, 'value' => $providerEntity->getProviderCode()->value]],
+                createdAt: $providerEntity->getCreatedAt(),
                 owner: 'MagicAI',
             )
         );
+    }
+
+    private function getByAdmin(string $model, ?string $orgCode = null): ?OdinModel
+    {
+        $providerDataIsolation = ProviderDataIsolation::create($orgCode ?? '');
+        if (is_null($orgCode)) {
+            $providerDataIsolation->disabled();
+        }
+        $providerModel = di(ProviderModelDomainService::class)->getByIdOrModelId($providerDataIsolation, $model);
+
+        if (! $providerModel || ! $providerModel->getStatus()->isEnabled()) {
+            return null;
+        }
+        // 如果当前模型是官方模型，则使用官方服务商
+        if ($providerModel->isOffice() && $providerModel->getModelParentId()) {
+            $providerModel = di(ProviderModelDomainService::class)->getById($providerDataIsolation, $providerModel->getModelParentId());
+            if (! $providerModel->getStatus()->isEnabled()) {
+                return null;
+            }
+        }
+
+        $providerConfig = di(ProviderConfigDomainService::class)->getById($providerDataIsolation, $providerModel->getProviderConfigId());
+        if (! $providerConfig || ! $providerConfig->getStatus()->isEnabled()) {
+            return null;
+        }
+
+        $provider = di(ProviderDomainService::class)->getById($providerDataIsolation, $providerConfig->getProviderId());
+        if (! $provider) {
+            return null;
+        }
+
+        return $this->createModelByProvider($providerModel, $providerConfig, $provider);
     }
 
     private function addAttributes(string $key, OdinModelAttributes $attributes): void
