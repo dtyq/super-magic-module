@@ -438,11 +438,12 @@ class ModelGatewayMapper extends ModelMapper
         if (! $providerModel || ! $providerModel->getStatus()->isEnabled()) {
             return null;
         }
-        // 如果当前模型是官方模型，则使用官方服务商
-        if ($providerModel->getModelParentId() && $providerModel->getId() !== $providerModel->getModelParentId()) {
-            $providerModel = di(ProviderModelDomainService::class)->getById($providerDataIsolation, $providerModel->getModelParentId());
-            if (! $providerModel->getStatus()->isEnabled()) {
-                return null;
+        if (! in_array($providerModel->getOrganizationCode(), $providerDataIsolation->getOfficialOrganizationCodes())) {
+            if ($providerModel->getModelParentId() && $providerModel->getId() !== $providerModel->getModelParentId()) {
+                $providerModel = di(ProviderModelDomainService::class)->getById($providerDataIsolation, $providerModel->getModelParentId());
+                if (! $providerModel->getStatus()->isEnabled()) {
+                    return null;
+                }
             }
         }
 
