@@ -36,7 +36,7 @@ readonly class ProviderModelDomainService
 
     /**
      * 通过ID或ModelID查询模型
-     * 基于数据库的 where or 条件查询，同时匹配id和model_id字段
+     * 基于数据库的 where or 条件查询，同时匹配id和model_id字段.
      */
     public function getByIdOrModelId(ProviderDataIsolation $dataIsolation, string $id): ?ProviderModelEntity
     {
