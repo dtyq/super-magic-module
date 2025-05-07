@@ -244,11 +244,24 @@ export default {
 					]
 				}
 
+				const dataFileInfo = btoa(
+					JSON.stringify({
+						url: node.attrs.src,
+						ext: { ext: "jpg", mime: "image/jpeg" }, // 默认认为是 jpg, 并不需要具体知道是什么类型的, 暂时不影响判断
+						fileId: node.attrs.file_id,
+						index: node.attrs.index,
+						standalone: node.attrs.standalone,
+						useHDImage: false,
+						fileSize: node.attrs.file_size,
+					}),
+				)
+
 				return [
 					"img",
 					{
 						...node.attrs,
 						class: "magic-image",
+						"data-file-info": dataFileInfo,
 						draggable: false,
 					},
 				]

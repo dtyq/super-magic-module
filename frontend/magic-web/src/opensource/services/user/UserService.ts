@@ -20,6 +20,7 @@ import MessageService from "@/opensource/services/chat/message/MessageService"
 import conversationService from "@/opensource/services/chat/conversation/ConversationService"
 import { interfaceStore } from "@/opensource/stores/interface"
 import { ChatApi } from "@/apis"
+import ChatFileService from "../chat/file/ChatFileService"
 
 export interface OrganizationResponse {
 	magicOrganizationMap: Record<string, User.MagicOrganization>
@@ -434,55 +435,62 @@ export class UserService {
 	}
 
 	async switchUser(magicUser: User.UserInfo, showSwitchLoading = true) {
-		const magicId = magicUser.magic_id
-		console.log("切换账户", magicId)
-		if (showSwitchLoading) interfaceStore.setIsSwitchingOrganization(true)
+		try {
+			const magicId = magicUser.magic_id
+			console.log("切换账户", magicId)
+			if (showSwitchLoading) interfaceStore.setIsSwitchingOrganization(true)
 
-		// 如果当前账户ID与传入的账户ID相同，则不进行切换
-		if (this.magicId !== magicId) {
-			this.magicId = magicId
-			chatDb.switchDb(magicId)
+			// 如果当前账户ID与传入的账户ID相同，则不进行切换
+			if (this.magicId !== magicId) {
+				this.magicId = magicId
+				chatDb.switchDb(magicId)
+				ChatFileService.init()
+			}
+
+			if (this.userId !== magicUser.user_id) {
+				const db = initDataContextDb(magicUser.magic_id, magicUser.user_id)
+				await userInfoService.loadData(db)
+				await groupInfoService.loadData(db)
+			}
+
+			// 检查所有组织的渲染序列号
+			MessageSeqIdService.checkAllOrganizationRenderSeqId()
+
+			if (this.userId !== magicUser.user_id || this.magicId !== magicUser.magic_id) {
+				// 重置消息数据视图
+				conversationService.reset() // 切换到空会话
+				MessageService.reset()
+			}
+
+			this.userId = magicUser.user_id
+
+			/** 如果是第一次加载，则拉取 消息 */
+			if (!MessageSeqIdService.getGlobalPullSeqId()) {
+				await MessageService.pullMessageOnFirstLoad(
+					magicUser.magic_id,
+					magicUser.organization_code,
+				)
+			} else {
+				await conversationService.init(
+					magicUser.magic_id,
+					magicUser.organization_code,
+					magicUser,
+				)
+				// 拉取离线消息（内部只会应用改组织的信息）
+				MessageService.pullOfflineMessages()
+			}
+
+			// this.conversationGroupBusiness.initConversationGroups(
+			// 	magicUser.magic_id,
+			// 	magicUser.organization_code,
+			// )
+
+			/** 设置消息拉取 循环 */
+			MessageService.init()
+			// this.messagePullBusiness.registerMessagePullLoop()
+			if (showSwitchLoading) interfaceStore.setIsSwitchingOrganization(false)
+		} catch (error) {
+			console.error("切换账户失败", error)
 		}
-
-		const db = initDataContextDb(magicUser.magic_id, magicUser.user_id)
-		await userInfoService.loadData(db)
-		await groupInfoService.loadData(db)
-
-		// 检查所有组织的渲染序列号
-		MessageSeqIdService.checkAllOrganizationRenderSeqId()
-
-		if (this.userId !== magicUser.user_id || this.magicId !== magicUser.magic_id) {
-			// 重置消息数据视图
-			conversationService.reset() // 切换到空会话
-			MessageService.reset()
-		}
-
-		this.userId = magicUser.user_id
-
-		/** 如果是第一次加载，则拉取 消息 */
-		if (!MessageSeqIdService.getGlobalPullSeqId()) {
-			await MessageService.pullMessageOnFirstLoad(
-				magicUser.magic_id,
-				magicUser.organization_code,
-			)
-		} else {
-			await conversationService.init(
-				magicUser.magic_id,
-				magicUser.organization_code,
-				magicUser,
-			)
-			// 拉取离线消息（内部只会应用改组织的信息）
-			MessageService.pullOfflineMessages()
-		}
-
-		// this.conversationGroupBusiness.initConversationGroups(
-		// 	magicUser.magic_id,
-		// 	magicUser.organization_code,
-		// )
-
-		/** 设置消息拉取 循环 */
-		MessageService.init()
-		// this.messagePullBusiness.registerMessagePullLoop()
-		if (showSwitchLoading) interfaceStore.setIsSwitchingOrganization(false)
 	}
 }

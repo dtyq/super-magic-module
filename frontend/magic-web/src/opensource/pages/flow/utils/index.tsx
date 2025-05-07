@@ -11,7 +11,7 @@ import {
 	registerNodeGroups,
 	registerLoopStartConfig,
 	registerMaterialNodeTypeMap,
-} from "@dtyq/magic-flow/MagicFlow/register/node"
+} from "@dtyq/magic-flow/dist/MagicFlow/register/node"
 import {
 	IconAlignBoxLeftMiddle,
 	IconDatabase,
@@ -21,7 +21,7 @@ import {
 	IconVocabulary,
 } from "@tabler/icons-react"
 import i18next from "i18next"
-import { TabObject } from "@dtyq/magic-flow/MagicFlow/components/FlowMaterialPanel/constants"
+import { TabObject } from "@dtyq/magic-flow/dist/MagicFlow/components/FlowMaterialPanel/constants"
 import { customNodeType } from "../constants"
 import { generateNodeVersionSchema } from "./version"
 import { BaseFlowProps } from ".."

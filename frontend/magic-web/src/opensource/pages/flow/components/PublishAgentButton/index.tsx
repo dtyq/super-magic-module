@@ -4,7 +4,7 @@ import type { Bot } from "@/types/bot"
 import MagicButton from "@/opensource/components/base/MagicButton"
 import PublishAgent from "@/opensource/pages/explore/components/PublishAgent"
 import type { MutableRefObject } from "react"
-import type { MagicFlowInstance } from "@dtyq/magic-flow/MagicFlow"
+import type { MagicFlowInstance } from "@dtyq/magic-flow/dist/MagicFlow"
 
 type PublishAgentButtonProps = {
 	agent: Bot.Detail

@@ -19,7 +19,7 @@ export function createI18nNext(defaultLang?: string) {
 			resourcesToBackend(async (lng: string, namespace: string) => {
 				if (namespace === "magicFlow") {
 					return import(
-						`@dtyq/magic-flow/common/locales/${normalizeLocale(lng)}/${namespace}.json`
+						`../../../node_modules/@dtyq/magic-flow/dist/common/locales/${normalizeLocale(lng)}/${namespace}.json`
 					)
 				}
 				return import(`./${normalizeLocale(lng)}/${namespace}.json`)

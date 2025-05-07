@@ -1,11 +1,12 @@
-import { useContactStore } from "@/opensource/stores/contact/hooks"
 import { ConversationMessageType } from "@/types/chat/conversation_message"
 import { Flex } from "antd"
-import { type PropsWithChildren } from "react"
+import { useMemo, type PropsWithChildren } from "react"
 import { observer } from "mobx-react-lite"
 import ReplyStore from "@/opensource/stores/chatNew/messageUI/Reply"
 import MessageTextRender from "../MessageTextRender"
 import { useStyles } from "./styles"
+import useUserInfo from "@/opensource/hooks/chat/useUserInfo"
+import { getUserName } from "@/utils/modules/chat"
 
 interface ReferMessageProps extends PropsWithChildren {
 	isSelf: boolean
@@ -19,9 +20,15 @@ function MessageReferComponent({ isSelf, className, onClick }: ReferMessageProps
 	const referText = ReplyStore.replyFile?.referText
 	const referMessage = ReplyStore.replyMessage
 
-	const sender = useContactStore((state) =>
-		referMessage ? state.userInfos.get(referMessage.sender_id) : undefined,
-	)
+	const { userInfo } = useUserInfo(referMessage?.sender_id)
+
+	const userName = useMemo(() => {
+		if (!userInfo) return null
+
+		if (referFileId) return null
+
+		return <span className={styles.username}>{getUserName(userInfo)}</span>
+	}, [referFileId, styles.username, userInfo])
 
 	if (!referMessage) return null
 
@@ -31,15 +38,13 @@ function MessageReferComponent({ isSelf, className, onClick }: ReferMessageProps
 
 	return (
 		<Flex vertical className={cx(styles.container, className)} gap={2} onClick={onClick}>
-			<span className={styles.username}>{sender?.nickname}</span>
-			<div className={styles.content}>
-				<MessageTextRender
-					messageId={referMessage.message_id}
-					message={referMessage.message}
-					referFileId={referFileId}
-					referText={referText}
-				/>
-			</div>
+			{userName}
+			<MessageTextRender
+				messageId={referMessage.message_id}
+				message={referMessage.message}
+				referFileId={referFileId}
+				referText={referText}
+			/>
 		</Flex>
 	)
 }

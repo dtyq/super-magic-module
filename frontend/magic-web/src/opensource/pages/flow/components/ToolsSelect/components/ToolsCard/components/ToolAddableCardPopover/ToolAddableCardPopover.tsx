@@ -1,5 +1,5 @@
 import { Form } from "antd"
-import JSONSchemaRenderer from "@dtyq/magic-flow/common/BaseUI/JSONSchemaRenderer"
+import JSONSchemaRenderer from "@dtyq/magic-flow/dist/common/BaseUI/JSONSchemaRenderer"
 import type React from "react"
 import { forwardRef, useImperativeHandle, useMemo, useState } from "react"
 import { Flex, Popover, Tooltip } from "antd"

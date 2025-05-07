@@ -1,5 +1,5 @@
 import { IconCheck } from "@tabler/icons-react"
-import brandOpenApi from "@dtyq/magic-flow/common/assets/brand-openai.png"
+import brandOpenApi from "@dtyq/magic-flow/dist/common/assets/brand-openai.png"
 import { createStyles, cx } from "antd-style"
 
 import { Tooltip } from "antd"

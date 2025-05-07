@@ -149,9 +149,25 @@ class MagicFlowDomainService extends AbstractDomainService
     /**
      * 修改流程状态.
      */
-    public function changeEnable(FlowDataIsolation $dataIsolation, MagicFlowEntity $magicFlow): void
+    public function changeEnable(FlowDataIsolation $dataIsolation, MagicFlowEntity $magicFlow, ?bool $enable = null): void
     {
-        $magicFlow->prepareForChangeEnable();
+        // 如果传入了明确的状态值，则直接设置
+        if ($enable !== null) {
+            // 如果当前状态与要设置的状态相同，则无需操作
+            if ($magicFlow->isEnabled() === $enable) {
+                return;
+            }
+            $magicFlow->setEnabled($enable);
+        } else {
+            // 否则保持原有的自动切换逻辑
+            $magicFlow->prepareForChangeEnable();
+        }
+
+        // 如果启用状态为true，需要进行验证
+        if ($magicFlow->isEnabled() && empty($magicFlow->getNodes())) {
+            ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'flow.node.cannot_enable_empty_nodes');
+        }
+
         $this->magicFlowRepository->changeEnable($dataIsolation, $magicFlow->getCode(), $magicFlow->isEnabled());
     }
 

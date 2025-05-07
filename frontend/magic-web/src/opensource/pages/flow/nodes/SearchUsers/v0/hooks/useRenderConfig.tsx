@@ -3,8 +3,8 @@
  */
 
 import { useMemoizedFn } from "ahooks"
-import type { EXPRESSION_VALUE } from "@dtyq/magic-flow/MagicExpressionWidget/types"
-import { LabelTypeMap } from "@dtyq/magic-flow/MagicExpressionWidget/types"
+import type { EXPRESSION_VALUE } from "@dtyq/magic-flow/dist/MagicExpressionWidget/types"
+import { LabelTypeMap } from "@dtyq/magic-flow/dist/MagicExpressionWidget/types"
 import AuthManagerModal from "@/opensource/pages/flow/components/AuthControlButton/AuthManagerModal/AuthManagerModal"
 import type { DepartmentExtraData } from "@/opensource/pages/flow/components/AuthControlButton/AuthManagerModal/types"
 import { ManagerModalType } from "@/opensource/pages/flow/components/AuthControlButton/AuthManagerModal/types"

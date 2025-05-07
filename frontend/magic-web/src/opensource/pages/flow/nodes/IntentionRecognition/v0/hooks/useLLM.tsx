@@ -1,7 +1,7 @@
 import type { FormInstance } from "antd"
 import { useMemoizedFn, useMount } from "ahooks"
 import { useMemo, useState } from "react"
-import { useCurrentNode } from "@dtyq/magic-flow/MagicFlow/nodes/common/context/CurrentNode/useCurrentNode"
+import { useCurrentNode } from "@dtyq/magic-flow/dist/MagicFlow/nodes/common/context/CurrentNode/useCurrentNode"
 import useSWRImmutable from "swr/immutable"
 import { RequestUrl } from "@/opensource/apis/constant"
 import { cloneDeep } from "lodash-es"

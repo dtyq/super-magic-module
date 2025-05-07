@@ -434,7 +434,7 @@ class MagicFlowAppService extends AbstractFlowAppService
      * 修改启用状态.
      */
     #[Transactional]
-    public function changeEnable(Authenticatable $authorization, string $flowId): void
+    public function changeEnable(Authenticatable $authorization, string $flowId, ?bool $enable = null): void
     {
         $dataIsolation = $this->createFlowDataIsolation($authorization);
         $magicFlow = $this->magicFlowDomainService->getByCode($this->createFlowDataIsolation($authorization), $flowId);
@@ -442,7 +442,8 @@ class MagicFlowAppService extends AbstractFlowAppService
             ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, 'flow.common.not_found', ['label' => $flowId]);
         }
         $this->getFlowOperation($dataIsolation, $magicFlow)->validate('edit', $flowId);
-        $this->magicFlowDomainService->changeEnable($dataIsolation, $magicFlow);
+
+        $this->magicFlowDomainService->changeEnable($dataIsolation, $magicFlow, $enable);
         AsyncEventUtil::dispatch(new MagicFlowChangeEnabledEvent($magicFlow));
     }
 

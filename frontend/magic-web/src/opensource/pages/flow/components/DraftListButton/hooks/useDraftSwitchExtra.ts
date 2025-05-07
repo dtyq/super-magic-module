@@ -4,7 +4,7 @@
 
 import { getCurrentDateTimeString } from "@/opensource/pages/flow/utils/helpers"
 import type { FlowDraft } from "@/types/flow"
-import type { MagicFlow } from "@dtyq/magic-flow/MagicFlow/types/flow"
+import type { MagicFlow } from "@dtyq/magic-flow/dist/MagicFlow/types/flow"
 import { useMemoizedFn } from "ahooks"
 import { FlowApi } from "@/apis"
 

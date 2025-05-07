@@ -66,9 +66,13 @@ export default function VectorKnowledgeDetail() {
 
 	// 根据当前页面显示不同的内容
 	const PageContent = useMemo(() => {
-		if (currentDetailPage === "document") {
+		if (knowledgeDetail && currentDetailPage === "document") {
 			return (
-				<Document className={styles.rightContainer} knowledgeBaseCode={knowledgeBaseCode} />
+				<Document
+					className={styles.rightContainer}
+					knowledgeBaseCode={knowledgeBaseCode}
+					userOperation={knowledgeDetail.user_operation}
+				/>
 			)
 		}
 
@@ -93,7 +97,7 @@ export default function VectorKnowledgeDetail() {
 
 		return null
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [knowledgeBaseCode, currentDetailPage])
+	}, [knowledgeBaseCode, currentDetailPage, knowledgeDetail])
 
 	return (
 		<Flex className={styles.wrapper}>
