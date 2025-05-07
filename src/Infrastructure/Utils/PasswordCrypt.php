@@ -61,7 +61,8 @@ class PasswordCrypt
      */
     private static function getEncryptKey(): string
     {
-        return config('super-magic.share.encrypt_key');
+        // 实际应用中应该从配置或环境变量中获取
+        return md5('magic_service_encrypt_key');
     }
 
     /**
@@ -71,6 +72,7 @@ class PasswordCrypt
      */
     private static function getEncryptIv(): string
     {
-        return config('super-magic.share.encrypt_iv');
+        // 实际应用中应该从配置或环境变量中获取
+        return md5('magic_service_encrypt_iv');
     }
 }

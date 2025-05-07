@@ -38,6 +38,6 @@ class ConfigApi extends AbstractApi
         }
 
         // 调用应用服务处理业务逻辑
-        return $this->configAppService->shouldRedirectToSuperMagic($this->getAuthorization());
+        return $this->configAppService->shouldRedirectToSuperMagic();
     }
 }

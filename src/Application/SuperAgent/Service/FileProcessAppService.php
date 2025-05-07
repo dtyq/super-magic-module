@@ -152,7 +152,6 @@ class FileProcessAppService extends AbstractAppService
                     'file_size' => $fileInfo['file_size'],
                     'file_tag' => 'user_upload',
                     'file_url' => $fileInfo['external_url'] ?? '',
-                    'storage_type' => $attachment['storage_type'] ?? 'workspace',
                 ];
 
                 // 处理单个附件
@@ -273,7 +272,6 @@ class FileProcessAppService extends AbstractAppService
                         'file_id' => $existingFile->getFileId(),
                         'file_key' => $existingFile->getFileKey(),
                         'file_name' => $existingFile->getFileName(),
-                        'storage_type' => $existingFile->getStorageType(),
                         'status' => 'skipped',
                     ];
                     continue;
@@ -293,7 +291,6 @@ class FileProcessAppService extends AbstractAppService
                     'file_id' => $taskFileEntity->getFileId(),
                     'file_key' => $taskFileEntity->getFileKey(),
                     'file_name' => $taskFileEntity->getFileName(),
-                    'storage_type' => $taskFileEntity->getStorageType(),
                     'status' => 'created',
                 ];
                 $this->logger->info(sprintf(

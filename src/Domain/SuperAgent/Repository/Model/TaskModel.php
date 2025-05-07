@@ -42,7 +42,6 @@ class TaskModel extends AbstractModel
         'task_status',
         'work_dir',
         'task_mode',
-        'err_msg',
         'created_at',
         'updated_at',
         'deleted_at',

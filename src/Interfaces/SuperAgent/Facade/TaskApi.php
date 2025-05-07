@@ -46,7 +46,7 @@ class TaskApi extends AbstractApi
         }
 
         // 从 env 获取沙箱 token ，然后对比沙箱 token 和请求 token 是否一致
-        $sandboxToken = config('super-magic.sandbox.token', '');
+        $sandboxToken = env('SANDBOX_TOKEN', '');
         if ($sandboxToken !== $token) {
             ExceptionBuilder::throw(GenericErrorCode::ParameterMissing, 'token_invalid');
         }

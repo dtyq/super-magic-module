@@ -8,7 +8,6 @@ declare(strict_types=1);
 namespace Dtyq\SuperMagic\Domain\SuperAgent\Repository\Facade;
 
 use Dtyq\SuperMagic\Domain\SuperAgent\Entity\TopicEntity;
-use Dtyq\SuperMagic\Domain\SuperAgent\Entity\ValueObject\TaskStatus;
 
 interface TopicRepositoryInterface
 {
@@ -68,6 +67,4 @@ interface TopicRepositoryInterface
      * @return array 包含各状态数量的数组
      */
     public function getTopicStatusMetrics(array $conditions = []): array;
-
-    public function updateTopicStatus(int $id, $taskId, TaskStatus $status): bool;
 }

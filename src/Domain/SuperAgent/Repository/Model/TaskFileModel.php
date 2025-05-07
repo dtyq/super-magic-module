@@ -18,11 +18,6 @@ class TaskFileModel extends AbstractModel
 
     protected string $primaryKey = 'file_id';
 
-    /**
-     * 可填充字段列表
-     * 
-     * @var array
-     */
     protected array $fillable = [
         'file_id',
         'user_id',
@@ -36,18 +31,8 @@ class TaskFileModel extends AbstractModel
         'file_size',
         'external_url',
         'menu',
-        'storage_type', // 存储类型，由FileProcessAppService.processAttachmentsArray方法传入
         'created_at',
         'updated_at',
         'deleted_at',
-    ];
-    
-    /**
-     * 默认属性值
-     * 
-     * @var array
-     */
-    protected array $attributes = [
-        'storage_type' => 'workspace', // 默认存储类型为workspace
     ];
 }

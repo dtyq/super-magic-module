@@ -76,7 +76,7 @@ class FileApi extends AbstractApi
             ExceptionBuilder::throw(GenericErrorCode::ParameterMissing, 'token_required');
         }
 
-        if ($token !== config('super-magic.sandbox.token', '')) {
+        if ($token !== env('SANDBOX_TOKEN')) {
             ExceptionBuilder::throw(GenericErrorCode::ParameterMissing, 'token_invalid');
         }
 

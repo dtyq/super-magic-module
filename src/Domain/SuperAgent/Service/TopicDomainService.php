@@ -8,7 +8,6 @@ declare(strict_types=1);
 namespace Dtyq\SuperMagic\Domain\SuperAgent\Service;
 
 use Dtyq\SuperMagic\Domain\SuperAgent\Entity\TopicEntity;
-use Dtyq\SuperMagic\Domain\SuperAgent\Entity\ValueObject\TaskStatus;
 use Dtyq\SuperMagic\Domain\SuperAgent\Repository\Facade\TopicRepositoryInterface;
 
 class TopicDomainService
@@ -21,10 +20,5 @@ class TopicDomainService
     public function getTopicById(int $id): ?TopicEntity
     {
         return $this->topicRepository->getTopicById($id);
-    }
-
-    public function updateTopicStatus(int $id, int $taskId, TaskStatus $taskStatus): bool
-    {
-        return $this->topicRepository->updateTopicStatus($id, $taskId, $taskStatus);
     }
 }
