@@ -214,12 +214,21 @@ class LLMAppService extends AbstractLLMAppService
                 'embedding' => $this->modelGatewayMapper->getOrganizationEmbeddingModel($modeId, $orgCode),
                 default => null
             };
-            //  $model 不能是 MagicAILocalModel，会死循环。只能是 odin/model 的模型
+            if (! $model) {
+                ExceptionBuilder::throw(MagicApiErrorCode::MODEL_NOT_SUPPORT);
+            }
+
+            // 尝试使用 model_name 再次获取真实数据
+            if ($model instanceof MagicAILocalModel) {
+                $modelId = $model->getModelName();
+                $model = match ($proxyModelRequest->getType()) {
+                    'chat' => $this->modelGatewayMapper->getOrganizationChatModel($modelId, $orgCode),
+                    'embedding' => $this->modelGatewayMapper->getOrganizationEmbeddingModel($modelId, $orgCode),
+                    default => null
+                };
+            }
+            // 防止死循环
             if (! $model || $model instanceof MagicAILocalModel) {
-                $this->logger->error('Model not found', [
-                    'request_model' => $proxyModelRequest->getModel(),
-                    'organization_code' => $orgCode,
-                ]);
                 ExceptionBuilder::throw(MagicApiErrorCode::MODEL_NOT_SUPPORT);
             }
 
