@@ -35,7 +35,7 @@ class ProviderModelRepository extends AbstractRepository implements ProviderMode
     }
 
     /**
-     * 通过ID或ModelID查询模型，在id和model_id字段上使用OR条件
+     * 通过ID或ModelID查询模型，在id和model_id字段上使用OR条件.
      */
     public function getByIdOrModelId(ProviderDataIsolation $dataIsolation, string $id): ?ProviderModelEntity
     {
@@ -44,7 +44,7 @@ class ProviderModelRepository extends AbstractRepository implements ProviderMode
         /** @var null|ProviderModelModel $model */
         $model = $builder->where(function ($query) use ($id) {
             $query->where('id', $id)
-                  ->orWhere('model_id', $id);
+                ->orWhere('model_id', $id);
         })->first();
 
         if (! $model) {

@@ -23,7 +23,7 @@ interface ProviderModelRepositoryInterface
     public function getByIds(ProviderDataIsolation $dataIsolation, array $ids): array;
 
     /**
-     * 通过ID或ModelID查询模型，在id和model_id字段上使用OR条件
+     * 通过ID或ModelID查询模型，在id和model_id字段上使用OR条件.
      */
     public function getByIdOrModelId(ProviderDataIsolation $dataIsolation, string $id): ?ProviderModelEntity;
 
