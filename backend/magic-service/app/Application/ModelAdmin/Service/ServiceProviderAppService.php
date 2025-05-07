@@ -24,6 +24,7 @@ use App\Domain\ModelAdmin\Entity\ValueObject\ServiceProviderModelsDTO;
 use App\Domain\ModelAdmin\Service\Provider\ConnectResponse;
 use App\Domain\ModelAdmin\Service\ServiceProviderDomainService;
 use App\Domain\ModelGateway\Entity\Dto\CompletionDTO;
+use App\Domain\ModelGateway\Entity\Dto\EmbeddingsDTO;
 use App\Domain\OrganizationEnvironment\Service\MagicOrganizationEnvDomainService;
 use App\ErrorCode\ServiceProviderErrorCode;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
@@ -254,11 +255,20 @@ class ServiceProviderAppService
     private function embeddingConnectivityTest(string $modelId, MagicUserAuthorization $authorization): ConnectResponse
     {
         $connectResponse = new ConnectResponse();
-        $model = $this->serviceProviderDomainService->getServiceProviderConfig('', $modelId, $authorization->getOrganizationCode());
-        /* @var ChatCompletionResponse $response */
+        $llmAppService = di(LLMAppService::class);
+        $proxyModelRequest = new EmbeddingsDTO();
+        if (defined('MAGIC_ACCESS_TOKEN')) {
+            $proxyModelRequest->setAccessToken(MAGIC_ACCESS_TOKEN);
+        }
+        $proxyModelRequest->setModel($modelId);
+        $proxyModelRequest->setInput('test');
+        $proxyModelRequest->setBusinessParams([
+            'organization_id' => $authorization->getOrganizationCode(),
+            'user_id' => $authorization->getId(),
+            'source_id' => 'connectivity_test',
+        ]);
         try {
-            $embedding = $model->createEmbedding();
-            $embedding->embedding('test');
+            $llmAppService->embeddings($proxyModelRequest);
         } catch (Exception $exception) {
             $connectResponse->setStatus(false);
             $connectResponse->setMessage($exception->getMessage());
