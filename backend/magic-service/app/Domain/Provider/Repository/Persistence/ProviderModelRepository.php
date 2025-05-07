@@ -10,6 +10,7 @@ namespace App\Domain\Provider\Repository\Persistence;
 use App\Domain\Provider\Entity\ProviderModelEntity;
 use App\Domain\Provider\Entity\ValueObject\ProviderDataIsolation;
 use App\Domain\Provider\Entity\ValueObject\Query\ProviderModelQuery;
+use App\Domain\Provider\Entity\ValueObject\Status;
 use App\Domain\Provider\Factory\ProviderModelFactory;
 use App\Domain\Provider\Repository\Facade\ProviderModelRepositoryInterface;
 use App\Domain\Provider\Repository\Persistence\Model\ProviderModelModel;
@@ -45,7 +46,7 @@ class ProviderModelRepository extends AbstractRepository implements ProviderMode
         $model = $builder->where(function ($query) use ($id) {
             $query->where('id', $id)
                 ->orWhere('model_id', $id);
-        })->first();
+        })->where('status', Status::Enabled->value)->first();
 
         if (! $model) {
             return null;
