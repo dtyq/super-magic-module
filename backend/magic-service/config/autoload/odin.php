@@ -5,14 +5,10 @@ declare(strict_types=1);
  * Copyright (c) The Magic , Distributed under the software license
  */
 use App\Infrastructure\Core\Hyperf\Odin\Model\MiscEmbeddingModel;
-use Hyperf\Odin\Api\Providers\AzureOpenAI\AzureOpenAI;
+use Hyperf\Odin\Model\AwsBedrockModel;
 use Hyperf\Odin\Model\AzureOpenAIModel;
 use Hyperf\Odin\Model\DoubaoModel;
 use Hyperf\Odin\Model\OpenAIModel;
-
-/*
- * Copyright (c) The Magic , Distributed under the software license
- */
 
 use function Hyperf\Support\env;
 
@@ -160,6 +156,29 @@ if (env('MISC_DMETA_EMBEDDING_ENABLED', false)) {
             'multi_modal' => false,
             'embedding' => true,
             'vector_size' => env('MISC_DMETA_EMBEDDING_VECTOR_SIZE', 768),
+        ],
+    ];
+}
+
+// Aws claude3.7
+if (env('AWS_CLAUDE_ENABLED', false)) {
+    $envModelConfigs['claude-3-7'] = [
+        'model' => 'AWS_CLAUDE_3_7_ENDPOINT|claude-3-7',
+        'implementation' => AwsBedrockModel::class,
+        'config' => [
+            'access_key' => 'AWS_CLAUDE3_7_ACCESS_KEY',
+            'secret_key' => 'AWS_CLAUDE3_7_SECRET_KEY',
+            'region' => 'AWS_CLAUDE3_7_REGION|us-east-1',
+        ],
+        'model_options' => [
+            'chat' => true,
+            'function_call' => true,
+            'multi_modal' => true,
+            'embedding' => false,
+            'vector_size' => 0,
+        ],
+        'api_options' => [
+            'proxy' => env('AWS_CLAUDE3_7_PROXY', ''),
         ],
     ];
 }
