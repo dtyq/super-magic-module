@@ -31,6 +31,7 @@ use Hyperf\Odin\Contract\Model\EmbeddingInterface;
 use Hyperf\Odin\Contract\Model\ModelInterface;
 use Hyperf\Odin\Factory\ModelFactory;
 use Hyperf\Odin\Model\AbstractModel;
+use Hyperf\Odin\Model\AwsBedrockModel;
 use Hyperf\Odin\Model\ModelOptions;
 use Hyperf\Odin\ModelMapper;
 use InvalidArgumentException;
@@ -102,10 +103,10 @@ class ModelGatewayMapper extends ModelMapper
      * 仅 ModelGateway 领域使用.
      * @param string $model 预期是管理后台的 model_id，过度阶段接受传入 model_version
      */
-    public function getOrganizationChatModel(string $model, ?string $orgCode = null): ModelInterface
+    public function getOrganizationChatModel(string $model, ?string $orgCode = null, array $options = []): ModelInterface
     {
         // 优先从管理后台获取模型配置
-        $odinModel = $this->getByAdmin($model, $orgCode);
+        $odinModel = $this->getByAdmin($model, $orgCode, $options);
         if ($odinModel) {
             return $odinModel->getModel();
         }
@@ -118,9 +119,9 @@ class ModelGatewayMapper extends ModelMapper
      * 仅 ModelGateway 领域使用.
      * @param string $model 模型名称 预期是管理后台的 model_id，过度阶段接受 model_version
      */
-    public function getOrganizationEmbeddingModel(string $model, ?string $orgCode = null): EmbeddingInterface
+    public function getOrganizationEmbeddingModel(string $model, ?string $orgCode = null, array $options = []): EmbeddingInterface
     {
-        $odinModel = $this->getByAdmin($model, $orgCode);
+        $odinModel = $this->getByAdmin($model, $orgCode, $options);
         if ($odinModel) {
             return $odinModel->getModel();
         }
@@ -381,7 +382,7 @@ class ModelGatewayMapper extends ModelMapper
         return $list;
     }
 
-    private function createModelByProvider(ProviderModelEntity $providerModelEntity, ProviderConfigEntity $providerConfigEntity, ProviderEntity $providerEntity): OdinModel
+    private function createModelByProvider(ProviderModelEntity $providerModelEntity, ProviderConfigEntity $providerConfigEntity, ProviderEntity $providerEntity, array $options = []): OdinModel
     {
         $chat = false;
         $functionCall = false;
@@ -399,12 +400,20 @@ class ModelGatewayMapper extends ModelMapper
 
         $key = $providerModelEntity->getModelId();
 
+        $implementation = $providerEntity->getProviderCode()->getImplementation();
+        $implementationConfig = $providerEntity->getProviderCode()->getImplementationConfig($providerConfigEntity->getConfig(), $providerModelEntity->getModelVersion());
+
+        if ($implementation === AwsBedrockModel::class) {
+            $awsAutoCacheConfig = $options['aws_cache_options'] ?? [];
+            $implementationConfig = array_merge($implementationConfig, $awsAutoCacheConfig);
+        }
+
         return new OdinModel(
             key: $key,
             model: $this->createModel($providerModelEntity->getModelVersion(), [
                 'model' => $providerModelEntity->getModelVersion(),
-                'implementation' => $providerEntity->getProviderCode()->getImplementation(),
-                'config' => $providerEntity->getProviderCode()->getImplementationConfig($providerConfigEntity->getConfig(), $providerModelEntity->getModelVersion()),
+                'implementation' => $implementation,
+                'config' => $implementationConfig,
                 'model_options' => [
                     'chat' => $chat,
                     'function_call' => $functionCall,
@@ -426,7 +435,7 @@ class ModelGatewayMapper extends ModelMapper
         );
     }
 
-    private function getByAdmin(string $model, ?string $orgCode = null): ?OdinModel
+    private function getByAdmin(string $model, ?string $orgCode = null, array $options = []): ?OdinModel
     {
         $providerDataIsolation = ProviderDataIsolation::create($orgCode ?? '');
         $providerDataIsolation->setContainOfficialOrganization(true);
@@ -457,7 +466,7 @@ class ModelGatewayMapper extends ModelMapper
             return null;
         }
 
-        return $this->createModelByProvider($providerModel, $providerConfig, $provider);
+        return $this->createModelByProvider($providerModel, $providerConfig, $provider, $options);
     }
 
     private function addAttributes(string $key, OdinModelAttributes $attributes): void
