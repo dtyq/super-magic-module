@@ -49,6 +49,9 @@ class MagicFlowFactory
         }
         $nodes = [];
         foreach ($magicFlowArray['nodes'] ?? [] as $nodeArr) {
+            if (! isset($nodeArr['node_type'])) {
+                continue;
+            }
             if (! isset($nodeArr['node_version']) || $nodeArr['node_version'] === '') {
                 $nodeArr['node_version'] = $defaultNodeVersion;
             }
