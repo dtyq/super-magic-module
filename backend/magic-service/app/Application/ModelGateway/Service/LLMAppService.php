@@ -209,9 +209,15 @@ class LLMAppService extends AbstractLLMAppService
             if (empty($modeId)) {
                 $modeId = $proxyModelRequest->getModel();
             }
+
+            // 加载动态配置
+            $options = [
+                'aws_cache_options' => $this->createAwsAutoCacheConfig($proxyModelRequest),
+            ];
+
             $model = match ($proxyModelRequest->getType()) {
-                'chat' => $this->modelGatewayMapper->getOrganizationChatModel($modeId, $orgCode),
-                'embedding' => $this->modelGatewayMapper->getOrganizationEmbeddingModel($modeId, $orgCode),
+                'chat' => $this->modelGatewayMapper->getOrganizationChatModel($modeId, $orgCode, $options),
+                'embedding' => $this->modelGatewayMapper->getOrganizationEmbeddingModel($modeId, $orgCode, $options),
                 default => null
             };
             if (! $model) {
@@ -222,8 +228,8 @@ class LLMAppService extends AbstractLLMAppService
             if ($model instanceof MagicAILocalModel) {
                 $modelId = $model->getModelName();
                 $model = match ($proxyModelRequest->getType()) {
-                    'chat' => $this->modelGatewayMapper->getOrganizationChatModel($modelId, $orgCode),
-                    'embedding' => $this->modelGatewayMapper->getOrganizationEmbeddingModel($modelId, $orgCode),
+                    'chat' => $this->modelGatewayMapper->getOrganizationChatModel($modelId, $orgCode, $options),
+                    'embedding' => $this->modelGatewayMapper->getOrganizationEmbeddingModel($modelId, $orgCode, $options),
                     default => null
                 };
             }
@@ -677,5 +683,35 @@ class LLMAppService extends AbstractLLMAppService
             $msgLog->setCreatedAt(new DateTime());
             $this->msgLogDomainService->create($LLMDataIsolation, $msgLog);
         });
+    }
+
+    private function createAwsAutoCacheConfig(ProxyModelRequestInterface $proxyModelRequest): array
+    {
+        $autoCache = $proxyModelRequest->getHeaderConfig('AWS-AutoCache', true);
+        if ($autoCache === 'false') {
+            $autoCache = false;
+        }
+        $autoCache = (bool) $autoCache;
+
+        $maxCachePoints = (int) $proxyModelRequest->getHeaderConfig('AWS-MaxCachePoints', 4);
+        $maxCachePoints = max(min($maxCachePoints, 4), 1);
+
+        $minCacheTokens = (int) $proxyModelRequest->getHeaderConfig('AWS-MinCacheTokens', 2048);
+        $minCacheTokens = max($minCacheTokens, 2048);
+
+        $refreshPointMinTokens = (int) $proxyModelRequest->getHeaderConfig('AWS-RefreshPointMinTokens', 5000);
+        $refreshPointMinTokens = max($refreshPointMinTokens, 2048);
+
+        return [
+            'auto_cache' => $autoCache,
+            'auto_cache_config' => [
+                // 最大缓存点数量
+                'max_cache_points' => $maxCachePoints,
+                // 缓存点最小生效 tokens 阈值。tools+system 的最小缓存 tokens
+                'min_cache_tokens' => $minCacheTokens,
+                // 刷新缓存点的最小 tokens 阈值。messages 的最小缓存 tokens
+                'refresh_point_min_tokens' => $refreshPointMinTokens,
+            ],
+        ];
     }
 }
