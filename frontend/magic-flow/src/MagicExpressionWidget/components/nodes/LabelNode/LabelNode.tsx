@@ -27,7 +27,7 @@ interface LabelNodeProps {
 
 export function LabelNode({ config, selected, deleteFn, wrapperWidth }: LabelNodeProps) {
 	const { t } = useTranslation()
-	const { withPopOver, handleDoubleClickNode } = useTextareaModeContext()
+	const { handleDoubleClickNode } = useTextareaModeContext()
 
 	const { dataSourceMap, disabled } = useGlobalContext()
 
@@ -170,7 +170,5 @@ export function LabelNode({ config, selected, deleteFn, wrapperWidth }: LabelNod
 		</Tooltip>
 	)
 
-	const EnhancedComponent = withPopOver(WrappedComponent, config) as JSX.Element
-
-	return EnhancedComponent
+	return WrappedComponent
 }

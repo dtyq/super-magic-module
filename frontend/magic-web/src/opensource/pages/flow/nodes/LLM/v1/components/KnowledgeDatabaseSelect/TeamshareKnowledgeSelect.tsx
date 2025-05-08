@@ -52,7 +52,7 @@ export default function TeamshareKnowledgeSelectV1({
 			[KnowledgeStatus.Vectored]: t("common.vectoredText", { ns: "flow" }),
 			[KnowledgeStatus.VectorFail]: t("common.vectorFailText", { ns: "flow" }),
 		} as Record<number, string>
-		return map[currentProgressItem?.vector_status!] ?? ""
+		return map[currentProgressItem?.vector_status] ?? ""
 	}, [currentProgressItem?.vector_status, t])
 
 	const tooltip = useMemo(() => {
@@ -62,7 +62,7 @@ export default function TeamshareKnowledgeSelectV1({
 			[KnowledgeStatus.Vectored]: t("common.vectoredDesc", { ns: "flow" }),
 			[KnowledgeStatus.VectorFail]: t("common.vectorFailDesc", { ns: "flow" }),
 		} as Record<number, string>
-		return map[currentProgressItem?.vector_status!] ?? ""
+		return map[currentProgressItem?.vector_status] ?? ""
 	}, [currentProgressItem?.vector_status, t])
 
 	const createKnowledgeDatabaseVector = useMemoizedFn(async (businessId) => {
@@ -109,6 +109,7 @@ export default function TeamshareKnowledgeSelectV1({
 						trailColor="#E6E7EA"
 						strokeColor="#315CEC"
 						strokeWidth={20}
+						showInfo={false}
 					/>
 				)}
 				{currentProgressItem?.vector_status === KnowledgeStatus.Vectored && (
@@ -147,8 +148,8 @@ export default function TeamshareKnowledgeSelectV1({
 			labelRender={() => (
 				<RenderLabel
 					item={{
-						name: value?.name!,
-						business_id: value?.business_id!,
+						name: value?.name ?? "",
+						business_id: value?.business_id ?? "",
 					}}
 				/>
 			)}
@@ -161,7 +162,7 @@ export default function TeamshareKnowledgeSelectV1({
 					(option) => option.business_id === businessId,
 				)
 				const response = await KnowledgeApi.getTeamshareKnowledgeProgress({
-					knowledge_codes: [selected?.knowledge_code!],
+					knowledge_codes: [selected?.knowledge_code ?? ""],
 				})
 				// 下一次渲染再调用，避免请求数据是旧的
 				setTimeout(() => {

@@ -224,7 +224,14 @@ export default function useFlowLayout({ setShowParamsComp, flowInstance }: FlowL
 							showArrow={false}
 							open={openInteractionSelect}
 						>
-							<Flex className={styles.interaction} align="center">
+							<Flex
+								className={styles.interaction}
+								align="center"
+								onClick={(e) => {
+									e.stopPropagation()
+									setOpenInteractionSelect(!openInteractionSelect)
+								}}
+							>
 								{interaction === Interactions.Mouse ? (
 									<IconMouse stroke={1} />
 								) : (

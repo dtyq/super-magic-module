@@ -613,7 +613,7 @@ export default function useTestFunctions({
 										...msg,
 										content: msg.content || "我正在处理命令...",
 										status: "done",
-									}
+								  }
 								: msg,
 						),
 					)

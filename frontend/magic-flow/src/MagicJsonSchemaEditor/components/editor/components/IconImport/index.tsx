@@ -9,7 +9,7 @@ import React, { useContext, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 
 type IconImportProps = {
-	onImport: (value: Schema) => void
+	onImport: (value: Schema) => boolean
 }
 
 export enum ImportType {
@@ -30,12 +30,12 @@ export default function IconImport({ onImport }: IconImportProps) {
 	const [formData, setFormData] = useState({})
 
 	const onOk = useMemoizedFn(() => {
-		try {
-			onImport(form.getFieldsValue())
+		const success = onImport(form.getFieldsValue())
+		if (success) {
 			setOpen(false)
-		} catch (err) {
-			message.warning(i18next.t("jsonSchema.invalidValue", { ns: "magicFlow" }))
+			return
 		}
+		message.warning(i18next.t("jsonSchema.invalidValue", { ns: "magicFlow" }))
 	})
 
 	useUpdateEffect(() => {
@@ -153,8 +153,7 @@ export default function IconImport({ onImport }: IconImportProps) {
 								})}
 								options={fieldOptions}
 								changeOnSelect
-								multiple
-								showArrow
+								multiple={false}
 							></Cascader>
 						</Form.Item>
 					)}

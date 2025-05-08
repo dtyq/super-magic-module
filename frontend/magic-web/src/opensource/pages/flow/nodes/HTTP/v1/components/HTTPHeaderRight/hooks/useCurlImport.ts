@@ -108,7 +108,7 @@ export default function useCurlImport() {
 													},
 													{} as Record<string, any>,
 												),
-											}
+										  }
 										: createEmptyStructure(),
 							},
 							// 请求体类型 - 始终使用新的解析结果

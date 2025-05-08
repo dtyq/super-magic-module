@@ -28,11 +28,34 @@ type TransformerProps = React.PropsWithChildren<{
 	onSelect: (node: any, trans?: string) => void
 }>
 
+/**
+ * Transformer组件
+ *
+ * 该组件用于在ReactFlow环境中提供数据类型转换功能的悬浮面板。
+ * 允许用户从一个数据类型转换到另一个数据类型，支持链式转换操作。
+ *
+ * 特性:
+ * - 基于数据源类型动态生成可用的转换方法
+ * - 支持链式调用多个转换方法
+ * - 提供参数化转换，允许为特定转换设置参数
+ * - 在ReactFlow缩放环境中自适应定位
+ * - 提供面包屑导航以展示转换链条
+ *
+ * 解决方案:
+ * - 使用ReactFlow的缩放信息动态调整弹出层的位置
+ * - 将弹出层挂载到适当的DOM节点以确保正确的事件传递
+ * - 通过动态计算偏移量而非内容缩放来保持UI交互性
+ *
+ * @param {TransformerProps} props - 组件属性
+ * @param {DataSourceOption} props.source - 数据来源，包含类型信息
+ * @param {Function} props.onSelect - 数据转换选择回调
+ * @param {React.ReactNode} props.children - 触发弹出层的子元素
+ * @returns {JSX.Element} 转换器组件
+ */
 const Transformer = ({ source, onSelect, children }: TransformerProps) => {
 	const [values, setValues, resetValues] = useResetState([] as StepOption[])
 	const [paths, setPaths] = useState([] as StepOption[])
 	const [open, setOpen] = useState(false)
-	const currentZoom = useReactFlow().getZoom()
 
 	const breadcrumbItems = useMemo(() => {
 		if (!values.length) return []
@@ -153,7 +176,7 @@ const Transformer = ({ source, onSelect, children }: TransformerProps) => {
 	const onOpenChange = useMemoizedFn((visible: boolean) => {
 		setOpen(visible)
 		// 关闭时重置值
-		if (!open) {
+		if (!visible) {
 			resetValues()
 		}
 	})
@@ -162,12 +185,9 @@ const Transformer = ({ source, onSelect, children }: TransformerProps) => {
 		<Popover
 			placement="right"
 			showArrow={false}
-			overlayClassName="magic-type-transformer"
+			classNames={{ root: "magic-type-transformer" }}
 			onOpenChange={onOpenChange}
 			open={open}
-			overlayStyle={{
-				scale: `${currentZoom}`, // 手动调整缩放
-			}}
 			content={
 				<Wrap onClick={(e) => e.stopPropagation()}>
 					{titleComponent}
@@ -177,7 +197,6 @@ const Transformer = ({ source, onSelect, children }: TransformerProps) => {
 								<li key={item.value}>
 									<span>
 										{item.icon && <div className="magic-icon">{item.icon}</div>}
-
 										{item.label}
 									</span>
 

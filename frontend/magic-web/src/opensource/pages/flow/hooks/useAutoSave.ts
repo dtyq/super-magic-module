@@ -49,10 +49,12 @@ export default function useAutoSave({ flowInstance, isAgent, initDraftList }: Us
 		const shadowedFlow = shadowFlow(latestFlow!)
 		if (!latestFlow) return
 
-		const flowId = isAgent ? shadowedFlow.id! : latestFlow?.id!
+		const flowId = isAgent ? shadowedFlow.id ?? "" : latestFlow?.id ?? ""
 
 		const requestParams = {
-			name: `${latestFlow?.name}_${t("common.draft", { ns: "flow" })}${getCurrentDateTimeString()}`,
+			name: `${latestFlow?.name}_${t("common.draft", {
+				ns: "flow",
+			})}${getCurrentDateTimeString()}`,
 			description: "",
 			magic_flow: {
 				...shadowedFlow,

@@ -2,9 +2,8 @@
  * Tools参数配置器
  */
 import type { FormListFieldData } from "antd"
-import { Form, Switch, Tooltip } from "antd"
+import { Form, Switch, Tooltip, Flex } from "antd"
 import { IconHelp } from "@tabler/icons-react"
-import { Flex } from "antd"
 import MagicJSONSchemaEditorWrap from "@dtyq/magic-flow/dist/common/BaseUI/MagicJsonSchemaEditorWrap"
 import usePrevious from "@/opensource/pages/flow/common/hooks/usePrevious"
 import { ShowColumns } from "@dtyq/magic-flow/dist/MagicJsonSchemaEditor/constants"

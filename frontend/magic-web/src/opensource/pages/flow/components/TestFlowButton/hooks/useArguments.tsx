@@ -80,6 +80,7 @@ export default function useArguments({
 					label={field.label}
 					required={field.required}
 					rules={[{ required: true }]}
+					key={field.key}
 				>
 					{getComponent(field.type as FormItemType)}
 				</Form.Item>

@@ -9,7 +9,7 @@ export const v1Template = {
 	node_version: "v1",
 	meta: [],
 	params: {
-		model: "gpt-4o-global",
+		model: "",
 		system_prompt: {
 			id: "component-677633dfaf2fc",
 			version: "1",

@@ -406,9 +406,12 @@ const Editor = observer(
 						schemaMobx.changeSchema(schema)
 				}
 				message.success(i18next.t("common.importSuccess", { ns: "magicFlow" }))
+
+				return true
 			} catch (err) {
 				console.log("导入错误", err)
-				message.warning(i18next.t("common.importError", { ns: "magicFlow" }))
+
+				return false
 			}
 		})
 
