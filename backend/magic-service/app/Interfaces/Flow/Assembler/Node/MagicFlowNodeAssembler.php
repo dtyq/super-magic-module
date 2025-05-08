@@ -28,7 +28,10 @@ class MagicFlowNodeAssembler
             return $data;
         }
         if (is_array($data)) {
-            return new NodeDTO($data);
+            $nodeDTO = new NodeDTO($data);
+            if ($nodeDTO->getNodeType()) {
+                return $nodeDTO;
+            }
         }
         return null;
     }
