@@ -45,6 +45,7 @@ use Hyperf\Odin\Contract\Api\Response\ResponseInterface;
 use Hyperf\Odin\Contract\Model\EmbeddingInterface;
 use Hyperf\Odin\Contract\Model\ModelInterface;
 use Hyperf\Odin\Exception\LLMException;
+use Hyperf\Odin\Model\AwsBedrockModel;
 use Hyperf\Odin\Tool\Definition\ToolDefinition;
 use Hyperf\Odin\Utils\MessageUtil;
 use Hyperf\Odin\Utils\ToolUtil;
@@ -210,14 +211,9 @@ class LLMAppService extends AbstractLLMAppService
                 $modeId = $proxyModelRequest->getModel();
             }
 
-            // 加载动态配置
-            $options = [
-                'aws_cache_options' => $this->createAwsAutoCacheConfig($proxyModelRequest),
-            ];
-
             $model = match ($proxyModelRequest->getType()) {
-                'chat' => $this->modelGatewayMapper->getOrganizationChatModel($modeId, $orgCode, $options),
-                'embedding' => $this->modelGatewayMapper->getOrganizationEmbeddingModel($modeId, $orgCode, $options),
+                'chat' => $this->modelGatewayMapper->getOrganizationChatModel($modeId, $orgCode),
+                'embedding' => $this->modelGatewayMapper->getOrganizationEmbeddingModel($modeId, $orgCode),
                 default => null
             };
             if (! $model) {
@@ -228,14 +224,18 @@ class LLMAppService extends AbstractLLMAppService
             if ($model instanceof MagicAILocalModel) {
                 $modelId = $model->getModelName();
                 $model = match ($proxyModelRequest->getType()) {
-                    'chat' => $this->modelGatewayMapper->getOrganizationChatModel($modelId, $orgCode, $options),
-                    'embedding' => $this->modelGatewayMapper->getOrganizationEmbeddingModel($modelId, $orgCode, $options),
+                    'chat' => $this->modelGatewayMapper->getOrganizationChatModel($modelId, $orgCode),
+                    'embedding' => $this->modelGatewayMapper->getOrganizationEmbeddingModel($modelId, $orgCode),
                     default => null
                 };
             }
             // 防止死循环
             if (! $model || $model instanceof MagicAILocalModel) {
                 ExceptionBuilder::throw(MagicApiErrorCode::MODEL_NOT_SUPPORT);
+            }
+
+            if ($model instanceof AwsBedrockModel) {
+                $model->setConfig(array_merge($model->getConfig(), $this->createAwsAutoCacheConfig($proxyModelRequest)));
             }
 
             // 记录开始时间
