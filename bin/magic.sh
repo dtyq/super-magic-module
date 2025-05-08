@@ -1,5 +1,19 @@
 #!/bin/bash
 
+# 检查是否存在lock文件 / Check if lock file exists
+LOCK_FILE="$(dirname "$0")/magic.lock"
+if [ -f "$LOCK_FILE" ]; then
+    # 如果lock文件存在，跳过所有检查 / If lock file exists, skip all checks
+    SKIP_CHECKS=true
+    # 设置默认值 / Set default values
+    MAGIC_USE_SUPER_MAGIC=""
+else
+    SKIP_CHECKS=false
+fi
+
+# 标记是否是首次安装 / Flag for first-time installation
+FIRST_INSTALL=false
+
 # 检测系统默认语言 / Detect system default language
 detect_language() {
   # 默认使用英文 / Default to English
@@ -36,100 +50,6 @@ bilingual() {
     echo "$2 | $1"
   fi
 }
-
-# 检查是否安装了 Docker / Check if Docker is installed
-if ! command -v docker &> /dev/null; then
-    bilingual "错误: Docker 未安装。" "Error: Docker is not installed."
-    bilingual "请先安装 Docker:" "Please install Docker first:"
-    if [ "$(uname -s)" == "Darwin" ]; then
-        bilingual "1. 访问 https://docs.docker.com/desktop/install/mac-install/" "1. Visit https://docs.docker.com/desktop/install/mac-install/"
-        bilingual "2. 下载并安装 Docker Desktop for Mac" "2. Download and install Docker Desktop for Mac"
-    elif [ "$(uname -s)" == "Linux" ]; then
-        bilingual "1. 访问 https://docs.docker.com/engine/install/" "1. Visit https://docs.docker.com/engine/install/"
-        bilingual "2. 按照您的 Linux 发行版安装说明进行操作" "2. Follow the installation instructions for your Linux distribution"
-    else
-        bilingual "请访问 https://docs.docker.com/get-docker/ 获取安装指南" "Please visit https://docs.docker.com/get-docker/ for installation instructions"
-    fi
-    exit 1
-fi
-
-# 检查 Docker 是否正在运行 / Check if Docker is running
-if ! docker info &> /dev/null; then
-    bilingual "错误: Docker 未运行。" "Error: Docker is not running."
-    bilingual "请启动 Docker 并重试。" "Please start Docker and try again."
-    if [ "$(uname -s)" == "Darwin" ]; then
-        bilingual "1. 打开 Docker Desktop" "1. Open Docker Desktop"
-        bilingual "2. 等待 Docker 启动" "2. Wait for Docker to start"
-    elif [ "$(uname -s)" == "Linux" ]; then
-        bilingual "1. 启动 Docker 服务: sudo systemctl start docker" "1. Start Docker service: sudo systemctl start docker"
-    fi
-    exit 1
-fi
-
-# 检查是否安装了 docker-compose / Check if docker-compose is installed
-if ! command -v docker-compose &> /dev/null; then
-    bilingual "错误: docker-compose 未安装。" "Error: docker-compose is not installed."
-    bilingual "请先安装 docker-compose:" "Please install docker-compose first:"
-    if [ "$(uname -s)" == "Darwin" ]; then
-        bilingual "1. Docker Desktop for Mac 默认包含 docker-compose" "1. Docker Desktop for Mac includes docker-compose by default"
-        bilingual "2. 如果您使用的是旧版本，请访问 https://docs.docker.com/compose/install/" "2. If you're using an older version, visit https://docs.docker.com/compose/install/"
-    elif [ "$(uname -s)" == "Linux" ]; then
-        bilingual "1. 访问 https://docs.docker.com/compose/install/" "1. Visit https://docs.docker.com/compose/install/"
-        bilingual "2. 按照您的 Linux 发行版安装说明进行操作" "2. Follow the installation instructions for your Linux distribution"
-        bilingual "   例如，在 Ubuntu/Debian 上:" "   For example, on Ubuntu/Debian:"
-        echo "   sudo apt-get update"
-        echo "   sudo apt-get install docker-compose-plugin"
-    else
-        bilingual "请访问 https://docs.docker.com/compose/install/ 获取安装指南" "Please visit https://docs.docker.com/compose/install/ for installation instructions"
-    fi
-    exit 1
-fi
-
-# 检测系统架构 / Detect system architecture
-ARCH=$(uname -m)
-case $ARCH in
-    x86_64)
-        export PLATFORM=linux/amd64
-        ;;
-    aarch64|arm64|armv7l)
-        export PLATFORM=linux/arm64
-        ;;
-    *)
-        bilingual "不支持的架构: $ARCH" "Unsupported architecture: $ARCH"
-        exit 1
-        ;;
-esac
-
-# 如果是 macOS arm64 则不设置 PLATFORM / Do not set PLATFORM if using macOS arm64
-if [ "$(uname -s)" == "Darwin" ] && [ "$(uname -m)" == "arm64" ]; then
-    export PLATFORM=""
-fi
-
-bilingual "检测到架构: $ARCH，使用平台: $PLATFORM" "Detected architecture: $ARCH, using platform: $PLATFORM"
-
-# 判断 .env 是否存在，如果不存在复制 .env.example 到 .env
-# Check if .env exists, if not copy .env.example to .env
-if [ ! -f .env ]; then
-    cp .env.example .env
-fi
-
-# 修改 .env 的 PLATFORM 变量 / Modify PLATFORM variable in .env
-if [ -n "$PLATFORM" ]; then
-    if [ "$(uname -s)" == "Darwin" ]; then
-        # macOS 版本 / macOS version
-        sed -i '' "s/^PLATFORM=.*/PLATFORM=$PLATFORM/" .env
-    else
-        # Linux 版本 / Linux version
-        sed -i "s/^PLATFORM=.*/PLATFORM=$PLATFORM/" .env
-    fi
-else
-    # 如果 PLATFORM 为空，将其设置为空字符串 / If PLATFORM is empty, set it to an empty string
-    if [ "$(uname -s)" == "Darwin" ]; then
-        sed -i '' "s/^PLATFORM=.*/PLATFORM=/" .env
-    else
-        sed -i "s/^PLATFORM=.*/PLATFORM=/" .env
-    fi
-fi
 
 # 检测公网IP并更新环境变量 / Detect public IP and update environment variables
 detect_public_ip() {
@@ -241,9 +161,6 @@ detect_public_ip() {
     fi
 }
 
-# 运行IP检测和更新 / Run IP detection and update
-detect_public_ip
-
 # 检查Super Magic环境配置文件是否存在 / Check if Super Magic environment file exists
 check_super_magic_env() {
     if [ ! -f .env_super_magic ]; then
@@ -280,8 +197,8 @@ ask_super_magic() {
             exit 1
         fi
         
-        # 在docker-compose命令中添加super-magic配置文件
-        # Add super-magic profile to docker-compose commands
+        # 在docker compose命令中添加super-magic配置文件
+        # Add super-magic profile to docker compose commands
         export MAGIC_USE_SUPER_MAGIC="--profile super-magic"
         bilingual "Super Magic服务将被启动。" "Super Magic service will be started."
     else
@@ -290,8 +207,110 @@ ask_super_magic() {
     fi
 }
 
-# 运行Super Magic安装询问 / Run Super Magic installation inquiry
-ask_super_magic
+# 如果设置了跳过检查，直接跳到命令处理部分 / If SKIP_CHECKS is set, jump to command processing
+if [ "$SKIP_CHECKS" = true ]; then
+    bilingual "检测到 magic.lock 文件，跳过系统检查。" "Detected magic.lock file, skipping system checks."
+else
+    # 检查是否安装了 Docker / Check if Docker is installed
+    if ! command -v docker &> /dev/null; then
+        bilingual "错误: Docker 未安装。" "Error: Docker is not installed."
+        bilingual "请先安装 Docker:" "Please install Docker first:"
+        if [ "$(uname -s)" == "Darwin" ]; then
+            bilingual "1. 访问 https://docs.docker.com/desktop/install/mac-install/" "1. Visit https://docs.docker.com/desktop/install/mac-install/"
+            bilingual "2. 下载并安装 Docker Desktop for Mac" "2. Download and install Docker Desktop for Mac"
+        elif [ "$(uname -s)" == "Linux" ]; then
+            bilingual "1. 访问 https://docs.docker.com/engine/install/" "1. Visit https://docs.docker.com/engine/install/"
+            bilingual "2. 按照您的 Linux 发行版安装说明进行操作" "2. Follow the installation instructions for your Linux distribution"
+        else
+            bilingual "请访问 https://docs.docker.com/get-docker/ 获取安装指南" "Please visit https://docs.docker.com/get-docker/ for installation instructions"
+        fi
+        exit 1
+    fi
+
+    # 检查 Docker 是否正在运行 / Check if Docker is running
+    if ! docker info &> /dev/null; then
+        bilingual "错误: Docker 未运行。" "Error: Docker is not running."
+        bilingual "请启动 Docker 并重试。" "Please start Docker and try again."
+        if [ "$(uname -s)" == "Darwin" ]; then
+            bilingual "1. 打开 Docker Desktop" "1. Open Docker Desktop"
+            bilingual "2. 等待 Docker 启动" "2. Wait for Docker to start"
+        elif [ "$(uname -s)" == "Linux" ]; then
+            bilingual "1. 启动 Docker 服务: sudo systemctl start docker" "1. Start Docker service: sudo systemctl start docker"
+        fi
+        exit 1
+    fi
+
+    # 检查 Docker Compose 是否可用 / Check if Docker Compose is available
+    if ! docker compose version &> /dev/null; then
+        bilingual "错误: Docker Compose 未安装或不可用。" "Error: Docker Compose is not installed or not available."
+        bilingual "请确保您的 Docker 版本支持 Docker Compose V2:" "Please ensure your Docker version supports Docker Compose V2:"
+        if [ "$(uname -s)" == "Darwin" ]; then
+            bilingual "1. Docker Desktop for Mac 应该已包含 Docker Compose" "1. Docker Desktop for Mac should include Docker Compose"
+            bilingual "2. 尝试更新到最新版本的 Docker Desktop" "2. Try updating to the latest version of Docker Desktop"
+        elif [ "$(uname -s)" == "Linux" ]; then
+            bilingual "1. 访问 https://docs.docker.com/compose/install/" "1. Visit https://docs.docker.com/compose/install/"
+            bilingual "2. 按照您的 Linux 发行版安装说明进行操作" "2. Follow the installation instructions for your Linux distribution"
+        else
+            bilingual "请访问 https://docs.docker.com/compose/install/ 获取安装指南" "Please visit https://docs.docker.com/compose/install/ for installation instructions"
+        fi
+        exit 1
+    fi
+
+    # 标记为首次安装 / Mark as first installation
+    FIRST_INSTALL=true
+
+    # 检测系统架构 / Detect system architecture
+    ARCH=$(uname -m)
+    case $ARCH in
+        x86_64)
+            export PLATFORM=linux/amd64
+            ;;
+        aarch64|arm64|armv7l)
+            export PLATFORM=linux/arm64
+            ;;
+        *)
+            bilingual "不支持的架构: $ARCH" "Unsupported architecture: $ARCH"
+            exit 1
+            ;;
+    esac
+
+    # 如果是 macOS arm64 则不设置 PLATFORM / Do not set PLATFORM if using macOS arm64
+    if [ "$(uname -s)" == "Darwin" ] && [ "$(uname -m)" == "arm64" ]; then
+        export PLATFORM=""
+    fi
+
+    bilingual "检测到架构: $ARCH，使用平台: $PLATFORM" "Detected architecture: $ARCH, using platform: $PLATFORM"
+
+    # 判断 .env 是否存在，如果不存在复制 .env.example 到 .env
+    # Check if .env exists, if not copy .env.example to .env
+    if [ ! -f .env ]; then
+        cp .env.example .env
+    fi
+
+    # 修改 .env 的 PLATFORM 变量 / Modify PLATFORM variable in .env
+    if [ -n "$PLATFORM" ]; then
+        if [ "$(uname -s)" == "Darwin" ]; then
+            # macOS 版本 / macOS version
+            sed -i '' "s/^PLATFORM=.*/PLATFORM=$PLATFORM/" .env
+        else
+            # Linux 版本 / Linux version
+            sed -i "s/^PLATFORM=.*/PLATFORM=$PLATFORM/" .env
+        fi
+    else
+        # 如果 PLATFORM 为空，将其设置为空字符串 / If PLATFORM is empty, set it to an empty string
+        if [ "$(uname -s)" == "Darwin" ]; then
+            sed -i '' "s/^PLATFORM=.*/PLATFORM=/" .env
+        else
+            sed -i "s/^PLATFORM=.*/PLATFORM=/" .env
+        fi
+    fi
+
+    # 运行IP检测和更新 / Run IP detection and update
+    detect_public_ip
+
+    # 运行Super Magic安装询问 / Run Super Magic installation inquiry
+    ask_super_magic
+fi
 
 # 显示帮助信息 / Show help information
 show_help() {
@@ -310,40 +329,61 @@ show_help() {
     bilingual "如果未提供命令，默认使用 'start'" "If no command is provided, 'start' will be used by default."
 }
 
+# 创建lock文件函数 / Create lock file function
+create_lock_file() {
+    if [ "$FIRST_INSTALL" = true ]; then
+        bilingual "首次安装成功，创建 magic.lock 文件..." "First installation successful, creating magic.lock file..."
+        touch "$LOCK_FILE"
+        if [ -f "$LOCK_FILE" ]; then
+            bilingual "magic.lock 文件已创建，下次启动将跳过系统检查。" "magic.lock file created, system checks will be skipped on next startup."
+        else
+            bilingual "警告：无法创建 magic.lock 文件，请检查权限。" "Warning: Could not create magic.lock file, please check permissions."
+        fi
+    fi
+}
+
 # 启动服务 / Start services
 start_services() {
     bilingual "正在前台启动服务..." "Starting services in foreground..."
-    docker-compose $MAGIC_USE_SUPER_MAGIC up
+    docker compose $MAGIC_USE_SUPER_MAGIC up
+    # 服务结束后创建lock文件 / Create lock file after services end
+    create_lock_file
 }
 
 # 停止服务 / Stop services
 stop_services() {
     bilingual "正在停止服务..." "Stopping services..."
-    docker-compose $MAGIC_USE_SUPER_MAGIC down
+    docker compose $MAGIC_USE_SUPER_MAGIC down
+    # 停止后创建lock文件 / Create lock file after stopping
+    create_lock_file
 }
 
 # 后台启动服务 / Start services in background
 start_daemon() {
     bilingual "正在后台启动服务..." "Starting services in background..."
-    docker-compose $MAGIC_USE_SUPER_MAGIC up -d
+    docker compose $MAGIC_USE_SUPER_MAGIC up -d
+    # 启动后创建lock文件 / Create lock file after starting
+    create_lock_file
 }
 
 # 重启服务 / Restart services
 restart_services() {
     bilingual "正在重启服务..." "Restarting services..."
-    docker-compose $MAGIC_USE_SUPER_MAGIC restart
+    docker compose $MAGIC_USE_SUPER_MAGIC restart
+    # 重启后创建lock文件 / Create lock file after restarting
+    create_lock_file
 }
 
 # 查看服务状态 / Show services status
 show_status() {
     bilingual "服务状态:" "Services status:"
-    docker-compose $MAGIC_USE_SUPER_MAGIC ps
+    docker compose $MAGIC_USE_SUPER_MAGIC ps
 }
 
 # 查看服务日志 / Show services logs
 show_logs() {
     bilingual "显示服务日志:" "Showing services logs:"
-    docker-compose $MAGIC_USE_SUPER_MAGIC logs -f
+    docker compose $MAGIC_USE_SUPER_MAGIC logs -f
 }
 
 # 仅启动Super Magic服务 / Start only Super Magic service
@@ -355,7 +395,9 @@ start_super_magic() {
     fi
 
     bilingual "正在前台启动Super Magic服务..." "Starting Super Magic service in foreground..."
-    docker-compose --profile super-magic up
+    docker compose --profile super-magic up
+    # 创建lock文件 / Create lock file
+    create_lock_file
 }
 
 # 后台仅启动Super Magic服务 / Start only Super Magic service in background
@@ -367,7 +409,9 @@ start_super_magic_daemon() {
     fi
 
     bilingual "正在后台启动Super Magic服务..." "Starting Super Magic service in background..."
-    docker-compose --profile super-magic up -d
+    docker compose --profile super-magic up -d
+    # 创建lock文件 / Create lock file
+    create_lock_file
 }
 
 # 处理命令行参数 / Handle command line arguments
