@@ -21,7 +21,7 @@ class MagicFlowVersionFactory
         $magicFlowDraftEntity->setName($magicFlowVersionModel->name);
         $magicFlowDraftEntity->setDescription($magicFlowVersionModel->description);
         if (! empty($magicFlowVersionModel->magic_flow)) {
-            $magicFlowDraftEntity->setMagicFlow(MagicFlowFactory::arrayToEntity($magicFlowVersionModel->magic_flow));
+            $magicFlowDraftEntity->setMagicFlow(MagicFlowFactory::arrayToEntity($magicFlowVersionModel->magic_flow, 'v0'));
         }
 
         $magicFlowDraftEntity->setOrganizationCode($magicFlowVersionModel->organization_code);
