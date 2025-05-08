@@ -8,8 +8,8 @@ declare(strict_types=1);
 namespace App\Interfaces\KnowledgeBase\Assembler;
 
 use App\Application\ModelGateway\Mapper\OdinModel;
-use App\Domain\ModelAdmin\Entity\ValueObject\ServiceProviderDTO;
-use App\Domain\ModelAdmin\Entity\ValueObject\ServiceProviderModelsDTO;
+use App\Interfaces\KnowledgeBase\DTO\ServiceProviderDTO;
+use App\Interfaces\KnowledgeBase\DTO\ServiceProviderModelDTO;
 
 class KnowledgeBaseProviderAssembler
 {
@@ -29,7 +29,7 @@ class KnowledgeBaseProviderAssembler
             $dto->setName($providerAlias);
             $modelsForProvider = [];
             foreach ($providerModels as $providerModel) {
-                $modelDTO = new ServiceProviderModelsDTO();
+                $modelDTO = new ServiceProviderModelDTO();
                 $modelDTO->setId($providerModel->getAttributes()->getKey());
                 $modelDTO->setName($providerModel->getAttributes()->getLabel());
                 $modelDTO->setModelId($providerModel->getAttributes()->getName());
