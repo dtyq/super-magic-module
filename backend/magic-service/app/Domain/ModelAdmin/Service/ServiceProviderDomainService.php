@@ -337,11 +337,7 @@ class ServiceProviderDomainService
         $serviceProviderDTO = $this->getServiceProviderById((int) $serviceProviderConfigDetail->getServiceProviderId());
 
         // 设置禁用来源
-        $disabledBy = null;
-        if ($status === Status::DISABLE) {
-            // 官方组织禁用标记为official，其他组织禁用标记为user
-            $disabledBy = $this->isOfficial($organizationCode) ? DisabledByType::OFFICIAL : DisabledByType::USER;
-        }
+        $disabledBy = $this->isOfficial($organizationCode) ? DisabledByType::OFFICIAL : DisabledByType::USER;
 
         if ($this->isOfficial($organizationCode)) {
             // 如果服务商状态为false，则其他模型为false
