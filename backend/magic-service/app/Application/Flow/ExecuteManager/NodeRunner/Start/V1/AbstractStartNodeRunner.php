@@ -238,6 +238,9 @@ abstract class AbstractStartNodeRunner extends NodeRunner
 
     private function appendAttachments(ExecutionData $executionData, MagicMessageEntity $messageEntity): void
     {
+        if (! empty($executionData->getTriggerData()->getAttachments())) {
+            return;
+        }
         $attachments = AttachmentUtil::getByMagicMessageEntity($messageEntity);
         foreach ($attachments as $attachment) {
             $executionData->getTriggerData()->addAttachment($attachment);
