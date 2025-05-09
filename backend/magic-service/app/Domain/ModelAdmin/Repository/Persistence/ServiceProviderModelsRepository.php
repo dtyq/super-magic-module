@@ -13,6 +13,7 @@ use App\Domain\ModelAdmin\Constant\ServiceProviderCategory;
 use App\Domain\ModelAdmin\Constant\Status;
 use App\Domain\ModelAdmin\Entity\ServiceProviderModelsEntity;
 use App\Domain\ModelAdmin\Factory\ServiceProviderModelsEntityFactory;
+use App\Domain\ModelAdmin\Repository\ValueObject\UpdateConsumerModel;
 use App\ErrorCode\ServiceProviderErrorCode;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Infrastructure\Util\IdGenerator\IdGenerator;
@@ -427,10 +428,13 @@ class ServiceProviderModelsRepository extends AbstractModelRepository
         $this->serviceProviderModelsModel::query()->where('id', $id)->update($entityArray);
     }
 
-    public function updateConsumerModel(int $modelParentId, string $name, string $icon, array $translate, array $visibleOrganizations): void
+    public function updateConsumerModel(int $modelParentId, UpdateConsumerModel $updateConsumerModel): void
     {
+        $modelArray = $updateConsumerModel->toArray();
+        $modelArray['translate'] = Json::encode($modelArray['translate'] ?: []);
+        $modelArray['visible_organizations'] = Json::encode($modelArray['visible_organizations'] ?: []);
         $this->serviceProviderModelsModel::query()->where('model_parent_id', $modelParentId)
-            ->update(['name' => $name, 'icon' => $icon, 'translate' => Json::encode($translate), 'visible_organizations' => Json::encode($visibleOrganizations)]);
+            ->update($modelArray);
     }
 
     /**
