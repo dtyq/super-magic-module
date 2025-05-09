@@ -87,6 +87,8 @@ use App\Domain\Flow\Repository\Persistence\MagicFlowVersionRepository;
 use App\Domain\Flow\Repository\Persistence\MagicFlowWaitMessageRepository;
 use App\Domain\Group\Repository\Facade\MagicGroupRepositoryInterface;
 use App\Domain\Group\Repository\Persistence\MagicGroupRepository;
+use App\Domain\KnowledgeBase\Entity\ValueObject\Interface\KnowledgeTypeFactoryInterface;
+use App\Domain\KnowledgeBase\Factory\KnowledgeTypeFactory;
 use App\Domain\KnowledgeBase\Repository\Facade\KnowledgeBaseDocumentRepositoryInterface;
 use App\Domain\KnowledgeBase\Repository\Facade\KnowledgeBaseFragmentRepositoryInterface;
 use App\Domain\KnowledgeBase\Repository\Facade\KnowledgeBaseRepositoryInterface;
@@ -293,6 +295,8 @@ $dependencies = [
     WordFileParserDriverInterface::class => WordFileParserDriver::class,
 
     // 知识库
+    KnowledgeTypeFactoryInterface::class => KnowledgeTypeFactory::class,
+
     ExternalFileContentParserInterface::class => ExternalFileContentParserDriver::class,
     ThirdPlatformContentParserInterface::class => ThirdPlatformContentParserDriver::class,
 

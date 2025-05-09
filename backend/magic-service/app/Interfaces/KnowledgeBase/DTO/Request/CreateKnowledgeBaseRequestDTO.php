@@ -142,7 +142,7 @@ class CreateKnowledgeBaseRequestDTO extends AbstractRequestDTO
             'embedding_config' => 'array',
             'retrieve_config' => 'array',
             'document_files' => 'required|array',
-            'document_files.*.type' => 'required|integer|between:1,2',
+            'document_files.*.type' => 'integer|between:1,2',
             'document_files.*.name' => 'required|string',
             'document_files.*.key' => 'required_if:document_files.*.type,1|string',
             'document_files.*.third_file_id' => 'required_if:document_files.*.type,2|string',

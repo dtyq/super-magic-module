@@ -28,7 +28,8 @@ abstract class AbstractDocumentFileDTO extends AbstractDTO implements DocumentFi
 
     public static function fromArray(array $data): DocumentFileDTOInterface
     {
-        return match (DocumentFileType::tryFrom($data['type'])) {
+        $documentFileType = isset($data['type']) ? DocumentFileType::tryFrom($data['type']) : DocumentFileType::EXTERNAL;
+        return match ($documentFileType) {
             DocumentFileType::EXTERNAL => new ExternalDocumentFileDTO($data),
             DocumentFileType::THIRD_PLATFORM => new ThirdPlatformDocumentFileDTO($data),
             default => ExceptionBuilder::throw(FlowErrorCode::KnowledgeValidateFailed),
