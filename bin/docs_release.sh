@@ -19,12 +19,15 @@ then
     VERSION="v$VERSION"
 fi
 
+# 获取路径信息（关闭命令回显以避免显示路径）
+set +x  # 暂时关闭命令回显
 # 获取脚本所在目录的绝对路径
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # 获取 docs 目录的绝对路径
 DOCS_DIR="$(cd "${SCRIPT_DIR}/../docs" && pwd)"
 # 获取根目录的绝对路径
 ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+set -x  # 重新开启命令回显
 
 # 加载环境变量 (静默方式)
 set +x  # 暂时关闭命令回显
