@@ -46,6 +46,7 @@ export default function LLMV1() {
 		console.log("🚀 ~ onValuesChange ~ changeValues:", changeValues)
 
 		console.log("form", form.getFieldsValue(true))
+		if (!currentNode) return
 
 		if (changeValues.model_config) {
 			handleModelConfigChange(changeValues)

@@ -1,10 +1,8 @@
-import { IconCheck } from "@tabler/icons-react"
-import brandOpenApi from "@dtyq/magic-flow/dist/common/assets/brand-openai.png"
+import { IconBrandOpenai, IconCheck } from "@tabler/icons-react"
 import { createStyles, cx } from "antd-style"
 
 import { Tooltip } from "antd"
 
-// eslint-disable-next-line react-refresh/only-export-components
 export enum LLMLabelTagType {
 	Text = 1,
 	Icon = 2,
@@ -103,7 +101,11 @@ export default function LLMLabel({
 	return (
 		<Tooltip title={label}>
 			<div className={styles.LLMLabel}>
-				<img src={icon || brandOpenApi} alt="" className={styles.img} />
+				{icon ? (
+					<img src={icon} alt="" className={styles.img} />
+				) : (
+					<IconBrandOpenai size={18} />
+				)}
 				<span className={styles.title}>{label}</span>
 				<ul className={styles.tagList}>
 					{tags.map((tag, index) => (

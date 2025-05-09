@@ -92,7 +92,7 @@ export default function BaseFlow() {
 	const Buttons = useMemo(() => {
 		return (
 			<>
-				<Button ghost loading={false} onClick={consoleFlow}>
+				<Button loading={false} onClick={consoleFlow}>
 					试运行
 				</Button>
 				<Button type="primary" loading={false}>

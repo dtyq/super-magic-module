@@ -13,6 +13,7 @@ use App\Domain\ModelAdmin\Constant\ServiceProviderCategory;
 use App\Domain\ModelAdmin\Constant\Status;
 use App\Domain\ModelAdmin\Entity\ServiceProviderModelsEntity;
 use App\Domain\ModelAdmin\Factory\ServiceProviderModelsEntityFactory;
+use App\Domain\ModelAdmin\Repository\ValueObject\UpdateConsumerModel;
 use App\ErrorCode\ServiceProviderErrorCode;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Infrastructure\Util\IdGenerator\IdGenerator;
@@ -418,14 +419,22 @@ class ServiceProviderModelsRepository extends AbstractModelRepository
         $this->serviceProviderModelsModel::query()->whereIn('model_parent_id', $modelParentIds)->where('is_office', true)->delete();
     }
 
-    public function batchUpdateModelsAndOffice(?int $modelParentId, array $entityArray, bool $isOffice): void
+    public function updateOfficeModel(int $id, array $entityArray): void
     {
         unset($entityArray['id'], $entityArray['organization_code'], $entityArray['service_provider_config_id'], $entityArray['status']);
-
         $entityArray['config'] = Json::encode($entityArray['config'] ?: []);
         $entityArray['translate'] = Json::encode($entityArray['translate'] ?: []);
         $entityArray['visible_organizations'] = Json::encode($entityArray['visible_organizations'] ?: []);
-        $this->serviceProviderModelsModel::query()->where('model_parent_id', $modelParentId)->where('is_office', $isOffice)->update($entityArray);
+        $this->serviceProviderModelsModel::query()->where('id', $id)->update($entityArray);
+    }
+
+    public function updateConsumerModel(int $modelParentId, UpdateConsumerModel $updateConsumerModel): void
+    {
+        $modelArray = $updateConsumerModel->toArray();
+        $modelArray['translate'] = Json::encode($modelArray['translate'] ?: []);
+        $modelArray['visible_organizations'] = Json::encode($modelArray['visible_organizations'] ?: []);
+        $this->serviceProviderModelsModel::query()->where('model_parent_id', $modelParentId)
+            ->update($modelArray);
     }
 
     /**

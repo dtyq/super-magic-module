@@ -160,8 +160,8 @@ const TimeTrigger = ({ branchId }: TimeTriggeredProps) => {
 		}
 
 		if (branchConfig) {
-			Object.assign(branch?.config!, changedValues)
-			const currentNodeConfig = nodeConfig[currentNode?.node_id!]
+			Object.assign(branch.config!, changedValues)
+			const currentNodeConfig = nodeConfig[currentNode?.node_id ?? ""]
 			updateNodeConfig({ ...currentNodeConfig })
 		}
 	})

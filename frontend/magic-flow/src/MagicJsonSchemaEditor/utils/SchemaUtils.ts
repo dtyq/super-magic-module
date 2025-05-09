@@ -188,6 +188,39 @@ function getFieldsTitle(data: Record<string, Schema>): string[] {
   return requiredTitle;
 }
 
+/**
+ * 生成唯一ID
+ */
+export const generateUniqueId = (): string => {
+    return Math.floor(Math.random() * 1000000000000000000).toString();
+};
+
+/**
+ * 将普通值转换为表达式组件值
+ * @param value 普通值
+ * @returns 符合InputExpressionValue类型的表达式组件值
+ */
+export const convertToExpressionValue = (value: any): any => {
+    // 处理undefined和null
+    if (value === undefined || value === null) {
+        return null;
+    }
+
+    // 将值转换为字符串
+    const stringValue = String(value);
+
+    return {
+        type: "const",
+        const_value: [
+            {
+                type: "input",
+                uniqueId: generateUniqueId(),
+                value: stringValue
+            }
+        ],
+        expression_value: []
+    };
+};
 
 // 将普通JSON转换为Schema格式
 export const convertJsonToSchema = (json: any): Schema => {
@@ -213,6 +246,18 @@ export const convertJsonToSchema = (json: any): Schema => {
             } else {
                 arraySchema.items = getDefaultSchema(itemType)
             }
+            
+            // 为数组的每个元素创建对应的属性
+            arraySchema.properties = {}
+            json.forEach((item, index) => {
+                if (typeof item === "object" && item !== null) {
+                    arraySchema.properties![index.toString()] = convertJsonToSchema(item)
+                } else {
+                    const schema = getDefaultSchema(typeof item)
+                    schema.value = convertToExpressionValue(item)
+                    arraySchema.properties![index.toString()] = schema
+                }
+            })
         }
 
         return arraySchema
@@ -232,10 +277,9 @@ export const convertJsonToSchema = (json: any): Schema => {
 
     // 处理基本类型
     const type = typeof json
-    // return getDefaultSchema(
-    //     type === "number" ? (Number.isInteger(json) ? "integer" : "number") : type,
-    // )
-    return getDefaultSchema(type)
+    const schema = getDefaultSchema(type)
+    schema.value = convertToExpressionValue(json)
+    return schema
 }
 
 // 判断是否为Schema格式
@@ -248,3 +292,19 @@ export const isSchemaFormat = (json: any): boolean => {
         (json.properties !== undefined || json.items !== undefined)
     )
 }
+
+/**
+ * 判断字段是否可以编辑（更改类型或名称）
+ * @param parentField 父级字段对象
+ * @returns 是否可编辑
+ */
+export const canEditField = (parentField: Schema | null): boolean => {
+    
+  // 如果父级是数组类型且已定义items，则不允许编辑
+  if (parentField && parentField.type === 'array' && parentField.items) {
+    return false;
+  }
+  
+  // 其他情况下都可以编辑
+  return true;
+};

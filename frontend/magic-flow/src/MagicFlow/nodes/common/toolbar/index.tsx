@@ -41,6 +41,7 @@ export default function ToolbarComponent({ id, showCopy = true }: ToolbarCompone
 						okButtonProps={{ danger: true }}
 						okText={i18next.t("common.confirm", { ns: "magicFlow" })}
 						cancelText={i18next.t("common.cancel", { ns: "magicFlow" })}
+						rootClassName={styles.popconfirm}
 					>
 						{/* @ts-ignore */}
 						<Button type="link" ref={trashRef} className={styles.deleteBtn}>
@@ -68,6 +69,7 @@ export default function ToolbarComponent({ id, showCopy = true }: ToolbarCompone
 	const EnterKey = useKeyPress(["Enter"])
 
 	useUpdateEffect(() => {
+		console.log(DeleteKey, selectedNodeId, EnterKey, isPopconfirmVisible)
 		if (DeleteKey && selectedNodeId) {
 			// 只在未打开确认对话框的情况下点击删除按钮
 			trashRef?.current?.click()

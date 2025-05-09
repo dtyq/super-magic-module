@@ -11,9 +11,8 @@ import { KnowledgeApi } from "@/apis"
 import { knowledgeType } from "@/opensource/pages/vectorKnowledge/constant"
 import { VectorKnowledge } from "@/types/flow"
 import { useMemoizedFn } from "ahooks"
-import type { FormInstance } from "antd"
 
-export default function useKnowledgeDatabases(form: FormInstance) {
+export default function useKnowledgeDatabases() {
 	const { useableTeamshareDatabase } = useFlowStore()
 
 	const { currentNode } = useCurrentNode()

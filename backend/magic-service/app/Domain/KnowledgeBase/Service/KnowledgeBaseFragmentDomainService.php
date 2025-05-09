@@ -11,6 +11,7 @@ use App\Domain\KnowledgeBase\Entity\KnowledgeBaseDocumentEntity;
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseEntity;
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseFragmentEntity;
 use App\Domain\KnowledgeBase\Entity\ValueObject\FragmentConfig;
+use App\Domain\KnowledgeBase\Entity\ValueObject\FragmentMode;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeBaseDataIsolation;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeSyncStatus;
 use App\Domain\KnowledgeBase\Entity\ValueObject\Query\KnowledgeBaseFragmentQuery;
@@ -161,8 +162,11 @@ readonly class KnowledgeBaseFragmentDomainService
      */
     public function processFragmentsByContent(KnowledgeBaseDataIsolation $dataIsolation, string $content, FragmentConfig $fragmentConfig): array
     {
-        // todo 目前只有默认分段，后续要补充父子分段逻辑
-        $selectedFragmentConfig = $fragmentConfig->getNormal();
+        $selectedFragmentConfig = match ($fragmentConfig->getMode()) {
+            FragmentMode::NORMAL => $fragmentConfig->getNormal(),
+            FragmentMode::PARENT_CHILD => $fragmentConfig->getParentChild(),
+            default => ExceptionBuilder::throw(FlowErrorCode::KnowledgeValidateFailed),
+        };
         $preprocessRule = $selectedFragmentConfig->getTextPreprocessRule();
         // 先进行预处理
         // 需要过滤REPLACE_WHITESPACE规则，REPLACE_WHITESPACE规则在分段后进行处理
@@ -170,11 +174,12 @@ readonly class KnowledgeBaseFragmentDomainService
         $content = TextPreprocessUtil::preprocess($filterPreprocessRule, $content);
 
         // 再进行分段
-        $normalFragmentConfig = $fragmentConfig->getNormal();
+        // 处理转义的分隔符
+        $separator = stripcslashes($selectedFragmentConfig->getSegmentRule()->getSeparator());
         $splitter = new TokenTextSplitter(
-            chunkSize: $normalFragmentConfig->getSegmentRule()->getChunkSize(),
-            chunkOverlap: $normalFragmentConfig->getSegmentRule()->getChunkOverlap(),
-            fixedSeparator: $normalFragmentConfig->getSegmentRule()->getSeparator(),
+            chunkSize: $selectedFragmentConfig->getSegmentRule()->getChunkSize(),
+            chunkOverlap: $selectedFragmentConfig->getSegmentRule()->getChunkOverlap(),
+            fixedSeparator: $separator,
             preserveSeparator: true,
         );
 

@@ -37,7 +37,7 @@ export default function SaveDraftButton({
 		const shadowedFlow = shadowFlow(latestFlow!)
 		if (!latestFlow) return
 
-		const flowId = shadowedFlow.code || latestFlow?.id!
+		const flowId = (shadowedFlow.code || latestFlow?.id) ?? ""
 
 		const requestParams = draft
 			? {
