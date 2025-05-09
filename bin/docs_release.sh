@@ -4,7 +4,7 @@ set -x
 
 if (( "$#" != 1 ))
 then
-    echo "标签必须提供 / Tag has to be provided"
+    echo "Tag has to be provided"
 
     exit 1
 fi
@@ -32,7 +32,7 @@ set -x  # 重新开启命令回显
 # 加载环境变量 (静默方式)
 set +x  # 暂时关闭命令回显
 if [ -f "${ROOT_DIR}/.env" ]; then
-    echo "正在加载环境变量... / Loading environment variables..."
+    echo "Loading environment variables..."
     source "${ROOT_DIR}/.env"
 fi
 set -x  # 重新开启命令回显
@@ -45,16 +45,16 @@ fi
 REMOTE_URL="${GIT_REPO_URL}/magic-docs.git"
 
 # 添加确认环节，防止误发布
-echo "准备发布到远程仓库 / Preparing to publish to remote repository: ${REMOTE_URL}"
+echo "Preparing to publish to remote repository: ${REMOTE_URL}"
 if [[ $REMOTE_URL == *"github"* ]]; then
-    echo "🔔 提示 / Note: 正在向GitHub仓库发布代码 / Publishing code to GitHub repository"
+    echo "🔔 Note: Publishing code to GitHub repository"
 elif [[ $REMOTE_URL == *"gitlab"* ]]; then
-    echo "🔔 提示 / Note: 正在向GitLab仓库发布代码 / Publishing code to GitLab repository"
+    echo "🔔 Note: Publishing code to GitLab repository"
 fi
 
-read -p "是否确认继续? / Do you want to continue? (y/n): " confirm
+read -p "Do you want to continue? (y/n): " confirm
 if [[ $confirm != "y" && $confirm != "Y" ]]; then
-    echo "发布已取消 / Publishing cancelled"
+    echo "Publishing cancelled"
     exit 0
 fi
 
@@ -70,28 +70,28 @@ function remote()
 }
 
 # 更健壮地处理git pull操作
-echo "检查远程分支状态... / Checking remote branch status..."
+echo "Checking remote branch status..."
 if git ls-remote --heads origin $CURRENT_BRANCH | grep -q $CURRENT_BRANCH; then
-    echo "远程分支存在，正在拉取... / Remote branch exists, pulling now..."
+    echo "Remote branch exists, pulling now..."
     git pull origin $CURRENT_BRANCH
 else
-    echo "远程分支不存在，跳过拉取操作 / Remote branch does not exist, skipping pull operation"
+    echo "Remote branch does not exist, skipping pull operation"
 fi
 
 # 初始化远程连接
-echo "初始化远程连接... / Initializing remote connection..."
+echo "Initializing remote connection..."
 remote magic-docs $REMOTE_URL
 
 # 执行分割并推送
-echo "执行分割并推送... / Splitting and pushing..."
+echo "Splitting and pushing..."
 split "docs" magic-docs
 
 # 打标签并推送标签
-echo "打标签并推送标签... / Tagging and pushing tag..."
+echo "Tagging and pushing tag..."
 git fetch magic-docs || true
 git tag -a $VERSION -m "Release $VERSION" $CURRENT_BRANCH
 git push magic-docs $VERSION
 
 TIME=$(echo "$(date +%s) - $NOW" | bc)
 
-printf "执行时间 / Execution time: %f 秒 / seconds" $TIME
+printf "Execution time: %f seconds" $TIME
