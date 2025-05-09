@@ -7,7 +7,7 @@ declare(strict_types=1);
 use App\Interfaces\Flow\Facade\Open\MagicFlowOpenApi;
 use Hyperf\HttpServer\Router\Router;
 
-Router::addGroup('/open-apis/v1', function () {
+Router::addGroup('/api/v1/open-api', function () {
     // flow api
     Router::post('/chat', [MagicFlowOpenApi::class, 'chat']);
     Router::post('/chat/completions', [MagicFlowOpenApi::class, 'chatCompletions']);
