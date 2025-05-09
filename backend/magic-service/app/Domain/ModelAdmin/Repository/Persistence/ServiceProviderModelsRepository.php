@@ -420,6 +420,7 @@ class ServiceProviderModelsRepository extends AbstractModelRepository
 
     public function updateOfficeModel(int $id, array $entityArray): void
     {
+        unset($entityArray['id'], $entityArray['organization_code'], $entityArray['service_provider_config_id'], $entityArray['status']);
         $entityArray['config'] = Json::encode($entityArray['config'] ?: []);
         $entityArray['translate'] = Json::encode($entityArray['translate'] ?: []);
         $entityArray['visible_organizations'] = Json::encode($entityArray['visible_organizations'] ?: []);
