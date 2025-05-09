@@ -70,7 +70,7 @@ readonly class KnowledgeBaseDocumentSyncSubscriber implements ListenerInterface
                 $documentEntity->setSyncStatus(KnowledgeSyncStatus::Syncing->value);
                 $documentEntity = $knowledgeBaseDocumentDomainService->update($dataIsolation, $knowledge, $documentEntity);
                 $logger->info('正在解析文件，文件名：' . $file->getName());
-                $content = $fileParser->parse($file->getFileLink()->getUrl());
+                $content = $fileParser->parse($file->getFileLink()->getUrl(), true);
 
                 $logger->info('解析文件完成，正在文件分段，文件名：' . $file->getName());
                 $splitText = $knowledgeBaseFragmentDomainService->processFragmentsByContent($dataIsolation, $content, $documentEntity->getFragmentConfig());

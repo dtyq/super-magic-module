@@ -30,10 +30,10 @@ class FileParser
     /**
      * @throws SSRFException
      */
-    public function parse(string $fileUrl): string
+    public function parse(string $fileUrl, bool $textPreprocess = false): string
     {
         // 使用md5作为缓存key
-        $cacheKey = 'file_parser:parse_' . md5($fileUrl);
+        $cacheKey = 'file_parser:parse_' . md5($fileUrl) . '_' . ($textPreprocess ? 1 : 0);
         // 检查缓存,如果存在则返回缓存内容
         $cachedContent = $this->redis->get($cacheKey);
         if ($cachedContent !== false) {
@@ -68,7 +68,7 @@ class FileParser
             };
             $res = $interface->parse($tempFile, $fileUrl, $extension);
             // 如果是csv、xlsx、xls文件，需要进行额外处理
-            if (in_array($extension, ['csv', 'xlsx', 'xls'])) {
+            if ($textPreprocess && in_array($extension, ['csv', 'xlsx', 'xls'])) {
                 $res = TextPreprocessUtil::preprocess([TextPreprocessRule::EXCEL_HEADER_CONCAT], $res);
             }
 

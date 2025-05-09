@@ -86,7 +86,7 @@ class KnowledgeBaseFragmentAppService extends AbstractKnowledgeAppService
         if (empty($fileUrl)) {
             $this->logger->warning('文件不存在');
         }
-        $content = $this->fileParser->parse($fileUrl?->getUrl() ?? '');
+        $content = $this->fileParser->parse($fileUrl?->getUrl() ?? '', true);
         $fragmentContents = $this->knowledgeBaseFragmentDomainService->processFragmentsByContent($dataIsolation, $content, $fragmentConfig);
         return KnowledgeBaseFragmentEntity::fromFragmentContents($fragmentContents);
     }
