@@ -274,14 +274,56 @@ class KnowledgeBaseApiTest extends HttpTestCase
     {
         $document = $this->createDocument();
 
+        $newFragmentConfig = [
+            'mode' => 1,
+            'normal' => [
+                'text_preprocess_rule' => [
+                    1,
+                ],
+                'segment_rule' => [
+                    'separator' => '**',
+                    'chunk_size' => 200,
+                    'chunk_overlap' => 20,
+                ],
+            ],
+            'parent_child' => null,
+        ];
+        $newRetrieveConfig = [
+            'search_method' => 'semantic_search',
+            'top_k' => 3,
+            'score_threshold' => 0.5,
+            'score_threshold_enabled' => false,
+            'reranking_mode' => 'weighted_score',
+            'reranking_enable' => false,
+            'weights' => [
+                'graph_setting' => [
+                    'timeout' => 5,
+                    'max_depth' => 2,
+                    'retry_count' => 3,
+                    'relation_weight' => 0.5,
+                    'include_properties' => true,
+                ],
+                'vector_setting' => [
+                    'vector_weight' => 1,
+                    'embedding_model_name' => '',
+                    'embedding_provider_name' => '',
+                ],
+                'keyword_setting' => [
+                    'keyword_weight' => 0,
+                ],
+            ],
+            'reranking_model' => [
+                'reranking_model_name' => '',
+                'reranking_provider_name' => '',
+            ],
+        ];
+
         $updateData = [
             'name' => '更新后的文档名称',
             'enabled' => false,
             'doc_metadata' => ['source' => 'updated'],
-            'fragment_config' => ['chunk_size' => 800],
-            'embedding_config' => ['model' => 'test-embedding-v2'],
-            'vector_db_config' => ['engine' => 'test-db-v2'],
-            'retrieve_config' => [],
+            'fragment_config' => $newFragmentConfig,
+            'retrieve_config' => $newRetrieveConfig,
         ];
 
         $res = $this->put(
@@ -295,6 +337,8 @@ class KnowledgeBaseApiTest extends HttpTestCase
         $this->assertSame($updateData['name'], $res['data']['name']);
         $this->assertSame($updateData['enabled'], $res['data']['enabled']);
         $this->assertSame($updateData['doc_metadata'], $res['data']['doc_metadata']);
+        $this->assertSame($newFragmentConfig, $res['data']['fragment_config']);
+        $this->assertSame($newRetrieveConfig, $res['data']['retrieve_config']);
     }
 
     public function testGetDocumentDetail()

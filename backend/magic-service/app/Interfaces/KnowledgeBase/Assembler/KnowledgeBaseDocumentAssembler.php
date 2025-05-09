@@ -39,6 +39,12 @@ class KnowledgeBaseDocumentAssembler
     {
         $data = $dto->toArray();
         $data['updated_uid'] = $auth->getId();
+        if (is_null($data['fragment_config'])) {
+            unset($data['fragment_config']);
+        }
+        if (is_null($data['retrieve_config'])) {
+            unset($data['retrieve_config']);
+        }
         return new KnowledgeBaseDocumentEntity($data);
     }
 }

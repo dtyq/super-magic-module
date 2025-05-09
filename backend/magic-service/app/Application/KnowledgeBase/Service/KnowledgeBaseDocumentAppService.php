@@ -36,9 +36,11 @@ class KnowledgeBaseDocumentAppService extends AbstractKnowledgeAppService
         $documentEntity->setUpdatedUid($dataIsolation->getCurrentUserId());
         $knowledgeBaseEntity = $this->knowledgeBaseDomainService->show($dataIsolation, $documentEntity->getKnowledgeBaseCode());
 
-        // 文档配置继承知识库
-        $documentEntity->setFragmentConfig($knowledgeBaseEntity->getFragmentConfig());
-        $documentEntity->setRetrieveConfig($knowledgeBaseEntity->getRetrieveConfig());
+        // 文档配置继承知识库(如果没有对应设置)
+        empty($knowledgeBaseEntity->getFragmentConfig()) && $documentEntity->setFragmentConfig($knowledgeBaseEntity->getFragmentConfig());
+        empty($documentEntity->getRetrieveConfig()) && $documentEntity->setRetrieveConfig($knowledgeBaseEntity->getRetrieveConfig());
+
+        // 嵌入配置不可编辑
         $documentEntity->setEmbeddingConfig($knowledgeBaseEntity->getEmbeddingConfig());
         // 设置默认的嵌入模型和向量数据库
         $documentEntity->setEmbeddingModel($knowledgeBaseEntity->getModel());
