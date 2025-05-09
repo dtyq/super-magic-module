@@ -1,17 +1,24 @@
 #!/usr/bin/env bash
 set -e
+set -x
 
+# 获取路径信息（关闭命令回显以避免显示路径）
+set +x  # 暂时关闭命令回显
 # 获取脚本所在目录的绝对路径
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # 获取 service 目录的绝对路径
 SERVICE_DIR="$(cd "${SCRIPT_DIR}/../backend/magic-service" && pwd)"
 # 获取根目录的绝对路径
 ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+set -x  # 重新开启命令回显
 
-# 加载环境变量
+# 加载环境变量（静默方式）
+set +x  # 暂时关闭命令回显
 if [ -f "${ROOT_DIR}/.env" ]; then
-    export $(grep -v '^#' "${ROOT_DIR}/.env" | xargs)
+    echo "正在加载环境变量... / Loading environment variables..."
+    source "${ROOT_DIR}/.env"
 fi
+set -x  # 重新开启命令回显
 
 # 使用环境变量获取Git仓库URL，默认使用GitHub
 if [ -z "${GIT_REPO_URL}" ]; then
@@ -26,6 +33,8 @@ if [[ $REMOTE_URL == *"github"* ]]; then
     IS_GITHUB=true
 fi
 
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+
 # 获取版本号或分支名
 if (( "$#" == 1 )); then
     VERSION=$1
@@ -34,14 +43,15 @@ if (( "$#" == 1 )); then
         VERSION="v$VERSION"
     fi
     USE_BRANCH=false
+    TARGET_BRANCH=$CURRENT_BRANCH
 else
     if [[ $IS_GITHUB == false ]]; then
         # 如果不是GitHub且未提供版本号，则使用当前分支
-        CURRENT_BRANCH=$(cd "${SERVICE_DIR}" && git rev-parse --abbrev-ref HEAD)
-        echo "未提供版本号，将使用当前分支: ${CURRENT_BRANCH}"
+        echo "未提供版本号，将使用当前分支 / No version provided, using current branch: ${CURRENT_BRANCH}"
         USE_BRANCH=true
+        TARGET_BRANCH=$CURRENT_BRANCH
     else
-        echo "Tag has to be provided"
+        echo "标签必须提供 / Tag has to be provided"
         exit 1
     fi
 fi
@@ -49,93 +59,61 @@ fi
 NOW=$(date +%s)
 
 # 添加确认环节，防止误发布
-echo "准备发布到远程仓库: ${REMOTE_URL}"
+echo "准备发布到远程仓库 / Preparing to publish to remote repository: ${REMOTE_URL}"
 if [[ $IS_GITHUB == true ]]; then
-    echo "🔔 提示: 正在向GitHub仓库发布代码"
-    echo "🔔 将使用版本: ${VERSION}"
+    echo "🔔 提示 / Note: 正在向GitHub仓库发布代码 / Publishing code to GitHub repository"
+    echo "🔔 将使用版本 / Using version: ${VERSION}"
 else
-    echo "🔔 提示: 正在向GitLab仓库发布代码"
+    echo "🔔 提示 / Note: 正在向GitLab仓库发布代码 / Publishing code to GitLab repository"
     if [[ $USE_BRANCH == true ]]; then
-        echo "🔔 将使用分支: ${CURRENT_BRANCH}"
+        echo "🔔 将使用分支 / Using branch: ${CURRENT_BRANCH}"
     else
-        echo "🔔 将使用版本: ${VERSION}"
+        echo "🔔 将使用版本 / Using version: ${VERSION}"
     fi
 fi
 
-read -p "是否确认继续? (y/n): " confirm
+read -p "是否确认继续? / Do you want to continue? (y/n): " confirm
 if [[ $confirm != "y" && $confirm != "Y" ]]; then
-    echo "发布已取消"
+    echo "发布已取消 / Publishing cancelled"
     exit 0
 fi
 
-echo ""
-echo ""
-echo "Cloning magic-service";
-TMP_DIR="/tmp/magic-split"
+function split()
+{
+    SHA1=`./bin/splitsh-lite --prefix=$1`
+    git push $2 "$SHA1:refs/heads/$TARGET_BRANCH" -f
+}
 
-rm -rf $TMP_DIR;
-mkdir $TMP_DIR;
+function remote()
+{
+    git remote add $1 $2 || true
+}
 
-(
-    cd $TMP_DIR;
-    git clone $REMOTE_URL;
-    cd magic-service;
-    
-    # 获取默认分支名
-    DEFAULT_BRANCH=$(git remote show origin | grep 'HEAD branch' | cut -d' ' -f5);
-    
-    if [[ $USE_BRANCH == true ]]; then
-        # 如果远程分支不存在，则基于默认分支创建新分支
-        git checkout $DEFAULT_BRANCH
-        git fetch origin $CURRENT_BRANCH || true
-        if ! git branch -r | grep -q "origin/${CURRENT_BRANCH}$"; then
-            echo "远程分支 ${CURRENT_BRANCH} 不存在，将创建新分支"
-            git checkout -b $CURRENT_BRANCH
-        else
-            git checkout $CURRENT_BRANCH
-        fi
-        TARGET_BRANCH=$CURRENT_BRANCH
-    else
-        git checkout $DEFAULT_BRANCH
-        TARGET_BRANCH=$DEFAULT_BRANCH
-    fi
+# 更健壮地处理git pull操作
+echo "检查远程分支状态... / Checking remote branch status..."
+if git ls-remote --heads origin $CURRENT_BRANCH | grep -q $CURRENT_BRANCH; then
+    echo "远程分支存在，正在拉取... / Remote branch exists, pulling now..."
+    git pull origin $CURRENT_BRANCH
+else
+    echo "远程分支不存在，跳过拉取操作 / Remote branch does not exist, skipping pull operation"
+fi
 
-    # 复制 service 目录下的所有文件（包括隐藏文件）
-    cp -a "${SERVICE_DIR}"/* .
-    cp -a "${SERVICE_DIR}"/.gitignore ./
-    cp -R "${SERVICE_DIR}"/.github ./
-    cp -R "${SERVICE_DIR}"/.php-cs-fixer.php ./
-    cp -R "${SERVICE_DIR}"/.dockerignore ./
-    cp -a "${SCRIPT_DIR}"/magic-service/Dockerfile.github ./
-    # 判断是否是GitHub才执行这一步
-    if [[ $IS_GITHUB == true ]]; then
-        cp -a "${SCRIPT_DIR}"/magic-service/start.sh ./
-    fi
+# 初始化远程连接
+echo "初始化远程连接... / Initializing remote connection..."
+remote magic-service $REMOTE_URL
 
-    # 添加并提交更改
-    git add .
-    if [[ $USE_BRANCH == true ]]; then
-        git commit -m "chore: update service files for branch ${CURRENT_BRANCH}"
-    else
-        git commit -m "chore: update service files for version ${VERSION}"
-    fi
+# 执行分割并推送
+echo "执行分割并推送... / Splitting and pushing..."
+split "backend/magic-service" magic-service
 
-    # 根据不同情况推送代码
-    if [[ $USE_BRANCH == true ]]; then
-        echo "Pushing to branch ${TARGET_BRANCH}"
-        git push origin --delete $TARGET_BRANCH || true
-        git push origin $TARGET_BRANCH
-    else
-        if [[ $(git log --pretty="%d" -n 1 | grep tag --count) -eq 0 ]]; then
-            echo "Releasing magic-service"
-            git tag $VERSION
-            git push origin --delete $TARGET_BRANCH || true
-            git push origin $TARGET_BRANCH
-            git push origin --tags
-        fi
-    fi
-)
+# 打标签并推送标签
+if [[ $USE_BRANCH == false ]]; then
+    echo "打标签并推送标签... / Tagging and pushing tag..."
+    git fetch magic-service || true
+    git tag -a $VERSION -m "Release $VERSION" $CURRENT_BRANCH
+    git push magic-service $VERSION
+fi
 
 TIME=$(echo "$(date +%s) - $NOW" | bc)
 
-printf "Execution time: %f seconds" $TIME
+printf "执行时间 / Execution time: %f 秒 / seconds" $TIME

@@ -1,15 +1,17 @@
 #!/usr/bin/env bash
 set -e
+set -x
 
 if (( "$#" != 1 ))
 then
-    echo "Tag has to be provided"
+    echo "标签必须提供 / Tag has to be provided"
 
     exit 1
 fi
 
 NOW=$(date +%s)
 VERSION=$1
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 
 # Always prepend with "v"
 if [[ $VERSION != v*  ]]
@@ -17,17 +19,23 @@ then
     VERSION="v$VERSION"
 fi
 
+# 获取路径信息（关闭命令回显以避免显示路径）
+set +x  # 暂时关闭命令回显
 # 获取脚本所在目录的绝对路径
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-# 获取 service 目录的绝对路径
-SERVICE_DIR="$(cd "${SCRIPT_DIR}/../docs" && pwd)"
+# 获取 docs 目录的绝对路径
+DOCS_DIR="$(cd "${SCRIPT_DIR}/../docs" && pwd)"
 # 获取根目录的绝对路径
 ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+set -x  # 重新开启命令回显
 
-# 加载环境变量
+# 加载环境变量 (静默方式)
+set +x  # 暂时关闭命令回显
 if [ -f "${ROOT_DIR}/.env" ]; then
-    export $(grep -v '^#' "${ROOT_DIR}/.env" | xargs)
+    echo "正在加载环境变量... / Loading environment variables..."
+    source "${ROOT_DIR}/.env"
 fi
+set -x  # 重新开启命令回显
 
 # 使用环境变量获取Git仓库URL，默认使用GitHub
 if [ -z "${GIT_REPO_URL}" ]; then
@@ -37,61 +45,53 @@ fi
 REMOTE_URL="${GIT_REPO_URL}/magic-docs.git"
 
 # 添加确认环节，防止误发布
-echo "准备发布到远程仓库: ${REMOTE_URL}"
+echo "准备发布到远程仓库 / Preparing to publish to remote repository: ${REMOTE_URL}"
 if [[ $REMOTE_URL == *"github"* ]]; then
-    echo "🔔 提示: 正在向GitHub仓库发布代码"
+    echo "🔔 提示 / Note: 正在向GitHub仓库发布代码 / Publishing code to GitHub repository"
 elif [[ $REMOTE_URL == *"gitlab"* ]]; then
-    echo "🔔 提示: 正在向GitLab仓库发布代码"
+    echo "🔔 提示 / Note: 正在向GitLab仓库发布代码 / Publishing code to GitLab repository"
 fi
 
-read -p "是否确认继续? (y/n): " confirm
+read -p "是否确认继续? / Do you want to continue? (y/n): " confirm
 if [[ $confirm != "y" && $confirm != "Y" ]]; then
-    echo "发布已取消"
+    echo "发布已取消 / Publishing cancelled"
     exit 0
 fi
 
-echo ""
-echo ""
-echo "Cloning magic-docs";
-TMP_DIR="/tmp/magic-split"
+function split()
+{
+    SHA1=`./bin/splitsh-lite --prefix=$1`
+    git push $2 "$SHA1:refs/heads/$CURRENT_BRANCH" -f
+}
 
-rm -rf $TMP_DIR;
-mkdir $TMP_DIR;
+function remote()
+{
+    git remote add $1 $2 || true
+}
 
-(
-    cd $TMP_DIR;
-    git clone $REMOTE_URL;
-    cd magic-docs;
-    # 获取默认分支名
-    DEFAULT_BRANCH=$(git remote show origin | grep 'HEAD branch' | cut -d' ' -f5);
-    git checkout $DEFAULT_BRANCH;
+# 更健壮地处理git pull操作
+echo "检查远程分支状态... / Checking remote branch status..."
+if git ls-remote --heads origin $CURRENT_BRANCH | grep -q $CURRENT_BRANCH; then
+    echo "远程分支存在，正在拉取... / Remote branch exists, pulling now..."
+    git pull origin $CURRENT_BRANCH
+else
+    echo "远程分支不存在，跳过拉取操作 / Remote branch does not exist, skipping pull operation"
+fi
 
-    # 备份原有的 Dockerfile
-    # if [ -f Dockerfile ]; then
-    #     mv Dockerfile Dockerfile.bak
-    # fi
+# 初始化远程连接
+echo "初始化远程连接... / Initializing remote connection..."
+remote magic-docs $REMOTE_URL
 
-    # 复制 service 目录下的所有文件（包括隐藏文件）
-    cp -a "${SERVICE_DIR}"/* .
-    cp -a "${SERVICE_DIR}"/.gitignore .
-    cp -a "${SERVICE_DIR}"/.vitepress .
-    # 还原原有的 Dockerfile
-    # if [ -f Dockerfile.bak ]; then
-    #     mv Dockerfile.bak Dockerfile
-    # fi
+# 执行分割并推送
+echo "执行分割并推送... / Splitting and pushing..."
+split "docs" magic-docs
 
-    # 添加并提交更改
-    git add .
-    git commit -m "chore: update docs files for version ${VERSION}"
-
-    if [[ $(git log --pretty="%d" -n 1 | grep tag --count) -eq 0 ]]; then
-        echo "Releasing magic-docs"
-        git tag $VERSION
-        git push origin $DEFAULT_BRANCH
-        git push origin --tags
-    fi
-)
+# 打标签并推送标签
+echo "打标签并推送标签... / Tagging and pushing tag..."
+git fetch magic-docs || true
+git tag -a $VERSION -m "Release $VERSION" $CURRENT_BRANCH
+git push magic-docs $VERSION
 
 TIME=$(echo "$(date +%s) - $NOW" | bc)
 
-printf "Execution time: %f seconds" $TIME
+printf "执行时间 / Execution time: %f 秒 / seconds" $TIME
