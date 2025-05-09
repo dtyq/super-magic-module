@@ -11,7 +11,6 @@ import { FlowRouteType } from "@/types/flow"
 import { createStyles } from "antd-style"
 import { useTranslation } from "react-i18next"
 import { replaceRouteParams } from "@/utils/route"
-import { isCommercial } from "@/utils/env"
 
 const useStyles = createStyles(({ css }) => {
 	return {

@@ -1,4 +1,3 @@
-
 import _ from 'lodash';
 import { makeAutoObservable } from 'mobx';
 import { AppendPosition, JSONPATH_JOIN_CHAR, SchemaValueSplitor } from '../constants';
@@ -107,23 +106,49 @@ export default class SchemaDescription {
   }): void {
     const clonedSchema = _.clone(this.schema);
     const propertiesData = _.get(this.schema, keys);
-    let fieldName = `field_${this.fieldNum++}`;
-    while (typeof propertiesData[fieldName] !== 'undefined') {
+    
+    // 获取父级字段类型
+    const parentKeys = getParentKey(keys);
+    const parentField = parentKeys.length
+      ? _.get(this.schema, parentKeys)
+      : this.schema;
+    
+    // 根据父级类型确定fieldName
+    let fieldName: string;
+    if (parentField?.type === FormItemType.Array) {
+      // 如果父级是数组，fieldName为数字索引
+      fieldName = `${Object.keys(propertiesData || {}).length}`;
+    } else {
+      // 非数组类型，使用原有的命名逻辑
       fieldName = `field_${this.fieldNum++}`;
+      while (typeof propertiesData[fieldName] !== 'undefined') {
+        fieldName = `field_${this.fieldNum++}`;
+      }
     }
+    
+    // 根据父级字段类型判断添加什么类型的字段
+    let fieldType = 'string'; // 默认为字符串类型
+    if (parentField?.type === FormItemType.Array) {
+      // 如果父级是数组，则添加的字段类型与数组项类型一致
+      const itemsType = parentField.items?.type;
+      if (itemsType) {
+        fieldType = itemsType;
+      }
+    }
+    
     let newPropertiesData: Record<string, Schema> = {};
     if (name) {
       // eslint-disable-next-line guard-for-in
       for (const i in propertiesData) {
         newPropertiesData[i] = propertiesData[i];
         if (i === name) {
-          newPropertiesData[fieldName] = getDefaultSchema('string');
+          newPropertiesData[fieldName] = getDefaultSchema(fieldType);
         }
       }
     } else {
-		newPropertiesData = _.assign(propertiesData, {
-			[fieldName]: getDefaultSchema('string'),
-			});
+      newPropertiesData = _.assign(propertiesData, {
+        [fieldName]: getDefaultSchema(fieldType),
+      });
     }
     // 默认是添加到下一个节点
     let newSchema = _.update(clonedSchema, keys, () => newPropertiesData);
@@ -137,16 +162,18 @@ export default class SchemaDescription {
   }
 
   changeType({ keys, value, itemsType }: { keys: string[]; value: string; itemsType?: string }): void {
-    const parentKeys: string[] = getParentKey(keys);
-    const parentData = parentKeys.length
+    // 获取父级字段
+    const parentKeys = getParentKey(keys);
+    const parentField = parentKeys.length
       ? _.get(this.schema, parentKeys)
       : this.schema;
-    const isSameItemsType = itemsType === parentData?.items?.type
-    if (parentData.type === value && isSameItemsType) {
+
+    const isSameItemsType = itemsType === parentField?.items?.type
+    if (parentField.type === value && isSameItemsType) {
       return;
     }
     const clonedSchema = _.clone(this.schema);
-    const extendsProps = _.pick(parentData, ['description', 'title'])
+    const extendsProps = _.pick(parentField, ['description', 'title'])
 
     const newParentDataItem: Schema = {
       ...getDefaultSchema(value, itemsType),
@@ -164,15 +191,15 @@ export default class SchemaDescription {
     keys,
     name,
     position,
-	fields // 导入时才需要传的内容
+    fields // 导入时才需要传的内容
   }: {
     keys: string[];
     name?: string;
     position: AppendPosition;
-	fields?: Schema
+    fields?: Schema
   }): void {
-	if(!fields) return
-	const cloneFields = _.cloneDeep(fields)
+    if(!fields) return
+    const cloneFields = _.cloneDeep(fields)
     const clonedSchema = _.clone(this.schema);
     const propertiesData = _.get(this.schema, keys);
     let newPropertiesData: Record<string, Schema> = {};
@@ -182,17 +209,19 @@ export default class SchemaDescription {
       for (const i in propertiesData) {
         newPropertiesData[i] = propertiesData[i];
         if (i === name) {
-			Object.entries(cloneFields?.properties || {}).forEach(([key, schema]) => {
-				newPropertiesData[key] = schema
-			})
+          // 导入所有属性
+          Object.entries(cloneFields?.properties || {}).forEach(([key, schema]) => {
+            newPropertiesData[key] = schema;
+          });
         }
       }
     } else {
-		/** 处理导入的路径 */
-		newPropertiesData = _.assign(propertiesData, {
-			...cloneFields.properties
-		})
+      // 直接导入所有属性
+      newPropertiesData = _.assign(propertiesData, {
+        ...cloneFields.properties
+      });
     }
+    
     // 默认是添加到下一个节点
     let newSchema = _.update(clonedSchema, keys, () => newPropertiesData);
     // 如果指定添加到尾部时的处理路径
@@ -201,7 +230,7 @@ export default class SchemaDescription {
         _.assign(n, newPropertiesData),
       );
     }
-	this.schema = newSchema
+    this.schema = newSchema
   }
 
   enableRequire({
@@ -241,11 +270,14 @@ export default class SchemaDescription {
     name: string;
     value: string;
   }): void {
-    let clonedSchema = _.clone(this.schema);
+    // 获取父级字段
     const parentKeys = getParentKey(keys);
-    const parentData =
-      parentKeys.length === 0 ? clonedSchema : _.get(clonedSchema, parentKeys);
-    let requiredData = [].concat(parentData.required || []);
+    const parentField = parentKeys.length
+      ? _.get(this.schema, parentKeys)
+      : this.schema;
+
+    let clonedSchema = _.clone(this.schema);
+    let requiredData = [].concat(parentField.required || []);
     const propertiesData = _.get(clonedSchema, keys);
     const newPropertiesData = {};
 

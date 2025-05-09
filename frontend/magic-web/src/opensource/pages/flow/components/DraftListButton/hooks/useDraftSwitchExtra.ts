@@ -33,9 +33,11 @@ export default function useDraftSwitchExtra({ flow, initDraftList }: UseDraftSwi
 			},
 		}
 
-		await FlowApi.saveFlowDraft(requestParams, flow?.id!)
+		if (!flow?.id) return
 
-		initDraftList?.(flow?.id!)
+		await FlowApi.saveFlowDraft(requestParams, flow.id)
+
+		initDraftList?.(flow.id)
 	})
 
 	return {

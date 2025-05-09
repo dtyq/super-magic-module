@@ -34,7 +34,6 @@ const ToolAddableCard = memo(
 		fontSize14 = false,
 		height = 40,
 		onClick,
-		cardOpen,
 		toolSet,
 		...props
 	}: ToolAddableCardProps) => {

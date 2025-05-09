@@ -53,7 +53,7 @@ export const useSendAgentMessage = () => {
 					"Content-Type": "application/json",
 					authorization: userStore.user.authorization ?? "",
 					"organization-code": magicOrganizationCode ?? "",
-					language
+					language,
 				}
 
 				console.log("发送Agent请求 headers:", headers)

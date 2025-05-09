@@ -38,7 +38,7 @@ export default function DraftListButton({
 
 	const { draftList } = useFlowStore()
 
-	const newId = useMemo(() => flow?.id!, [flow?.id])
+	const newId = useMemo(() => flow?.id ?? "", [flow?.id])
 
 	const onDeleteItem = useMemoizedFn(async (draftId: string) => {
 		await FlowApi.deleteFlowDraft(newId, draftId)
@@ -48,7 +48,7 @@ export default function DraftListButton({
 	})
 
 	const onSwitchDraft = useMemoizedFn((draft: FlowDraft.ListItem) => {
-		if (!hasEditRight(flow?.user_operation!)) return
+		if (!hasEditRight(flow?.user_operation)) return
 		Modal.confirm({
 			title: resolveToString(t("common.rollbackDesc", { ns: "flow" }), {
 				versionName: draft.name,
