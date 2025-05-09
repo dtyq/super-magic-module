@@ -10,7 +10,6 @@ namespace App\Interfaces\Flow\Assembler\Node;
 use App\Domain\Flow\Entity\ValueObject\Node;
 use App\Domain\Flow\Entity\ValueObject\NodeInput;
 use App\Domain\Flow\Entity\ValueObject\NodeOutput;
-use App\Domain\Flow\Entity\ValueObject\NodeType;
 use App\Interfaces\Flow\DTO\Node\NodeDTO;
 use App\Interfaces\Flow\DTO\Node\NodeInputDTO;
 use App\Interfaces\Flow\DTO\Node\NodeOutputDTO;
@@ -60,7 +59,7 @@ class MagicFlowNodeAssembler
 
     public static function createNodeDO(NodeDTO $nodeDTO): Node
     {
-        $node = new Node(NodeType::from($nodeDTO->getNodeType()), $nodeDTO->getNodeVersion());
+        $node = new Node($nodeDTO->getNodeType(), $nodeDTO->getNodeVersion());
         $node->setNodeId($nodeDTO->getNodeId());
         $node->setDebug($nodeDTO->getDebug());
         $node->setName($nodeDTO->getName());
