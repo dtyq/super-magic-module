@@ -45,6 +45,7 @@ use Hyperf\Odin\Contract\Api\Response\ResponseInterface;
 use Hyperf\Odin\Contract\Model\EmbeddingInterface;
 use Hyperf\Odin\Contract\Model\ModelInterface;
 use Hyperf\Odin\Exception\LLMException;
+use Hyperf\Odin\Model\AbstractModel;
 use Hyperf\Odin\Model\AwsBedrockModel;
 use Hyperf\Odin\Tool\Definition\ToolDefinition;
 use Hyperf\Odin\Utils\MessageUtil;
@@ -72,9 +73,12 @@ class LLMAppService extends AbstractLLMAppService
 
         $list = [];
         foreach ($models as $name => $odinModel) {
+            /** @var AbstractModel $model */
+            $model = $odinModel->getModel();
+
             $modelConfigEntity = new ModelConfigEntity();
             // 服务商的接入点
-            $modelConfigEntity->setModel($odinModel->getModel()->getModelName());
+            $modelConfigEntity->setModel($model->getModelName());
             // 模型类型
             $modelConfigEntity->setType($odinModel->getAttributes()->getKey());
             $modelConfigEntity->setName($odinModel->getAttributes()->getLabel() ?: $odinModel->getAttributes()->getName());
@@ -83,7 +87,7 @@ class LLMAppService extends AbstractLLMAppService
             if ($withInfo) {
                 $modelConfigEntity->setInfo([
                     'attributes' => $odinModel->getAttributes()->toArray(),
-                    'options' => $odinModel->getModel()->getModelOptions()->toArray(),
+                    'options' => $model->getModelOptions()->toArray(),
                 ]);
             }
 
