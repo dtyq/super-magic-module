@@ -78,7 +78,7 @@ class KnowledgeBaseAppService extends AbstractKnowledgeAppService
         $modelName = $magicFlowKnowledgeEntity->getModel();
         // 创建知识库前，先对嵌入模型进行连通性测试
         try {
-            $embeddingModel = di(ModelGatewayMapper::class)->getEmbeddingModelProxy($magicFlowKnowledgeEntity->getModel());
+            $embeddingModel = di(ModelGatewayMapper::class)->getEmbeddingModelProxy($magicFlowKnowledgeEntity->getModel(), $dataIsolation->getCurrentOrganizationCode());
             $modelName = $embeddingModel->getModelName();
             $embeddingResult = $embeddingModel->embedding('test', businessParams: ['organization_id' => $dataIsolation->getCurrentOrganizationCode(), 'user_id' => $dataIsolation->getCurrentUserId()]);
             if (count($embeddingResult->getEmbeddings()) !== $embeddingModel->getVectorSize()) {
