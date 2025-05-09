@@ -2,12 +2,13 @@ import { useMemo } from "react"
 import { Flex } from "antd"
 import { cx } from "antd-style"
 import type {
+	AIImagesMessage,
 	ConversationMessage,
 	ConversationMessageSend,
 	RichTextConversationMessage,
 	TextConversationMessage,
 } from "@/types/chat/conversation_message"
-import { ConversationMessageType } from "@/types/chat/conversation_message"
+import { AIImagesDataType, ConversationMessageType } from "@/types/chat/conversation_message"
 import { DomClassName } from "@/const/dom"
 import MessageStore from "@/opensource/stores/chatNew/message"
 import { observer } from "mobx-react-lite"
@@ -16,6 +17,7 @@ import MessageFactory from "../../../MessageFactory"
 import { useStyles } from "./style"
 import MessageHeader from "./MessageHeader"
 import MessageTextRender from "../../../MessageTextRender"
+import ReGenerate from "../../../MessageFactory/components/AiImageBase/componnents/ReGenerate"
 // import EmojiItem from "../EmojiItem"
 
 // import RichText from "../../../MessageFactory/components/RichText"
@@ -102,41 +104,35 @@ const MessageContent = observer(
 				{/* 发送时间和用户名 */}
 				<MessageHeader isSelf={is_self} name={name} sendTime={message.send_time} />
 				{/* 消息气泡 */}
-				<div
-					className={cx(
-						styles.content,
-						is_self ? styles.magicTheme : styles.defaultTheme,
-						DomClassName.MESSAGE_ITEM,
-					)}
-				>
-					{refer_message_id && (
-						<MessageReferContent
-							refer_message_id={referMsgId}
-							refer_file_id={referFileId}
-						/>
-					)}
-					<MessageFactory
-						type={message.type as ConversationMessageType}
-						message={message}
-						isSelf={is_self}
-						messageId={message_id}
-						referMessageId={referMsgId}
-						referFileId={referFileId}
-					/>
-					{/* {message.type === ConversationMessageType.RichText ? (
-						<RichText
-							content={JSON.parse(message.rich_text?.content ?? "")}
+				<Flex gap={4} className={is_self ? styles.selfMessage : styles.otherMessage}>
+					<div
+						className={cx(
+							styles.content,
+							is_self ? styles.selfMessageStyle : styles.otherMessageStyle,
+							DomClassName.MESSAGE_ITEM,
+						)}
+					>
+						{refer_message_id && (
+							<MessageReferContent
+								refer_message_id={referMsgId}
+								refer_file_id={referFileId}
+							/>
+						)}
+						<MessageFactory
+							type={message.type as ConversationMessageType}
+							message={message}
 							isSelf={is_self}
 							messageId={message_id}
+							referMessageId={referMsgId}
+							referFileId={referFileId}
 						/>
-					) : (
-						<TextItem
-							content={message.text?.content ?? ""}
-							isSelf={is_self}
-							messageId={message_id}
-						/>
-					)} */}
-				</div>
+					</div>
+					{message.type === ConversationMessageType.AiImage &&
+						(message as AIImagesMessage)?.ai_image_card?.type ===
+							AIImagesDataType.GenerateComplete && (
+							<ReGenerate messageId={message_id} />
+						)}
+				</Flex>
 			</Flex>
 		)
 	},

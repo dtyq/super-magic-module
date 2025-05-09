@@ -20,4 +20,6 @@ interface ProxyModelRequestInterface
     public function getCallMethod(): string;
 
     public function getBusinessParam(string $key, bool $checkExists = false): mixed;
+
+    public function getHeaderConfig(string $key, mixed $default = null): mixed;
 }

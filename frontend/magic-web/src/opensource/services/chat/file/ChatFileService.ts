@@ -1,10 +1,10 @@
 import { groupBy } from "lodash-es"
 import type { ChatFileUrlData } from "@/types/chat/conversation_message"
-import { makeObservable, observable } from "mobx"
+import { makeAutoObservable } from "mobx"
 import chatDb from "@/opensource/database/chat"
 import { ChatApi } from "@/apis"
 
-interface FileCacheData extends ChatFileUrlData {
+export interface FileCacheData extends ChatFileUrlData {
 	file_id: string
 	message_id: string
 	url: string
@@ -15,13 +15,10 @@ interface FileCacheData extends ChatFileUrlData {
  * 聊天文件业务
  */
 class ChatFileService {
-	fileInfoCache: Map<string, FileCacheData>
+	fileInfoCache: Map<string, FileCacheData> = new Map()
 
 	constructor() {
-		this.fileInfoCache = new Map()
-		makeObservable(this, {
-			fileInfoCache: observable,
-		})
+		makeAutoObservable(this, {}, { autoBind: true })
 	}
 
 	/**
@@ -32,7 +29,10 @@ class ChatFileService {
 			?.getFileUrlsTable()
 			?.toArray()
 			.then((res) => {
-				this.fileInfoCache = new Map(res.map((item) => [item.file_id, item]))
+				console.log("res =======> ", res)
+				res.forEach((item) => {
+					this.fileInfoCache.set(item.file_id, item)
+				})
 			})
 	}
 
@@ -49,16 +49,20 @@ class ChatFileService {
 	 */
 	cacheFileUrl(fileInfo: ChatFileUrlData & { file_id: string; message_id: string }) {
 		this.fileInfoCache.set(fileInfo.file_id, fileInfo)
-		chatDb
-			?.getFileUrlsTable()
-			?.get(fileInfo.file_id)
-			.then((res) => {
-				if (res) {
-					chatDb?.getFileUrlsTable()?.update(fileInfo.file_id, fileInfo)
-				} else {
-					chatDb?.getFileUrlsTable()?.add(fileInfo)
-				}
-			})
+		chatDb?.getFileUrlsTable()?.put(fileInfo)
+	}
+
+	/**
+	 * 检查文件是否过期
+	 */
+	checkFileExpired(fileId: string) {
+		const fileInfo = this.fileInfoCache.get(fileId)
+
+		console.log("checkFileExpired =======> ", fileId, fileInfo, this.fileInfoCache.size)
+
+		if (!fileInfo) return true
+
+		return fileInfo.expires * 1000 < Date.now()
 	}
 
 	/**
@@ -71,9 +75,7 @@ class ChatFileService {
 
 		// 检测是否过期
 		const { true: expired = [], false: notExpired = [] } = groupBy(datas, (item) => {
-			const fileInfo = this.fileInfoCache.get(item.file_id)
-			if (!fileInfo) return true
-			return fileInfo.expires * 1000 < Date.now()
+			return this.checkFileExpired(item.file_id)
 		})
 
 		if (expired.length > 0) {
@@ -90,24 +92,18 @@ class ChatFileService {
 				}
 
 				// 返回文件信息
-				return datas.reduce(
-					(acc, item) => {
-						acc[item.file_id] = this.fileInfoCache.get(item.file_id)!
-						return acc
-					},
-					{} as Record<string, FileCacheData>,
-				)
+				return datas.reduce((acc, item) => {
+					acc[item.file_id] = this.fileInfoCache.get(item.file_id)!
+					return acc
+				}, {} as Record<string, FileCacheData>)
 			})
 		}
 
 		return Promise.resolve(
-			notExpired.reduce(
-				(acc, item) => {
-					acc[item.file_id] = this.fileInfoCache.get(item.file_id)!
-					return acc
-				},
-				{} as Record<string, FileCacheData>,
-			),
+			notExpired.reduce((acc, item) => {
+				acc[item.file_id] = this.fileInfoCache.get(item.file_id)!
+				return acc
+			}, {} as Record<string, FileCacheData>),
 		)
 	}
 }

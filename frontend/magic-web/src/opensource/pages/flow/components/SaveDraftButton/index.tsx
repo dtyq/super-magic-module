@@ -1,9 +1,9 @@
 import { Button, message, Form } from "antd"
-import MagicInput from "@dtyq/magic-flow/common/BaseUI/Input"
-import type { MagicFlowInstance } from "@dtyq/magic-flow/MagicFlow"
+import MagicInput from "@dtyq/magic-flow/dist/common/BaseUI/Input"
+import type { MagicFlowInstance } from "@dtyq/magic-flow/dist/MagicFlow"
 import { useBoolean, useMemoizedFn } from "ahooks"
 import { useMemo, type MutableRefObject } from "react"
-import type { MagicFlow } from "@dtyq/magic-flow/MagicFlow/types/flow"
+import type { MagicFlow } from "@dtyq/magic-flow/dist/MagicFlow/types/flow"
 import type { FlowDraft } from "@/types/flow"
 import antdStyles from "@/opensource/pages/flow/index.module.less"
 import { useTranslation } from "react-i18next"
@@ -37,7 +37,7 @@ export default function SaveDraftButton({
 		const shadowedFlow = shadowFlow(latestFlow!)
 		if (!latestFlow) return
 
-		const flowId = shadowedFlow.code || latestFlow?.id!
+		const flowId = (shadowedFlow.code || latestFlow?.id) ?? ""
 
 		const requestParams = draft
 			? {

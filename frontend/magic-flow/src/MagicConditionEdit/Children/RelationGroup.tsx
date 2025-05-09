@@ -3,7 +3,7 @@ import { PlusCircleFilled } from "@ant-design/icons"
 import classname from "clsx"
 import i18next from "i18next"
 import _ from "lodash"
-import React, { useCallback, useMemo, useState } from "react"
+import React, { useCallback, useEffect, useMemo, useState } from "react"
 import type { CacheDictionary, ChangeRef, OptionsProps } from ".."
 import { RELATION_LOGICS_MAP, posSeparator } from "../constants"
 import { RelationGroupStyle } from "../style"
@@ -33,6 +33,11 @@ export function RelationGroup({
 }: RelationGroupProps) {
 	const [ops, setOps] = useState((conditionData as Expression.LogicNode).ops)
 
+	// 当conditionData.ops变化时同步更新本地状态
+	useEffect(() => {
+		setOps((conditionData as Expression.LogicNode).ops)
+	}, [(conditionData as Expression.LogicNode).ops])
+
 	const isShowRelationSign = useMemo(() => {
 		const conditionDataCopy = conditionData as Expression.LogicNode
 		if (
@@ -48,7 +53,9 @@ export function RelationGroup({
 
 	const switchOpsSign = useCallback(() => {
 		if (_.isEmpty(changeRef) || _.isEmpty(changeRef.current)) return
+		// 立即更新本地状态，使UI响应更快
 		setOps(ops === RELATION_LOGICS_MAP.AND ? RELATION_LOGICS_MAP.OR : RELATION_LOGICS_MAP.AND)
+		// 同时更新实际数据
 		changeRef.current.switchConditionItemLogic(pos)
 	}, [changeRef, pos, ops])
 

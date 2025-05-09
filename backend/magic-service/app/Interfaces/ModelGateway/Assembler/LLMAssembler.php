@@ -25,12 +25,7 @@ class LLMAssembler
         $usage = [];
         $chatUsage = $chatCompletionResponse->getUsage();
         if ($chatUsage) {
-            $usage = [
-                'completion_tokens' => $chatUsage->getCompletionTokens(),
-                'prompt_tokens' => $chatUsage->getPromptTokens(),
-                'total_tokens' => $chatUsage->getTotalTokens(),
-                'prompt_tokens_details' => [],
-            ];
+            $usage = $chatUsage->toArray();
         }
         $choices = [];
         /** @var ChatCompletionChoice $choice */

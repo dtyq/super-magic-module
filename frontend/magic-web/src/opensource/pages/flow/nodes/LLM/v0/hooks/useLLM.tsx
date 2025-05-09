@@ -1,5 +1,5 @@
 import { useMemo } from "react"
-import { useCurrentNode } from "@dtyq/magic-flow/MagicFlow/nodes/common/context/CurrentNode/useCurrentNode"
+import { useCurrentNode } from "@dtyq/magic-flow/dist/MagicFlow/nodes/common/context/CurrentNode/useCurrentNode"
 import { customNodeType } from "@/opensource/pages/flow/constants"
 import { cloneDeep, isNull } from "lodash-es"
 import useOldToolsHandle from "./useOldToolsHandle"

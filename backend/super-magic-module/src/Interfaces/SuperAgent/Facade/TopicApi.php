@@ -34,6 +34,7 @@ class TopicApi extends AbstractApi
 
     /**
      * 获取话题信息.
+     * @param mixed $id
      */
     public function getTopic(RequestContext $requestContext, $id): array
     {

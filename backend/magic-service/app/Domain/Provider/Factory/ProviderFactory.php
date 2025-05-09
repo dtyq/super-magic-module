@@ -9,6 +9,7 @@ namespace App\Domain\Provider\Factory;
 
 use App\Domain\Provider\Entity\ProviderEntity;
 use App\Domain\Provider\Entity\ValueObject\Category;
+use App\Domain\Provider\Entity\ValueObject\ProviderCode;
 use App\Domain\Provider\Entity\ValueObject\ProviderType;
 use App\Domain\Provider\Entity\ValueObject\Status;
 use App\Domain\Provider\Repository\Persistence\Model\ProviderModel;
@@ -21,7 +22,7 @@ class ProviderFactory
         $entity = new ProviderEntity();
         $entity->setId($model->id);
         $entity->setName($model->name);
-        $entity->setProviderCode($model->provider_code);
+        $entity->setProviderCode(ProviderCode::from($model->provider_code));
         $entity->setCategory(Category::from($model->category));
         $entity->setProviderType(ProviderType::from($model->provider_type));
         $entity->setStatus(Status::from($model->status));

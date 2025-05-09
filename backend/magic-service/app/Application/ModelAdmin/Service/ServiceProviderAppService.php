@@ -24,6 +24,7 @@ use App\Domain\ModelAdmin\Entity\ValueObject\ServiceProviderModelsDTO;
 use App\Domain\ModelAdmin\Service\Provider\ConnectResponse;
 use App\Domain\ModelAdmin\Service\ServiceProviderDomainService;
 use App\Domain\ModelGateway\Entity\Dto\CompletionDTO;
+use App\Domain\ModelGateway\Entity\Dto\EmbeddingsDTO;
 use App\Domain\OrganizationEnvironment\Service\MagicOrganizationEnvDomainService;
 use App\ErrorCode\ServiceProviderErrorCode;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
@@ -74,16 +75,16 @@ class ServiceProviderAppService
      * 根据组织编码和服务商分类获取活跃的服务商及其模型.
      * @param string $organizationCode 组织编码
      * @param null|ServiceProviderCategory $category 服务商分类
-     * @param null|ModelType $modelType 模型类型
+     * @param null|array $modelTypes 模型类型数组
      * @return ServiceProviderConfigDTO[]
      */
-    public function getActiveModelsByOrganizationCode(string $organizationCode, ?ServiceProviderCategory $category = null, ?ModelType $modelType = null): array
+    public function getActiveModelsByOrganizationCode(string $organizationCode, ?ServiceProviderCategory $category = null, ?array $modelTypes = null): array
     {
         $serviceProviderConfigDTOs = $this->serviceProviderDomainService->getActiveModelsByOrganizationCode($organizationCode, $category);
 
-        // 如果设置了模型类型，则过滤模型和服务商
-        if ($modelType !== null) {
-            $serviceProviderConfigDTOs = $this->filterServiceProvidersByModelType($serviceProviderConfigDTOs, $modelType);
+        // 如果提供了modelTypes数组，则使用它进行过滤
+        if (! empty($modelTypes)) {
+            $serviceProviderConfigDTOs = $this->filterServiceProvidersByModelTypes($serviceProviderConfigDTOs, $modelTypes);
         }
 
         // 处理图标
@@ -254,11 +255,20 @@ class ServiceProviderAppService
     private function embeddingConnectivityTest(string $modelId, MagicUserAuthorization $authorization): ConnectResponse
     {
         $connectResponse = new ConnectResponse();
-        $model = $this->serviceProviderDomainService->getServiceProviderConfig('', $modelId, $authorization->getOrganizationCode());
-        /* @var ChatCompletionResponse $response */
+        $llmAppService = di(LLMAppService::class);
+        $proxyModelRequest = new EmbeddingsDTO();
+        if (defined('MAGIC_ACCESS_TOKEN')) {
+            $proxyModelRequest->setAccessToken(MAGIC_ACCESS_TOKEN);
+        }
+        $proxyModelRequest->setModel($modelId);
+        $proxyModelRequest->setInput('test');
+        $proxyModelRequest->setBusinessParams([
+            'organization_id' => $authorization->getOrganizationCode(),
+            'user_id' => $authorization->getId(),
+            'source_id' => 'connectivity_test',
+        ]);
         try {
-            $embedding = $model->createEmbedding();
-            $embedding->embedding('test');
+            $llmAppService->embeddings($proxyModelRequest);
         } catch (Exception $exception) {
             $connectResponse->setStatus(false);
             $connectResponse->setMessage($exception->getMessage());
@@ -296,19 +306,36 @@ class ServiceProviderAppService
     }
 
     /**
-     * 根据模型类型过滤服务提供商及其模型.
+     * 根据多个模型类型过滤服务提供商.
      *
      * @param array $serviceProviderConfigDTOs 服务提供商配置DTO数组
-     * @param ModelType $modelType 模型类型
+     * @param array $modelTypes 模型类型数组
      * @return array 过滤后的服务提供商配置DTO数组
      */
-    private function filterServiceProvidersByModelType(array $serviceProviderConfigDTOs, ModelType $modelType): array
+    private function filterServiceProvidersByModelTypes(array $serviceProviderConfigDTOs, array $modelTypes): array
     {
+        // 将字符串数组转换为ModelType枚举数组
+        $modelTypeEnums = [];
+        foreach ($modelTypes as $type) {
+            $modelType = (int) $type;
+            if ($enum = ModelType::tryFrom($modelType)) {
+                $modelTypeEnums[] = $enum;
+            }
+        }
+
+        if (empty($modelTypeEnums)) {
+            return $serviceProviderConfigDTOs;
+        }
+
         foreach ($serviceProviderConfigDTOs as $serviceProviderConfigDTO) {
             $filteredModels = [];
             foreach ($serviceProviderConfigDTO->getModels() as $modelDTO) {
-                if (ModelType::from($modelDTO->getModelType()) === $modelType) {
-                    $filteredModels[] = $modelDTO;
+                $currentModelType = ModelType::from($modelDTO->getModelType());
+                foreach ($modelTypeEnums as $typeEnum) {
+                    if ($currentModelType === $typeEnum) {
+                        $filteredModels[] = $modelDTO;
+                        break;
+                    }
                 }
             }
             $serviceProviderConfigDTO->setModels($filteredModels);

@@ -147,11 +147,14 @@ class MagicUserContactAppService extends AbstractAppService
     /**
      * 批量查询组织架构、ai 、或者个人版的用户.
      */
-    public function getUserDetailByIds(UserQueryDTO $queryDTO, MagicUserAuthorization $authorization): array
+    public function getUserDetailByIds(UserQueryDTO $dto, MagicUserAuthorization $authorization): array
     {
-        $userIds = $queryDTO->getUserIds();
-        $userIds = array_slice($userIds, (int) $queryDTO->getPageToken(), $queryDTO->getPageSize());
-        $queryType = $queryDTO->getQueryType();
+        $userIds = $dto->getUserIds();
+        $pageToken = (int) $dto->getPageToken();
+        $pageSize = $dto->getPageSize();
+
+        $userIds = array_slice($userIds, $pageToken, $pageSize);
+        $queryType = $dto->getQueryType();
         $dataIsolation = $this->createDataIsolation($authorization);
 
         // 基本用户信息查询
@@ -183,25 +186,19 @@ class MagicUserContactAppService extends AbstractAppService
 
         // 通讯录和搜索相关接口，过滤隐藏部门和隐藏用户。
         $users = $this->filterDepartmentOrUserHidden($users);
-
-        // 判断是否有下一页
-        $hasMore = count($users) === $queryDTO->getPageSize();
-        $requestPageToken = $queryDTO->getPageToken();
-
-        // 返回分页结构
-        return PageListAssembler::pageByMysql($users, $requestPageToken, $hasMore);
+        return PageListAssembler::pageByMysql($users, (int) $dto->getPageToken(), $pageSize, count($dto->getUserIds()));
     }
 
-    public function getUsersDetailByDepartmentId(UserQueryDTO $contactUserListQueryDTO, MagicUserAuthorization $authorization): array
+    public function getUsersDetailByDepartmentId(UserQueryDTO $dto, MagicUserAuthorization $authorization): array
     {
         $dataIsolation = $this->createDataIsolation($authorization);
         // 根部门被抽象为 -1，所以这里需要转换
-        if ($contactUserListQueryDTO->getDepartmentId() === PlatformRootDepartmentId::Magic) {
+        if ($dto->getDepartmentId() === PlatformRootDepartmentId::Magic) {
             $departmentId = $this->departmentChartDomainService->getDepartmentRootId($dataIsolation);
-            $contactUserListQueryDTO->setDepartmentId($departmentId);
+            $dto->setDepartmentId($departmentId);
         }
         // 部门下的用户列表，限制了 pageSize
-        $departmentUsers = $this->departmentUserDomainService->getDepartmentUsersByDepartmentId($contactUserListQueryDTO, $dataIsolation);
+        $departmentUsers = $this->departmentUserDomainService->getDepartmentUsersByDepartmentId($dto, $dataIsolation);
         $departmentIds = array_column($departmentUsers, 'department_id');
         // 部门详情
         $departmentsInfo = $this->departmentChartDomainService->getDepartmentByIds($dataIsolation, $departmentIds);
@@ -217,9 +214,8 @@ class MagicUserContactAppService extends AbstractAppService
         $usersDepartmentDetail = UserAssembler::getUserDepartmentDetailDTOList($departmentUsers, $usersDetail, $departmentsInfoWithFullPath);
         // 通讯录和搜索相关接口，过滤隐藏部门和隐藏用户。
         $usersDepartmentDetail = $this->filterDepartmentOrUserHidden($usersDepartmentDetail);
-        $requestPageToken = $contactUserListQueryDTO->getPageToken();
-        $hasMore = count($usersDepartmentDetail) === $contactUserListQueryDTO->getPageSize();
-        return PageListAssembler::pageByMysql($usersDepartmentDetail, $requestPageToken, $hasMore);
+        $requestPageToken = $dto->getPageToken();
+        return PageListAssembler::pageByMysql($usersDepartmentDetail, (int) $requestPageToken, $dto->getPageSize());
     }
 
     /**

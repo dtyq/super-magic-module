@@ -1,5 +1,6 @@
 import { MarkerType } from "reactflow"
 import CustomEdge from "./CustomEdge"
+import CustomSmoothEdge from "./CustomSmoothEdge"
 
 export const EdgeModelTypes = {
 	CommonEdge: "commonEdge",
@@ -7,7 +8,8 @@ export const EdgeModelTypes = {
 }
 
 export const edgeModels = {
-	[EdgeModelTypes.CommonEdge]: CustomEdge
+	[EdgeModelTypes.CommonEdge]: CustomEdge,
+	[EdgeModelTypes.SmoothStep]: CustomSmoothEdge
 }
 
 export const defaultEdgeConfig = {

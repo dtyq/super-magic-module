@@ -121,7 +121,7 @@ class MessageStore {
 		// temp_id 为空，可能是控制消息
 		if (message.temp_id && messageIndex !== -1) {
 			console.log("replace local send message ====> ", message)
-			this.messages.splice(messageIndex, 1, message)
+			this.messages.splice(messageIndex, 1, { ...message })
 			this.updateMessageSeenStatus(message?.temp_id || "", message.seen_status)
 			this.updateMessageSeenStatus(message?.message_id || "", message.seen_status)
 		} else {

@@ -35,6 +35,7 @@ import useSelectOptions from "../hooks/useSelectOptions"
 import useSvgLine from "../hooks/useSvgLine"
 import { mapping } from "../index"
 import { SchemaItemRow, SchemaItemWrap } from "./index.style"
+import { getParentKey, canEditField } from "../../../utils/SchemaUtils"
 
 const { Option } = Select
 
@@ -86,6 +87,12 @@ const SchemaItem = observer((props: SchemaItemProp): ReactElement | null => {
 
 	const context = useContext(EditorContext)
 	const mobxContext = useContext(SchemaMobxContext)
+
+	// 获取父级字段
+	const parentKeys = getParentKey(prefix)
+	const parentField = parentKeys.length
+		? _.get(mobxContext.schema, parentKeys)
+		: mobxContext.schema
 
 	const { allowExpression, expressionSource } = context
 	const { currentFieldExpressionSource } = useCurrentFieldSource({
@@ -359,7 +366,10 @@ const SchemaItem = observer((props: SchemaItemProp): ReactElement | null => {
 										<FieldInput
 											onChange={handleChangeName}
 											value={name}
-											disabled={disableFields.includes(DisabledField.Name)}
+											disabled={
+												disableFields.includes(DisabledField.Name) ||
+												!canEditField(parentField)
+											}
 										/>
 									</Col>
 								</Row>
@@ -392,7 +402,10 @@ const SchemaItem = observer((props: SchemaItemProp): ReactElement | null => {
 									style={{ width: "100%" }}
 									onChange={handleChangeType}
 									value={selectValue}
-									disabled={disableFields.includes(DisabledField.Type)}
+									disabled={
+										disableFields.includes(DisabledField.Type) ||
+										!canEditField(parentField)
+									}
 								>
 									{selectOptions.map((item) => {
 										return (

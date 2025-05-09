@@ -12,11 +12,13 @@ use App\Infrastructure\Core\Exception\BusinessException;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Infrastructure\Util\Context\RequestContext;
 use Dtyq\ApiResponse\Annotation\ApiResponse;
-use Dtyq\SuperMagic\Application\SuperAgent\Service\TopicAppService;
+use Dtyq\SuperMagic\Application\SuperAgent\Service\TopicTaskAppService;
 use Dtyq\SuperMagic\Application\SuperAgent\Service\WorkspaceAppService;
+use Dtyq\SuperMagic\Interfaces\SuperAgent\DTO\Request\GetFileUrlsRequestDTO;
 use Dtyq\SuperMagic\Interfaces\SuperAgent\DTO\Request\GetTaskFilesRequestDTO;
 use Dtyq\SuperMagic\Interfaces\SuperAgent\DTO\TopicTaskMessageDTO;
 use Hyperf\HttpServer\Contract\RequestInterface;
+use Qbhy\HyperfAuth\AuthManager;
 
 #[ApiResponse('low_code')]
 class TaskApi extends AbstractApi
@@ -24,7 +26,7 @@ class TaskApi extends AbstractApi
     public function __construct(
         protected RequestInterface $request,
         protected WorkspaceAppService $workspaceAppService,
-        protected TopicAppService $topicAppService,
+        protected TopicTaskAppService $topicTaskAppService,
     ) {
     }
 
@@ -44,7 +46,7 @@ class TaskApi extends AbstractApi
         }
 
         // 从 env 获取沙箱 token ，然后对比沙箱 token 和请求 token 是否一致
-        $sandboxToken = env('SANDBOX_TOKEN', '');
+        $sandboxToken = config('super-magic.sandbox.token', '');
         if ($sandboxToken !== $token) {
             ExceptionBuilder::throw(GenericErrorCode::ParameterMissing, 'token_invalid');
         }
@@ -52,7 +54,7 @@ class TaskApi extends AbstractApi
         // 从请求中创建DTO
         $messageDTO = TopicTaskMessageDTO::fromArray($this->request->all());
         // 调用应用服务进行消息投递
-        return $this->workspaceAppService->deliverTopicTaskMessage($messageDTO);
+        return $this->topicTaskAppService->deliverTopicTaskMessage($messageDTO);
     }
 
     /**
@@ -77,6 +79,32 @@ class TaskApi extends AbstractApi
             $dto->getId(),
             $dto->getPage(),
             $dto->getPageSize()
+        );
+    }
+
+    /**
+     * 获取文件URL列表.
+     *
+     * @param RequestContext $requestContext 请求上下文
+     * @return array 文件URL列表
+     * @throws BusinessException 如果参数无效则抛出异常
+     */
+    public function getFileUrls(RequestContext $requestContext): array
+    {
+        // 获取请求DTO
+        $dto = GetFileUrlsRequestDTO::fromRequest($this->request);
+        if (! empty($dto->getToken())) {
+            // 走令牌校验逻辑
+            return $this->workspaceAppService->getFileUrlsByAccessToken($dto->getFileIds(), $dto->getToken());
+        }
+        // 设置用户授权信息
+        $requestContext->setUserAuthorization(di(AuthManager::class)->guard(name: 'web')->user());
+        $userAuthorization = $requestContext->getUserAuthorization();
+
+        // 调用应用服务
+        return $this->workspaceAppService->getFileUrls(
+            $userAuthorization,
+            $dto->getFileIds()
         );
     }
 }

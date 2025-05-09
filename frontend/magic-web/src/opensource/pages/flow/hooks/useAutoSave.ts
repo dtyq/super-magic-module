@@ -1,10 +1,10 @@
-import type { MagicFlowInstance } from "@dtyq/magic-flow/MagicFlow"
+import type { MagicFlowInstance } from "@dtyq/magic-flow/dist/MagicFlow"
 import { useMemoizedFn } from "ahooks"
 import type { Dispatch, MutableRefObject, SetStateAction } from "react"
 import { useEffect, useState } from "react"
 import { useFlowStore } from "@/opensource/stores/flow"
 import { first } from "lodash-es"
-import type { MagicFlow } from "@dtyq/magic-flow/MagicFlow/types/flow"
+import type { MagicFlow } from "@dtyq/magic-flow/dist/MagicFlow/types/flow"
 import type { FlowDraft } from "@/types/flow"
 import { useTranslation } from "react-i18next"
 import { FlowApi } from "@/apis"
@@ -49,10 +49,12 @@ export default function useAutoSave({ flowInstance, isAgent, initDraftList }: Us
 		const shadowedFlow = shadowFlow(latestFlow!)
 		if (!latestFlow) return
 
-		const flowId = isAgent ? shadowedFlow.id! : latestFlow?.id!
+		const flowId = isAgent ? shadowedFlow.id ?? "" : latestFlow?.id ?? ""
 
 		const requestParams = {
-			name: `${latestFlow?.name}_${t("common.draft", { ns: "flow" })}${getCurrentDateTimeString()}`,
+			name: `${latestFlow?.name}_${t("common.draft", {
+				ns: "flow",
+			})}${getCurrentDateTimeString()}`,
 			description: "",
 			magic_flow: {
 				...shadowedFlow,

@@ -60,13 +60,12 @@ export default function useCustomConfig({ value, name, type }: CustomConfigProps
 		}
 		return []
 	}, [customFieldsConfig])
-
 	
 	// 是否可以添加子成员类型
 	const canAddSubFields = useMemo(() => {
-		// 对象数组和对象可以添加
+		// 所有数组类型和对象类型都可以添加子级
 		return (
-			type === `${FormItemType.Array}${SchemaValueSplitor}${FormItemType.Object}` ||
+			type?.startsWith?.(`${FormItemType.Array}`) ||
 			type === FormItemType.Object
 		)
 	}, [type])

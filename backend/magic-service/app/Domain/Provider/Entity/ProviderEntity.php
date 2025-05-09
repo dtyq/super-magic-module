@@ -8,6 +8,7 @@ declare(strict_types=1);
 namespace App\Domain\Provider\Entity;
 
 use App\Domain\Provider\Entity\ValueObject\Category;
+use App\Domain\Provider\Entity\ValueObject\ProviderCode;
 use App\Domain\Provider\Entity\ValueObject\ProviderType;
 use App\Domain\Provider\Entity\ValueObject\Status;
 use App\Infrastructure\Core\AbstractEntity;
@@ -19,7 +20,7 @@ class ProviderEntity extends AbstractEntity
 
     protected string $name;
 
-    protected string $providerCode;
+    protected ProviderCode $providerCode;
 
     protected string $description = '';
 
@@ -61,12 +62,12 @@ class ProviderEntity extends AbstractEntity
         $this->name = $name;
     }
 
-    public function getProviderCode(): string
+    public function getProviderCode(): ProviderCode
     {
         return $this->providerCode;
     }
 
-    public function setProviderCode(string $providerCode): void
+    public function setProviderCode(ProviderCode $providerCode): void
     {
         $this->providerCode = $providerCode;
     }
@@ -138,7 +139,7 @@ class ProviderEntity extends AbstractEntity
 
     public function setTranslate(?array $translate): void
     {
-        $this->translate = $translate;
+        $this->translate = $translate ?? [];
     }
 
     public function getRemark(): string

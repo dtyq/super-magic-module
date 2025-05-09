@@ -8,6 +8,7 @@ use App\Infrastructure\Util\Middleware\RequestContextMiddleware;
 use App\Interfaces\KnowledgeBase\Facade\KnowledgeBaseApi;
 use App\Interfaces\KnowledgeBase\Facade\KnowledgeBaseDocumentApi;
 use App\Interfaces\KnowledgeBase\Facade\KnowledgeBaseFragmentApi;
+use App\Interfaces\KnowledgeBase\Facade\KnowledgeBaseProviderApi;
 use Hyperf\HttpServer\Router\Router;
 
 Router::addGroup('/api/v1/knowledge-bases', static function () {
@@ -18,7 +19,6 @@ Router::addGroup('/api/v1/knowledge-bases', static function () {
         Router::post('/queries', [KnowledgeBaseApi::class, 'queries']);
         Router::get('/{code}', [KnowledgeBaseApi::class, 'show']);
         Router::delete('/{code}', [KnowledgeBaseApi::class, 'destroy']);
-        Router::get('/providers/rerank/list', [KnowledgeBaseApi::class, 'getOfficialRerankProviderList']);
     });
 
     // 文档
@@ -40,4 +40,10 @@ Router::addGroup('/api/v1/knowledge-bases', static function () {
     });
     Router::post('/fragments/preview', [KnowledgeBaseFragmentApi::class, 'fragmentPreview']);
     Router::post('/{code}/fragments/similarity', [KnowledgeBaseFragmentApi::class, 'similarity']);
+
+    // 模型提供商
+    Router::addGroup('/providers', function () {
+        Router::get('/rerank/list', [KnowledgeBaseProviderApi::class, 'getOfficialRerankProviderList']);
+        Router::get('/embedding/list', [KnowledgeBaseProviderApi::class, 'getEmbeddingProviderList']);
+    });
 }, ['middleware' => [RequestContextMiddleware::class]]);

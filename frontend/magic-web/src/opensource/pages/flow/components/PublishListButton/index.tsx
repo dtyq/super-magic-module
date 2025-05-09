@@ -1,7 +1,7 @@
 import { Drawer, message, Modal, Timeline } from "antd"
 import { useBoolean, useMemoizedFn } from "ahooks"
 import { useFlowStore } from "@/opensource/stores/flow"
-import type { MagicFlow } from "@dtyq/magic-flow/MagicFlow/types/flow"
+import type { MagicFlow } from "@dtyq/magic-flow/dist/MagicFlow/types/flow"
 import { IconArchive } from "@tabler/icons-react"
 import EmptyIcon from "@/assets/logos/empty.svg"
 import { cx } from "antd-style"
@@ -56,7 +56,7 @@ export default function PublishListButton({ isAgent, flow }: PublishListButtonPr
 	}, [open, agentPublishList, isAgent, flowPublishList])
 
 	const onSwitchDraft = useMemoizedFn((version: FlowDraft.ListItem) => {
-		if (!hasEditRight(flow?.user_operation!)) return
+		if (!hasEditRight(flow?.user_operation)) return
 		Modal.confirm({
 			title: resolveToString(t("common.rollbackDesc", { ns: "flow" }), {
 				versionName: version.name,
@@ -77,9 +77,9 @@ export default function PublishListButton({ isAgent, flow }: PublishListButtonPr
 						name: versionDetail.botVersionEntity.robot_name,
 					})
 				} else {
-					versionDetail = await FlowApi.getFlowPublishDetail(flow?.id!, version.id)
+					versionDetail = await FlowApi.getFlowPublishDetail(flow?.id ?? "", version.id)
 					setCurrentFlow({ ...versionDetail.magic_flow, version_code: version.id })
-					await FlowApi.restoreFlow(flow?.id!, version.id)
+					await FlowApi.restoreFlow(flow?.id ?? "", version.id)
 				}
 
 				setFalse()

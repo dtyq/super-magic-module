@@ -15,13 +15,19 @@ import {
 import { useDocumentOperations } from "../../hooks/useDocumentOperations"
 import { useVectorKnowledgeDocumentStyles } from "./styles"
 import DocumentUpload from "@/opensource/pages/vectorKnowledge/components/Upload/DocumentUpload"
+import {
+	hasEditRight,
+	hasAdminRight,
+} from "@/opensource/pages/flow/components/AuthControlButton/types"
+import type { OperationTypes } from "@/opensource/pages/flow/components/AuthControlButton/types"
 
 interface Props {
 	className: string
 	knowledgeBaseCode: string
+	userOperation: OperationTypes
 }
 
-export default function Document({ className, knowledgeBaseCode }: Props) {
+export default function Document({ className, knowledgeBaseCode, userOperation }: Props) {
 	const { styles } = useVectorKnowledgeDocumentStyles()
 	const { t } = useTranslation("flow")
 
@@ -360,48 +366,61 @@ export default function Document({ className, knowledgeBaseCode }: Props) {
 			width: 120,
 			render: getStatusTag,
 		},
-		{
-			title: t("knowledgeDatabase.operation"),
-			key: "operation",
-			width: 100,
-			render: (_: any, record: Knowledge.EmbedDocumentDetail) => (
-				<Dropdown
-					placement="bottomRight"
-					menu={{
-						items: [
-							{
-								label: <div>{t("knowledgeDatabase.rename")}</div>,
-								key: "rename",
-								onClick: () => handleRenameFile(record),
-							},
-							{
-								label: <div>{t("common.enable")}</div>,
-								key: "enable",
-								onClick: () => handleEnableSingleFile(record),
-							},
-							{
-								label: <div>{t("common.disabled")}</div>,
-								key: "disabled",
-								onClick: () => handleDisableSingleFile(record),
-							},
-							{
-								label: (
-									<div className={styles.deleteText}>
-										{t("knowledgeDatabase.delete")}
-									</div>
-								),
-								key: "delete",
-								onClick: () => handleDeleteSingleFile(record),
-							},
-						],
-					}}
-				>
-					<Flex align="center" justify="center" className={styles.operationButton}>
-						<IconDots size={20} />
-					</Flex>
-				</Dropdown>
-			),
-		},
+		...(hasEditRight(userOperation)
+			? [
+					{
+						title: t("knowledgeDatabase.operation"),
+						key: "operation",
+						width: 100,
+						render: (_: any, record: Knowledge.EmbedDocumentDetail) => (
+							<Dropdown
+								placement="bottomRight"
+								menu={{
+									items: [
+										{
+											label: <div>{t("knowledgeDatabase.rename")}</div>,
+											key: "rename",
+											onClick: () => handleRenameFile(record),
+										},
+										{
+											label: <div>{t("common.enable")}</div>,
+											key: "enable",
+											onClick: () => handleEnableSingleFile(record),
+										},
+										{
+											label: <div>{t("common.disabled")}</div>,
+											key: "disabled",
+											onClick: () => handleDisableSingleFile(record),
+										},
+										...(hasAdminRight(userOperation)
+											? [
+													{
+														label: (
+															<div className={styles.deleteText}>
+																{t("knowledgeDatabase.delete")}
+															</div>
+														),
+														key: "delete",
+														onClick: () =>
+															handleDeleteSingleFile(record),
+													},
+											  ]
+											: []),
+									],
+								}}
+							>
+								<Flex
+									align="center"
+									justify="center"
+									className={styles.operationButton}
+								>
+									<IconDots size={20} />
+								</Flex>
+							</Dropdown>
+						),
+					},
+			  ]
+			: []),
 	]
 
 	return (
@@ -417,53 +436,63 @@ export default function Document({ className, knowledgeBaseCode }: Props) {
 						onChange={(e) => handleSearch(e.target.value)}
 						allowClear
 					/>
-					<Flex align="stretch" gap={10}>
-						<Dropdown
-							menu={{
-								items: [
-									{
-										label: <div>{t("common.enable")}</div>,
-										key: "enable",
-										onClick: () => handleBatchEnable(),
-									},
-									{
-										label: <div>{t("common.disabled")}</div>,
-										key: "disable",
-										onClick: () => handleBatchDisable(),
-									},
-									{
-										label: (
-											<div className={styles.deleteText}>
-												{t("knowledgeDatabase.delete")}
-											</div>
-										),
-										key: "delete",
-										onClick: () => handleBatchDelete(),
-									},
-								],
-							}}
-						>
-							<Flex align="center" gap={4} className={styles.batchOperation}>
-								<div>{t("knowledgeDatabase.batchOperation")}</div>
-								<IconChevronDown size={16} />
-							</Flex>
-						</Dropdown>
-						<DocumentUpload handleFileUpload={handleFileUpload} dragger={false}>
-							<Button type="primary" icon={<IconPlus size={16} />}>
-								{t("knowledgeDatabase.addDocument")}
-							</Button>
-						</DocumentUpload>
-					</Flex>
+					{hasEditRight(userOperation) && (
+						<Flex align="stretch" gap={10}>
+							<Dropdown
+								menu={{
+									items: [
+										{
+											label: <div>{t("common.enable")}</div>,
+											key: "enable",
+											onClick: () => handleBatchEnable(),
+										},
+										{
+											label: <div>{t("common.disabled")}</div>,
+											key: "disable",
+											onClick: () => handleBatchDisable(),
+										},
+										...(hasAdminRight(userOperation)
+											? [
+													{
+														label: (
+															<div className={styles.deleteText}>
+																{t("knowledgeDatabase.delete")}
+															</div>
+														),
+														key: "delete",
+														onClick: () => handleBatchDelete(),
+													},
+											  ]
+											: []),
+									],
+								}}
+							>
+								<Flex align="center" gap={4} className={styles.batchOperation}>
+									<div>{t("knowledgeDatabase.batchOperation")}</div>
+									<IconChevronDown size={16} />
+								</Flex>
+							</Dropdown>
+							<DocumentUpload handleFileUpload={handleFileUpload} dragger={false}>
+								<Button type="primary" icon={<IconPlus size={16} />}>
+									{t("knowledgeDatabase.addDocument")}
+								</Button>
+							</DocumentUpload>
+						</Flex>
+					)}
 				</Flex>
 			</div>
 
 			<div className={styles.tableContainer}>
 				<Table
 					rowKey="code"
-					rowSelection={{
-						selectedRowKeys,
-						onChange: (codes) => setSelectedRowKeys(codes as string[]),
-					}}
+					rowSelection={
+						hasEditRight(userOperation)
+							? {
+									selectedRowKeys,
+									onChange: (codes) => setSelectedRowKeys(codes as string[]),
+							  }
+							: undefined
+					}
 					columns={columns}
 					dataSource={documentList}
 					scroll={{ scrollToFirstRowOnChange: true, y: tableHeight }}

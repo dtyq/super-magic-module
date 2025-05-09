@@ -3,7 +3,7 @@
  */
 
 import type { Knowledge } from "@/types/knowledge"
-import { useCurrentNode } from "@dtyq/magic-flow/MagicFlow/nodes/common/context/CurrentNode/useCurrentNode"
+import { useCurrentNode } from "@dtyq/magic-flow/dist/MagicFlow/nodes/common/context/CurrentNode/useCurrentNode"
 import { useMemo, useState, useEffect } from "react"
 import RenderLabel from "../../KnowledgeDatabaseSelect/RenderLabel"
 import { useFlowStore } from "@/opensource/stores/flow"
@@ -11,9 +11,8 @@ import { KnowledgeApi } from "@/apis"
 import { knowledgeType } from "@/opensource/pages/vectorKnowledge/constant"
 import { VectorKnowledge } from "@/types/flow"
 import { useMemoizedFn } from "ahooks"
-import type { FormInstance } from "antd"
 
-export default function useKnowledgeDatabases(form: FormInstance) {
+export default function useKnowledgeDatabases() {
 	const { useableTeamshareDatabase } = useFlowStore()
 
 	const { currentNode } = useCurrentNode()

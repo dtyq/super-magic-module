@@ -15,7 +15,7 @@ use Qbhy\HyperfAuth\AuthManager;
 
 abstract class AbstractApi
 {
-    private AuthGuard $adminGuard;
+    protected AuthGuard $adminGuard;
 
     public function __construct(
         private readonly AuthManager $authManager,

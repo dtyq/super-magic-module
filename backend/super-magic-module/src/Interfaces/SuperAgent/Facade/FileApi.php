@@ -8,16 +8,13 @@ declare(strict_types=1);
 namespace Dtyq\SuperMagic\Interfaces\SuperAgent\Facade;
 
 use App\ErrorCode\GenericErrorCode;
-use App\Infrastructure\Core\Exception\BusinessException;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Infrastructure\Util\Context\RequestContext;
 use Dtyq\ApiResponse\Annotation\ApiResponse;
 use Dtyq\SuperMagic\Application\SuperAgent\Service\FileProcessAppService;
 use Dtyq\SuperMagic\Application\SuperAgent\Service\WorkspaceAppService;
-use Dtyq\SuperMagic\Interfaces\SuperAgent\DTO\Request\GetFileUrlsRequestDTO;
 use Dtyq\SuperMagic\Interfaces\SuperAgent\DTO\Request\RefreshStsTokenRequestDTO;
 use Hyperf\HttpServer\Contract\RequestInterface;
-use Qbhy\HyperfAuth\AuthManager;
 
 #[ApiResponse('low_code')]
 class FileApi extends AbstractApi
@@ -67,32 +64,6 @@ class FileApi extends AbstractApi
     }
 
     /**
-     * 获取文件URL列表.
-     *
-     * @param RequestContext $requestContext 请求上下文
-     * @return array 文件URL列表
-     * @throws BusinessException 如果参数无效则抛出异常
-     */
-    public function getFileUrls(RequestContext $requestContext): array
-    {
-        // 获取请求DTO
-        $dto = GetFileUrlsRequestDTO::fromRequest($this->request);
-        if (! empty($dto->getToken())) {
-            // 走令牌校验逻辑
-            return $this->workspaceAppService->getFileUrlsByAccessToken($dto->getFileIds(), $dto->getToken());
-        }
-        // 设置用户授权信息
-        $requestContext->setUserAuthorization(di(AuthManager::class)->guard(name: 'web')->user());
-        $userAuthorization = $requestContext->getUserAuthorization();
-
-        // 调用应用服务
-        return $this->workspaceAppService->getFileUrls(
-            $userAuthorization,
-            $dto->getFileIds()
-        );
-    }
-
-    /**
      * 刷新 STS Token.
      *
      * @param RequestContext $requestContext 请求上下文
@@ -105,7 +76,7 @@ class FileApi extends AbstractApi
             ExceptionBuilder::throw(GenericErrorCode::ParameterMissing, 'token_required');
         }
 
-        if ($token !== env('SANDBOX_TOKEN')) {
+        if ($token !== config('super-magic.sandbox.token', '')) {
             ExceptionBuilder::throw(GenericErrorCode::ParameterMissing, 'token_invalid');
         }
 

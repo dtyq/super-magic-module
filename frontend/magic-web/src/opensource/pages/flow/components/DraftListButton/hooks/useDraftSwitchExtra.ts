@@ -4,7 +4,7 @@
 
 import { getCurrentDateTimeString } from "@/opensource/pages/flow/utils/helpers"
 import type { FlowDraft } from "@/types/flow"
-import type { MagicFlow } from "@dtyq/magic-flow/MagicFlow/types/flow"
+import type { MagicFlow } from "@dtyq/magic-flow/dist/MagicFlow/types/flow"
 import { useMemoizedFn } from "ahooks"
 import { FlowApi } from "@/apis"
 
@@ -33,9 +33,11 @@ export default function useDraftSwitchExtra({ flow, initDraftList }: UseDraftSwi
 			},
 		}
 
-		await FlowApi.saveFlowDraft(requestParams, flow?.id!)
+		if (!flow?.id) return
 
-		initDraftList?.(flow?.id!)
+		await FlowApi.saveFlowDraft(requestParams, flow.id)
+
+		initDraftList?.(flow.id)
 	})
 
 	return {

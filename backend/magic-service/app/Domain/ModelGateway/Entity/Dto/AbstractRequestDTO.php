@@ -32,6 +32,8 @@ abstract class AbstractRequestDTO extends AbstractEntity implements ProxyModelRe
 
     protected array $ips = [];
 
+    protected array $headerConfigs = [];
+
     public function getBusinessParam(string $key, bool $checkExists = false): mixed
     {
         $value = $this->businessParams[$key] ?? null;
@@ -89,5 +91,16 @@ abstract class AbstractRequestDTO extends AbstractEntity implements ProxyModelRe
     public function setIps(array $ips): void
     {
         $this->ips = $ips;
+    }
+
+    public function setHeaderConfigs(array $headerConfigs): void
+    {
+        $this->headerConfigs = $headerConfigs;
+    }
+
+    public function getHeaderConfig(string $key, mixed $default = null): mixed
+    {
+        $key = strtolower($key);
+        return $this->headerConfigs[$key] ?? $default;
     }
 }

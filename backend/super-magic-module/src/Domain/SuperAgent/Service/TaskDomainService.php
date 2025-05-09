@@ -73,7 +73,7 @@ class TaskDomainService
 
         // 如果指令是打断或者追问的情况下
         // 如果后续有其他情况变更，再从前端传 task_id
-        if ($instruction == ChatInstruction::Interrupted or $instruction == ChatInstruction::FollowUp) {
+        if ($instruction == ChatInstruction::Interrupted) {
             $taskList = $this->taskRepository->getTasksByTopicId($topicId, 1, 1, ['task_status' => TaskStatus::RUNNING]);
             if (empty($taskList['list'])) {
                 ExceptionBuilder::throw(GenericErrorCode::IllegalOperation, 'task.not_found');
@@ -136,7 +136,7 @@ class TaskDomainService
         return $task;
     }
 
-    public function updateTaskStatus(DataIsolation $dataIsolation, int $topicId, TaskStatus $status, int $id, string $taskId, string $sandboxId): bool
+    public function updateTaskStatus(DataIsolation $dataIsolation, int $topicId, TaskStatus $status, int $id, string $taskId, string $sandboxId, ?string $errMsg = null): bool
     {
         // 1. 通过话题 id 获取话题实体
         $topicEntity = $this->topicRepository->getTopicById($topicId);
@@ -158,6 +158,12 @@ class TaskDomainService
         $taskEntity->setSandboxId($sandboxId);
         $taskEntity->setTaskId($taskId);
         $taskEntity->setUpdatedAt(date('Y-m-d H:i:s'));
+
+        // 如果提供了错误信息，并且状态为ERROR，则设置错误信息
+        if ($status === TaskStatus::ERROR && $errMsg !== null) {
+            $taskEntity->setErrMsg($errMsg);
+        }
+
         $this->taskRepository->updateTask($taskEntity);
 
         // 3. 更新话题的相关信息
@@ -631,12 +637,28 @@ class TaskDomainService
     /**
      * 轻量级的更新任务状态方法，只修改任务状态
      *
-     * @param string $taskId 任务ID
+     * @param int $id 任务ID
      * @param TaskStatus $status 任务状态
+     * @param null|string $errMsg 错误信息，仅当状态为ERROR时有意义
      * @return bool 是否更新成功
      */
-    public function updateTaskStatusByTaskId(string $taskId, TaskStatus $status): bool
+    public function updateTaskStatusByTaskId(int $id, TaskStatus $status, ?string $errMsg = null): bool
     {
-        return $this->taskRepository->updateTaskStatusByTaskId($taskId, $status);
+        if ($status === TaskStatus::ERROR && $errMsg !== null) {
+            return $this->taskRepository->updateTaskStatusAndErrMsgByTaskId($id, $status, $errMsg);
+        }
+        return $this->taskRepository->updateTaskStatusByTaskId($id, $status);
+    }
+
+    /**
+     * 获取最近更新时间超过指定时间的任务列表.
+     *
+     * @param string $timeThreshold 时间阈值，如果任务的更新时间早于此时间，则会被包含在结果中
+     * @param int $limit 返回结果的最大数量
+     * @return array<TaskEntity> 任务实体列表
+     */
+    public function getTasksExceedingUpdateTime(string $timeThreshold, int $limit = 100): array
+    {
+        return $this->taskRepository->getTasksExceedingUpdateTime($timeThreshold, $limit);
     }
 }

@@ -2,7 +2,7 @@
  * Agent权限相关
  */
 import { useMemo } from "react"
-import type { MagicFlow } from "@dtyq/magic-flow/MagicFlow/types/flow"
+import type { MagicFlow } from "@dtyq/magic-flow/dist/MagicFlow/types/flow"
 import type { Bot } from "@/types/bot"
 import { ScopeType } from "@/types/bot"
 import { hasAdminRight, hasEditRight } from "../components/AuthControlButton/types"

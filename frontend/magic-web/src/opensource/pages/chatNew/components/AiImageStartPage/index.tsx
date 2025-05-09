@@ -1,15 +1,14 @@
 import { Flex } from "antd"
-import type { HTMLAttributes } from "react"
 import { memo, useMemo, useState } from "react"
 import { useMemoizedFn } from "ahooks"
 import { nanoid } from "nanoid"
 import chatTopicService from "@/opensource/services/chat/topic"
 import ConversationStore from "@/opensource/stores/chatNew/conversation"
-import MessageEditor from "../MessageEditor"
 import { useStyles } from "./style"
 import Header from "./components/Header"
 import WaterfallList from "./components/WaterfallList"
 import { data } from "./image_prompt.json"
+import MessageEditor from "../MessageEditor"
 
 export interface Image {
 	id: string
@@ -18,11 +17,10 @@ export interface Image {
 	height?: number
 }
 
-interface AiImageStartPageProps extends HTMLAttributes<HTMLDivElement> {
-	disabled: boolean
-}
-
-const AiImageStartPage = memo(({ disabled }: AiImageStartPageProps) => {
+/**
+ * 文生图启动页
+ */
+const AiImageStartPage = memo(() => {
 	const { styles } = useStyles()
 
 	const dataset = useMemo(() => {
@@ -63,9 +61,9 @@ const AiImageStartPage = memo(({ disabled }: AiImageStartPageProps) => {
 			<Header tags={tags} selectType={selectType} currentType={currentType} />
 			<WaterfallList data={images} onImageClick={onImageClick} />
 			<MessageEditor
+				sendWhenEnter
 				className={styles.editor}
-				inputClassName={styles.mainInput}
-				disabled={disabled}
+				inputMainClassName={styles.mainInput}
 			/>
 			<div className={styles.bottomMask} />
 		</Flex>

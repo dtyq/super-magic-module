@@ -22,6 +22,7 @@ use App\Infrastructure\Core\Exception\BusinessException;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Infrastructure\Util\Auth\PermissionChecker;
 use App\Infrastructure\Util\IdGenerator\IdGenerator;
+use App\Infrastructure\Util\Locker\LockerInterface;
 use App\Interfaces\Authorization\Web\MagicUserAuthorization;
 use Dtyq\SuperMagic\Domain\SuperAgent\Constant\TaskFileType;
 use Dtyq\SuperMagic\Domain\SuperAgent\Entity\TaskEntity;
@@ -71,6 +72,7 @@ class TaskAppService extends AbstractAppService
         private readonly FileProcessAppService $fileProcessAppService,
         protected MagicUserDomainService $userDomainService,
         protected TaskRepositoryInterface $taskRepository,
+        protected LockerInterface $locker,
         LoggerFactory $loggerFactory
     ) {
         $this->messageBuilder = new MessageBuilderDomainService();
@@ -182,7 +184,7 @@ class TaskAppService extends AbstractAppService
             // 没有沙箱id，那么一定是首次任务
             $isFirstTaskMessage = empty($taskEntity->getSandboxId());
             // 判断是否为沙箱模式
-            $isSandboxMode = config('super-magic.sandbox.enabled', false);
+            $isSandboxMode = config('super-magic.sandbox.enabled', true);
             if ($isSandboxMode) {
                 /** @var bool $isInitConfig */
                 [$isInitConfig, $sandboxId] = $this->initSandbox($taskEntity->getSandboxId());
@@ -245,9 +247,7 @@ class TaskAppService extends AbstractAppService
             $this->logger->error(sprintf(
                 '初始化任务失败: %s',
                 $e->getMessage()
-            ), [
-                'exception' => $e,
-            ]);
+            ));
 
             $text = '系统繁忙，请稍后重试';
             if ($e->getCode() === GenericErrorCode::IllegalOperation->value) {
@@ -266,7 +266,38 @@ class TaskAppService extends AbstractAppService
      */
     public function handleTopicTaskMessage($messageDTO): void
     {
+        // 获取sandboxId用于锁定
+        $sandboxId = $messageDTO->getMetadata()?->getSandboxId();
+        if (empty($sandboxId)) {
+            $this->logger->warning('缺少有效的sandboxId，无法加锁保证消息顺序性', [
+                'message_id' => $messageDTO->getPayload()?->getMessageId(),
+                'message' => $messageDTO->toArray(),
+            ]);
+        }
+
+        $lockKey = 'handle_sandbox_message_lock:' . $sandboxId;
+        $lockOwner = IdGenerator::getUniqueId32(); // 使用唯一ID作为锁持有者标识
+        $lockExpireSeconds = 30; // 锁的过期时间（秒），消息处理可能需要更长时间
+        $lockAcquired = false;
+
         try {
+            // 如果有有效的sandboxId，尝试获取分布式互斥锁
+            if (! empty($sandboxId)) {
+                $lockAcquired = $this->locker->mutexLock($lockKey, $lockOwner, $lockExpireSeconds);
+
+                if (! $lockAcquired) {
+                    $this->logger->warning(sprintf(
+                        '无法获取sandbox %s的锁，该sandbox可能有其他消息正在处理中，message_id: %s',
+                        $sandboxId,
+                        $messageDTO->getPayload()?->getMessageId()
+                    ));
+                    // 可以选择将消息重新入队或实现延迟重试策略
+                    return;
+                }
+
+                $this->logger->debug(sprintf('已获取sandbox %s的锁，持有者: %s', $sandboxId, $lockOwner));
+            }
+
             $this->logger->info(sprintf(
                 '开始处理话题任务消息，task_id: %s , 消息内容为: %s',
                 $messageDTO->getPayload()->getTaskId() ?? '',
@@ -314,6 +345,16 @@ class TaskAppService extends AbstractAppService
                 'exception' => $e,
                 'message' => $messageDTO->toArray(),
             ]);
+        } finally {
+            // 如果获取了锁，确保释放它
+            if ($lockAcquired) {
+                if ($this->locker->release($lockKey, $lockOwner)) {
+                    $this->logger->debug(sprintf('已释放sandbox %s的锁，持有者: %s', $sandboxId, $lockOwner));
+                } else {
+                    // 记录释放锁失败的情况，可能需要人工干预
+                    $this->logger->error(sprintf('释放sandbox %s的锁失败，持有者: %s，可能需要人工干预', $sandboxId, $lockOwner));
+                }
+            }
         }
     }
 

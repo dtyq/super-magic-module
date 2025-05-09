@@ -399,13 +399,20 @@ const ChatMessageList = observer(() => {
 
 		// 如果是图片点击，并且不是表情
 		if (target.tagName === "IMG" && target.classList.contains("magic-image")) {
-			// 如果是同一张图片，先重置状态
-			MessageFilePreview.setPreviewInfo({
-				messageId: messageId ?? "",
-				conversationId: conversationStore.currentConversation?.id ?? "",
-				url: target.getAttribute("src") ?? "",
-				fileName: target.getAttribute("alt") ?? "",
-			})
+			const fileInfo = target.getAttribute("data-file-info")
+			if (fileInfo) {
+				try {
+					const fileInfoObj = JSON.parse(atob(fileInfo))
+					// 如果是同一张图片，先重置状态
+					MessageFilePreview.setPreviewInfo({
+						...fileInfoObj,
+						messageId,
+						conversationId: conversationStore.currentConversation?.id,
+					})
+				} catch (error) {
+					console.error("解析文件信息失败", error)
+				}
+			}
 		}
 
 		if (messageElement && messageElement.classList.contains(GroupSeenPanelDomClassName)) {
@@ -495,7 +502,7 @@ const ChatMessageList = observer(() => {
 								key: item.key,
 								label: t(item.label ?? "", { ns: "interface" }),
 								danger: item.danger,
-								onClick: (e) => {
+								onClick: () => {
 									MessageDropdownService.clickMenuItem(item.key as any)
 								},
 							}

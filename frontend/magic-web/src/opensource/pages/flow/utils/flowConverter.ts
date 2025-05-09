@@ -76,8 +76,8 @@ export class FlowConverter {
 								? json.type === 1
 									? "workflow"
 									: json.type === 2
-										? "knowledge"
-										: "default"
+									? "knowledge"
+									: "default"
 								: json.type
 							: "default",
 						icon: json.icon || "",

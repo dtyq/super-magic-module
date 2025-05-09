@@ -1,6 +1,6 @@
 import { genRequestUrl } from "@/utils/http"
 import { RequestUrl } from "../constant"
-import type { MagicFlow } from "@dtyq/magic-flow/MagicFlow/types/flow"
+import type { MagicFlow } from "@dtyq/magic-flow/dist/MagicFlow/types/flow"
 import type {
 	ApiKey,
 	ApiKeyRequestParams,
@@ -21,7 +21,7 @@ import type {
 import { FlowType } from "@/types/flow"
 import type { File, Sheet } from "@/types/sheet"
 import type { Knowledge } from "@/types/knowledge"
-import type { MethodOption } from "@dtyq/magic-flow/MagicExpressionWidget/types"
+import type { MethodOption } from "@dtyq/magic-flow/dist/MagicExpressionWidget/types"
 import type { HttpClient } from "../core/HttpClient"
 
 export const generateFlowApi = (fetch: HttpClient) => ({

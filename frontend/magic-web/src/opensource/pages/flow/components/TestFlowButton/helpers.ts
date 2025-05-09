@@ -1,7 +1,7 @@
 import type { User } from "@/types/user"
 import dayjs from "dayjs"
 import { nanoid } from "nanoid"
-import type Schema from "@dtyq/magic-flow/MagicJsonSchemaEditor/types/Schema"
+import type Schema from "@dtyq/magic-flow/dist/MagicJsonSchemaEditor/types/Schema"
 import { ConversationMessageType } from "@/types/chat/conversation_message"
 import { TriggerType } from "../../nodes/Start/v0/constants"
 import type { DynamicFormItem } from "./hooks/useArguments"

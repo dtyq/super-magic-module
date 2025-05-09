@@ -152,6 +152,7 @@ class ServiceProviderApi extends AbstractApi
         $authenticatable = $this->getAuthorization();
         $category = $request->input('category');
         $modelType = (int) $request->input('model_type', -1);
+        $modelTypes = $request->input('model_types', []);
         $modelType = ModelType::tryFrom($modelType);
         $serviceProviderCategory = ServiceProviderCategory::tryFrom($category);
         $serviceProviderConfigId = $request->input('service_provider_config_id');
@@ -164,11 +165,17 @@ class ServiceProviderApi extends AbstractApi
             );
         }
 
-        // 否则返回所有服务商及其模型信息
+        // 处理modelTypes参数：
+        // 如果model_types为空但model_type有值，将model_type放入model_types
+        if (empty($modelTypes) && $modelType !== null) {
+            $modelTypes = [$modelType->value];
+        }
+
+        // 返回所有服务商及其模型信息，传入model_types数组
         return $this->serviceProviderAppService->getActiveModelsByOrganizationCode(
             $authenticatable->getOrganizationCode(),
             $serviceProviderCategory,
-            $modelType
+            $modelTypes
         );
     }
 

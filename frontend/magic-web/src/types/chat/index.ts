@@ -120,6 +120,8 @@ export enum ControlEventMessageType {
 	GroupUpdate = "group_update",
 	/** 添加好友成功 */
 	AddFriendSuccess = "add_friend_success",
+	/** 编辑消息 */
+	EditMessage = "edit_message",
 }
 
 /**

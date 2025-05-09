@@ -20,7 +20,7 @@ class ProviderModelFactory
     {
         $entity = new ProviderModelEntity();
         $entity->setId($model->id)
-            ->setServiceProviderConfigId($model->service_provider_config_id)
+            ->setProviderConfigId($model->service_provider_config_id)
             ->setName($model->name)
             ->setModelVersion($model->model_version)
             ->setCategory(Category::from($model->category))

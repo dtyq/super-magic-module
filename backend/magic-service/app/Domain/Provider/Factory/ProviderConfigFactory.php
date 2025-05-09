@@ -19,7 +19,7 @@ class ProviderConfigFactory
     {
         $entity = new ProviderConfigEntity();
         $entity->setId($model->id);
-        $entity->setServiceProviderId($model->service_provider_id);
+        $entity->setProviderId($model->service_provider_id);
         $entity->setOrganizationCode($model->organization_code);
         // Model accessors handle encoding/decoding, so we can pass the raw config array
         $entity->setConfig(new ProviderConfigVO($model->config));

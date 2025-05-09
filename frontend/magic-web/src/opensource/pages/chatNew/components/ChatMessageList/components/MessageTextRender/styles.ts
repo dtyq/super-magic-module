@@ -30,6 +30,15 @@ export const useStyles = createStyles(
 				width: 16px;
 				height: 16px;
 			}
+
+			.ProseMirror {
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: nowrap;
+				display: -webkit-box;
+				${lineClamp !== false && `-webkit-line-clamp: ${lineClamp};`}
+				-webkit-box-orient: vertical;
+			}
 		`,
 		aiImageText: css`
 			overflow: hidden;

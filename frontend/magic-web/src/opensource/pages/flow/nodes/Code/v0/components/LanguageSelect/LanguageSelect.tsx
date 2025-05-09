@@ -1,6 +1,6 @@
 import { cx } from "antd-style"
 import { IconSelector } from "@tabler/icons-react"
-import MagicSelect from "@dtyq/magic-flow/common/BaseUI/Select"
+import MagicSelect from "@dtyq/magic-flow/dist/common/BaseUI/Select"
 import { Form } from "antd"
 import styles from "./index.module.less"
 import { LanguageOptions } from "./constants"

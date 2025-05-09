@@ -25,6 +25,15 @@ readonly class ProviderDomainService
         return $this->providerRepository->getById($dataIsolation, $id);
     }
 
+    /**
+     * @param array<int> $ids
+     * @return array<ProviderEntity>
+     */
+    public function getByIds(ProviderDataIsolation $dataIsolation, array $ids): array
+    {
+        return $this->providerRepository->getByIds($dataIsolation, $ids);
+    }
+
     public function getByCode(ProviderDataIsolation $dataIsolation, string $providerCode): ?ProviderEntity
     {
         return $this->providerRepository->getByCode($dataIsolation, $providerCode);

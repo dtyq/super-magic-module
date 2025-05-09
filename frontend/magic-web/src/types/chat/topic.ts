@@ -34,3 +34,16 @@ export interface ConversationTopic {
 	created_at?: number
 	updated_at?: number
 }
+
+/**
+ * 编辑消息
+ */
+export interface EditMessage extends ConversationMessageBase {
+	type: ControlEventMessageType.EditMessage
+	[ControlEventMessageType.EditMessage]: {
+		refer_message_id: string
+		markdown: string
+		text: string
+		rich_text: string
+	}
+}

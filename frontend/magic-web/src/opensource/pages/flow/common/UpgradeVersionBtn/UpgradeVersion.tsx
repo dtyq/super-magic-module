@@ -1,19 +1,21 @@
 import { IconCircleArrowUp } from "@tabler/icons-react"
 import { Popconfirm, Tooltip } from "antd"
-import { useCurrentNode } from "@dtyq/magic-flow/MagicFlow/nodes/common/context/CurrentNode/useCurrentNode"
+import { useCurrentNode } from "@dtyq/magic-flow/dist/MagicFlow/nodes/common/context/CurrentNode/useCurrentNode"
 import { useMemo } from "react"
-import { getLatestNodeVersion } from "@dtyq/magic-flow/MagicFlow/utils"
+import { getLatestNodeVersion } from "@dtyq/magic-flow/dist/MagicFlow/utils"
 import { useMemoizedFn } from "ahooks"
 import { useTranslation } from "react-i18next"
 import { cloneDeep } from "lodash-es"
-import { useFlow } from "@dtyq/magic-flow/MagicFlow/context/FlowContext/useFlow"
+import { useFlow } from "@dtyq/magic-flow/dist/MagicFlow/context/FlowContext/useFlow"
 import { customNodeType } from "../../constants"
 import { useStyles } from "./styles"
 import { getNodeSchema } from "../../utils/helpers"
 import { compareNodeVersion } from "./helpers"
+import { useCommercial } from "../../context/CommercialContext"
 
 export default function UpgradeVersionBtn() {
 	const { currentNode } = useCurrentNode()
+	const commercialData = useCommercial()
 
 	const { updateNodeConfig } = useFlow()
 
@@ -26,8 +28,8 @@ export default function UpgradeVersionBtn() {
 	}, [currentNode])
 
 	const isOldVersion = useMemo(() => {
-		const currentNodeVersion = currentNode?.node_version!
-		return compareNodeVersion(currentNodeLatestVersion || "v0", currentNodeVersion || "v0")
+		const currentNodeVersion = currentNode?.node_version ?? "v0"
+		return compareNodeVersion(currentNodeLatestVersion || "v0", currentNodeVersion)
 		// return true
 	}, [currentNode?.node_version, currentNodeLatestVersion])
 
@@ -76,7 +78,7 @@ export default function UpgradeVersionBtn() {
 				break
 			case customNodeType.WaitForReply:
 			case customNodeType.SearchUsers:
-			case customNodeType.KnowledgeSearch:
+			case commercialData?.enterpriseNodeTypes.KnowledgeSearch:
 			case customNodeType.LLM:
 			case customNodeType.VectorSearch:
 			case customNodeType.Loader:
