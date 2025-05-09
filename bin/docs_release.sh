@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -e
+set -x
 
 if (( "$#" != 1 ))
 then
@@ -10,6 +11,7 @@ fi
 
 NOW=$(date +%s)
 VERSION=$1
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 
 # Always prepend with "v"
 if [[ $VERSION != v*  ]]
@@ -19,15 +21,18 @@ fi
 
 # 获取脚本所在目录的绝对路径
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-# 获取 service 目录的绝对路径
-SERVICE_DIR="$(cd "${SCRIPT_DIR}/../docs" && pwd)"
+# 获取 docs 目录的绝对路径
+DOCS_DIR="$(cd "${SCRIPT_DIR}/../docs" && pwd)"
 # 获取根目录的绝对路径
 ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
-# 加载环境变量
+# 加载环境变量 (静默方式)
+set +x  # 暂时关闭命令回显
 if [ -f "${ROOT_DIR}/.env" ]; then
-    export $(grep -v '^#' "${ROOT_DIR}/.env" | xargs)
+    echo "正在加载环境变量..."
+    source "${ROOT_DIR}/.env"
 fi
+set -x  # 重新开启命令回显
 
 # 使用环境变量获取Git仓库URL，默认使用GitHub
 if [ -z "${GIT_REPO_URL}" ]; then
@@ -50,47 +55,29 @@ if [[ $confirm != "y" && $confirm != "Y" ]]; then
     exit 0
 fi
 
-echo ""
-echo ""
-echo "Cloning magic-docs";
-TMP_DIR="/tmp/magic-split"
+function split()
+{
+    SHA1=`./bin/splitsh-lite --prefix=$1`
+    git push $2 "$SHA1:refs/heads/$CURRENT_BRANCH" -f
+}
 
-rm -rf $TMP_DIR;
-mkdir $TMP_DIR;
+function remote()
+{
+    git remote add $1 $2 || true
+}
 
-(
-    cd $TMP_DIR;
-    git clone $REMOTE_URL;
-    cd magic-docs;
-    # 获取默认分支名
-    DEFAULT_BRANCH=$(git remote show origin | grep 'HEAD branch' | cut -d' ' -f5);
-    git checkout $DEFAULT_BRANCH;
+git pull origin $CURRENT_BRANCH
 
-    # 备份原有的 Dockerfile
-    # if [ -f Dockerfile ]; then
-    #     mv Dockerfile Dockerfile.bak
-    # fi
+# 初始化远程连接
+remote magic-docs $REMOTE_URL
 
-    # 复制 service 目录下的所有文件（包括隐藏文件）
-    cp -a "${SERVICE_DIR}"/* .
-    cp -a "${SERVICE_DIR}"/.gitignore .
-    cp -a "${SERVICE_DIR}"/.vitepress .
-    # 还原原有的 Dockerfile
-    # if [ -f Dockerfile.bak ]; then
-    #     mv Dockerfile.bak Dockerfile
-    # fi
+# 执行分割并推送
+split "docs" magic-docs
 
-    # 添加并提交更改
-    git add .
-    git commit -m "chore: update docs files for version ${VERSION}"
-
-    if [[ $(git log --pretty="%d" -n 1 | grep tag --count) -eq 0 ]]; then
-        echo "Releasing magic-docs"
-        git tag $VERSION
-        git push origin $DEFAULT_BRANCH
-        git push origin --tags
-    fi
-)
+# 打标签并推送标签
+git fetch magic-docs
+git tag -a $VERSION -m "Release $VERSION" $CURRENT_BRANCH
+git push magic-docs $VERSION
 
 TIME=$(echo "$(date +%s) - $NOW" | bc)
 
