@@ -444,7 +444,7 @@ class ModelGatewayMapper extends ModelMapper
         if (! in_array($providerModel->getOrganizationCode(), $providerDataIsolation->getOfficialOrganizationCodes())) {
             if ($providerModel->getModelParentId() && $providerModel->getId() !== $providerModel->getModelParentId()) {
                 $providerModel = di(ProviderModelDomainService::class)->getById($providerDataIsolation, $providerModel->getModelParentId());
-                if (! $providerModel->getStatus()->isEnabled()) {
+                if (! $providerModel || ! $providerModel->getStatus()->isEnabled()) {
                     return null;
                 }
             }
