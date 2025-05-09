@@ -28,6 +28,7 @@ use App\Domain\ModelAdmin\Repository\Persistence\ServiceProviderConfigRepository
 use App\Domain\ModelAdmin\Repository\Persistence\ServiceProviderModelsRepository;
 use App\Domain\ModelAdmin\Repository\Persistence\ServiceProviderOriginalModelsRepository;
 use App\Domain\ModelAdmin\Repository\Persistence\ServiceProviderRepository;
+use App\Domain\ModelAdmin\Repository\ValueObject\UpdateConsumerModel;
 use App\Domain\ModelAdmin\Service\Provider\ServiceProviderFactory;
 use App\ErrorCode\ServiceProviderErrorCode;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
@@ -1427,13 +1428,17 @@ class ServiceProviderDomainService
 
             $this->serviceProviderModelsRepository->batchSaveModels($modelEntities);
         } else {
-            $modelParentId = $serviceProviderModelsEntity->getId();
             // 修改官方的模型
             $modelArray = $serviceProviderModelsEntity->toArray();
-            $this->serviceProviderModelsRepository->batchUpdateModelsAndOffice($modelParentId, $modelArray, true);
+            $this->serviceProviderModelsRepository->updateOfficeModel($serviceProviderModelsEntity->getId(), $modelArray);
             // 修改客户的模型信息
-            unset($modelArray['status']);
-            $this->serviceProviderModelsRepository->batchUpdateModelsAndOffice($modelParentId, $modelArray, false);
+            $updateConsumerModel = new UpdateConsumerModel();
+            $updateConsumerModel->setName($serviceProviderModelsEntity->getName());
+            $updateConsumerModel->setIcon($serviceProviderModelsEntity->getIcon());
+            $updateConsumerModel->setTranslate($serviceProviderModelsEntity->getTranslate());
+            $updateConsumerModel->setVisibleOrganizations($serviceProviderModelsEntity->getVisibleOrganizations());
+            $modelParentId = $serviceProviderModelsEntity->getId();
+            $this->serviceProviderModelsRepository->updateConsumerModel($modelParentId, $updateConsumerModel);
         }
     }
 
