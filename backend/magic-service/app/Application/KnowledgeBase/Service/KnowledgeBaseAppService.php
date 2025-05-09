@@ -20,7 +20,7 @@ use App\Infrastructure\Core\Embeddings\VectorStores\VectorStoreDriver;
 use App\Infrastructure\Core\Exception\BusinessException;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Infrastructure\Core\ValueObject\Page;
-use App\Interfaces\KnowledgeBase\DTO\DocumentFileDTO;
+use App\Interfaces\KnowledgeBase\DTO\DocumentFile\ExternalDocumentFileDTO;
 use Qbhy\HyperfAuth\Authenticatable;
 use Throwable;
 
@@ -29,7 +29,7 @@ use function Hyperf\Translation\__;
 class KnowledgeBaseAppService extends AbstractKnowledgeAppService
 {
     /**
-     * @param array<DocumentFileDTO> $documentFiles
+     * @param array<ExternalDocumentFileDTO> $documentFiles
      */
     public function save(Authenticatable $authorization, KnowledgeBaseEntity $magicFlowKnowledgeEntity, array $documentFiles = []): KnowledgeBaseEntity
     {

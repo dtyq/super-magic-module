@@ -11,7 +11,7 @@ use App\Domain\Flow\Entity\ValueObject\Query\KnowledgeBaseDocumentQuery;
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseDocumentEntity;
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseEntity;
 use App\Domain\KnowledgeBase\Entity\ValueObject\DocType;
-use App\Domain\KnowledgeBase\Entity\ValueObject\DocumentFileVO;
+use App\Domain\KnowledgeBase\Entity\ValueObject\DocumentFile\DocumentFileInterface;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeBaseDataIsolation;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeSyncStatus;
 use App\Domain\KnowledgeBase\Event\KnowledgeBaseDefaultDocumentSavedEvent;
@@ -22,7 +22,6 @@ use App\ErrorCode\FlowErrorCode;
 use App\Infrastructure\Core\Embeddings\VectorStores\VectorStoreDriver;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Infrastructure\Core\ValueObject\Page;
-use App\Infrastructure\Util\FileType;
 use Dtyq\AsyncEvent\AsyncEventUtil;
 use Hyperf\DbConnection\Db;
 
@@ -36,7 +35,7 @@ readonly class KnowledgeBaseDocumentDomainService
     ) {
     }
 
-    public function create(KnowledgeBaseDataIsolation $dataIsolation, KnowledgeBaseEntity $knowledgeBaseEntity, KnowledgeBaseDocumentEntity $documentEntity, ?DocumentFileVO $documentFile = null): KnowledgeBaseDocumentEntity
+    public function create(KnowledgeBaseDataIsolation $dataIsolation, KnowledgeBaseEntity $knowledgeBaseEntity, KnowledgeBaseDocumentEntity $documentEntity, ?DocumentFileInterface $documentFile = null): KnowledgeBaseDocumentEntity
     {
         $this->prepareForCreation($documentEntity, $documentFile);
         $entity = $this->knowledgeBaseDocumentRepository->create($dataIsolation, $documentEntity);
@@ -186,7 +185,7 @@ readonly class KnowledgeBaseDocumentDomainService
     /**
      * 准备创建.
      */
-    private function prepareForCreation(KnowledgeBaseDocumentEntity $documentEntity, ?DocumentFileVO $documentFile = null): void
+    private function prepareForCreation(KnowledgeBaseDocumentEntity $documentEntity, ?DocumentFileInterface $documentFile = null): void
     {
         if (empty($documentEntity->getName())) {
             ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, '文档名称不能为空');
@@ -207,12 +206,7 @@ readonly class KnowledgeBaseDocumentDomainService
 
         $documentEntity->setUpdatedAt($documentEntity->getCreatedAt());
         $documentEntity->setUpdatedUid($documentEntity->getCreatedUid());
-        if ($documentFile) {
-            $extension = FileType::getType($documentFile->getFileLink()->getUrl());
-            $documentEntity->setDocType(DocType::fromExtension($extension)->value);
-        } else {
-            $documentEntity->setDocType(DocType::TXT->value);
-        }
+        $documentEntity->setDocType($documentFile?->getDocType()?->value ?? DocType::TXT->value);
         $documentEntity->setSyncStatus(0); // 0 表示未同步
     }
 

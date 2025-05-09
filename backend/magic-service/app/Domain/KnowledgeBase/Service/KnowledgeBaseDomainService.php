@@ -10,7 +10,7 @@ namespace App\Domain\KnowledgeBase\Service;
 use App\Domain\Flow\Entity\ValueObject\Code;
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseEntity;
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseFragmentEntity;
-use App\Domain\KnowledgeBase\Entity\ValueObject\DocumentFileVO;
+use App\Domain\KnowledgeBase\Entity\ValueObject\DocumentFile\DocumentFileInterface;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeBaseDataIsolation;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeSyncStatus;
 use App\Domain\KnowledgeBase\Entity\ValueObject\Query\KnowledgeBaseFragmentQuery;
@@ -37,7 +37,7 @@ readonly class KnowledgeBaseDomainService
 
     /**
      * 保存知识库 - 基本信息.
-     * @param array<DocumentFileVO> $files
+     * @param array<DocumentFileInterface> $files
      */
     public function save(KnowledgeBaseDataIsolation $dataIsolation, KnowledgeBaseEntity $savingMagicFlowKnowledgeEntity, array $files = []): KnowledgeBaseEntity
     {

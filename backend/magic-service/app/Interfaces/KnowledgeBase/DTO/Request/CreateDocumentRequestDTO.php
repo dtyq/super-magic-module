@@ -8,7 +8,8 @@ declare(strict_types=1);
 namespace App\Interfaces\KnowledgeBase\DTO\Request;
 
 use App\Infrastructure\Core\AbstractRequestDTO;
-use App\Interfaces\KnowledgeBase\DTO\DocumentFileDTO;
+use App\Interfaces\KnowledgeBase\DTO\DocumentFile\AbstractDocumentFileDTO;
+use App\Interfaces\KnowledgeBase\DTO\DocumentFile\DocumentFileDTOInterface;
 
 class CreateDocumentRequestDTO extends AbstractRequestDTO
 {
@@ -20,7 +21,7 @@ class CreateDocumentRequestDTO extends AbstractRequestDTO
 
     public array $vectorDbConfig = [];
 
-    public DocumentFileDTO $documentFile;
+    public DocumentFileDTOInterface $documentFile;
 
     public static function getHyperfValidationRules(): array
     {
@@ -91,14 +92,14 @@ class CreateDocumentRequestDTO extends AbstractRequestDTO
         return $this;
     }
 
-    public function getDocumentFile(): ?DocumentFileDTO
+    public function getDocumentFile(): ?DocumentFileDTOInterface
     {
         return $this->documentFile;
     }
 
-    public function setDocumentFile(array|DocumentFileDTO $documentFile): void
+    public function setDocumentFile(array|DocumentFileDTOInterface $documentFile): void
     {
-        is_array($documentFile) && $documentFile = new DocumentFileDTO($documentFile);
+        is_array($documentFile) && $documentFile = AbstractDocumentFileDTO::fromArray($documentFile);
         $this->documentFile = $documentFile;
     }
 }

@@ -12,7 +12,8 @@ use App\Application\KnowledgeBase\VectorDatabase\Similarity\KnowledgeSimilarityM
 use App\Application\Permission\Service\OperationPermissionAppService;
 use App\Domain\Contact\Service\MagicUserDomainService;
 use App\Domain\File\Service\FileDomainService;
-use App\Domain\KnowledgeBase\Entity\ValueObject\DocumentFileVO;
+use App\Domain\KnowledgeBase\Entity\ValueObject\DocumentFile\DocumentFileInterface;
+use App\Domain\KnowledgeBase\Entity\ValueObject\DocumentFile\ExternalDocumentFile;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeBaseDataIsolation;
 use App\Domain\KnowledgeBase\Service\KnowledgeBaseDocumentDomainService;
 use App\Domain\KnowledgeBase\Service\KnowledgeBaseDomainService;
@@ -20,10 +21,13 @@ use App\Domain\KnowledgeBase\Service\KnowledgeBaseFragmentDomainService;
 use App\Domain\ModelAdmin\Service\ServiceProviderDomainService;
 use App\Domain\Permission\Entity\ValueObject\OperationPermission\Operation;
 use App\Domain\Permission\Entity\ValueObject\OperationPermission\ResourceType;
+use App\ErrorCode\FlowErrorCode;
 use App\ErrorCode\PermissionErrorCode;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Infrastructure\Core\File\Parser\FileParser;
-use App\Interfaces\KnowledgeBase\DTO\DocumentFileDTO;
+use App\Interfaces\KnowledgeBase\DTO\DocumentFile\DocumentFileDTOInterface;
+use App\Interfaces\KnowledgeBase\DTO\DocumentFile\ExternalDocumentFileDTO;
+use App\Interfaces\KnowledgeBase\DTO\DocumentFile\ThirdPlatformDocumentFileDTO;
 use Hyperf\Logger\LoggerFactory;
 use Psr\Log\LoggerInterface;
 
@@ -46,23 +50,30 @@ abstract class AbstractKnowledgeAppService extends AbstractKernelAppService
         $this->logger = $loggerFactory->get(get_class($this));
     }
 
-    public function documentFileDTOToVO(?DocumentFileDTO $dto): ?DocumentFileVO
+    public function documentFileDTOToVO(?DocumentFileDTOInterface $dto): ?DocumentFileInterface
     {
         if ($dto === null) {
             return null;
         }
-        $data = $dto->toArray();
-        unset($data['file_link']);
-        return (new DocumentFileVO($data))->setFileLink($dto->getFileLink());
+        switch (get_class($dto)) {
+            case ExternalDocumentFileDTO::class:
+                $data = $dto->toArray();
+                unset($data['file_link']);
+                return (new ExternalDocumentFile($data))->setFileLink($dto->getFileLink());
+            case ThirdPlatformDocumentFileDTO::class:
+                return new ExternalDocumentFile($dto->toArray());
+            default:
+                ExceptionBuilder::throw(FlowErrorCode::KnowledgeValidateFailed);
+        }
     }
 
     /**
-     * @param array<DocumentFileDTO> $dtoList
-     * @return array<DocumentFileVO>
+     * @param array<DocumentFileDTOInterface> $dtoList
+     * @return array<DocumentFileInterface>
      */
     public function documentFileDTOListToVOList(array $dtoList): array
     {
-        return array_map(fn (DocumentFileDTO $dto) => $this->documentFileDTOToVO($dto), $dtoList);
+        return array_map(fn (DocumentFileDTOInterface $dto) => $this->documentFileDTOToVO($dto), $dtoList);
     }
 
     protected function getKnowledgeOperation(KnowledgeBaseDataIsolation $dataIsolation, int|string $knowledgeCode): Operation

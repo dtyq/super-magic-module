@@ -16,7 +16,7 @@ use App\Domain\KnowledgeBase\Entity\ValueObject\Query\KnowledgeBaseFragmentQuery
 use App\Infrastructure\Core\ValueObject\Page;
 use App\Infrastructure\Util\SSRF\Exception\SSRFException;
 use App\Interfaces\KnowledgeBase\Assembler\KnowledgeBaseFragmentAssembler;
-use App\Interfaces\KnowledgeBase\DTO\DocumentFileDTO;
+use App\Interfaces\KnowledgeBase\DTO\DocumentFile\ExternalDocumentFileDTO;
 use App\Interfaces\KnowledgeBase\DTO\KnowledgeBaseFragmentDTO;
 use Qbhy\HyperfAuth\Authenticatable;
 
@@ -79,7 +79,7 @@ class KnowledgeBaseFragmentAppService extends AbstractKnowledgeAppService
      * @return array<KnowledgeBaseFragmentEntity>
      * @throws SSRFException
      */
-    public function fragmentPreview(Authenticatable $authorization, DocumentFileDTO $documentFile, FragmentConfig $fragmentConfig): array
+    public function fragmentPreview(Authenticatable $authorization, ExternalDocumentFileDTO $documentFile, FragmentConfig $fragmentConfig): array
     {
         $dataIsolation = $this->createKnowledgeBaseDataIsolation($authorization);
         $fileUrl = $this->fileDomainService->getLink($dataIsolation->getCurrentOrganizationCode(), $documentFile->getKey());

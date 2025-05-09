@@ -12,7 +12,7 @@ use App\Domain\KnowledgeBase\Entity\KnowledgeBaseDocumentEntity;
 use App\Domain\KnowledgeBase\Entity\ValueObject\Query\KnowledgeBaseFragmentQuery;
 use App\Infrastructure\Core\Embeddings\VectorStores\VectorStoreDriver;
 use App\Infrastructure\Core\ValueObject\Page;
-use App\Interfaces\KnowledgeBase\DTO\DocumentFileDTO;
+use App\Interfaces\KnowledgeBase\DTO\DocumentFile\ExternalDocumentFileDTO;
 use Qbhy\HyperfAuth\Authenticatable;
 
 class KnowledgeBaseDocumentAppService extends AbstractKnowledgeAppService
@@ -28,7 +28,7 @@ class KnowledgeBaseDocumentAppService extends AbstractKnowledgeAppService
     /**
      * 保存知识库文档.
      */
-    public function save(Authenticatable $authorization, KnowledgeBaseDocumentEntity $documentEntity, ?DocumentFileDTO $documentFile = null): KnowledgeBaseDocumentEntity
+    public function save(Authenticatable $authorization, KnowledgeBaseDocumentEntity $documentEntity, ?ExternalDocumentFileDTO $documentFile = null): KnowledgeBaseDocumentEntity
     {
         $dataIsolation = $this->createKnowledgeBaseDataIsolation($authorization);
         $this->checkKnowledgeBaseOperation($dataIsolation, 'w', $documentEntity->getKnowledgeBaseCode(), $documentEntity->getCode());
