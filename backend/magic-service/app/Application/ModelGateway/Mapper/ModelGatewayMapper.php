@@ -65,7 +65,7 @@ class ModelGatewayMapper extends ModelMapper
         $this->loadApiModels();
     }
 
-    public function exist(string $model, ?string $orgCode = null): bool
+    public function exists(string $model, ?string $orgCode = null): bool
     {
         if (isset($this->models['chat'][$model]) || isset($this->models['embedding'][$model])) {
             return true;
@@ -138,6 +138,7 @@ class ModelGatewayMapper extends ModelMapper
 
     /**
      * 获取当前组织下的所有可用 embedding 模型.
+     * @return OdinModel[]
      */
     public function getEmbeddingModels(string $organizationCode): array
     {
