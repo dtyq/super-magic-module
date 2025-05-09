@@ -4,9 +4,6 @@
 *.patch
 .idea/
 .git/
-./service/runtime/
-./service/vendor/
-./service/vendor/composer.lock
 .phpintel/
 ./service/.env
 .env
@@ -32,3 +29,7 @@ volumes/
 node_modules
 .env_super_magic
 bin/splitsh-lite
+backend/magic-service/vendor/
+backend/magic-service/composer.lock
+backend/magic-service/runtime/
+
