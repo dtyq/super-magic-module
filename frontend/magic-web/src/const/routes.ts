@@ -1,4 +1,5 @@
 export const enum RoutePath {
+	/*/api 和/v1 是后端服务使用的路由，为了避免做反向代理时，跟后端服务冲突，不可以使用这两个路由*/
 	Home = "/home",
 	Chat = "/chat",
 	Login = "/login",
