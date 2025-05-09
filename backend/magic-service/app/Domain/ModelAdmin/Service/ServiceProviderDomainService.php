@@ -1428,11 +1428,10 @@ class ServiceProviderDomainService
             $this->serviceProviderModelsRepository->batchSaveModels($modelEntities);
         } else {
             $modelParentId = $serviceProviderModelsEntity->getId();
-            // 修改官方的模型
             $modelArray = $serviceProviderModelsEntity->toArray();
+            // 修改官方的模型
             $this->serviceProviderModelsRepository->updateOfficeModel($modelParentId, $modelArray);
             // 修改客户的模型信息
-            unset($modelArray['status']);
             $this->serviceProviderModelsRepository->updateConsumerModel($modelParentId, $serviceProviderModelsEntity->getName(), $serviceProviderModelsEntity->getIcon(), $serviceProviderModelsEntity->getTranslate(), $serviceProviderModelsEntity->getVisibleOrganizations());
         }
     }
