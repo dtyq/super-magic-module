@@ -13,7 +13,6 @@
 .DS_Store
 *.cache
 *.lock
-!composer.lock
 .php-accessor/
 .phpunit*
 .vscode/
@@ -32,3 +31,4 @@ docs/.vitepress/cache/deps/*
 volumes/
 node_modules
 .env_super_magic
+bin/splitsh-lite
