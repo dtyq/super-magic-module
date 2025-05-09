@@ -33,7 +33,7 @@ WORKDIR /opt/www
 # RUN composer config -g repo.packagist composer https://mirrors.aliyun.com/composer/
 
 
-# 关闭swow扩展 再安装, 因为安装swow扩展后 再执行composer update 时会陷入curl 死循环
+# 关闭swow扩展 再安装, 因为安装swow扩展后 再执行composer update 时，curl会陷入循环
 RUN  php -d swow.enable=0  $(which composer) update 
 
 # 可选的：标记expose端口
