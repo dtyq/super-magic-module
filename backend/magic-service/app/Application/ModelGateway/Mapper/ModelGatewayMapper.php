@@ -65,7 +65,7 @@ class ModelGatewayMapper extends ModelMapper
         $this->loadApiModels();
     }
 
-    public function exist(string $model, ?string $orgCode = null): bool
+    public function exists(string $model, ?string $orgCode = null): bool
     {
         if (isset($this->models['chat'][$model]) || isset($this->models['embedding'][$model])) {
             return true;
@@ -138,6 +138,7 @@ class ModelGatewayMapper extends ModelMapper
 
     /**
      * 获取当前组织下的所有可用 embedding 模型.
+     * @return OdinModel[]
      */
     public function getEmbeddingModels(string $organizationCode): array
     {
@@ -399,12 +400,15 @@ class ModelGatewayMapper extends ModelMapper
 
         $key = $providerModelEntity->getModelId();
 
+        $implementation = $providerEntity->getProviderCode()->getImplementation();
+        $implementationConfig = $providerEntity->getProviderCode()->getImplementationConfig($providerConfigEntity->getConfig(), $providerModelEntity->getModelVersion());
+
         return new OdinModel(
             key: $key,
             model: $this->createModel($providerModelEntity->getModelVersion(), [
                 'model' => $providerModelEntity->getModelVersion(),
-                'implementation' => $providerEntity->getProviderCode()->getImplementation(),
-                'config' => $providerEntity->getProviderCode()->getImplementationConfig($providerConfigEntity->getConfig(), $providerModelEntity->getModelVersion()),
+                'implementation' => $implementation,
+                'config' => $implementationConfig,
                 'model_options' => [
                     'chat' => $chat,
                     'function_call' => $functionCall,
@@ -441,7 +445,7 @@ class ModelGatewayMapper extends ModelMapper
         if (! in_array($providerModel->getOrganizationCode(), $providerDataIsolation->getOfficialOrganizationCodes())) {
             if ($providerModel->getModelParentId() && $providerModel->getId() !== $providerModel->getModelParentId()) {
                 $providerModel = di(ProviderModelDomainService::class)->getById($providerDataIsolation, $providerModel->getModelParentId());
-                if (! $providerModel->getStatus()->isEnabled()) {
+                if (! $providerModel || ! $providerModel->getStatus()->isEnabled()) {
                     return null;
                 }
             }

@@ -294,34 +294,34 @@ export default function useFlowEvents ({ resetLastLayoutData, resetCanLayout, cu
 
 	// backspace删除事件
 	const onNodesDelete = useMemoizedFn((_nodes: (Node & Partial<MagicFlow.Node>)[]) => {
-		const deleteIds = _nodes.reduce((acc, n) => {
-			// @ts-ignore
-			const nodeType = n.node_type
-			// 如果删除的是分组节点，则需要把子节点一并删除
-			if(judgeIsLoopBody(nodeType)) {
-				const subNodeIds = nodes.filter(_n => _n.parentId === n.id).map(_n => _n.id)
-				const result = [...subNodeIds, n.id]
-				// 如果删除的是循环体，则需要将循环节点一并删除
-				// @ts-ignore
-				if(n.meta.parent_id) {
-					result.push(n?.meta?.parent_id)
-				}
-				return result
-			}
-			// 如果删除的是循环节点，则需要把循环体和循环体内节点删除
-			if(judgeLoopNode(nodeType)) {
-				const loopBodyNodeIds = nodes.filter(_n => _n.parentId === n.id || n?.meta?.parent_id === n.id).map(_n => _n.id)
-				return [...loopBodyNodeIds, n.id]
-			}
-			return [...acc, n.id]
-		}, [] as string[])
+		// const deleteIds = _nodes.reduce((acc, n) => {
+		// 	// @ts-ignore
+		// 	const nodeType = n.node_type
+		// 	// 如果删除的是分组节点，则需要把子节点一并删除
+		// 	if(judgeIsLoopBody(nodeType)) {
+		// 		const subNodeIds = nodes.filter(_n => _n.parentId === n.id).map(_n => _n.id)
+		// 		const result = [...subNodeIds, n.id]
+		// 		// 如果删除的是循环体，则需要将循环节点一并删除
+		// 		// @ts-ignore
+		// 		if(n.meta.parent_id) {
+		// 			result.push(n?.meta?.parent_id)
+		// 		}
+		// 		return result
+		// 	}
+		// 	// 如果删除的是循环节点，则需要把循环体和循环体内节点删除
+		// 	if(judgeLoopNode(nodeType)) {
+		// 		const loopBodyNodeIds = nodes.filter(_n => _n.parentId === n.id || n?.meta?.parent_id === n.id).map(_n => _n.id)
+		// 		return [...loopBodyNodeIds, n.id]
+		// 	}
+		// 	return [...acc, n.id]
+		// }, [] as string[])
 
-        deleteNodes(deleteIds)
+        // deleteNodes(deleteIds)
 
-		resetLastLayoutData()
-		resetCanLayout()
+		// resetLastLayoutData()
+		// resetCanLayout()
 		
-		notifyNodeChange?.()
+		// notifyNodeChange?.()
 	})
 
 	const onEdgesDelete = useMemoizedFn((_edges: Edge[]) => {

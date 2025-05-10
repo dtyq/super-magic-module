@@ -46,7 +46,7 @@ class TextEmbeddingNodeRunner extends NodeRunner
         if (empty($input)) {
             ExceptionBuilder::throw(FlowErrorCode::ExecuteValidateFailed, 'flow.node.text_embedding.empty_text');
         }
-        $embeddingModel = $this->modelGatewayMapper->getEmbeddingModelProxy($modelName);
+        $embeddingModel = $this->modelGatewayMapper->getEmbeddingModelProxy($modelName, $executionData->getDataIsolation()->getCurrentOrganizationCode());
 
         $embeddingGenerator = ApplicationContext::getContainer()->get(EmbeddingGeneratorInterface::class);
 

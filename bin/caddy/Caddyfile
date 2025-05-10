@@ -1,15 +1,6 @@
-{
-    # 全局配置
-    auto_https off
-    log {
-        output stdout
-        format console
-    }
-}
-
 # 文件服务
 :80 {
-    # 文件服务根目录
+    # 上传文件服务根目录
     root * /srv/files
     
     # 启用文件浏览
@@ -21,6 +12,40 @@
     # 设置缓存
     header {
         Cache-Control "public, max-age=3600"
+    }
+
+    handle {
+        # 检查是否是 WebSocket 请求
+        if {header Connection} contains Upgrade {
+            reverse_proxy {
+                to magic-service:9502
+                header_up Host {host}
+                header_up X-Real-IP {remote}
+                header_up X-Forwarded-For {remote}
+                header_up X-Forwarded-Proto {scheme}
+                header_down Access-Control-Allow-Origin *
+            }
+        }
+    }
+
+    # 反向代理 API 服务
+    reverse_proxy /api/* {
+        to magic-service:9501
+        header_up Host {host}
+        header_up X-Real-IP {remote}
+        header_up X-Forwarded-For {remote}
+        header_up X-Forwarded-Proto {scheme}
+        header_down Access-Control-Allow-Origin *
+    }
+
+    # 反向代理 API 服务
+    reverse_proxy /v1/* {
+        to magic-service:9501
+        header_up Host {host}
+        header_up X-Real-IP {remote}
+        header_up X-Forwarded-For {remote}
+        header_up X-Forwarded-Proto {scheme}
+        header_down Access-Control-Allow-Origin *
     }
     
     # 日志配置

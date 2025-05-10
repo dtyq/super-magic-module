@@ -1,20 +1,19 @@
 #!/bin/bash
 
-# 检测系统默认语言 / Detect system default language
+# Detect system default language
 detect_language() {
-  # 默认使用英文 / Default to English
+  # Default to English
   DEFAULT_LANG="en"
   
-  # 获取系统语言设置 / Get system language settings
+  # Get system language settings
   if [[ "$(uname -s)" == "Darwin" ]]; then
-    # macOS 系统 / macOS system
+    # macOS system
     SYS_LANG=$(defaults read -g AppleLocale 2>/dev/null || echo "en_US")
   else
-    # Linux 和其他系统 / Linux and other systems
+    # Linux and other systems
     SYS_LANG=$(echo $LANG || echo $LC_ALL || echo $LC_MESSAGES || echo "en_US.UTF-8")
   fi
   
-  # 如果语言代码以 zh_ 开头，设置为中文，否则使用英文
   # If language code starts with zh_, set to Chinese, otherwise use English
   if [[ $SYS_LANG == zh_* ]]; then
     DEFAULT_LANG="zh"
@@ -23,21 +22,16 @@ detect_language() {
   echo $DEFAULT_LANG
 }
 
-# 获取系统语言 / Get system language
+# Get system language
 SYSTEM_LANG=$(detect_language)
 
-# 双语提示函数 / Bilingual prompt function
-# 用法: bilingual "中文消息" "English message"
+# Bilingual prompt function
 # Usage: bilingual "Chinese message" "English message"
 bilingual() {
-  if [[ "$SYSTEM_LANG" == "zh" ]]; then
-    echo "$1 | $2"
-  else
-    echo "$2 | $1"
-  fi
+  echo "$2"
 }
 
-# 检查是否安装了 Docker / Check if Docker is installed
+# Check if Docker is installed
 if ! command -v docker &> /dev/null; then
     bilingual "错误: Docker 未安装。" "Error: Docker is not installed."
     bilingual "请先安装 Docker:" "Please install Docker first:"
@@ -53,7 +47,7 @@ if ! command -v docker &> /dev/null; then
     exit 1
 fi
 
-# 检查 Docker 是否正在运行 / Check if Docker is running
+# Check if Docker is running
 if ! docker info &> /dev/null; then
     bilingual "错误: Docker 未运行。" "Error: Docker is not running."
     bilingual "请启动 Docker 并重试。" "Please start Docker and try again."
@@ -66,7 +60,7 @@ if ! docker info &> /dev/null; then
     exit 1
 fi
 
-# 检查是否安装了 docker-compose / Check if docker-compose is installed
+# Check if docker-compose is installed
 if ! command -v docker-compose &> /dev/null; then
     bilingual "错误: docker-compose 未安装。" "Error: docker-compose is not installed."
     bilingual "请先安装 docker-compose:" "Please install docker-compose first:"
@@ -85,7 +79,7 @@ if ! command -v docker-compose &> /dev/null; then
     exit 1
 fi
 
-# 检测系统架构 / Detect system architecture
+# Detect system architecture
 ARCH=$(uname -m)
 case $ARCH in
     x86_64)
@@ -100,30 +94,29 @@ case $ARCH in
         ;;
 esac
 
-# 如果是 macOS arm64 则不设置 PLATFORM / Do not set PLATFORM if using macOS arm64
+# Do not set PLATFORM if using macOS arm64
 if [ "$(uname -s)" == "Darwin" ] && [ "$(uname -m)" == "arm64" ]; then
     export PLATFORM=""
 fi
 
 bilingual "检测到架构: $ARCH，使用平台: $PLATFORM" "Detected architecture: $ARCH, using platform: $PLATFORM"
 
-# 判断 .env 是否存在，如果不存在复制 .env.example 到 .env
 # Check if .env exists, if not copy .env.example to .env
 if [ ! -f .env ]; then
     cp .env.example .env
 fi
 
-# 修改 .env 的 PLATFORM 变量 / Modify PLATFORM variable in .env
+# Modify PLATFORM variable in .env
 if [ -n "$PLATFORM" ]; then
     if [ "$(uname -s)" == "Darwin" ]; then
-        # macOS 版本 / macOS version
+        # macOS version
         sed -i '' "s/^PLATFORM=.*/PLATFORM=$PLATFORM/" .env
     else
-        # Linux 版本 / Linux version
+        # Linux version
         sed -i "s/^PLATFORM=.*/PLATFORM=$PLATFORM/" .env
     fi
 else
-    # 如果 PLATFORM 为空，将其设置为空字符串 / If PLATFORM is empty, set it to an empty string
+    # If PLATFORM is empty, set it to an empty string
     if [ "$(uname -s)" == "Darwin" ]; then
         sed -i '' "s/^PLATFORM=.*/PLATFORM=/" .env
     else
@@ -131,15 +124,14 @@ else
     fi
 fi
 
-# 检测公网IP并更新环境变量 / Detect public IP and update environment variables
+# Detect public IP and update environment variables
 detect_public_ip() {
-    # 询问用户部署方式 / Ask user about deployment method
+    # Ask user about deployment method
     bilingual "请选择您的部署方式:" "Please select your deployment method:"
     bilingual "1. 本地电脑部署" "1. Local deployment"
     bilingual "2. 远程服务器部署" "2. Remote server deployment"
     read -p "$(bilingual "请输入选项编号 [1/2]: " "Please enter option number [1/2]: ")" DEPLOYMENT_TYPE
     
-    # 如果用户选择本地部署，则不进行IP更新
     # If user chooses local deployment, do not update IP
     if [ "$DEPLOYMENT_TYPE" = "1" ]; then
         bilingual "已选择本地部署，保持默认设置。" "Local deployment selected, keeping default settings."
@@ -151,10 +143,10 @@ detect_public_ip() {
     
     bilingual "正在检测公网IP..." "Detecting public IP..."
     
-    # 尝试多种方法获取公网IP / Try multiple methods to get public IP
+    # Try multiple methods to get public IP
     PUBLIC_IP=""
     
-    # 方法1: 使用ipinfo.io / Method 1: Using ipinfo.io
+    # Method 1: Using ipinfo.io
     if [ -z "$PUBLIC_IP" ]; then
         PUBLIC_IP=$(curl -s https://ipinfo.io/ip 2>/dev/null)
         if [ -z "$PUBLIC_IP" ] || [[ $PUBLIC_IP == *"html"* ]]; then
@@ -162,7 +154,7 @@ detect_public_ip() {
         fi
     fi
     
-    # 方法2: 使用ip.sb / Method 2: Using ip.sb
+    # Method 2: Using ip.sb
     if [ -z "$PUBLIC_IP" ]; then
         PUBLIC_IP=$(curl -s https://api.ip.sb/ip 2>/dev/null)
         if [ -z "$PUBLIC_IP" ] || [[ $PUBLIC_IP == *"html"* ]]; then
@@ -170,7 +162,7 @@ detect_public_ip() {
         fi
     fi
     
-    # 方法3: 使用ipify / Method 3: Using ipify
+    # Method 3: Using ipify
     if [ -z "$PUBLIC_IP" ]; then
         PUBLIC_IP=$(curl -s https://api.ipify.org 2>/dev/null)
         if [ -z "$PUBLIC_IP" ] || [[ $PUBLIC_IP == *"html"* ]]; then
@@ -178,7 +170,6 @@ detect_public_ip() {
         fi
     fi
     
-    # 如果成功获取公网IP，询问用户是否使用此IP
     # If successfully obtained public IP, ask user whether to use this IP
     if [ -n "$PUBLIC_IP" ]; then
         bilingual "检测到公网IP: $PUBLIC_IP" "Detected public IP: $PUBLIC_IP"
@@ -188,14 +179,13 @@ detect_public_ip() {
         if [[ "$USE_DETECTED_IP" =~ ^[Yy]$ ]]; then
             bilingual "正在更新环境变量..." "Updating environment variables..."
             
-            # 更新MAGIC_SOCKET_BASE_URL和MAGIC_SERVICE_BASE_URL
             # Update MAGIC_SOCKET_BASE_URL and MAGIC_SERVICE_BASE_URL
             if [ "$(uname -s)" == "Darwin" ]; then
-                # macOS版本 / macOS version
+                # macOS version
                 sed -i '' "s|^MAGIC_SOCKET_BASE_URL=ws://localhost:9502|MAGIC_SOCKET_BASE_URL=ws://$PUBLIC_IP:9502|" .env
                 sed -i '' "s|^MAGIC_SERVICE_BASE_URL=http://localhost:9501|MAGIC_SERVICE_BASE_URL=http://$PUBLIC_IP:9501|" .env
             else
-                # Linux版本 / Linux version
+                # Linux version
                 sed -i "s|^MAGIC_SOCKET_BASE_URL=ws://localhost:9502|MAGIC_SOCKET_BASE_URL=ws://$PUBLIC_IP:9502|" .env
                 sed -i "s|^MAGIC_SERVICE_BASE_URL=http://localhost:9501|MAGIC_SERVICE_BASE_URL=http://$PUBLIC_IP:9501|" .env
             fi
@@ -217,14 +207,13 @@ detect_public_ip() {
             if [ -n "$MANUAL_IP_ADDRESS" ]; then
                 bilingual "正在使用IP: $MANUAL_IP_ADDRESS 更新环境变量..." "Updating environment variables with IP: $MANUAL_IP_ADDRESS..."
                 
-                # 更新MAGIC_SOCKET_BASE_URL和MAGIC_SERVICE_BASE_URL
                 # Update MAGIC_SOCKET_BASE_URL and MAGIC_SERVICE_BASE_URL
                 if [ "$(uname -s)" == "Darwin" ]; then
-                    # macOS版本 / macOS version
+                    # macOS version
                     sed -i '' "s|^MAGIC_SOCKET_BASE_URL=ws://localhost:9502|MAGIC_SOCKET_BASE_URL=ws://$MANUAL_IP_ADDRESS:9502|" .env
                     sed -i '' "s|^MAGIC_SERVICE_BASE_URL=http://localhost:9501|MAGIC_SERVICE_BASE_URL=http://$MANUAL_IP_ADDRESS:9501|" .env
                 else
-                    # Linux版本 / Linux version
+                    # Linux version
                     sed -i "s|^MAGIC_SOCKET_BASE_URL=ws://localhost:9502|MAGIC_SOCKET_BASE_URL=ws://$MANUAL_IP_ADDRESS:9502|" .env
                     sed -i "s|^MAGIC_SERVICE_BASE_URL=http://localhost:9501|MAGIC_SERVICE_BASE_URL=http://$MANUAL_IP_ADDRESS:9501|" .env
                 fi
@@ -241,10 +230,10 @@ detect_public_ip() {
     fi
 }
 
-# 运行IP检测和更新 / Run IP detection and update
+# Run IP detection and update
 detect_public_ip
 
-# 检查Super Magic环境配置文件是否存在 / Check if Super Magic environment file exists
+# Check if Super Magic environment file exists
 check_super_magic_env() {
     if [ ! -f .env_super_magic ]; then
         if [ -f .env_super_magic.example ]; then
@@ -264,7 +253,7 @@ check_super_magic_env() {
     return 0
 }
 
-# 询问是否安装Super Magic服务 / Ask if Super Magic service should be installed
+# Ask if Super Magic service should be installed
 ask_super_magic() {
     bilingual "是否安装Super Magic服务?" "Do you want to install Super Magic service?"
     bilingual "1. 是，安装Super Magic服务" "1. Yes, install Super Magic service"
@@ -274,13 +263,11 @@ ask_super_magic() {
     if [ "$SUPER_MAGIC_OPTION" = "1" ]; then
         bilingual "您选择了安装Super Magic服务。" "You have chosen to install Super Magic service."
         
-        # 检查.env_super_magic文件是否存在
         # Check if .env_super_magic exists
         if ! check_super_magic_env; then
             exit 1
         fi
         
-        # 在docker-compose命令中添加super-magic配置文件
         # Add super-magic profile to docker-compose commands
         export MAGIC_USE_SUPER_MAGIC="--profile super-magic"
         bilingual "Super Magic服务将被启动。" "Super Magic service will be started."
@@ -290,10 +277,10 @@ ask_super_magic() {
     fi
 }
 
-# 运行Super Magic安装询问 / Run Super Magic installation inquiry
+# Run Super Magic installation inquiry
 ask_super_magic
 
-# 显示帮助信息 / Show help information
+# Show help information
 show_help() {
     bilingual "用法: $0 [命令]" "Usage: $0 [command]"
     echo ""
@@ -310,45 +297,44 @@ show_help() {
     bilingual "如果未提供命令，默认使用 'start'" "If no command is provided, 'start' will be used by default."
 }
 
-# 启动服务 / Start services
+# Start services
 start_services() {
     bilingual "正在前台启动服务..." "Starting services in foreground..."
     docker-compose $MAGIC_USE_SUPER_MAGIC up
 }
 
-# 停止服务 / Stop services
+# Stop services
 stop_services() {
     bilingual "正在停止服务..." "Stopping services..."
     docker-compose $MAGIC_USE_SUPER_MAGIC down
 }
 
-# 后台启动服务 / Start services in background
+# Start services in background
 start_daemon() {
     bilingual "正在后台启动服务..." "Starting services in background..."
     docker-compose $MAGIC_USE_SUPER_MAGIC up -d
 }
 
-# 重启服务 / Restart services
+# Restart services
 restart_services() {
     bilingual "正在重启服务..." "Restarting services..."
     docker-compose $MAGIC_USE_SUPER_MAGIC restart
 }
 
-# 查看服务状态 / Show services status
+# Show services status
 show_status() {
     bilingual "服务状态:" "Services status:"
     docker-compose $MAGIC_USE_SUPER_MAGIC ps
 }
 
-# 查看服务日志 / Show services logs
+# Show services logs
 show_logs() {
     bilingual "显示服务日志:" "Showing services logs:"
     docker-compose $MAGIC_USE_SUPER_MAGIC logs -f
 }
 
-# 仅启动Super Magic服务 / Start only Super Magic service
+# Start only Super Magic service
 start_super_magic() {
-    # 检查.env_super_magic文件是否存在
     # Check if .env_super_magic exists
     if ! check_super_magic_env; then
         exit 1
@@ -358,9 +344,8 @@ start_super_magic() {
     docker-compose --profile super-magic up
 }
 
-# 后台仅启动Super Magic服务 / Start only Super Magic service in background
+# Start only Super Magic service in background
 start_super_magic_daemon() {
-    # 检查.env_super_magic文件是否存在
     # Check if .env_super_magic exists
     if ! check_super_magic_env; then
         exit 1
@@ -370,7 +355,7 @@ start_super_magic_daemon() {
     docker-compose --profile super-magic up -d
 }
 
-# 处理命令行参数 / Handle command line arguments
+# Handle command line arguments
 case "$1" in
     start)
         start_services

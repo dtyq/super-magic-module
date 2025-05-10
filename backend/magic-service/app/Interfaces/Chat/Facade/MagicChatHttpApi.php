@@ -136,8 +136,7 @@ class MagicChatHttpApi extends AbstractApi
             ]
         );
         $conversations = $this->magicChatMessageAppService->getConversations($authorization, $dto);
-        $hasMore = count($conversations) >= $dto->getLimit();
-        return PageListAssembler::pageByMysql($conversations, $dto->getPageToken(), $hasMore);
+        return PageListAssembler::pageByMysql($conversations, (int) $dto->getPageToken(), $dto->getLimit(), count($dto->getIds()));
     }
 
     /**
@@ -317,7 +316,7 @@ class MagicChatHttpApi extends AbstractApi
             $authorization = $this->getAuthorization();
             $list = $this->chatGroupAppService->getGroupsInfo($groupIds, $authorization);
         }
-        return PageListAssembler::pageByMysql($list, $pageToken);
+        return PageListAssembler::pageByMysql($list);
     }
 
     public function GroupUpdateInfo(string $id, RequestInterface $request): array
@@ -348,7 +347,7 @@ class MagicChatHttpApi extends AbstractApi
         $pageToken = (string) $request->query('page_token', '');
         $authorization = $this->getAuthorization();
         $users = $this->chatGroupAppService->getGroupUserList($id, $pageToken, $authorization);
-        return PageListAssembler::pageByMysql($users, $pageToken);
+        return PageListAssembler::pageByMysql($users);
     }
 
     /**
@@ -357,9 +356,10 @@ class MagicChatHttpApi extends AbstractApi
     public function getUserGroupList(RequestInterface $request): array
     {
         $pageToken = (string) $request->input('page_token', '');
+        $pageSize = 50;
         $authorization = $this->getAuthorization();
-        $groups = $this->chatGroupAppService->getUserGroupList($pageToken, $authorization);
-        return PageListAssembler::pageByMysql($groups, $pageToken);
+        $groups = $this->chatGroupAppService->getUserGroupList($pageToken, $authorization, $pageSize);
+        return PageListAssembler::pageByMysql($groups, (int) $pageToken, $pageSize);
     }
 
     public function getMessageReceiveList(string $messageId): array

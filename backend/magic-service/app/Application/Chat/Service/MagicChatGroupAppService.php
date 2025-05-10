@@ -317,10 +317,10 @@ class MagicChatGroupAppService extends AbstractAppService
     /**
      * 获取用户的群列表.
      */
-    public function getUserGroupList(string $pageToken, MagicUserAuthorization $userAuthorization): array
+    public function getUserGroupList(string $pageToken, MagicUserAuthorization $userAuthorization, int $pageSize): array
     {
         $dataIsolation = $this->createDataIsolation($userAuthorization);
-        return $this->magicGroupDomainService->getUserGroupList($pageToken, $dataIsolation);
+        return $this->magicGroupDomainService->getUserGroupList($pageToken, $dataIsolation, $pageSize);
     }
 
     public function groupTransferOwner(MagicGroupEntity $magicGroupDTO, MagicUserAuthorization $userAuthorization): array

@@ -49,7 +49,13 @@ class MagicFlowFactory
         }
         $nodes = [];
         foreach ($magicFlowArray['nodes'] ?? [] as $nodeArr) {
-            $node = new Node($nodeArr['node_type'], $nodeArr['node_version'] ?? $defaultNodeVersion);
+            if (! isset($nodeArr['node_type'])) {
+                continue;
+            }
+            if (! isset($nodeArr['node_version']) || $nodeArr['node_version'] === '') {
+                $nodeArr['node_version'] = $defaultNodeVersion;
+            }
+            $node = new Node($nodeArr['node_type'], $nodeArr['node_version']);
             $node->setNodeId($nodeArr['node_id']);
             $node->setDebug($nodeArr['debug'] ?? false);
             $node->setName($nodeArr['name']);

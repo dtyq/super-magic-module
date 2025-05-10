@@ -111,9 +111,9 @@ class MagicGroupDomainService extends AbstractDomainService
         return $this->magicGroupRepository->isUsersInGroup($groupId, $userIds);
     }
 
-    public function getUserGroupList(string $pageToken, DataIsolation $dataIsolation): array
+    public function getUserGroupList(string $pageToken, DataIsolation $dataIsolation, int $pageSize): array
     {
-        $groupEntities = $this->magicGroupRepository->getUserGroupList($pageToken, $dataIsolation->getCurrentUserId());
+        $groupEntities = $this->magicGroupRepository->getUserGroupList($pageToken, $dataIsolation->getCurrentUserId(), $pageSize);
         // 用户在这些群聊中的会话id
         $groupIds = array_column($groupEntities, 'id');
         $conversations = $this->magicConversationRepository->getConversationsByReceiveIds($dataIsolation->getCurrentUserId(), $groupIds);

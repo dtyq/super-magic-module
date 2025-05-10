@@ -113,7 +113,7 @@ const ContentEditable = (
 	const { extraClassname, makeCanScroll, banScroll } = useExtraClassname()
 
 	const computedZoom = useMemo(() => {
-		if (isInFlow) return 1
+		if (!isInFlow) return 1
 		return zoom
 	}, [isInFlow, zoom])
 

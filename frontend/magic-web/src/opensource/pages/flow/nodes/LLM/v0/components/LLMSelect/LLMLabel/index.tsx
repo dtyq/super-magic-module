@@ -4,7 +4,6 @@ import { createStyles, cx } from "antd-style"
 
 import { Tooltip } from "antd"
 
-// eslint-disable-next-line react-refresh/only-export-components
 export enum LLMLabelTagType {
 	Text = 1,
 	Icon = 2,

@@ -36,7 +36,7 @@ use App\Interfaces\Authorization\Web\MagicUserAuthorization;
     version: 'v0',
     singleDebug: false,
     needInput: false,
-    needOutput: true,
+    needOutput: false,
 )]
 class CreateGroupNodeRunner extends NodeRunner
 {

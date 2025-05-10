@@ -45,6 +45,8 @@ use Hyperf\Odin\Contract\Api\Response\ResponseInterface;
 use Hyperf\Odin\Contract\Model\EmbeddingInterface;
 use Hyperf\Odin\Contract\Model\ModelInterface;
 use Hyperf\Odin\Exception\LLMException;
+use Hyperf\Odin\Model\AbstractModel;
+use Hyperf\Odin\Model\AwsBedrockModel;
 use Hyperf\Odin\Tool\Definition\ToolDefinition;
 use Hyperf\Odin\Utils\MessageUtil;
 use Hyperf\Odin\Utils\ToolUtil;
@@ -71,9 +73,12 @@ class LLMAppService extends AbstractLLMAppService
 
         $list = [];
         foreach ($models as $name => $odinModel) {
+            /** @var AbstractModel $model */
+            $model = $odinModel->getModel();
+
             $modelConfigEntity = new ModelConfigEntity();
             // 服务商的接入点
-            $modelConfigEntity->setModel($odinModel->getModel()->getModelName());
+            $modelConfigEntity->setModel($model->getModelName());
             // 模型类型
             $modelConfigEntity->setType($odinModel->getAttributes()->getKey());
             $modelConfigEntity->setName($odinModel->getAttributes()->getLabel() ?: $odinModel->getAttributes()->getName());
@@ -82,7 +87,7 @@ class LLMAppService extends AbstractLLMAppService
             if ($withInfo) {
                 $modelConfigEntity->setInfo([
                     'attributes' => $odinModel->getAttributes()->toArray(),
-                    'options' => $odinModel->getModel()->getModelOptions()->toArray(),
+                    'options' => $model->getModelOptions()->toArray(),
                 ]);
             }
 
@@ -209,6 +214,7 @@ class LLMAppService extends AbstractLLMAppService
             if (empty($modeId)) {
                 $modeId = $proxyModelRequest->getModel();
             }
+
             $model = match ($proxyModelRequest->getType()) {
                 'chat' => $this->modelGatewayMapper->getOrganizationChatModel($modeId, $orgCode),
                 'embedding' => $this->modelGatewayMapper->getOrganizationEmbeddingModel($modeId, $orgCode),
@@ -230,6 +236,10 @@ class LLMAppService extends AbstractLLMAppService
             // 防止死循环
             if (! $model || $model instanceof MagicAILocalModel) {
                 ExceptionBuilder::throw(MagicApiErrorCode::MODEL_NOT_SUPPORT);
+            }
+
+            if ($model instanceof AwsBedrockModel && method_exists($model, 'setConfig')) {
+                $model->setConfig(array_merge($model->getConfig(), $this->createAwsAutoCacheConfig($proxyModelRequest)));
             }
 
             // 记录开始时间
@@ -285,7 +295,7 @@ class LLMAppService extends AbstractLLMAppService
             );
 
             $this->logModelCallFailure($proxyModelRequest->getModel(), $exception);
-            ExceptionBuilder::throw(MagicApiErrorCode::MODEL_RESPONSE_FAIL, $exception->getMessage(), throwable: $exception);
+            throw $exception;
         } catch (Throwable $throwable) {
             $startTime = $startTime ?? microtime(true);
             // 计算响应耗时
@@ -677,5 +687,35 @@ class LLMAppService extends AbstractLLMAppService
             $msgLog->setCreatedAt(new DateTime());
             $this->msgLogDomainService->create($LLMDataIsolation, $msgLog);
         });
+    }
+
+    private function createAwsAutoCacheConfig(ProxyModelRequestInterface $proxyModelRequest): array
+    {
+        $autoCache = $proxyModelRequest->getHeaderConfig('AWS-AutoCache', true);
+        if ($autoCache === 'false') {
+            $autoCache = false;
+        }
+        $autoCache = (bool) $autoCache;
+
+        $maxCachePoints = (int) $proxyModelRequest->getHeaderConfig('AWS-MaxCachePoints', 4);
+        $maxCachePoints = max(min($maxCachePoints, 4), 1);
+
+        $minCacheTokens = (int) $proxyModelRequest->getHeaderConfig('AWS-MinCacheTokens', 2048);
+        $minCacheTokens = max($minCacheTokens, 2048);
+
+        $refreshPointMinTokens = (int) $proxyModelRequest->getHeaderConfig('AWS-RefreshPointMinTokens', 5000);
+        $refreshPointMinTokens = max($refreshPointMinTokens, 2048);
+
+        return [
+            'auto_cache' => $autoCache,
+            'auto_cache_config' => [
+                // 最大缓存点数量
+                'max_cache_points' => $maxCachePoints,
+                // 缓存点最小生效 tokens 阈值。tools+system 的最小缓存 tokens
+                'min_cache_tokens' => $minCacheTokens,
+                // 刷新缓存点的最小 tokens 阈值。messages 的最小缓存 tokens
+                'refresh_point_min_tokens' => $refreshPointMinTokens,
+            ],
+        ];
     }
 }

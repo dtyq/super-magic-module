@@ -94,8 +94,7 @@ class MagicDepartmentAppService extends AbstractAppService
         }
         // 通讯录和搜索相关接口，过滤隐藏部门和隐藏用户。
         $departments = $this->filterDepartmentsHidden($departments);
-        $hasMore = (count($departments) === $pageSize);
-        return PageListAssembler::pageByMysql($departments, $pageToken, $hasMore);
+        return PageListAssembler::pageByMysql($departments, $offset, $pageSize);
     }
 
     public function searchDepartment(DepartmentQueryDTO $queryDTO, MagicUserAuthorization $userAuthorization): array
@@ -110,7 +109,7 @@ class MagicDepartmentAppService extends AbstractAppService
         // 通讯录和搜索相关接口，过滤隐藏部门和隐藏用户。
         $departments = $this->filterDepartmentsHidden($departments);
         // 全量查找，没有更多
-        return PageListAssembler::pageByMysql($departments, $pageToken);
+        return PageListAssembler::pageByMysql($departments);
     }
 
     public function updateDepartmentsOptionByIds(array $userIds, ?DepartmentOption $departmentOption = null): int

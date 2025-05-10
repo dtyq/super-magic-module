@@ -115,6 +115,6 @@ class MagicChatUserApi extends AbstractApi
         $friendQueryDTO->setPageToken($pageToken);
         $friendQueryDTO->setAiCodes($aiCodes);
         $friends = $this->userAppService->getUserFriendList($friendQueryDTO, $authorization);
-        return PageListAssembler::pageByMysql($friends, $pageToken);
+        return PageListAssembler::pageByMysql($friends);
     }
 }

@@ -62,7 +62,7 @@ readonly class KnowledgeBaseSyncSubscriber implements ListenerInterface
                 $knowledge->setSyncStatus(KnowledgeSyncStatus::Syncing);
                 $knowledgeBaseDomainService->changeSyncStatus($knowledge);
 
-                $model = $this->container->get(ModelGatewayMapper::class)->getEmbeddingModelProxy($knowledge->getModel());
+                $model = $this->container->get(ModelGatewayMapper::class)->getEmbeddingModelProxy($knowledge->getModel(), $knowledge->getOrganizationCode());
                 $vector->createCollection($knowledge->getCollectionName(), $model->getVectorSize());
                 $knowledge->setSyncStatus(KnowledgeSyncStatus::Synced);
                 $changed = true;

@@ -29,8 +29,6 @@ import { checkIsInLoop, mergeOptionsIntoOne } from "../../utils/helpers"
 import { generateLoopItemOptions } from "./helpers"
 import { LoopTypes } from "../../nodes/Loop/v0/components/LoopTypeSelect"
 import { useFlowInstance } from "../../context/FlowInstanceContext"
-// @ts-ignore
-import { useReactFlow } from "reactflow"
 
 export default function usePrevious() {
 	const { flow } = useFlowData()

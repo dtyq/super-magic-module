@@ -58,7 +58,7 @@ readonly class KnowledgeBaseFragmentSyncSubscriber implements ListenerInterface
                 $fragment->setSyncStatus(KnowledgeSyncStatus::Syncing);
                 $magicFlowKnowledgeDomainService->changeSyncStatus($fragment);
 
-                $model = di(ModelGatewayMapper::class)->getEmbeddingModelProxy($knowledge->getModel());
+                $model = di(ModelGatewayMapper::class)->getEmbeddingModelProxy($knowledge->getModel(), $knowledge->getOrganizationCode());
                 $embeddingGenerator = di(EmbeddingGeneratorInterface::class);
                 $embeddings = $embeddingGenerator->embedText($model, $fragment->getContent(), options: [
                     'business_params' => [

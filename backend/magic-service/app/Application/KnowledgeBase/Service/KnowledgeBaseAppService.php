@@ -11,20 +11,16 @@ use App\Application\ModelGateway\Mapper\ModelGatewayMapper;
 use App\Domain\Contact\Entity\MagicUserEntity;
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseEntity;
 use App\Domain\KnowledgeBase\Entity\ValueObject\Query\KnowledgeBaseQuery;
-use App\Domain\ModelAdmin\Constant\ModelType;
 use App\Domain\Permission\Entity\ValueObject\OperationPermission\Operation;
 use App\Domain\Permission\Entity\ValueObject\OperationPermission\ResourceType;
 use App\ErrorCode\FlowErrorCode;
 use App\Infrastructure\Core\Embeddings\EmbeddingGenerator\EmbeddingGenerator;
 use App\Infrastructure\Core\Embeddings\VectorStores\VectorStoreDriver;
-use App\Infrastructure\Core\Exception\BusinessException;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Infrastructure\Core\ValueObject\Page;
 use App\Interfaces\KnowledgeBase\DTO\DocumentFile\ExternalDocumentFileDTO;
 use Qbhy\HyperfAuth\Authenticatable;
 use Throwable;
-
-use function Hyperf\Translation\__;
 
 class KnowledgeBaseAppService extends AbstractKnowledgeAppService
 {
@@ -59,11 +55,25 @@ class KnowledgeBaseAppService extends AbstractKnowledgeAppService
             $magicFlowKnowledgeEntity->setModel($oldKnowledge->getModel());
             $magicFlowKnowledgeEntity->setVectorDB($oldKnowledge->getVectorDB());
         }
+        $modelGatewayMapper = di(ModelGatewayMapper::class);
+
         // 创建的才需要设置
         if ($magicFlowKnowledgeEntity->shouldCreate()) {
-            // 设置嵌入模型和向量数据库
-            $model = $this->serviceProviderDomainService->findSelectedActiveProviderByType($dataIsolation->getCurrentOrganizationCode(), ModelType::EMBEDDING);
-            $magicFlowKnowledgeEntity->setModel($magicFlowKnowledgeEntity->getEmbeddingConfig()['model_id'] ?? $model?->getServiceProviderModelsEntity()?->getModelId() ?? EmbeddingGenerator::defaultModel());
+            $modelId = $magicFlowKnowledgeEntity->getEmbeddingConfig()['model_id'] ?? null;
+            if (! $modelId) {
+                // 优先使用配置的模型
+                $modelId = EmbeddingGenerator::defaultModel();
+                if (! $modelGatewayMapper->exists($modelId, $dataIsolation->getCurrentOrganizationCode())) {
+                    // 获取第一个
+                    $firstEmbeddingModel = $modelGatewayMapper->getEmbeddingModels($dataIsolation->getCurrentOrganizationCode())[0] ?? null;
+                    $modelId = $firstEmbeddingModel->getKey();
+                }
+            }
+            if (! $modelId) {
+                ExceptionBuilder::throw(FlowErrorCode::KnowledgeValidateFailed, 'flow.model.error_config_missing', ['name' => 'embedding_model']);
+            }
+
+            $magicFlowKnowledgeEntity->setModel($modelId);
             $magicFlowKnowledgeEntity->setVectorDB(VectorStoreDriver::default()->value);
         }
 
@@ -78,11 +88,11 @@ class KnowledgeBaseAppService extends AbstractKnowledgeAppService
         $modelName = $magicFlowKnowledgeEntity->getModel();
         // 创建知识库前，先对嵌入模型进行连通性测试
         try {
-            $embeddingModel = di(ModelGatewayMapper::class)->getEmbeddingModelProxy($magicFlowKnowledgeEntity->getModel());
+            $embeddingModel = di(ModelGatewayMapper::class)->getEmbeddingModelProxy($magicFlowKnowledgeEntity->getModel(), $dataIsolation->getCurrentOrganizationCode());
             $modelName = $embeddingModel->getModelName();
             $embeddingResult = $embeddingModel->embedding('test', businessParams: ['organization_id' => $dataIsolation->getCurrentOrganizationCode(), 'user_id' => $dataIsolation->getCurrentUserId()]);
             if (count($embeddingResult->getEmbeddings()) !== $embeddingModel->getVectorSize()) {
-                throw new BusinessException(__('flow.model.vector_size_not_match'));
+                ExceptionBuilder::throw(FlowErrorCode::KnowledgeValidateFailed, 'flow.model.vector_size_not_match', ['model_name' => $modelName]);
             }
         } catch (Throwable $exception) {
             simple_logger('KnowledgeBaseDomainService')->warning('KnowledgeBaseCheckEmbeddingsFailed', [

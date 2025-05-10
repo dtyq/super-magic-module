@@ -43,7 +43,7 @@ export default function PublishFlowButton({
 		if (!latestFlow) return
 		const shadowedFlow = shadowFlow(latestFlow)
 
-		const flowId = latestFlow?.id!
+		const flowId = latestFlow?.id ?? ""
 
 		const requestParams = {
 			name: formValues.name,
