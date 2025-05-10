@@ -10,7 +10,10 @@ namespace App\Application\KnowledgeBase\Service;
 use App\Domain\Flow\Entity\ValueObject\Query\KnowledgeBaseDocumentQuery;
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseDocumentEntity;
 use App\Domain\KnowledgeBase\Entity\ValueObject\Query\KnowledgeBaseFragmentQuery;
+use App\Domain\KnowledgeBase\Event\KnowledgeBaseDocumentSavedEvent;
+use App\ErrorCode\PermissionErrorCode;
 use App\Infrastructure\Core\Embeddings\VectorStores\VectorStoreDriver;
+use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Infrastructure\Core\ValueObject\Page;
 use Qbhy\HyperfAuth\Authenticatable;
 
@@ -114,5 +117,29 @@ class KnowledgeBaseDocumentAppService extends AbstractKnowledgeAppService
 
         // 调用领域服务删除文档
         $this->knowledgeBaseDocumentDomainService->destroy($dataIsolation, $knowledgeBaseCode, $documentCode);
+    }
+
+    /**
+     * 重新向量化.
+     */
+    public function reVectorized(Authenticatable $authorization, string $knowledgeBaseCode, string $documentCode): void
+    {
+        $dataIsolation = $this->createKnowledgeBaseDataIsolation($authorization);
+        $this->checkKnowledgeBaseOperation($dataIsolation, 'manage', $knowledgeBaseCode, $documentCode);
+
+        // 调用领域服务重新向量化
+        $knowledgeBaseEntity = $this->knowledgeBaseDomainService->show($dataIsolation, $knowledgeBaseCode);
+        $documentEntity = $this->knowledgeBaseDocumentDomainService->show($dataIsolation, $knowledgeBaseCode, $documentCode);
+        // 由于历史文档没有 document_file 字段，不能被重新向量化
+        if (! $documentEntity->getDocumentFile()) {
+            ExceptionBuilder::throw(PermissionErrorCode::Error, 'flow.knowledge_base.re_vectorized_not_support');
+        }
+        // 分发事件，重新向量化
+        $documentSavedEvent = new KnowledgeBaseDocumentSavedEvent(
+            $knowledgeBaseEntity,
+            $documentEntity,
+            false,
+        );
+        $this->eventDispatcher->dispatch($documentSavedEvent);
     }
 }

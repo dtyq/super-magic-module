@@ -43,6 +43,10 @@ class KnowledgeBaseFragmentAppService extends AbstractKnowledgeAppService
         if ($knowledgeBaseEntity->getDefaultDocumentCode() === $query->getDocumentCode()) {
             $query->setIsDefaultDocumentCode(true);
         }
+        if (! $query->getVersion()) {
+            $knowledgeBaseDocumentEntity = $this->knowledgeBaseDocumentDomainService->show($dataIsolation, $query->getKnowledgeCode(), $query->getDocumentCode());
+            $query->setVersion($knowledgeBaseDocumentEntity->getVersion());
+        }
 
         return $this->knowledgeBaseFragmentDomainService->queries($dataIsolation, $query, $page);
     }

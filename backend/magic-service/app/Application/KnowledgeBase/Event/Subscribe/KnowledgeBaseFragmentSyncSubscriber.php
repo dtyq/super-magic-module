@@ -8,15 +8,15 @@ declare(strict_types=1);
 namespace App\Application\KnowledgeBase\Event\Subscribe;
 
 use App\Application\KnowledgeBase\Service\KnowledgeBaseVectorAppService;
+use App\Application\ModelGateway\Mapper\ModelGatewayMapper;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeSyncStatus;
 use App\Domain\KnowledgeBase\Event\KnowledgeBaseFragmentSavedEvent;
 use App\Domain\KnowledgeBase\Service\KnowledgeBaseDomainService;
-use App\Infrastructure\Core\Embeddings\EmbeddingGeneratorInterface;
-use App\Infrastructure\Core\ModelGateway\ModelGatewayMapper;
+use App\Infrastructure\Core\Embeddings\EmbeddingGenerator\EmbeddingGeneratorInterface;
 use Dtyq\AsyncEvent\Kernel\Annotation\AsyncListener;
+use Hyperf\Codec\Json;
 use Hyperf\Event\Annotation\Listener;
 use Hyperf\Event\Contract\ListenerInterface;
-use Hyperf\Json\Json;
 use Throwable;
 
 use function di;

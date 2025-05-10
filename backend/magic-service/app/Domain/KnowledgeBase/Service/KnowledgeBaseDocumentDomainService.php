@@ -173,6 +173,13 @@ readonly class KnowledgeBaseDocumentDomainService
         return $res;
     }
 
+    public function increaseVersion(KnowledgeBaseDataIsolation $dataIsolation, KnowledgeBaseDocumentEntity $documentEntity): int
+    {
+        $affectedRows = $this->knowledgeBaseDocumentRepository->increaseVersion($dataIsolation, $documentEntity);
+        $documentEntity->setVersion($documentEntity->getVersion() + 1);
+        return $affectedRows;
+    }
+
     /**
      * 删除文档下的所有片段.
      */

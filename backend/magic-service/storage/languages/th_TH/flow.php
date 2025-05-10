@@ -61,6 +61,9 @@ return [
         'embedding_failed' => '[:model_name] การฝังตัวล้มเหลว, โปรดตรวจสอบการตั้งค่าฝังตัว',
         'vector_size_not_match' => '[:model_name] ขนาดเวกเตอร์ไม่ตรงกับการตั้งค่า, โปรดตรวจสอบขนาดเวกเตอร์',
     ],
+    'knowledge_base' => [
+        're_vectorized_not_support' => 'ไม่รองรับการสร้างเวกเตอร์ใหม่',
+    ],
     'max_record' => [
         'positive_integer' => 'จำนวนบันทึกสูงสุดต้องเป็นจำนวนเต็มบวกระหว่าง :min และ :max',
     ],

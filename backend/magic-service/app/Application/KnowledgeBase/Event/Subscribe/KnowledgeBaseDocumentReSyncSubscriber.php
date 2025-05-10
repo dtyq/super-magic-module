@@ -77,6 +77,13 @@ readonly class KnowledgeBaseDocumentReSyncSubscriber implements ListenerInterfac
 
         // 同步文档
         try {
+            // 自增版本号（抢锁）
+            $affectedRows = $knowledgeBaseDocumentDomainService->increaseVersion($dataIsolation, $documentEntity);
+            // 如果自增失败，说明已经重新向量化过了，提前结束
+            if ($affectedRows === 0) {
+                $logger->info('文档已重新向量化，跳过同步');
+                return;
+            }
             $knowledgeBaseVectorAppService->syncDocument($dataIsolation, $knowledge, $documentEntity);
         } catch (Throwable $throwable) {
             $logger->error($throwable->getMessage() . PHP_EOL . $throwable->getTraceAsString());

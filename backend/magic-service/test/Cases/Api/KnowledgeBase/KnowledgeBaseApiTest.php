@@ -465,7 +465,7 @@ class KnowledgeBaseApiTest extends HttpTestCase
         $this->assertArrayHasKey('total', $res['data']);
         $this->assertArrayHasKey('list', $res['data']);
         $this->assertIsArray($res['data']['list']);
-        $this->assertCount(5, $res['data']['list']);
+        $this->assertCount(4, $res['data']['list']);
     }
 
     public function testGetFragmentDetail()
@@ -494,6 +494,7 @@ class KnowledgeBaseApiTest extends HttpTestCase
         $this->assertArrayHasKey('created_at', $data);
         $this->assertArrayHasKey('updated_at', $data);
         $this->assertArrayHasKey('word_count', $data);
+        $this->assertSame(1, $data['version']);
     }
 
     public function testDestroyFragment()
@@ -617,6 +618,24 @@ class KnowledgeBaseApiTest extends HttpTestCase
             // 验证返回的内容包含查询关键词
             $this->assertStringContainsString('测试', $result['content']);
         }
+    }
+
+    /**
+     * 测试重新向量化.
+     */
+    public function testReVectorized()
+    {
+        $knowledgeBase = $this->createKnowledgeBase();
+        $code = $knowledgeBase['code'];
+        $document = $this->createDocument([], $code);
+        $documentCode = $document['code'];
+
+        $res = $this->post(
+            sprintf('%s/%s/documents/%s/re-vectorized', self::API, $code, $documentCode),
+            [],
+            $this->getCommonHeaders()
+        );
+        $this->assertSame(1000, $res['code'], $res['message']);
     }
 
     /**

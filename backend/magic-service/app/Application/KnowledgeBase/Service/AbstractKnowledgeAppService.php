@@ -26,6 +26,7 @@ use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Infrastructure\Core\File\Parser\FileParser;
 use App\Interfaces\KnowledgeBase\Assembler\KnowledgeBaseDocumentAssembler;
 use App\Interfaces\KnowledgeBase\DTO\DocumentFile\DocumentFileDTOInterface;
+use Hyperf\Event\EventDispatcher;
 use Hyperf\Logger\LoggerFactory;
 use Psr\Log\LoggerInterface;
 
@@ -44,6 +45,7 @@ abstract class AbstractKnowledgeAppService extends AbstractKernelAppService
         protected readonly FileParser $fileParser,
         protected readonly KnowledgeSimilarityManager $knowledgeSimilarityManager,
         protected readonly DocumentFileStrategy $documentFileStrategy,
+        protected readonly EventDispatcher $eventDispatcher,
         LoggerFactory $loggerFactory,
     ) {
         $this->logger = $loggerFactory->get(get_class($this));

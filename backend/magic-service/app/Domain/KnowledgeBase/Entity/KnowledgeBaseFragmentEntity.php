@@ -65,6 +65,8 @@ class KnowledgeBaseFragmentEntity extends AbstractKnowledgeBaseEntity
 
     protected int $wordCount = 0;
 
+    protected int $version = 1;
+
     public function shouldCreate(): bool
     {
         return empty($this->id);
@@ -402,6 +404,17 @@ class KnowledgeBaseFragmentEntity extends AbstractKnowledgeBaseEntity
         }
 
         return $entities;
+    }
+
+    public function getVersion(): int
+    {
+        return $this->version;
+    }
+
+    public function setVersion(int $version): static
+    {
+        $this->version = $version;
+        return $this;
     }
 
     private function checkMetadata(): self

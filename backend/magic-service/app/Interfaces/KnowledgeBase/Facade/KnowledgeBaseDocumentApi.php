@@ -88,4 +88,12 @@ class KnowledgeBaseDocumentApi extends AbstractKnowledgeBaseApi
     {
         $this->knowledgeBaseDocumentAppService->destroy($this->getAuthorization(), $knowledgeBaseCode, $code);
     }
+
+    /**
+     * 重新向量化.
+     */
+    public function reVectorized(string $knowledgeBaseCode, string $code)
+    {
+        $this->knowledgeBaseDocumentAppService->reVectorized($this->getAuthorization(), $knowledgeBaseCode, $code);
+    }
 }

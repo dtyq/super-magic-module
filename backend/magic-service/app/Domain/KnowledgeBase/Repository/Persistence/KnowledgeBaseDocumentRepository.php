@@ -248,6 +248,15 @@ class KnowledgeBaseDocumentRepository extends KnowledgeBaseAbstractRepository im
             ]);
     }
 
+    public function increaseVersion(KnowledgeBaseDataIsolation $dataIsolation, KnowledgeBaseDocumentEntity $documentEntity): int
+    {
+        return KnowledgeBaseDocumentModel::query()
+            ->where('knowledge_base_code', $documentEntity->getKnowledgeBaseCode())
+            ->where('code', $documentEntity->getCode())
+            ->where('version', $documentEntity->getVersion())
+            ->increment('version');
+    }
+
     /**
      * 创建查询构建器.
      */

@@ -61,6 +61,9 @@ return [
         'embedding_failed' => '[:model_name] embedding failed, please check the embedding configuration',
         'vector_size_not_match' => '[:model_name] vector size does not match, please check the vector size',
     ],
+    'knowledge_base' => [
+        're_vectorized_not_support' => 'Re-vectorization is not supported',
+    ],
     'max_record' => [
         'positive_integer' => 'Maximum record number must be a positive integer between :min and :max',
     ],

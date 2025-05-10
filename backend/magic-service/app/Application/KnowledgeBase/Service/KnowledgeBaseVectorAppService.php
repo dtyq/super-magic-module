@@ -49,6 +49,7 @@ class KnowledgeBaseVectorAppService extends AbstractKnowledgeAppService
             $fragmentQuery = new KnowledgeBaseFragmentQuery();
             $fragmentQuery->setKnowledgeCode($knowledge->getCode());
             $fragmentQuery->setDocumentCode($documentEntity->getCode());
+            $fragmentQuery->setVersion($documentEntity->getVersion());
             $fragmentEntities = [];
             $page = new Page(1, 1);
             while (true) {
@@ -101,7 +102,8 @@ class KnowledgeBaseVectorAppService extends AbstractKnowledgeAppService
                 ->setDocumentCode($documentEntity->getCode())
                 ->setContent($text)
                 ->setCreator($documentEntity->getCreatedUid())
-                ->setModifier($documentEntity->getUpdatedUid());
+                ->setModifier($documentEntity->getUpdatedUid())
+                ->setVersion($documentEntity->getVersion());
             $knowledgeBaseDocumentEntity = $this->knowledgeBaseDocumentDomainService->show($dataIsolation, $knowledgeBaseEntity->getCode(), $fragmentEntity->getDocumentCode());
             $knowledgeBaseEntity = $this->knowledgeBaseDomainService->show($dataIsolation, $fragmentEntity->getKnowledgeCode());
             $this->knowledgeBaseFragmentDomainService->save($dataIsolation, $knowledgeBaseEntity, $knowledgeBaseDocumentEntity, $fragmentEntity);
