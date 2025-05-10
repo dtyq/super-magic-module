@@ -102,12 +102,6 @@ abstract class AbstractKnowledgeAppService extends AbstractKernelAppService
                 ExceptionBuilder::throw(PermissionErrorCode::AccessDenied, 'common.access', ['label' => $operation]);
             }
         }
-        // 如果向量数据库创建人是当前用户，则默认拥有管理权限，无需校验权限
-        $knowledgeBase = $this->knowledgeBaseDomainService->show($dataIsolation, $knowledgeBaseCode);
-        if ($knowledgeBase->getCreator() === $dataIsolation->getCurrentUserId()) {
-            return Operation::Owner;
-        }
-
         $operationVO = $this->getKnowledgeOperation($dataIsolation, $knowledgeBaseCode);
         $operationVO->validate($operation, $knowledgeBaseCode);
         return $operationVO;
