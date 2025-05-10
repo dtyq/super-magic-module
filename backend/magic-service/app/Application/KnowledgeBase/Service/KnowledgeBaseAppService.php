@@ -150,16 +150,10 @@ class KnowledgeBaseAppService extends AbstractKnowledgeAppService
     public function queries(Authenticatable $authorization, KnowledgeBaseQuery $query, Page $page): array
     {
         $dataIsolation = $this->createKnowledgeBaseDataIsolation($authorization);
-        $permissionDataIsolation = $this->createPermissionDataIsolation($dataIsolation);
 
-        $resources = $this->operationPermissionAppService->getResourceOperationByUserIds(
-            $permissionDataIsolation,
-            ResourceType::Knowledge,
-            [$authorization->getId()]
-        )[$authorization->getId()] ?? [];
-        $resourceIds = array_keys($resources);
+        $resources = $this->knowledgeBaseStrategy->getKnowledgeBaseOperations($dataIsolation);
 
-        $query->setCodes($resourceIds);
+        $query->setCodes(array_keys($resources));
         $result = $this->knowledgeBaseDomainService->queries($dataIsolation, $query, $page);
         $userIds = [];
         $iconFileLinks = $this->getIcons($dataIsolation->getCurrentOrganizationCode(), array_map(fn ($item) => $item->getIcon(), $result['list']));

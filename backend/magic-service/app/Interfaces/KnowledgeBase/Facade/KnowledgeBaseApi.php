@@ -8,7 +8,6 @@ declare(strict_types=1);
 namespace App\Interfaces\KnowledgeBase\Facade;
 
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseEntity;
-use App\Domain\KnowledgeBase\Entity\ValueObject\Interface\KnowledgeTypeFactoryInterface;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeType;
 use App\Domain\KnowledgeBase\Entity\ValueObject\Query\KnowledgeBaseQuery;
 use App\Interfaces\Authorization\Web\MagicUserAuthorization;
@@ -47,7 +46,7 @@ class KnowledgeBaseApi extends AbstractKnowledgeBaseApi
         $authorization = $this->getAuthorization();
         $query = new KnowledgeBaseQuery($this->request->all());
         $query->setOrder(['updated_at' => 'desc']);
-        $queryKnowledgeTypes = container()->has(KnowledgeTypeFactoryInterface::class) ? di(KnowledgeTypeFactoryInterface::class)->getQueryKnowledgeTypes() : [];
+        $queryKnowledgeTypes = $this->knowledgeBaseStrategy->getQueryKnowledgeTypes();
         $query->setTypes($queryKnowledgeTypes);
         $page = $this->createPage();
 

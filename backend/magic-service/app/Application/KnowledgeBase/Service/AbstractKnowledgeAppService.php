@@ -9,6 +9,7 @@ namespace App\Application\KnowledgeBase\Service;
 
 use App\Application\Kernel\AbstractKernelAppService;
 use App\Application\KnowledgeBase\Service\Strategy\DocumentFile\DocumentFileStrategy;
+use App\Application\KnowledgeBase\Service\Strategy\KnowledgeBase\KnowledgeBaseStrategyInterface;
 use App\Application\KnowledgeBase\VectorDatabase\Similarity\KnowledgeSimilarityManager;
 use App\Application\Permission\Service\OperationPermissionAppService;
 use App\Domain\Contact\Service\MagicUserDomainService;
@@ -44,6 +45,7 @@ abstract class AbstractKnowledgeAppService extends AbstractKernelAppService
         protected readonly FileParser $fileParser,
         protected readonly KnowledgeSimilarityManager $knowledgeSimilarityManager,
         protected readonly DocumentFileStrategy $documentFileStrategy,
+        protected readonly KnowledgeBaseStrategyInterface $knowledgeBaseStrategy,
         LoggerFactory $loggerFactory,
     ) {
         $this->logger = $loggerFactory->get(get_class($this));

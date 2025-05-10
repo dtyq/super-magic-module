@@ -10,14 +10,15 @@ namespace App\Application\KnowledgeBase\Service;
 use App\Application\KnowledgeBase\VectorDatabase\Similarity\KnowledgeSimilarityFilter;
 use App\Application\KnowledgeBase\VectorDatabase\Similarity\KnowledgeSimilarityManager;
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseFragmentEntity;
+use App\Domain\KnowledgeBase\Entity\ValueObject\DocumentFile\DocumentFileInterface;
 use App\Domain\KnowledgeBase\Entity\ValueObject\FragmentConfig;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeRetrievalResult;
 use App\Domain\KnowledgeBase\Entity\ValueObject\Query\KnowledgeBaseFragmentQuery;
 use App\Infrastructure\Core\ValueObject\Page;
 use App\Infrastructure\Util\SSRF\Exception\SSRFException;
 use App\Interfaces\KnowledgeBase\Assembler\KnowledgeBaseFragmentAssembler;
-use App\Interfaces\KnowledgeBase\DTO\DocumentFile\ExternalDocumentFileDTO;
 use App\Interfaces\KnowledgeBase\DTO\KnowledgeBaseFragmentDTO;
+use Exception;
 use Qbhy\HyperfAuth\Authenticatable;
 
 class KnowledgeBaseFragmentAppService extends AbstractKnowledgeAppService
@@ -81,16 +82,12 @@ class KnowledgeBaseFragmentAppService extends AbstractKnowledgeAppService
 
     /**
      * @return array<KnowledgeBaseFragmentEntity>
-     * @throws SSRFException
+     * @throws Exception|SSRFException
      */
-    public function fragmentPreview(Authenticatable $authorization, ExternalDocumentFileDTO $documentFile, FragmentConfig $fragmentConfig): array
+    public function fragmentPreview(Authenticatable $authorization, DocumentFileInterface $documentFile, FragmentConfig $fragmentConfig): array
     {
         $dataIsolation = $this->createKnowledgeBaseDataIsolation($authorization);
-        $fileUrl = $this->fileDomainService->getLink($dataIsolation->getCurrentOrganizationCode(), $documentFile->getKey());
-        if (empty($fileUrl)) {
-            $this->logger->warning('文件不存在');
-        }
-        $content = $this->fileParser->parse($fileUrl?->getUrl() ?? '', true);
+        $content = $this->documentFileStrategy->parseContent($dataIsolation, $documentFile);
         $fragmentContents = $this->knowledgeBaseFragmentDomainService->processFragmentsByContent($dataIsolation, $content, $fragmentConfig);
         return KnowledgeBaseFragmentEntity::fromFragmentContents($fragmentContents);
     }
