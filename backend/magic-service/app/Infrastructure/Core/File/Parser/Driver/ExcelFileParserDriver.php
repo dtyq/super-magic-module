@@ -19,7 +19,7 @@ class ExcelFileParserDriver implements ExcelFileParserDriverInterface
 {
     public function parse(string $filePath, string $url, string $fileExtension): string
     {
-        if ($fileExtension === '.xls') {
+        if (strtolower($fileExtension) === 'xlsx') {
             return $this->parseByXlsWriter($filePath, $fileExtension);
         }
         return $this->parseBySpreedSheet($filePath, $fileExtension);
@@ -35,11 +35,19 @@ class ExcelFileParserDriver implements ExcelFileParserDriverInterface
             $sheetList = $excelFile->sheetList();
             $content = '';
             foreach ($sheetList as $sheetName) {
-                $content .= '##' . $sheetName . "\n";
+                $content .= '## ' . $sheetName . "\n";
                 $sheet = $excelFile->openSheet($sheetName, Excel::SKIP_EMPTY_ROW);
                 $row = $sheet->nextRow();
                 while (! empty($row)) {
-                    $csvRow = implode(',', array_map(fn ($cell) => $this->formatCsvCell((string) $cell), $row));
+                    $csvRow = array_map(fn ($cell) => $this->formatCsvCell((string) $cell), $row);
+                    // 整行都是空字符串，跳过
+                    if (array_filter($csvRow, function ($value) {
+                        return $value !== '';
+                    }) === []) {
+                        $row = $sheet->nextRow();
+                        continue;
+                    }
+                    $csvRow = implode(',', $csvRow);
                     $content .= $csvRow . "\n";
                     $row = $sheet->nextRow();
                 }
