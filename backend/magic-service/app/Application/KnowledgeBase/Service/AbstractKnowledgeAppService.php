@@ -21,7 +21,6 @@ use App\Domain\KnowledgeBase\Service\KnowledgeBaseDomainService;
 use App\Domain\KnowledgeBase\Service\KnowledgeBaseFragmentDomainService;
 use App\Domain\ModelAdmin\Service\ServiceProviderDomainService;
 use App\Domain\Permission\Entity\ValueObject\OperationPermission\Operation;
-use App\Domain\Permission\Entity\ValueObject\OperationPermission\ResourceType;
 use App\ErrorCode\PermissionErrorCode;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Infrastructure\Core\File\Parser\FileParser;
@@ -60,21 +59,6 @@ abstract class AbstractKnowledgeAppService extends AbstractKernelAppService
         return array_map(fn (DocumentFileDTOInterface $dto) => KnowledgeBaseDocumentAssembler::documentFileDTOToVO($dto), $dtoList);
     }
 
-    protected function getKnowledgeOperation(KnowledgeBaseDataIsolation $dataIsolation, int|string $knowledgeCode): Operation
-    {
-        $permissionDataIsolation = $this->createPermissionDataIsolation($dataIsolation);
-
-        if (empty($knowledgeCode)) {
-            return Operation::None;
-        }
-        return $this->operationPermissionAppService->getOperationByResourceAndUser(
-            $permissionDataIsolation,
-            ResourceType::Knowledge,
-            (string) $knowledgeCode,
-            $permissionDataIsolation->getCurrentUserId()
-        );
-    }
-
     /**
      * 知识库权限校验.
      * @param string $knowledgeBaseCode 必传
@@ -102,7 +86,7 @@ abstract class AbstractKnowledgeAppService extends AbstractKernelAppService
                 ExceptionBuilder::throw(PermissionErrorCode::AccessDenied, 'common.access', ['label' => $operation]);
             }
         }
-        $operationVO = $this->getKnowledgeOperation($dataIsolation, $knowledgeBaseCode);
+        $operationVO = $this->knowledgeBaseStrategy->getKnowledgeOperation($dataIsolation, $knowledgeBaseCode);
         $operationVO->validate($operation, $knowledgeBaseCode);
         return $operationVO;
     }
