@@ -9,4 +9,5 @@ namespace App\Interfaces\KnowledgeBase\DTO\DocumentFile;
 
 interface DocumentFileDTOInterface
 {
+    public function getName(): string;
 }

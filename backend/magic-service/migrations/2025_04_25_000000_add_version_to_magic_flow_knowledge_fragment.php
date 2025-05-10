@@ -53,11 +53,11 @@ return new class extends Migration {
             if (! Schema::hasIndex('magic_flow_knowledge_fragment', 'knowledge_base_fragments_document_code_index')) {
                 $table->index(['document_code'], 'knowledge_base_fragments_document_code_index');
             }
-            
+
             // 检查是否已存在字段，避免重复删除
             if (Schema::hasColumn('magic_flow_knowledge_fragment', 'version')) {
                 $table->dropColumn('version');
             }
         });
     }
-}; 
+};
