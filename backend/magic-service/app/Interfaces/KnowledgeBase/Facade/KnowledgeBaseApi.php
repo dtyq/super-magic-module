@@ -47,7 +47,7 @@ class KnowledgeBaseApi extends AbstractKnowledgeBaseApi
         $authorization = $this->getAuthorization();
         $query = new KnowledgeBaseQuery($this->request->all());
         $query->setOrder(['updated_at' => 'desc']);
-        $queryKnowledgeTypes = container()->has(KnowledgeTypeFactoryInterface::class) ? di(KnowledgeTypeFactoryInterface::class)->getQueryKnowledgeTypes() : [];
+        $queryKnowledgeTypes = $this->knowledgeBaseStrategy->getQueryKnowledgeTypes();
         $query->setTypes($queryKnowledgeTypes);
         $page = $this->createPage();
 

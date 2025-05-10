@@ -14,6 +14,8 @@ use App\Application\KnowledgeBase\Service\Strategy\DocumentFile\Driver\ExternalF
 use App\Application\KnowledgeBase\Service\Strategy\DocumentFile\Driver\Interfaces\ExternalFileDocumentFileStrategyInterface;
 use App\Application\KnowledgeBase\Service\Strategy\DocumentFile\Driver\Interfaces\ThirdPlatformDocumentFileStrategyInterface;
 use App\Application\KnowledgeBase\Service\Strategy\DocumentFile\Driver\ThirdPlatformDocumentFileStrategyDriver;
+use App\Application\KnowledgeBase\Service\Strategy\KnowledgeBase\KnowledgeBaseStrategy;
+use App\Application\KnowledgeBase\Service\Strategy\KnowledgeBase\KnowledgeBaseStrategyInterface;
 use App\Application\KnowledgeBase\VectorDatabase\Similarity\Driver\BaseFullTextSimilaritySearch;
 use App\Application\KnowledgeBase\VectorDatabase\Similarity\Driver\BaseGraphSimilaritySearch;
 use App\Application\KnowledgeBase\VectorDatabase\Similarity\Driver\BaseHybridSimilaritySearch;
@@ -295,7 +297,7 @@ $dependencies = [
     WordFileParserDriverInterface::class => WordFileParserDriver::class,
 
     // 知识库
-    KnowledgeTypeFactoryInterface::class => KnowledgeTypeFactory::class,
+    KnowledgeBaseStrategyInterface::class => KnowledgeBaseStrategy::class,
 
     ExternalFileDocumentFileStrategyInterface::class => ExternalFileDocumentFileStrategyDriver::class,
     ThirdPlatformDocumentFileStrategyInterface::class => ThirdPlatformDocumentFileStrategyDriver::class,
