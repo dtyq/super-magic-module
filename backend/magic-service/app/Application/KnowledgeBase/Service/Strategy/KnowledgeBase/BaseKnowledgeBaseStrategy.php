@@ -38,4 +38,19 @@ class BaseKnowledgeBaseStrategy extends AbstractKernelAppService implements Know
     {
         return [KnowledgeType::UserKnowledgeBase->value];
     }
+
+    public function getKnowledgeOperation(KnowledgeBaseDataIsolation $dataIsolation, int|string $knowledgeCode): Operation
+    {
+        $permissionDataIsolation = $this->createPermissionDataIsolation($dataIsolation);
+
+        if (empty($knowledgeCode)) {
+            return Operation::None;
+        }
+        return $this->operationPermissionAppService->getOperationByResourceAndUser(
+            $permissionDataIsolation,
+            ResourceType::Knowledge,
+            (string) $knowledgeCode,
+            $permissionDataIsolation->getCurrentUserId()
+        );
+    }
 }

@@ -48,7 +48,7 @@ class KnowledgeBaseAppService extends AbstractKnowledgeAppService
         }
         $operation = Operation::None;
         if ($oldKnowledge) {
-            $operation = $this->getKnowledgeOperation($dataIsolation, $oldKnowledge->getCode());
+            $operation = $this->knowledgeBaseStrategy->getKnowledgeOperation($dataIsolation, $oldKnowledge->getCode());
             $operation->validate('w', $oldKnowledge->getCode());
 
             // 使用原来的模型和向量库
