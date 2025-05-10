@@ -26,6 +26,8 @@ class KnowledgeBaseApiTest extends HttpTestCase
     protected function setUp(): void
     {
         $this->clearTestKnowledgeBaseData();
+        // 测试环境自测时候打开，会删除用户所有知识库
+        $this->deleteAllKnowledgeBase();
         parent::setUp();
     }
 
@@ -635,6 +637,19 @@ class KnowledgeBaseApiTest extends HttpTestCase
             [],
             $this->getCommonHeaders()
         );
+        $this->assertSame(1000, $res['code'], $res['message']);
+    }
+
+    // 删除所有知识库
+    public function deleteAllKnowledgeBase()
+    {
+        // 获取知识库列表
+        $res = $this->post(self::API . '/queries', [], $this->getCommonHeaders());
+        $this->assertSame(1000, $res['code'], $res['message']);
+        $knowledgeBases = $res['data']['list'];
+        foreach ($knowledgeBases as $knowledgeBase) {
+            $this->delete(self::API . '/' . $knowledgeBase['code'], [], $this->getCommonHeaders());
+        }
         $this->assertSame(1000, $res['code'], $res['message']);
     }
 

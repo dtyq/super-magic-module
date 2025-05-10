@@ -15,6 +15,7 @@ use App\ErrorCode\PermissionErrorCode;
 use App\Infrastructure\Core\Embeddings\VectorStores\VectorStoreDriver;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Infrastructure\Core\ValueObject\Page;
+use Dtyq\AsyncEvent\AsyncEventUtil;
 use Qbhy\HyperfAuth\Authenticatable;
 
 class KnowledgeBaseDocumentAppService extends AbstractKnowledgeAppService
@@ -140,6 +141,6 @@ class KnowledgeBaseDocumentAppService extends AbstractKnowledgeAppService
             $documentEntity,
             false,
         );
-        $this->eventDispatcher->dispatch($documentSavedEvent);
+        AsyncEventUtil::dispatch($documentSavedEvent);
     }
 }
