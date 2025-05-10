@@ -154,7 +154,7 @@ readonly class KnowledgeBaseDocumentDomainService
         // 如果文档不存在，创建新的默认文档
         $documentEntity = (new KnowledgeBaseDocumentEntity())
             ->setCode($defaultDocumentCode)
-            ->setName('未命名文档')
+            ->setName('未命名文档.txt')
             ->setKnowledgeBaseCode($knowledgeBaseEntity->getCode())
             ->setCreatedUid($knowledgeBaseEntity->getCreator())
             ->setUpdatedUid($knowledgeBaseEntity->getCreator())
