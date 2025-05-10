@@ -41,7 +41,9 @@ class ExcelFileParserDriver implements ExcelFileParserDriverInterface
                 while (! empty($row)) {
                     $csvRow = array_map(fn ($cell) => $this->formatCsvCell((string) $cell), $row);
                     // 整行都是空字符串，跳过
-                    if (array_filter($csvRow) === []) {
+                    if (array_filter($csvRow, function ($value) {
+                        return $value !== '';
+                    }) === []) {
                         $row = $sheet->nextRow();
                         continue;
                     }
