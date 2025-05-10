@@ -7,9 +7,10 @@ declare(strict_types=1);
 
 namespace App\Domain\KnowledgeBase\Factory;
 
+use App\Domain\KnowledgeBase\Entity\ValueObject\Interface\KnowledgeTypeFactoryInterface;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeType;
 
-class KnowledgeTypeFactory
+class KnowledgeTypeFactory implements KnowledgeTypeFactoryInterface
 {
     public function getQueryKnowledgeTypes(): array
     {
