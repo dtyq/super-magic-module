@@ -7,10 +7,10 @@ declare(strict_types=1);
 
 namespace App\Domain\KnowledgeBase\Entity\ValueObject;
 
-use App\Infrastructure\Core\AbstractDTO;
+use App\Infrastructure\Core\AbstractValueObject;
 use App\Infrastructure\Util\Text\TextPreprocess\ValueObject\TextPreprocessRule;
 
-class ParentChildConfigVO extends AbstractDTO
+class ParentChildConfigVO extends AbstractValueObject
 {
     protected string $separator;
 

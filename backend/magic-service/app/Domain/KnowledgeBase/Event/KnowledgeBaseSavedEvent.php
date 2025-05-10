@@ -8,7 +8,7 @@ declare(strict_types=1);
 namespace App\Domain\KnowledgeBase\Event;
 
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseEntity;
-use App\Domain\KnowledgeBase\Entity\ValueObject\DocumentFileVO;
+use App\Domain\KnowledgeBase\Entity\ValueObject\DocumentFile\DocumentFileInterface;
 
 class KnowledgeBaseSavedEvent
 {
@@ -17,7 +17,7 @@ class KnowledgeBaseSavedEvent
     public function __construct(
         public KnowledgeBaseEntity $magicFlowKnowledgeEntity,
         public bool $create,
-        /** @var DocumentFileVO[] $documentFiles */
+        /** @var DocumentFileInterface[] $documentFiles */
         public array $documentFiles = [],
     ) {
     }

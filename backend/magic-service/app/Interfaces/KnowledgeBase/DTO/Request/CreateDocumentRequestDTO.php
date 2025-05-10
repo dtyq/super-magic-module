@@ -7,8 +7,10 @@ declare(strict_types=1);
 
 namespace App\Interfaces\KnowledgeBase\DTO\Request;
 
+use App\Domain\KnowledgeBase\Entity\ValueObject\FragmentConfig;
 use App\Infrastructure\Core\AbstractRequestDTO;
-use App\Interfaces\KnowledgeBase\DTO\DocumentFileDTO;
+use App\Interfaces\KnowledgeBase\DTO\DocumentFile\AbstractDocumentFileDTO;
+use App\Interfaces\KnowledgeBase\DTO\DocumentFile\DocumentFileDTOInterface;
 
 class CreateDocumentRequestDTO extends AbstractRequestDTO
 {
@@ -18,9 +20,9 @@ class CreateDocumentRequestDTO extends AbstractRequestDTO
 
     public array $docMetadata = [];
 
-    public array $vectorDbConfig = [];
+    public ?FragmentConfig $fragmentConfig = null;
 
-    public DocumentFileDTO $documentFile;
+    public DocumentFileDTOInterface $documentFile;
 
     public static function getHyperfValidationRules(): array
     {
@@ -80,25 +82,26 @@ class CreateDocumentRequestDTO extends AbstractRequestDTO
         return $this;
     }
 
-    public function getVectorDbConfig(): array
-    {
-        return $this->vectorDbConfig;
-    }
-
-    public function setVectorDbConfig(array $vectorDbConfig): self
-    {
-        $this->vectorDbConfig = $vectorDbConfig;
-        return $this;
-    }
-
-    public function getDocumentFile(): ?DocumentFileDTO
+    public function getDocumentFile(): ?DocumentFileDTOInterface
     {
         return $this->documentFile;
     }
 
-    public function setDocumentFile(array|DocumentFileDTO $documentFile): void
+    public function setDocumentFile(array|DocumentFileDTOInterface $documentFile): void
     {
-        is_array($documentFile) && $documentFile = new DocumentFileDTO($documentFile);
+        is_array($documentFile) && $documentFile = AbstractDocumentFileDTO::fromArray($documentFile);
         $this->documentFile = $documentFile;
+    }
+
+    public function getFragmentConfig(): ?FragmentConfig
+    {
+        return $this->fragmentConfig;
+    }
+
+    public function setFragmentConfig(null|array|FragmentConfig $fragmentConfig): static
+    {
+        is_array($fragmentConfig) && $fragmentConfig = FragmentConfig::fromArray($fragmentConfig);
+        $this->fragmentConfig = $fragmentConfig;
+        return $this;
     }
 }

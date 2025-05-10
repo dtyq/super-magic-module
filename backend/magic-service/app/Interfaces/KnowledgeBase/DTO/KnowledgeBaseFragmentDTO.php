@@ -34,6 +34,8 @@ class KnowledgeBaseFragmentDTO extends AbstractFlowDTO
 
     public int $wordCount;
 
+    public int $version;
+
     public function getKnowledgeCode(): string
     {
         return $this->knowledgeCode;
@@ -153,6 +155,17 @@ class KnowledgeBaseFragmentDTO extends AbstractFlowDTO
     public function setDocumentName(string $documentName): static
     {
         $this->documentName = $documentName;
+        return $this;
+    }
+
+    public function getVersion(): int
+    {
+        return $this->version;
+    }
+
+    public function setVersion(int $version): static
+    {
+        $this->version = $version;
         return $this;
     }
 }

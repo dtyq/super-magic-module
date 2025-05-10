@@ -10,7 +10,8 @@ namespace App\Interfaces\KnowledgeBase\DTO\Request;
 use App\Domain\KnowledgeBase\Entity\ValueObject\FragmentConfig;
 use App\Domain\KnowledgeBase\Entity\ValueObject\RetrieveConfig;
 use App\Infrastructure\Core\AbstractRequestDTO;
-use App\Interfaces\KnowledgeBase\DTO\DocumentFileDTO;
+use App\Interfaces\KnowledgeBase\DTO\DocumentFile\AbstractDocumentFileDTO;
+use App\Interfaces\KnowledgeBase\DTO\DocumentFile\DocumentFileDTOInterface;
 
 class CreateKnowledgeBaseRequestDTO extends AbstractRequestDTO
 {
@@ -24,7 +25,7 @@ class CreateKnowledgeBaseRequestDTO extends AbstractRequestDTO
 
     public ?array $embeddingConfig = null;
 
-    /** @var array<DocumentFileDTO> */
+    /** @var array<DocumentFileDTOInterface> */
     public array $documentFiles = [];
 
     public FragmentConfig $fragmentConfig;
@@ -118,7 +119,7 @@ class CreateKnowledgeBaseRequestDTO extends AbstractRequestDTO
 
     public function setDocumentFiles(array $documentFiles): void
     {
-        $this->documentFiles = array_map(fn ($file) => new DocumentFileDTO($file), $documentFiles);
+        $this->documentFiles = array_map(fn ($file) => AbstractDocumentFileDTO::fromArray($file), $documentFiles);
     }
 
     public function getBusinessId(): string
@@ -141,8 +142,11 @@ class CreateKnowledgeBaseRequestDTO extends AbstractRequestDTO
             'embedding_config' => 'array',
             'retrieve_config' => 'array',
             'document_files' => 'required|array',
+            'document_files.*.type' => 'integer|between:1,2',
             'document_files.*.name' => 'required|string',
-            'document_files.*.key' => 'required|string',
+            'document_files.*.key' => 'required_if:document_files.*.type,1|string',
+            'document_files.*.third_file_id' => 'required_if:document_files.*.type,2|string',
+            'document_files.*.platform_type' => 'required_if:document_files.*.type,2|string',
             // 分段设置
             'fragment_config' => 'required|array',
             'fragment_config.mode' => 'required|integer|in:1,2',

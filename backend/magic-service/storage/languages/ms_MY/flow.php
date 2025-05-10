@@ -61,6 +61,9 @@ return [
         'embedding_failed' => '[:model_name] pembenaman gagal, sila periksa konfigurasi pembenaman',
         'vector_size_not_match' => '[:model_name] saiz vektor tidak sepadan, sila periksa saiz vektor',
     ],
+    'knowledge_base' => [
+        're_vectorized_not_support' => 'Tidak menyokong pembenaman semula',
+    ],
     'max_record' => [
         'positive_integer' => 'Bilangan rekod maksimum mesti integer positif antara :min dan :max',
     ],

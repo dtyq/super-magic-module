@@ -26,6 +26,8 @@ class KnowledgeBaseApiTest extends HttpTestCase
     protected function setUp(): void
     {
         $this->clearTestKnowledgeBaseData();
+        // 测试环境自测时候打开，会删除用户所有知识库
+        $this->deleteAllKnowledgeBase();
         parent::setUp();
     }
 
@@ -244,29 +246,31 @@ class KnowledgeBaseApiTest extends HttpTestCase
 
     public function testCreateDocument()
     {
-        $document = $this->createDocument();
+        $createData = [
+            'fragment_config' => [
+                'mode' => FragmentMode::NORMAL->value,
+                'normal' => [
+                    'text_preprocess_rule' => [
+                        TextPreprocessRule::REPLACE_WHITESPACE->value,
+                        TextPreprocessRule::REMOVE_URL_EMAIL->value,
+                    ],
+                    'segment_rule' => [
+                        'separator' => '\n\n',
+                        'chunk_size' => 50,
+                        'chunk_overlap' => 10,
+                    ],
+                ],
+                'parent_child' => null,
+            ],
+        ];
+        $document = $this->createDocument($createData);
         $this->assertNotEmpty($document['code']);
         $this->assertSame('test.txt', $document['name']);
         $this->assertIsInt($document['doc_type']);
         $this->assertTrue($document['enabled']);
         $this->assertSame(['source' => 'test'], $document['doc_metadata']);
-        $this->assertSame([
-            'mode' => FragmentMode::NORMAL->value,
-            'normal' => [
-                'text_preprocess_rule' => [
-                    TextPreprocessRule::REPLACE_WHITESPACE->value,
-                    TextPreprocessRule::REMOVE_URL_EMAIL->value,
-                ],
-                'segment_rule' => [
-                    'separator' => '\n\n',
-                    'chunk_size' => 50,
-                    'chunk_overlap' => 10,
-                ],
-            ],
-            'parent_child' => null,
-        ], $document['fragment_config']);
+        $this->assertSame($createData['fragment_config'], $document['fragment_config']);
         $this->assertSame(['model_id' => 'dmeta-embedding'], $document['embedding_config']);
-        $this->assertSame([], $document['retrieve_config']);
         $this->assertArrayHasKey('knowledge_base_code', $document);
     }
 
@@ -274,14 +278,26 @@ class KnowledgeBaseApiTest extends HttpTestCase
     {
         $document = $this->createDocument();
 
+        $newFragmentConfig = [
+            'mode' => 1,
+            'normal' => [
+                'text_preprocess_rule' => [
+                    1,
+                ],
+                'segment_rule' => [
+                    'separator' => '**',
+                    'chunk_size' => 200,
+                    'chunk_overlap' => 20,
+                ],
+            ],
+            'parent_child' => null,
+        ];
+
         $updateData = [
             'name' => '更新后的文档名称',
             'enabled' => false,
             'doc_metadata' => ['source' => 'updated'],
-            'fragment_config' => ['chunk_size' => 800],
-            'embedding_config' => ['model' => 'test-embedding-v2'],
-            'vector_db_config' => ['engine' => 'test-db-v2'],
-            'retrieve_config' => [],
+            'fragment_config' => $newFragmentConfig,
         ];
 
         $res = $this->put(
@@ -295,6 +311,7 @@ class KnowledgeBaseApiTest extends HttpTestCase
         $this->assertSame($updateData['name'], $res['data']['name']);
         $this->assertSame($updateData['enabled'], $res['data']['enabled']);
         $this->assertSame($updateData['doc_metadata'], $res['data']['doc_metadata']);
+        $this->assertSame($newFragmentConfig, $res['data']['fragment_config']);
     }
 
     public function testGetDocumentDetail()
@@ -450,7 +467,7 @@ class KnowledgeBaseApiTest extends HttpTestCase
         $this->assertArrayHasKey('total', $res['data']);
         $this->assertArrayHasKey('list', $res['data']);
         $this->assertIsArray($res['data']['list']);
-        $this->assertCount(5, $res['data']['list']);
+        $this->assertCount(4, $res['data']['list']);
     }
 
     public function testGetFragmentDetail()
@@ -479,6 +496,7 @@ class KnowledgeBaseApiTest extends HttpTestCase
         $this->assertArrayHasKey('created_at', $data);
         $this->assertArrayHasKey('updated_at', $data);
         $this->assertArrayHasKey('word_count', $data);
+        $this->assertSame(1, $data['version']);
     }
 
     public function testDestroyFragment()
@@ -602,6 +620,37 @@ class KnowledgeBaseApiTest extends HttpTestCase
             // 验证返回的内容包含查询关键词
             $this->assertStringContainsString('测试', $result['content']);
         }
+    }
+
+    /**
+     * 测试重新向量化.
+     */
+    public function testReVectorized()
+    {
+        $knowledgeBase = $this->createKnowledgeBase();
+        $code = $knowledgeBase['code'];
+        $document = $this->createDocument([], $code);
+        $documentCode = $document['code'];
+
+        $res = $this->post(
+            sprintf('%s/%s/documents/%s/re-vectorized', self::API, $code, $documentCode),
+            [],
+            $this->getCommonHeaders()
+        );
+        $this->assertSame(1000, $res['code'], $res['message']);
+    }
+
+    // 删除所有知识库
+    public function deleteAllKnowledgeBase()
+    {
+        // 获取知识库列表
+        $res = $this->post(self::API . '/queries', [], $this->getCommonHeaders());
+        $this->assertSame(1000, $res['code'], $res['message']);
+        $knowledgeBases = $res['data']['list'];
+        foreach ($knowledgeBases as $knowledgeBase) {
+            $this->delete(self::API . '/' . $knowledgeBase['code'], [], $this->getCommonHeaders());
+        }
+        $this->assertSame(1000, $res['code'], $res['message']);
     }
 
     /**

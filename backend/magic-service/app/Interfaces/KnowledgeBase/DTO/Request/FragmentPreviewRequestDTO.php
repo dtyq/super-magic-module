@@ -9,11 +9,11 @@ namespace App\Interfaces\KnowledgeBase\DTO\Request;
 
 use App\Domain\KnowledgeBase\Entity\ValueObject\FragmentConfig;
 use App\Infrastructure\Core\AbstractRequestDTO;
-use App\Interfaces\KnowledgeBase\DTO\DocumentFileDTO;
+use App\Interfaces\KnowledgeBase\DTO\DocumentFile\ExternalDocumentFileDTO;
 
 class FragmentPreviewRequestDTO extends AbstractRequestDTO
 {
-    public DocumentFileDTO $documentFile;
+    public ExternalDocumentFileDTO $documentFile;
 
     public FragmentConfig $fragmentConfig;
 
@@ -90,14 +90,14 @@ class FragmentPreviewRequestDTO extends AbstractRequestDTO
         ];
     }
 
-    public function getDocumentFile(): DocumentFileDTO
+    public function getDocumentFile(): ExternalDocumentFileDTO
     {
         return $this->documentFile;
     }
 
-    public function setDocumentFile(array|DocumentFileDTO $documentFile): void
+    public function setDocumentFile(array|ExternalDocumentFileDTO $documentFile): void
     {
-        is_array($documentFile) && $documentFile = new DocumentFileDTO($documentFile);
+        is_array($documentFile) && $documentFile = new ExternalDocumentFileDTO($documentFile);
         $this->documentFile = $documentFile;
     }
 

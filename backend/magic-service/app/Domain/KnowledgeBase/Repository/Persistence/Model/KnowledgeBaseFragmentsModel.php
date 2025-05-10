@@ -29,6 +29,7 @@ use Hyperf\Snowflake\Concern\Snowflake;
  * @property string $updated_uid
  * @property DateTime $updated_at
  * @property int $word_count 字数统计
+ * @property int $version 版本
  */
 class KnowledgeBaseFragmentsModel extends AbstractModel
 {
@@ -39,7 +40,7 @@ class KnowledgeBaseFragmentsModel extends AbstractModel
 
     protected array $fillable = [
         'id', 'knowledge_code', 'content', 'metadata', 'business_id', 'sync_status', 'sync_times', 'sync_status_message', 'point_id', 'vector',
-        'created_uid', 'created_at', 'updated_uid', 'updated_at', 'deleted_at', 'word_count', 'document_code',
+        'created_uid', 'created_at', 'updated_uid', 'updated_at', 'deleted_at', 'word_count', 'document_code', 'version',
     ];
 
     protected array $casts = [
@@ -61,5 +62,6 @@ class KnowledgeBaseFragmentsModel extends AbstractModel
         'updated_uid' => 'string',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',
+        'version' => 'integer',
     ];
 }

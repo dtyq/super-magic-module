@@ -10,9 +10,12 @@ namespace App\Application\KnowledgeBase\Service;
 use App\Domain\Flow\Entity\ValueObject\Query\KnowledgeBaseDocumentQuery;
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseDocumentEntity;
 use App\Domain\KnowledgeBase\Entity\ValueObject\Query\KnowledgeBaseFragmentQuery;
+use App\Domain\KnowledgeBase\Event\KnowledgeBaseDocumentSavedEvent;
+use App\ErrorCode\PermissionErrorCode;
 use App\Infrastructure\Core\Embeddings\VectorStores\VectorStoreDriver;
+use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Infrastructure\Core\ValueObject\Page;
-use App\Interfaces\KnowledgeBase\DTO\DocumentFileDTO;
+use Dtyq\AsyncEvent\AsyncEventUtil;
 use Qbhy\HyperfAuth\Authenticatable;
 
 class KnowledgeBaseDocumentAppService extends AbstractKnowledgeAppService
@@ -28,7 +31,7 @@ class KnowledgeBaseDocumentAppService extends AbstractKnowledgeAppService
     /**
      * 保存知识库文档.
      */
-    public function save(Authenticatable $authorization, KnowledgeBaseDocumentEntity $documentEntity, ?DocumentFileDTO $documentFile = null): KnowledgeBaseDocumentEntity
+    public function save(Authenticatable $authorization, KnowledgeBaseDocumentEntity $documentEntity): KnowledgeBaseDocumentEntity
     {
         $dataIsolation = $this->createKnowledgeBaseDataIsolation($authorization);
         $this->checkKnowledgeBaseOperation($dataIsolation, 'w', $documentEntity->getKnowledgeBaseCode(), $documentEntity->getCode());
@@ -36,22 +39,19 @@ class KnowledgeBaseDocumentAppService extends AbstractKnowledgeAppService
         $documentEntity->setUpdatedUid($dataIsolation->getCurrentUserId());
         $knowledgeBaseEntity = $this->knowledgeBaseDomainService->show($dataIsolation, $documentEntity->getKnowledgeBaseCode());
 
-        // 文档配置继承知识库
-        $documentEntity->setFragmentConfig($knowledgeBaseEntity->getFragmentConfig());
-        $documentEntity->setRetrieveConfig($knowledgeBaseEntity->getRetrieveConfig());
+        // 文档配置继承知识库(如果没有对应设置)
+        empty($knowledgeBaseEntity->getFragmentConfig()) && $documentEntity->setFragmentConfig($knowledgeBaseEntity->getFragmentConfig());
+        empty($documentEntity->getRetrieveConfig()) && $documentEntity->setRetrieveConfig($knowledgeBaseEntity->getRetrieveConfig());
+
+        // 嵌入配置不可编辑
         $documentEntity->setEmbeddingConfig($knowledgeBaseEntity->getEmbeddingConfig());
         // 设置默认的嵌入模型和向量数据库
         $documentEntity->setEmbeddingModel($knowledgeBaseEntity->getModel());
         $documentEntity->setVectorDb(VectorStoreDriver::default()->value);
-
-        // 调用领域服务保存文档
-        if (! empty($documentFile)) {
-            $fileLink = $this->getFileLink($dataIsolation->getCurrentOrganizationCode(), $documentFile->getKey());
-            $documentFile->setFileLink($fileLink);
-        }
         if (! $documentEntity->getCode()) {
             // 新建文档
-            return $this->knowledgeBaseDocumentDomainService->create($dataIsolation, $knowledgeBaseEntity, $documentEntity, $this->documentFileDTOToVO($documentFile));
+            $documentEntity->getDocumentFile() && $this->documentFileStrategy->parseDocType($dataIsolation, $documentEntity->getDocumentFile());
+            return $this->knowledgeBaseDocumentDomainService->create($dataIsolation, $knowledgeBaseEntity, $documentEntity);
         }
         return $this->knowledgeBaseDocumentDomainService->update($dataIsolation, $knowledgeBaseEntity, $documentEntity);
     }
@@ -118,5 +118,29 @@ class KnowledgeBaseDocumentAppService extends AbstractKnowledgeAppService
 
         // 调用领域服务删除文档
         $this->knowledgeBaseDocumentDomainService->destroy($dataIsolation, $knowledgeBaseCode, $documentCode);
+    }
+
+    /**
+     * 重新向量化.
+     */
+    public function reVectorized(Authenticatable $authorization, string $knowledgeBaseCode, string $documentCode): void
+    {
+        $dataIsolation = $this->createKnowledgeBaseDataIsolation($authorization);
+        $this->checkKnowledgeBaseOperation($dataIsolation, 'manage', $knowledgeBaseCode, $documentCode);
+
+        // 调用领域服务重新向量化
+        $knowledgeBaseEntity = $this->knowledgeBaseDomainService->show($dataIsolation, $knowledgeBaseCode);
+        $documentEntity = $this->knowledgeBaseDocumentDomainService->show($dataIsolation, $knowledgeBaseCode, $documentCode);
+        // 由于历史文档没有 document_file 字段，不能被重新向量化
+        if (! $documentEntity->getDocumentFile()) {
+            ExceptionBuilder::throw(PermissionErrorCode::Error, 'flow.knowledge_base.re_vectorized_not_support');
+        }
+        // 分发事件，重新向量化
+        $documentSavedEvent = new KnowledgeBaseDocumentSavedEvent(
+            $knowledgeBaseEntity,
+            $documentEntity,
+            false,
+        );
+        AsyncEventUtil::dispatch($documentSavedEvent);
     }
 }

@@ -248,6 +248,15 @@ class KnowledgeBaseDocumentRepository extends KnowledgeBaseAbstractRepository im
             ]);
     }
 
+    public function increaseVersion(KnowledgeBaseDataIsolation $dataIsolation, KnowledgeBaseDocumentEntity $documentEntity): int
+    {
+        return KnowledgeBaseDocumentModel::query()
+            ->where('knowledge_base_code', $documentEntity->getKnowledgeBaseCode())
+            ->where('code', $documentEntity->getCode())
+            ->where('version', $documentEntity->getVersion())
+            ->increment('version');
+    }
+
     /**
      * 创建查询构建器.
      */
@@ -330,6 +339,7 @@ class KnowledgeBaseDocumentRepository extends KnowledgeBaseAbstractRepository im
             'updated_uid' => $entity->getUpdatedUid(),
             'word_count' => $entity->getWordCount(),
             'deleted_at' => $entity->getDeletedAt(),
+            'document_file' => $entity->getDocumentFile(),
         ];
 
         if ($entity->getCode()) {
