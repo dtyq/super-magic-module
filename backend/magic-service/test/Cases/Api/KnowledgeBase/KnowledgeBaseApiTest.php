@@ -244,29 +244,31 @@ class KnowledgeBaseApiTest extends HttpTestCase
 
     public function testCreateDocument()
     {
-        $document = $this->createDocument();
+        $createData = [
+            'fragment_config' => [
+                'mode' => FragmentMode::NORMAL->value,
+                'normal' => [
+                    'text_preprocess_rule' => [
+                        TextPreprocessRule::REPLACE_WHITESPACE->value,
+                        TextPreprocessRule::REMOVE_URL_EMAIL->value,
+                    ],
+                    'segment_rule' => [
+                        'separator' => '\n\n',
+                        'chunk_size' => 50,
+                        'chunk_overlap' => 10,
+                    ],
+                ],
+                'parent_child' => null,
+            ],
+        ];
+        $document = $this->createDocument($createData);
         $this->assertNotEmpty($document['code']);
         $this->assertSame('test.txt', $document['name']);
         $this->assertIsInt($document['doc_type']);
         $this->assertTrue($document['enabled']);
         $this->assertSame(['source' => 'test'], $document['doc_metadata']);
-        $this->assertSame([
-            'mode' => FragmentMode::NORMAL->value,
-            'normal' => [
-                'text_preprocess_rule' => [
-                    TextPreprocessRule::REPLACE_WHITESPACE->value,
-                    TextPreprocessRule::REMOVE_URL_EMAIL->value,
-                ],
-                'segment_rule' => [
-                    'separator' => '\n\n',
-                    'chunk_size' => 50,
-                    'chunk_overlap' => 10,
-                ],
-            ],
-            'parent_child' => null,
-        ], $document['fragment_config']);
+        $this->assertSame($createData['fragment_config'], $document['fragment_config']);
         $this->assertSame(['model_id' => 'dmeta-embedding'], $document['embedding_config']);
-        $this->assertSame([], $document['retrieve_config']);
         $this->assertArrayHasKey('knowledge_base_code', $document);
     }
 
@@ -288,42 +290,12 @@ class KnowledgeBaseApiTest extends HttpTestCase
             ],
             'parent_child' => null,
         ];
-        $newRetrieveConfig = [
-            'search_method' => 'semantic_search',
-            'top_k' => 3,
-            'score_threshold' => 0.5,
-            'score_threshold_enabled' => false,
-            'reranking_mode' => 'weighted_score',
-            'reranking_enable' => false,
-            'weights' => [
-                'graph_setting' => [
-                    'timeout' => 5,
-                    'max_depth' => 2,
-                    'retry_count' => 3,
-                    'relation_weight' => 0.5,
-                    'include_properties' => true,
-                ],
-                'vector_setting' => [
-                    'vector_weight' => 1,
-                    'embedding_model_name' => '',
-                    'embedding_provider_name' => '',
-                ],
-                'keyword_setting' => [
-                    'keyword_weight' => 0,
-                ],
-            ],
-            'reranking_model' => [
-                'reranking_model_name' => '',
-                'reranking_provider_name' => '',
-            ],
-        ];
 
         $updateData = [
             'name' => '更新后的文档名称',
             'enabled' => false,
             'doc_metadata' => ['source' => 'updated'],
             'fragment_config' => $newFragmentConfig,
-            'retrieve_config' => $newRetrieveConfig,
         ];
 
         $res = $this->put(
@@ -338,7 +310,6 @@ class KnowledgeBaseApiTest extends HttpTestCase
         $this->assertSame($updateData['enabled'], $res['data']['enabled']);
         $this->assertSame($updateData['doc_metadata'], $res['data']['doc_metadata']);
         $this->assertSame($newFragmentConfig, $res['data']['fragment_config']);
-        $this->assertSame($newRetrieveConfig, $res['data']['retrieve_config']);
     }
 
     public function testGetDocumentDetail()

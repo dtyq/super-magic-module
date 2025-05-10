@@ -9,7 +9,6 @@ namespace App\Domain\KnowledgeBase\Event;
 
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseDocumentEntity;
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseEntity;
-use App\Domain\KnowledgeBase\Entity\ValueObject\DocumentFile\DocumentFileInterface;
 
 class KnowledgeBaseDocumentSavedEvent
 {
@@ -19,7 +18,6 @@ class KnowledgeBaseDocumentSavedEvent
         public KnowledgeBaseEntity $knowledgeBaseEntity,
         public KnowledgeBaseDocumentEntity $knowledgeBaseDocumentEntity,
         public bool $create,
-        public ?DocumentFileInterface $documentFile = null,
     ) {
     }
 

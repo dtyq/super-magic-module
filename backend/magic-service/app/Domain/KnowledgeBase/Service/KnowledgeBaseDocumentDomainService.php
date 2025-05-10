@@ -11,7 +11,6 @@ use App\Domain\Flow\Entity\ValueObject\Query\KnowledgeBaseDocumentQuery;
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseDocumentEntity;
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseEntity;
 use App\Domain\KnowledgeBase\Entity\ValueObject\DocType;
-use App\Domain\KnowledgeBase\Entity\ValueObject\DocumentFile\DocumentFileInterface;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeBaseDataIsolation;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeSyncStatus;
 use App\Domain\KnowledgeBase\Event\KnowledgeBaseDefaultDocumentSavedEvent;
@@ -35,13 +34,13 @@ readonly class KnowledgeBaseDocumentDomainService
     ) {
     }
 
-    public function create(KnowledgeBaseDataIsolation $dataIsolation, KnowledgeBaseEntity $knowledgeBaseEntity, KnowledgeBaseDocumentEntity $documentEntity, ?DocumentFileInterface $documentFile = null): KnowledgeBaseDocumentEntity
+    public function create(KnowledgeBaseDataIsolation $dataIsolation, KnowledgeBaseEntity $knowledgeBaseEntity, KnowledgeBaseDocumentEntity $documentEntity): KnowledgeBaseDocumentEntity
     {
-        $this->prepareForCreation($documentEntity, $documentFile);
+        $this->prepareForCreation($documentEntity);
         $entity = $this->knowledgeBaseDocumentRepository->create($dataIsolation, $documentEntity);
         // 如果有文件，同步文件
-        if ($documentFile) {
-            $event = new KnowledgeBaseDocumentSavedEvent($knowledgeBaseEntity, $entity, true, $documentFile);
+        if ($documentEntity->getDocumentFile()) {
+            $event = new KnowledgeBaseDocumentSavedEvent($knowledgeBaseEntity, $entity, true);
             AsyncEventUtil::dispatch($event);
         }
         return $entity;
@@ -185,7 +184,7 @@ readonly class KnowledgeBaseDocumentDomainService
     /**
      * 准备创建.
      */
-    private function prepareForCreation(KnowledgeBaseDocumentEntity $documentEntity, ?DocumentFileInterface $documentFile = null): void
+    private function prepareForCreation(KnowledgeBaseDocumentEntity $documentEntity): void
     {
         if (empty($documentEntity->getName())) {
             ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, '文档名称不能为空');
@@ -206,7 +205,7 @@ readonly class KnowledgeBaseDocumentDomainService
 
         $documentEntity->setUpdatedAt($documentEntity->getCreatedAt());
         $documentEntity->setUpdatedUid($documentEntity->getCreatedUid());
-        $documentEntity->setDocType($documentFile?->getDocType()?->value ?? DocType::TXT->value);
+        $documentEntity->setDocType($documentEntity->getDocumentFile()?->getDocType()?->value ?? DocType::TXT->value);
         $documentEntity->setSyncStatus(0); // 0 表示未同步
     }
 
@@ -226,6 +225,7 @@ readonly class KnowledgeBaseDocumentDomainService
         $newDocument->setSyncStatus($oldDocument->getSyncStatus());
         $newDocument->setSyncStatusMessage($oldDocument->getSyncStatusMessage());
         $newDocument->setSyncTimes($oldDocument->getSyncTimes());
+        $newDocument->setDocumentFile($oldDocument->getDocumentFile());
 
         // 更新时间
         $newDocument->setUpdatedAt(date('Y-m-d H:i:s'));

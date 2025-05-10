@@ -14,6 +14,10 @@ abstract class AbstractDocumentFile extends AbstractValueObject implements Docum
 {
     public string $name;
 
+    public DocumentFileType $type;
+
+    public ?DocType $docType = null;
+
     public function getName(): string
     {
         return $this->name;
@@ -24,8 +28,31 @@ abstract class AbstractDocumentFile extends AbstractValueObject implements Docum
         $this->name = $name;
     }
 
-    public function getDocType(): DocType
+    public function getType(): ?DocumentFileType
     {
-        return DocType::UNKNOWN;
+        return $this->type;
+    }
+
+    public function getDocType(): ?DocType
+    {
+        return $this->docType;
+    }
+
+    public function setDocType(null|DocType|int $docType): static
+    {
+        is_int($docType) && $docType = DocType::from($docType);
+        $this->docType = $docType;
+        return $this;
+    }
+
+    public static function fromArray(array $data): ?DocumentFileInterface
+    {
+        $documentFileType = isset($data['type']) ? DocumentFileType::tryFrom($data['type']) : DocumentFileType::EXTERNAL;
+        $data['type'] = $documentFileType;
+        return match ($documentFileType) {
+            DocumentFileType::EXTERNAL => new ExternalDocumentFile($data),
+            DocumentFileType::THIRD_PLATFORM => new ThirdPlatformDocumentFile($data),
+            default => null,
+        };
     }
 }

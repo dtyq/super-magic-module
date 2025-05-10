@@ -7,6 +7,7 @@ declare(strict_types=1);
 
 namespace App\Domain\KnowledgeBase\Repository\Persistence\Model;
 
+use App\Domain\KnowledgeBase\Entity\ValueObject\DocumentFile\DocumentFileInterface;
 use Hyperf\Database\Model\SoftDeletes;
 use Hyperf\DbConnection\Model\Model;
 use Hyperf\Snowflake\Concern\Snowflake;
@@ -22,6 +23,7 @@ use Hyperf\Snowflake\Concern\Snowflake;
  * @property bool $enabled 是否启用
  * @property int $doc_type 文档类型
  * @property array $doc_metadata 文档元数据
+ * @property DocumentFileInterface $document_file 文档文件信息
  * @property int $sync_status 同步状态
  * @property int $sync_times 同步次数
  * @property string $sync_status_message 同步状态消息
@@ -71,6 +73,7 @@ class KnowledgeBaseDocumentModel extends Model
         'enabled',
         'doc_type',
         'doc_metadata',
+        'document_file',
         'sync_status',
         'sync_times',
         'sync_status_message',
@@ -94,6 +97,7 @@ class KnowledgeBaseDocumentModel extends Model
         'enabled' => 'boolean',
         'doc_type' => 'integer',
         'doc_metadata' => 'json',
+        'document_file' => 'json',
         'sync_status' => 'integer',
         'sync_times' => 'integer',
         'retrieve_config' => 'json',

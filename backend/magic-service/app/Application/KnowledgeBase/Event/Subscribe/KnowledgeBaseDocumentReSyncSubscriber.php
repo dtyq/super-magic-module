@@ -22,7 +22,7 @@ use function di;
 
 #[AsyncListener]
 #[Listener]
-readonly class KnowledgeBaseDocumentSyncSubscriber implements ListenerInterface
+readonly class KnowledgeBaseDocumentReSyncSubscriber implements ListenerInterface
 {
     public function __construct()
     {
@@ -40,7 +40,7 @@ readonly class KnowledgeBaseDocumentSyncSubscriber implements ListenerInterface
         if (! $event instanceof KnowledgeBaseDocumentSavedEvent) {
             return;
         }
-        if (! $event->create) {
+        if ($event->create) {
             return;
         }
         $knowledge = $event->knowledgeBaseEntity;
@@ -53,10 +53,30 @@ readonly class KnowledgeBaseDocumentSyncSubscriber implements ListenerInterface
         /** @var KnowledgeBaseVectorAppService $knowledgeBaseVectorAppService */
         $knowledgeBaseVectorAppService = di(KnowledgeBaseVectorAppService::class);
 
+        // 检查配置
         try {
-            // 检查集合是否存在
             $knowledgeBaseVectorAppService->checkCollectionExists($knowledge);
-            // 同步文档
+        } catch (Throwable $throwable) {
+            $logger->error($throwable->getMessage() . PHP_EOL . $throwable->getTraceAsString());
+            $documentEntity->setSyncStatus(KnowledgeSyncStatus::SyncFailed->value);
+            $documentEntity->setSyncStatusMessage($throwable->getMessage());
+            $knowledgeBaseDocumentDomainService->changeSyncStatus($dataIsolation, $documentEntity);
+            return;
+        }
+
+        // 销毁旧分段
+        try {
+            $knowledgeBaseVectorAppService->destroyOldFragments($dataIsolation, $knowledge, $documentEntity);
+        } catch (Throwable $throwable) {
+            $logger->error($throwable->getMessage() . PHP_EOL . $throwable->getTraceAsString());
+            $documentEntity->setSyncStatus(KnowledgeSyncStatus::DeleteFailed->value);
+            $documentEntity->setSyncStatusMessage($throwable->getMessage());
+            $knowledgeBaseDocumentDomainService->changeSyncStatus($dataIsolation, $documentEntity);
+            return;
+        }
+
+        // 同步文档
+        try {
             $knowledgeBaseVectorAppService->syncDocument($dataIsolation, $knowledge, $documentEntity);
         } catch (Throwable $throwable) {
             $logger->error($throwable->getMessage() . PHP_EOL . $throwable->getTraceAsString());

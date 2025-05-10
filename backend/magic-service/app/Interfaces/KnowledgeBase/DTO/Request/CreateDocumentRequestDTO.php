@@ -7,6 +7,7 @@ declare(strict_types=1);
 
 namespace App\Interfaces\KnowledgeBase\DTO\Request;
 
+use App\Domain\KnowledgeBase\Entity\ValueObject\FragmentConfig;
 use App\Infrastructure\Core\AbstractRequestDTO;
 use App\Interfaces\KnowledgeBase\DTO\DocumentFile\AbstractDocumentFileDTO;
 use App\Interfaces\KnowledgeBase\DTO\DocumentFile\DocumentFileDTOInterface;
@@ -19,7 +20,7 @@ class CreateDocumentRequestDTO extends AbstractRequestDTO
 
     public array $docMetadata = [];
 
-    public array $vectorDbConfig = [];
+    public ?FragmentConfig $fragmentConfig = null;
 
     public DocumentFileDTOInterface $documentFile;
 
@@ -81,17 +82,6 @@ class CreateDocumentRequestDTO extends AbstractRequestDTO
         return $this;
     }
 
-    public function getVectorDbConfig(): array
-    {
-        return $this->vectorDbConfig;
-    }
-
-    public function setVectorDbConfig(array $vectorDbConfig): self
-    {
-        $this->vectorDbConfig = $vectorDbConfig;
-        return $this;
-    }
-
     public function getDocumentFile(): ?DocumentFileDTOInterface
     {
         return $this->documentFile;
@@ -101,5 +91,17 @@ class CreateDocumentRequestDTO extends AbstractRequestDTO
     {
         is_array($documentFile) && $documentFile = AbstractDocumentFileDTO::fromArray($documentFile);
         $this->documentFile = $documentFile;
+    }
+
+    public function getFragmentConfig(): ?FragmentConfig
+    {
+        return $this->fragmentConfig;
+    }
+
+    public function setFragmentConfig(null|array|FragmentConfig $fragmentConfig): static
+    {
+        is_array($fragmentConfig) && $fragmentConfig = FragmentConfig::fromArray($fragmentConfig);
+        $this->fragmentConfig = $fragmentConfig;
+        return $this;
     }
 }

@@ -8,7 +8,6 @@ declare(strict_types=1);
 namespace App\Interfaces\KnowledgeBase\DTO\Request;
 
 use App\Domain\KnowledgeBase\Entity\ValueObject\FragmentConfig;
-use App\Domain\KnowledgeBase\Entity\ValueObject\RetrieveConfig;
 use App\Infrastructure\Core\AbstractRequestDTO;
 
 class UpdateDocumentRequestDTO extends AbstractRequestDTO
@@ -22,8 +21,6 @@ class UpdateDocumentRequestDTO extends AbstractRequestDTO
     public array $docMetadata = [];
 
     public ?FragmentConfig $fragmentConfig = null;
-
-    public ?RetrieveConfig $retrieveConfig = null;
 
     public bool $enabled = true;
 
@@ -113,18 +110,6 @@ class UpdateDocumentRequestDTO extends AbstractRequestDTO
     {
         is_array($fragmentConfig) && $fragmentConfig = FragmentConfig::fromArray($fragmentConfig);
         $this->fragmentConfig = $fragmentConfig;
-        return $this;
-    }
-
-    public function getRetrieveConfig(): ?RetrieveConfig
-    {
-        return $this->retrieveConfig;
-    }
-
-    public function setRetrieveConfig(null|array|RetrieveConfig $retrieveConfig): static
-    {
-        is_array($retrieveConfig) && $retrieveConfig = RetrieveConfig::fromArray($retrieveConfig);
-        $this->retrieveConfig = $retrieveConfig;
         return $this;
     }
 }

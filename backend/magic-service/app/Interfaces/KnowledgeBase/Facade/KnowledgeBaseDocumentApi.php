@@ -29,7 +29,7 @@ class KnowledgeBaseDocumentApi extends AbstractKnowledgeBaseApi
         $userAuthorization = $this->getAuthorization();
 
         $entity = KnowledgeBaseDocumentAssembler::createDTOToEntity($dto, $userAuthorization);
-        $entity = $this->knowledgeBaseDocumentAppService->save($userAuthorization, $entity, $dto->getDocumentFile());
+        $entity = $this->knowledgeBaseDocumentAppService->save($userAuthorization, $entity);
         return KnowledgeBaseDocumentAssembler::entityToDTO($entity)->toArray();
     }
 

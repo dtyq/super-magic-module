@@ -11,7 +11,7 @@ use App\Domain\KnowledgeBase\Entity\ValueObject\DocType;
 
 interface DocumentFileInterface
 {
-    public function getDocType(): DocType;
+    public function getDocType(): ?DocType;
 
     public function getName(): string;
 }

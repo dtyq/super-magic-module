@@ -7,6 +7,8 @@ declare(strict_types=1);
 
 namespace App\Domain\KnowledgeBase\Entity;
 
+use App\Domain\KnowledgeBase\Entity\ValueObject\DocumentFile\AbstractDocumentFile;
+use App\Domain\KnowledgeBase\Entity\ValueObject\DocumentFile\DocumentFileInterface;
 use App\Domain\KnowledgeBase\Entity\ValueObject\FragmentConfig;
 use App\Domain\KnowledgeBase\Entity\ValueObject\RetrieveConfig;
 use App\ErrorCode\FlowErrorCode;
@@ -36,6 +38,8 @@ class KnowledgeBaseDocumentEntity extends AbstractKnowledgeBaseEntity
     protected int $docType;
 
     protected array $docMetadata = [];
+
+    protected ?DocumentFileInterface $documentFile = null;
 
     protected int $syncStatus = 0;
 
@@ -360,5 +364,17 @@ class KnowledgeBaseDocumentEntity extends AbstractKnowledgeBaseEntity
             ExceptionBuilder::throw(FlowErrorCode::ValidateFailed, "向量数据库 [{$this->vectorDb}] 不存在");
         }
         return $driver->get();
+    }
+
+    public function getDocumentFile(): ?DocumentFileInterface
+    {
+        return $this->documentFile;
+    }
+
+    public function setDocumentFile(null|array|DocumentFileInterface $documentFile): self
+    {
+        is_array($documentFile) && $documentFile = AbstractDocumentFile::fromArray($documentFile);
+        $this->documentFile = $documentFile;
+        return $this;
     }
 }

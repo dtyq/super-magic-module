@@ -10,10 +10,10 @@ use App\Application\Flow\ExecuteManager\NodeRunner\Code\CodeExecutor\PHPExecutor
 use App\Application\Flow\ExecuteManager\NodeRunner\Code\CodeExecutor\PythonExecutor;
 use App\Application\Flow\ExecuteManager\NodeRunner\ReplyMessage\Struct\BaseMessageAttachmentHandler;
 use App\Application\Flow\ExecuteManager\NodeRunner\ReplyMessage\Struct\MessageAttachmentHandlerInterface;
-use App\Application\KnowledgeBase\Service\Strategy\ContentParser\Driver\ExternalFileContentParserDriver;
-use App\Application\KnowledgeBase\Service\Strategy\ContentParser\Driver\Interfaces\ExternalFileContentParserInterface;
-use App\Application\KnowledgeBase\Service\Strategy\ContentParser\Driver\Interfaces\ThirdPlatformContentParserInterface;
-use App\Application\KnowledgeBase\Service\Strategy\ContentParser\Driver\ThirdPlatformContentParserDriver;
+use App\Application\KnowledgeBase\Service\Strategy\DocumentFile\Driver\ExternalFileDocumentFileStrategyDriver;
+use App\Application\KnowledgeBase\Service\Strategy\DocumentFile\Driver\Interfaces\ExternalFileDocumentFileStrategyInterface;
+use App\Application\KnowledgeBase\Service\Strategy\DocumentFile\Driver\Interfaces\ThirdPlatformDocumentFileStrategyInterface;
+use App\Application\KnowledgeBase\Service\Strategy\DocumentFile\Driver\ThirdPlatformDocumentFileStrategyDriver;
 use App\Application\KnowledgeBase\VectorDatabase\Similarity\Driver\BaseFullTextSimilaritySearch;
 use App\Application\KnowledgeBase\VectorDatabase\Similarity\Driver\BaseGraphSimilaritySearch;
 use App\Application\KnowledgeBase\VectorDatabase\Similarity\Driver\BaseHybridSimilaritySearch;
@@ -297,8 +297,8 @@ $dependencies = [
     // 知识库
     KnowledgeTypeFactoryInterface::class => KnowledgeTypeFactory::class,
 
-    ExternalFileContentParserInterface::class => ExternalFileContentParserDriver::class,
-    ThirdPlatformContentParserInterface::class => ThirdPlatformContentParserDriver::class,
+    ExternalFileDocumentFileStrategyInterface::class => ExternalFileDocumentFileStrategyDriver::class,
+    ThirdPlatformDocumentFileStrategyInterface::class => ThirdPlatformDocumentFileStrategyDriver::class,
 
     // admin
     AdminGlobalSettingsRepositoryInterface::class => AdminGlobalSettingsRepository::class,

@@ -330,6 +330,7 @@ class KnowledgeBaseDocumentRepository extends KnowledgeBaseAbstractRepository im
             'updated_uid' => $entity->getUpdatedUid(),
             'word_count' => $entity->getWordCount(),
             'deleted_at' => $entity->getDeletedAt(),
+            'document_file' => $entity->getDocumentFile(),
         ];
 
         if ($entity->getCode()) {

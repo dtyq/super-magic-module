@@ -12,7 +12,6 @@ use App\Domain\KnowledgeBase\Entity\KnowledgeBaseDocumentEntity;
 use App\Domain\KnowledgeBase\Entity\ValueObject\Query\KnowledgeBaseFragmentQuery;
 use App\Infrastructure\Core\Embeddings\VectorStores\VectorStoreDriver;
 use App\Infrastructure\Core\ValueObject\Page;
-use App\Interfaces\KnowledgeBase\DTO\DocumentFile\ExternalDocumentFileDTO;
 use Qbhy\HyperfAuth\Authenticatable;
 
 class KnowledgeBaseDocumentAppService extends AbstractKnowledgeAppService
@@ -28,7 +27,7 @@ class KnowledgeBaseDocumentAppService extends AbstractKnowledgeAppService
     /**
      * 保存知识库文档.
      */
-    public function save(Authenticatable $authorization, KnowledgeBaseDocumentEntity $documentEntity, ?ExternalDocumentFileDTO $documentFile = null): KnowledgeBaseDocumentEntity
+    public function save(Authenticatable $authorization, KnowledgeBaseDocumentEntity $documentEntity): KnowledgeBaseDocumentEntity
     {
         $dataIsolation = $this->createKnowledgeBaseDataIsolation($authorization);
         $this->checkKnowledgeBaseOperation($dataIsolation, 'w', $documentEntity->getKnowledgeBaseCode(), $documentEntity->getCode());
@@ -45,15 +44,10 @@ class KnowledgeBaseDocumentAppService extends AbstractKnowledgeAppService
         // 设置默认的嵌入模型和向量数据库
         $documentEntity->setEmbeddingModel($knowledgeBaseEntity->getModel());
         $documentEntity->setVectorDb(VectorStoreDriver::default()->value);
-
-        // 调用领域服务保存文档
-        if (! empty($documentFile)) {
-            $fileLink = $this->getFileLink($dataIsolation->getCurrentOrganizationCode(), $documentFile->getKey());
-            $documentFile->setFileLink($fileLink);
-        }
         if (! $documentEntity->getCode()) {
             // 新建文档
-            return $this->knowledgeBaseDocumentDomainService->create($dataIsolation, $knowledgeBaseEntity, $documentEntity, $this->documentFileDTOToVO($documentFile));
+            $documentEntity->getDocumentFile() && $this->documentFileStrategy->parseDocType($dataIsolation, $documentEntity->getDocumentFile());
+            return $this->knowledgeBaseDocumentDomainService->create($dataIsolation, $knowledgeBaseEntity, $documentEntity);
         }
         return $this->knowledgeBaseDocumentDomainService->update($dataIsolation, $knowledgeBaseEntity, $documentEntity);
     }

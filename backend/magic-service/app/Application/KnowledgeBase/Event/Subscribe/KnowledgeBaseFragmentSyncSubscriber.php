@@ -7,23 +7,25 @@ declare(strict_types=1);
 
 namespace App\Application\KnowledgeBase\Event\Subscribe;
 
-use App\Application\ModelGateway\Mapper\ModelGatewayMapper;
+use App\Application\KnowledgeBase\Service\KnowledgeBaseVectorAppService;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeSyncStatus;
 use App\Domain\KnowledgeBase\Event\KnowledgeBaseFragmentSavedEvent;
 use App\Domain\KnowledgeBase\Service\KnowledgeBaseDomainService;
-use App\Infrastructure\Core\Embeddings\EmbeddingGenerator\EmbeddingGeneratorInterface;
+use App\Infrastructure\Core\Embeddings\EmbeddingGeneratorInterface;
+use App\Infrastructure\Core\ModelGateway\ModelGatewayMapper;
 use Dtyq\AsyncEvent\Kernel\Annotation\AsyncListener;
-use Hyperf\Codec\Json;
 use Hyperf\Event\Annotation\Listener;
 use Hyperf\Event\Contract\ListenerInterface;
-use Psr\Container\ContainerInterface;
+use Hyperf\Json\Json;
 use Throwable;
+
+use function di;
 
 #[AsyncListener]
 #[Listener]
 readonly class KnowledgeBaseFragmentSyncSubscriber implements ListenerInterface
 {
-    public function __construct(private ContainerInterface $container)
+    public function __construct()
     {
     }
 
@@ -41,12 +43,15 @@ readonly class KnowledgeBaseFragmentSyncSubscriber implements ListenerInterface
         }
         $knowledge = $event->magicFlowKnowledgeEntity;
         $fragment = $event->magicFlowKnowledgeFragmentEntity;
-        $magicFlowKnowledgeDomainService = $this->container->get(KnowledgeBaseDomainService::class);
+        /** @var KnowledgeBaseDomainService $magicFlowKnowledgeDomainService */
+        $magicFlowKnowledgeDomainService = di(KnowledgeBaseDomainService::class);
+        /** @var KnowledgeBaseVectorAppService $knowledgeBaseVectorService */
+        $knowledgeBaseVectorService = di(KnowledgeBaseVectorAppService::class);
 
         // todo 做成队列限流
 
         try {
-            $vector = $knowledge->getVectorDBDriver();
+            $knowledgeBaseVectorService->checkCollectionExists($knowledge);
 
             // 如果具有向量的，则不重新嵌入
             if (empty($fragment->getVector())) {
@@ -54,7 +59,7 @@ readonly class KnowledgeBaseFragmentSyncSubscriber implements ListenerInterface
                 $magicFlowKnowledgeDomainService->changeSyncStatus($fragment);
 
                 $model = di(ModelGatewayMapper::class)->getEmbeddingModelProxy($knowledge->getModel());
-                $embeddingGenerator = $this->container->get(EmbeddingGeneratorInterface::class);
+                $embeddingGenerator = di(EmbeddingGeneratorInterface::class);
                 $embeddings = $embeddingGenerator->embedText($model, $fragment->getContent(), options: [
                     'business_params' => [
                         'organization_id' => $knowledge->getOrganizationCode(),
@@ -68,13 +73,14 @@ readonly class KnowledgeBaseFragmentSyncSubscriber implements ListenerInterface
                 $embeddings = Json::decode($fragment->getVector());
             }
 
-            $vector->storePoint($knowledge->getCollectionName(), $fragment->getPointId(), $embeddings, $fragment->getPayload());
+            $knowledge->getVectorDBDriver()->storePoint($knowledge->getCollectionName(), $fragment->getPointId(), $embeddings, $fragment->getPayload());
 
             $fragment->setSyncStatus(KnowledgeSyncStatus::Synced);
+            $magicFlowKnowledgeDomainService->changeSyncStatus($fragment);
         } catch (Throwable $throwable) {
             $fragment->setSyncStatus(KnowledgeSyncStatus::SyncFailed);
             $fragment->setSyncStatusMessage($throwable->getMessage());
+            $magicFlowKnowledgeDomainService->changeSyncStatus($fragment);
         }
-        $magicFlowKnowledgeDomainService->changeSyncStatus($fragment);
     }
 }
