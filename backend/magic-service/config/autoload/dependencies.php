@@ -14,7 +14,7 @@ use App\Application\KnowledgeBase\Service\Strategy\DocumentFile\Driver\ExternalF
 use App\Application\KnowledgeBase\Service\Strategy\DocumentFile\Driver\Interfaces\ExternalFileDocumentFileStrategyInterface;
 use App\Application\KnowledgeBase\Service\Strategy\DocumentFile\Driver\Interfaces\ThirdPlatformDocumentFileStrategyInterface;
 use App\Application\KnowledgeBase\Service\Strategy\DocumentFile\Driver\ThirdPlatformDocumentFileStrategyDriver;
-use App\Application\KnowledgeBase\Service\Strategy\KnowledgeBase\KnowledgeBaseStrategy;
+use App\Application\KnowledgeBase\Service\Strategy\KnowledgeBase\BaseKnowledgeBaseStrategy;
 use App\Application\KnowledgeBase\Service\Strategy\KnowledgeBase\KnowledgeBaseStrategyInterface;
 use App\Application\KnowledgeBase\VectorDatabase\Similarity\Driver\BaseFullTextSimilaritySearch;
 use App\Application\KnowledgeBase\VectorDatabase\Similarity\Driver\BaseGraphSimilaritySearch;
@@ -89,8 +89,6 @@ use App\Domain\Flow\Repository\Persistence\MagicFlowVersionRepository;
 use App\Domain\Flow\Repository\Persistence\MagicFlowWaitMessageRepository;
 use App\Domain\Group\Repository\Facade\MagicGroupRepositoryInterface;
 use App\Domain\Group\Repository\Persistence\MagicGroupRepository;
-use App\Domain\KnowledgeBase\Entity\ValueObject\Interface\KnowledgeTypeFactoryInterface;
-use App\Domain\KnowledgeBase\Factory\KnowledgeTypeFactory;
 use App\Domain\KnowledgeBase\Repository\Facade\KnowledgeBaseDocumentRepositoryInterface;
 use App\Domain\KnowledgeBase\Repository\Facade\KnowledgeBaseFragmentRepositoryInterface;
 use App\Domain\KnowledgeBase\Repository\Facade\KnowledgeBaseRepositoryInterface;
@@ -297,7 +295,7 @@ $dependencies = [
     WordFileParserDriverInterface::class => WordFileParserDriver::class,
 
     // 知识库
-    KnowledgeBaseStrategyInterface::class => KnowledgeBaseStrategy::class,
+    KnowledgeBaseStrategyInterface::class => BaseKnowledgeBaseStrategy::class,
 
     ExternalFileDocumentFileStrategyInterface::class => ExternalFileDocumentFileStrategyDriver::class,
     ThirdPlatformDocumentFileStrategyInterface::class => ThirdPlatformDocumentFileStrategyDriver::class,
