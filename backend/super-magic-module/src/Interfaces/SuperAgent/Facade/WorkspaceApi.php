@@ -129,21 +129,4 @@ class WorkspaceApi extends AbstractApi
             'success' => $result,
         ];
     }
-
-    /**
-     * 获取所有工作区的唯一组织代码列表.
-     *
-     * @param RequestContext $requestContext 请求上下文
-     * @return array 唯一的组织代码列表
-     * @throws BusinessException 如果参数无效或操作失败则抛出异常
-     */
-    public function getOrganizationCodes(RequestContext $requestContext): array
-    {
-        // 设置用户授权信息
-        $requestContext->setUserAuthorization($this->getAuthorization());
-        $userAuthorization = $requestContext->getUserAuthorization();
-
-        // 调用应用服务获取唯一组织代码列表
-        return $this->workspaceAppService->getUniqueOrganizationCodes($userAuthorization);
-    }
 }

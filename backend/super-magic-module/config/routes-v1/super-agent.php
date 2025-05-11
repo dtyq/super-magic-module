@@ -8,7 +8,6 @@ use Dtyq\SuperMagic\Interfaces\SuperAgent\Facade\AccountApi;
 use Dtyq\SuperMagic\Interfaces\SuperAgent\Facade\ConfigApi;
 use Dtyq\SuperMagic\Interfaces\SuperAgent\Facade\FileApi;
 use Dtyq\SuperMagic\Interfaces\SuperAgent\Facade\LogApi;
-use Dtyq\SuperMagic\Interfaces\SuperAgent\Facade\StatisticsApi;
 use Dtyq\SuperMagic\Interfaces\SuperAgent\Facade\WorkspaceApi;
 use Dtyq\SuperMagic\Interfaces\SuperAgent\Facade\TopicApi;
 use Dtyq\SuperMagic\Interfaces\SuperAgent\Facade\TaskApi;
@@ -28,8 +27,6 @@ Router::addGroup('/api/v1/super-agent', static function () {
         Router::post('/delete', [WorkspaceApi::class, 'deleteWorkspace']);
         // 设置工作区归档状态
         Router::post('/set-archived', [WorkspaceApi::class, 'setArchived']);
-        // 获取所有工作区的唯一组织代码列表
-        Router::get('/organization-codes', [WorkspaceApi::class, 'getOrganizationCodes']);
     });
 
     // 话题相关
@@ -44,10 +41,6 @@ Router::addGroup('/api/v1/super-agent', static function () {
         Router::post('/delete', [TopicApi::class, 'deleteTopic']);
         // 智能重命名话题
         Router::post('/rename', [TopicApi::class, 'renameTopic']);
-        // 获取沙箱的状态
-        Router::get('/{id}/sandbox', [TopicApi::class, 'getSandboxStatus']);
-        // 获取沙箱的压缩包
-        Router::get('/{id}/sandbox/download', [TopicApi::class, 'getSandboxDownloadUrl']);
     });
 
     // 任务相关
@@ -56,20 +49,10 @@ Router::addGroup('/api/v1/super-agent', static function () {
         Router::get('/{id}/attachments', [TaskApi::class, 'getTaskAttachments']);
     });
 
-    // 账号相关（临时初始化使用）
+    // 账号相关
     Router::addGroup('/accounts', static function () {
         // 初始化超级麦吉账号
         Router::post('/init', [AccountApi::class, 'initAccount']);
-    });
-
-    // 统计
-    Router::addGroup('/statistics', static function () {
-        // 获取用户使用情况
-        Router::post('/user-usage', [StatisticsApi::class, 'getUserUsage']);
-        // 获取话题状态指标统计
-        Router::get('/topic-metrics', [StatisticsApi::class, 'getTopicMetrics']);
-        // 获取用户聊天信息
-        Router::get("/user-topic-message", [StatisticsApi::class, 'getUserTopicMessage']);
     });
 
     // 前端日志上报

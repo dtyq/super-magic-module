@@ -120,20 +120,6 @@ class TopicApi extends AbstractApi
         return $this->workspaceAppService->getTopicAttachments($userAuthorization, $dto);
     }
 
-    public function getSandboxStatus(RequestContext $requestContext, $id): array
-    {
-        // 设置用户授权信息
-        $requestContext->setUserAuthorization($this->getAuthorization());
-        return $this->workspaceAppService->getSandboxStatus($requestContext, (int) $id);
-    }
-
-    public function getSandboxDownloadUrl(RequestContext $requestContext, $id)
-    {
-        // 设置用户授权信息
-        $requestContext->setUserAuthorization($this->getAuthorization());
-        return $this->workspaceAppService->getSandboxDownloadUrl($requestContext, (int) $id);
-    }
-
     /**
      * 通过话题ID获取消息列表.x.
      *
