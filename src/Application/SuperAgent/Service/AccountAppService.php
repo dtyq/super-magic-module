@@ -20,6 +20,7 @@ use App\Interfaces\Authorization\Web\MagicUserAuthorization;
 use Dtyq\SuperMagic\Domain\SuperAgent\Constant\AgentConstant;
 use Hyperf\Logger\LoggerFactory;
 use Psr\Log\LoggerInterface;
+use Throwable;
 
 class AccountAppService extends AbstractAppService
 {
@@ -34,7 +35,7 @@ class AccountAppService extends AbstractAppService
     }
 
     /**
-     * @throws \Throwable
+     * @throws Throwable
      */
     public function initAccount(string $organizationCode): array
     {
@@ -63,7 +64,7 @@ class AccountAppService extends AbstractAppService
         try {
             $userEntity = $this->magicAccountAppService->aiRegister($userDTO, $authorization, AgentConstant::SUPER_MAGIC_CODE, $accountDTO);
             return $userEntity->toArray();
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->logger->error('初始化超级麦吉账号失败，原因：' . $e->getMessage());
             throw $e;
         }

@@ -19,9 +19,7 @@ class TaskFileModel extends AbstractModel
     protected string $primaryKey = 'file_id';
 
     /**
-     * 可填充字段列表
-     * 
-     * @var array
+     * 可填充字段列表.
      */
     protected array $fillable = [
         'file_id',
@@ -41,11 +39,9 @@ class TaskFileModel extends AbstractModel
         'updated_at',
         'deleted_at',
     ];
-    
+
     /**
      * 默认属性值
-     * 
-     * @var array
      */
     protected array $attributes = [
         'storage_type' => 'workspace', // 默认存储类型为workspace
