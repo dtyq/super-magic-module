@@ -25,7 +25,9 @@ class KnowledgeBaseDocumentAssembler
 {
     public static function entityToDTO(KnowledgeBaseDocumentEntity $entity): KnowledgeBaseDocumentDTO
     {
-        return new KnowledgeBaseDocumentDTO($entity->toArray());
+        $data = $entity->toArray();
+        $data['document_file'] = self::documentFileVOToDTO($entity->getDocumentFile());
+        return new KnowledgeBaseDocumentDTO($data);
     }
 
     /**
