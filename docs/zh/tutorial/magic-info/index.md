@@ -8,7 +8,7 @@ Magic是一个企业级AI应用开发平台，为企业提供了从AI助手创�
 
 平台提供类似微信的简洁直观界面，支持多用户同时在线交流，包括私聊和群组讨论。强大的群组管理功能让管理员可以灵活分配不同成员的权限，提升企业内部沟通效率。
 
-![实时聊天界面](https://cdn.letsmagic.cn/static/img/chat-interface.png)
+![实时聊天界面](https://cdn.letsmagic.cn/static/img/20250512164817.jpg)
 
 ### 2. AI助手创建与管理
 
@@ -16,7 +16,7 @@ Magic是一个企业级AI应用开发平台，为企业提供了从AI助手创�
 - **版本管理**：支持助手的版本发布、启用/禁用状态控制
 - **企业内部发布**：方便在企业内部共享AI助手列表
 
-![AI助手管理界面](https://cdn.letsmagic.cn/static/img/ai-assistant-1.png)
+![AI助手管理界面](https://cdn.letsmagic.cn/static/img/20250512164212.jpg)
 
 ### 3. 工作流编排系统
 

@@ -13,7 +13,7 @@
 ### 1.打开麦吉审批助理
 登录钉钉 → 点击导航栏「工作台」 → 在全部列表->技术中心中找到「麦吉审批助理」（支持搜索框快速定位）
 
-![FtUNa8IxFjkcfEg2UC-uWpRA940-.png](https://cdn.letsmagic.cn/static/img/FtUNa8IxFjkcfEg2UC-uWpRA940-.png)
+![20250512165849.jpg](https://cdn.letsmagic.cn/static/img/20250512165849.jpg)
 
 
 
@@ -24,7 +24,7 @@
     - 例："因岗位职责工作需要，申请Cursor软件使用权限，有效期3个月"
 - 支持手动微调（点击表单字段直接编辑）
 
-![FlyOUkKFCAvCyLxvM4htsdh-4OYz.png](https://cdn.letsmagic.cn/static/img/FlyOUkKFCAvCyLxvM4htsdh-4OYz.png)
+![20250512171421.jpg](https://cdn.letsmagic.cn/static/img/20250512171421.jpg)
 
 
 
@@ -32,7 +32,7 @@
 
 ### 3.确认无误发起审批
 
-![Fl6uG5gelQ-R11RYAJ-qbrZqLXtJ.png](https://cdn.letsmagic.cn/static/img/Fl6uG5gelQ-R11RYAJ-qbrZqLXtJ.png)
+![20250512171631.jpg](https://cdn.letsmagic.cn/static/img/20250512171631.jpg)
 
 
 

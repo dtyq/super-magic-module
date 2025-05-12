@@ -13,7 +13,7 @@ The Magic AI Approval Assistant is an intelligent approval processing tool that 
 ### 1. Open Magic Approval Assistant
 Log in to DingTalk → Click "Workbench" in the navigation bar → Find "Magic Approval Assistant" in "All Lists > Technology Center" (supports quick location via search box)
 
-![FtUNa8IxFjkcfEg2UC-uWpRA940-.png](https://cdn.letsmagic.cn/static/img/FtUNa8IxFjkcfEg2UC-uWpRA940-.png)
+![20250512165849.jpg](https://cdn.letsmagic.cn/static/img/20250512165849.jpg)
 
 ### 2. Generate Approval Form with One Sentence
 After entering the dialog box, **directly input approval requirements**, suggested format:
@@ -21,13 +21,13 @@ After entering the dialog box, **directly input approval requirements**, suggest
     - Example: "Request Cursor software usage permission for 3 months due to job responsibilities"
 - Supports manual fine-tuning (click form fields to edit directly)
 
-![FlyOUkKFCAvCyLxvM4htsdh-4OYz.png](https://cdn.letsmagic.cn/static/img/FlyOUkKFCAvCyLxvM4htsdh-4OYz.png)
+![F20250512171421.jpg](https://cdn.letsmagic.cn/static/img/20250512171421.jpg)
 
 Pro tip: The clearer your description, the more accurate the AI-generated form!
 
 ### 3. Confirm and Initiate Approval
 
-![Fl6uG5gelQ-R11RYAJ-qbrZqLXtJ.png](https://cdn.letsmagic.cn/static/img/Fl6uG5gelQ-R11RYAJ-qbrZqLXtJ.png)
+![20250512171631.jpg](https://cdn.letsmagic.cn/static/img/20250512171631.jpg)
 
 Click [**Jump to link**] to expand approval details:
 
