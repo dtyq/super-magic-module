@@ -18,7 +18,7 @@ use Psr\Container\ContainerInterface;
 
 class RuleServiceProvider extends AbstractRuleServiceProvider
 {
-    public const RULE_SERVICE_PROVIDER = 'kkguan/php-script';
+    public const RULE_SERVICE_PROVIDER = 'RuleEngineCore/php-script';
 
     /** @var Container */
     protected static ?ContainerInterface $container = null;
