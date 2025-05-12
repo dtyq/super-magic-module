@@ -1150,7 +1150,17 @@ class MagicLLMDomainService
                 str_replace(PHP_EOL, '', $llmResponse),
                 Json::encode($subQuestions)
             ));
-            return $subQuestions;
+            // 有时会返回多维数组，在这里过滤
+            $returnQuestions = [];
+            foreach ($subQuestions as $subQuestion) {
+                if (is_string($subQuestion)) {
+                    $returnQuestions[] = $subQuestion;
+                }
+            }
+            if (empty($returnQuestions)) {
+                $returnQuestions[] = $userMessage;
+            }
+            return $returnQuestions;
         } catch (Throwable) {
             $this->logger->error('mindSearch getSubQuestionsFromLLMStringResponse 失败 $llmResponse:' . $llmResponse);
             return [$userMessage];
