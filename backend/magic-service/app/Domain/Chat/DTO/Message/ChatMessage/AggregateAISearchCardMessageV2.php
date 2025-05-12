@@ -113,14 +113,14 @@ class AggregateAISearchCardMessageV2 extends AbstractChatMessageStruct implement
         //            {
         //                "parent_question_id": "0",
         //                "question_id": "1",
-        //                "question": "kk 集团旗下有哪些品牌"
+        //                "question": "小米集团旗下有哪些品牌"
         //            }
         //        ],
         //        "question_1": [
         //            {
         //                "parent_question_id": "1",
         //                "question_id": "3",
-        //                "question": "调色师是干嘛的"
+        //                "question": "百度是干嘛的"
         //            }
         //        ]
         //    }

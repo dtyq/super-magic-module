@@ -20,7 +20,7 @@ class SeqExtra extends AbstractEntity
     protected string $topicId = '';
 
     /**
-     * 用户发这条消息时，他所登录的环境 id.（比如在 saas 生产填了 kk 预发布的私有化部署码）
+     * 用户发这条消息时，他所登录的环境 id.（比如在 saas 生产填了某个私有化部署预发布环境的码）
      * 用于请求指定私有化部署的测试/预发布/生产环境.
      */
     protected ?int $magicEnvId = null;
