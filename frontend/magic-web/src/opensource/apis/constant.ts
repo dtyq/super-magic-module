@@ -234,7 +234,7 @@ export const enum RequestUrl {
 	/** 获取可用的知识库列表 */
 	getUseableDatabaseList = "/api/v1/flows/queries/knowledge",
 	/** 获取可用的天书知识库列表 */
-	getUseableTeamshareDatabaseList = "/api/v2/magic/external-api/teamshare/knowledge/manageable",
+	getUseableTeamshareDatabaseList = "/api/v1/teamshare/knowledge/manageable",
 	/** 获取视觉理解模型数据源 */
 	getVisionModels = "/org/admin/service-providers/category",
 	/** 根据类型获取所有激活模型 */
@@ -242,9 +242,9 @@ export const enum RequestUrl {
 	/** 获取官方重排模型列表 */
 	getRerankModels = "/api/v1/knowledge-base/providers/rerank/list",
 	/** 获取知识库向量化进度 */
-	getTeamshareKnowledgeProgress = "/api/v2/magic/external-api/teamshare/knowledge/manageable-progress",
+	getTeamshareKnowledgeProgress = "/api/v1/teamshare/knowledge/manageable-progress",
 	/** 发起知识库的向量创建 */
-	createTeamshareKnowledgeVector = "/api/v2/magic/external-api/teamshare/knowledge/start-vector",
+	createTeamshareKnowledgeVector = "/api/v1/teamshare/knowledge/start-vector",
 	/** Api Key 调用 Agent */
 	callAgent = "/api/chat",
 	/** Api Key 调用工具或流程  */
@@ -319,12 +319,14 @@ export const enum RequestUrl {
 	/** 话题智能重命名 */
 	getMagicTopicName = "/api/v1/im/conversations/${conversationId}/topics/${topicId}/name",
 
+	
+	/** 获取文件 */
+	getFiles = "/api/v1/teamshare/multi-table/file/queries",
 	/** 获取数据表 */
-	getFiles = "/api/v1/flows/external-api/teamshare/multi-table/file/queries",
-	/** 获取数据表 */
-	getSheets = "/api/v1/flows/external-api/teamshare/multi-table/${fileId}/sheets",
+	getSheets = "/api/v1/teamshare/multi-table/${fileId}/sheets",
 	/** 获取文件详情 */
-	getFile = "/api/v1/flows/external-api/teamshare/multi-table/${fileId}",
+	getFile = "/api/v1/teamshare/multi-table/${fileId}",
+    
 
 	/** Auth */
 	/** 更新资源授权 */

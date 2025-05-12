@@ -130,7 +130,9 @@ export default function useBaseFlow({ currentFlow, paramsName }: UseBaseFlowProp
 	})
 
 	const onEdgesChange = useMemoizedFn((changes) => {
-		takeSnapshot(nodes, edges, nodeConfig)
+		const filterChanges = changes.filter((change) => change.type !== "select")
+		if (filterChanges.length === 0) return
+		// takeSnapshot(nodes, edges, nodeConfig)
 		return setEdges((eds) => applyEdgeChanges(changes, eds))
 	})
 
@@ -621,5 +623,6 @@ export default function useBaseFlow({ currentFlow, paramsName }: UseBaseFlowProp
 		notifyNodeChange,
 		isProcessing,
 		progress,
+		edgeLength: 0,
 	}
 }
