@@ -14,6 +14,8 @@ use App\Infrastructure\Core\Exception\ExceptionBuilder;
 
 abstract class AbstractDocumentFileDTO extends AbstractDTO implements DocumentFileDTOInterface
 {
+    public DocumentFileType $type;
+
     public string $name;
 
     public function getName(): string
@@ -34,5 +36,17 @@ abstract class AbstractDocumentFileDTO extends AbstractDTO implements DocumentFi
             DocumentFileType::THIRD_PLATFORM => new ThirdPlatformDocumentFileDTO($data),
             default => ExceptionBuilder::throw(FlowErrorCode::KnowledgeValidateFailed),
         };
+    }
+
+    public function getType(): DocumentFileType
+    {
+        return $this->type;
+    }
+
+    public function setType(null|DocumentFileType|int $type): static
+    {
+        is_int($type) && $type = DocumentFileType::tryFrom($type);
+        $this->type = $type;
+        return $this;
     }
 }

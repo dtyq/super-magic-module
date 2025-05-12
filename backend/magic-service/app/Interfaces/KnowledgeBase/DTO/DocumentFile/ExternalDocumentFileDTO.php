@@ -7,13 +7,13 @@ declare(strict_types=1);
 
 namespace App\Interfaces\KnowledgeBase\DTO\DocumentFile;
 
-use Dtyq\CloudFile\Kernel\Struct\FileLink;
+use App\Domain\KnowledgeBase\Entity\ValueObject\DocumentFile\DocumentFileType;
 
 class ExternalDocumentFileDTO extends AbstractDocumentFileDTO
 {
     public string $key;
 
-    public ?FileLink $fileLink = null;
+    public DocumentFileType $type = DocumentFileType::EXTERNAL;
 
     public function getKey(): string
     {
@@ -23,15 +23,5 @@ class ExternalDocumentFileDTO extends AbstractDocumentFileDTO
     public function setKey(string $key): void
     {
         $this->key = $key;
-    }
-
-    public function getFileLink(): ?FileLink
-    {
-        return $this->fileLink;
-    }
-
-    public function setFileLink(?FileLink $fileLink): void
-    {
-        $this->fileLink = $fileLink;
     }
 }

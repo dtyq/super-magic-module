@@ -7,11 +7,15 @@ declare(strict_types=1);
 
 namespace App\Interfaces\KnowledgeBase\DTO\DocumentFile;
 
+use App\Domain\KnowledgeBase\Entity\ValueObject\DocumentFile\DocumentFileType;
+
 class ThirdPlatformDocumentFileDTO extends AbstractDocumentFileDTO
 {
     public string $platformType;
 
     public string $thirdFileId;
+
+    public DocumentFileType $type = DocumentFileType::THIRD_PLATFORM;
 
     public function getThirdFileId(): string
     {
@@ -32,5 +36,10 @@ class ThirdPlatformDocumentFileDTO extends AbstractDocumentFileDTO
     {
         $this->platformType = $platformType;
         return $this;
+    }
+
+    public function getType(): DocumentFileType
+    {
+        return $this->type;
     }
 }

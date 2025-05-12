@@ -28,6 +28,11 @@ abstract class AbstractDocumentFile extends AbstractValueObject implements Docum
         $this->name = $name;
     }
 
+    public function setType(mixed $type): static
+    {
+        return $this;
+    }
+
     public function getType(): ?DocumentFileType
     {
         return $this->type;

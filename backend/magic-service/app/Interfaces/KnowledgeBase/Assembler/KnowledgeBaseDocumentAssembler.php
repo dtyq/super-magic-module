@@ -75,7 +75,7 @@ class KnowledgeBaseDocumentAssembler
         }
         return match (get_class($documentFile)) {
             ExternalDocumentFile::class => new ExternalDocumentFileDTO($documentFile->toArray()),
-            ThirdPlatformDocumentFileDTO::class => new ThirdPlatformDocumentFileDTO($documentFile->toArray()),
+            ThirdPlatformDocumentFile::class => new ThirdPlatformDocumentFileDTO($documentFile->toArray()),
             default => ExceptionBuilder::throw(FlowErrorCode::KnowledgeValidateFailed),
         };
     }

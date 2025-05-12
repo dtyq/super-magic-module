@@ -79,7 +79,8 @@ readonly class KnowledgeBaseSyncSubscriber implements ListenerInterface
                     ->setFragmentConfig($knowledge->getFragmentConfig())
                     ->setEmbeddingConfig($knowledge->getEmbeddingConfig())
                     ->setRetrieveConfig($knowledge->getRetrieveConfig())
-                    ->setVectorDb($knowledge->getVectorDb());
+                    ->setVectorDb($knowledge->getVectorDb())
+                    ->setDocumentFile($file);
                 $documentEntity->getDocumentFile() && $documentFileStrategy->parseDocType($dataIsolation, $documentEntity->getDocumentFile());
                 $knowledgeBaseDocumentDomainService->create($dataIsolation, $knowledge, $documentEntity);
             }
