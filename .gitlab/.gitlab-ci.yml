@@ -44,7 +44,7 @@ sync-from-github:
     - ls -la
     
     # 添加GitLab远程仓库
-    - git remote add gitlab https://oauth2:${GITLAB_TOKEN}@git.kkgroup.cn/dtyq/magic.git
+    - git remote add gitlab https://oauth2:${GITLAB_TOKEN}@${GITLAB_DOMAIN}/dtyq/magic.git
     
     # 同步 master 分支
     - echo "正在同步 master 分支..."
@@ -132,7 +132,7 @@ sync-to-service:
     - cd $MAIN_DIR
     
     # 克隆源仓库
-    - git clone https://oauth2:${GITLAB_TOKEN}@git.kkgroup.cn/dtyq/magic.git
+    - git clone https://oauth2:${GITLAB_TOKEN}@${GITLAB_DOMAIN}/dtyq/magic.git
     - ls -la
     - cd magic
     - git checkout $CURRENT_BRANCH
@@ -145,7 +145,7 @@ sync-to-service:
     - cd $TMP_DIR
     
     # 克隆目标仓库
-    - git clone https://oauth2:${GITLAB_TOKEN}@git.kkgroup.cn/dtyq/magic-service.git
+    - git clone https://oauth2:${GITLAB_TOKEN}@${GITLAB_DOMAIN}/dtyq/magic-service.git
     - cd magic-service
     
     # 获取默认分支名
@@ -191,7 +191,7 @@ sync-to-web:
     - cd $MAIN_DIR
     
     # 克隆源仓库
-    - git clone https://oauth2:${GITLAB_TOKEN}@git.kkgroup.cn/dtyq/magic.git
+    - git clone https://oauth2:${GITLAB_TOKEN}@${GITLAB_DOMAIN}/dtyq/magic.git
     - ls -la
     - cd magic
     - git checkout $CURRENT_BRANCH
@@ -204,7 +204,7 @@ sync-to-web:
     - cd $TMP_DIR
     
     # 克隆目标仓库
-    - git clone https://oauth2:${GITLAB_TOKEN}@git.kkgroup.cn/dtyq/magic-web.git
+    - git clone https://oauth2:${GITLAB_TOKEN}@${GITLAB_DOMAIN}/dtyq/magic-web.git
     - cd magic-web
     
     # 获取默认分支名
@@ -248,7 +248,7 @@ sync-to-docs:
     - cd $MAIN_DIR
     
     # 克隆源仓库
-    - git clone https://oauth2:${GITLAB_TOKEN}@git.kkgroup.cn/dtyq/magic.git
+    - git clone https://oauth2:${GITLAB_TOKEN}@${GITLAB_DOMAIN}/dtyq/magic.git
     - ls -la
     - cd magic
     - git checkout $CURRENT_BRANCH
@@ -261,7 +261,7 @@ sync-to-docs:
     - cd $TMP_DIR
     
     # 克隆目标仓库
-    - git clone https://oauth2:${GITLAB_TOKEN}@git.kkgroup.cn/dtyq/magic-docs.git
+    - git clone https://oauth2:${GITLAB_TOKEN}@${GITLAB_DOMAIN}/dtyq/magic-docs.git
     - cd magic-docs
     
     # 获取默认分支名
