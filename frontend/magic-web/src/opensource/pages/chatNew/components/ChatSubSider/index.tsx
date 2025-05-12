@@ -7,7 +7,7 @@ import SubSiderContainer from "@/opensource/layouts/BaseLayout/components/SubSid
 import { titleWithCount } from "@/utils/modules/chat"
 import MagicSegmented from "@/opensource/components/base/MagicSegmented"
 import { observer } from "mobx-react-lite"
-import conversationSiderbarStore from "@/opensource/stores/chatNew/conversationSiderbar"
+import conversationSiderbarStore from "@/opensource/stores/chatNew/conversationSidebar"
 import type Conversation from "@/opensource/models/chat/conversation"
 import { throttle } from "lodash-es"
 import conversationService from "@/opensource/services/chat/conversation/ConversationService"

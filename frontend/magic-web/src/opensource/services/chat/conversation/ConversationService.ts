@@ -2,14 +2,14 @@
 import { ConversationGroupKey } from "@/const/chat"
 import Conversation from "@/opensource/models/chat/conversation"
 import { isAiConversation } from "@/opensource/stores/chatNew/helpers/conversation"
-import type { ControlEventMessageType } from "@/types/chat"
+import type { ControlEventMessageType } from "@/types/chat/control_message"
 import { MessageReceiveType } from "@/types/chat"
 import type { ConversationFromService } from "@/types/chat/conversation"
 import { ConversationStatus } from "@/types/chat/conversation"
 import conversationStore from "@/opensource/stores/chatNew/conversation"
 import MessageService from "@/opensource/services/chat/message/MessageService"
 import MessageCacheService from "@/opensource/services/chat/message/MessageCacheService"
-import conversationSiderbarStore from "@/opensource/stores/chatNew/conversationSiderbar"
+import conversationSidebarStore from "@/opensource/stores/chatNew/conversationSidebar"
 import EditorStore from "@/opensource/stores/chatNew/messageUI/editor"
 import MessageStore from "@/opensource/stores/chatNew/message"
 import { groupBy, last } from "lodash-es"
@@ -68,9 +68,9 @@ class ConversationService {
 			organizationCode,
 		)
 		if (cache) {
-			conversationSiderbarStore.setConversationSiderbarGroups(cache)
+			conversationSidebarStore.setConversationSidebarGroups(cache)
 		} else {
-			conversationSiderbarStore.resetConversationSiderbarGroups()
+			conversationSidebarStore.resetConversationSidebarGroups()
 		}
 
 		// 从数据库加载会话
@@ -86,8 +86,8 @@ class ConversationService {
 	 * 重置会话
 	 */
 	reset() {
-		conversationSiderbarStore.resetConversationSiderbarGroups()
-		this.switchConversation()
+		conversationSidebarStore.resetConversationSidebarGroups()
+		conversationStore.reset()
 		this.magicId = undefined
 		this.organizationCode = undefined
 	}
@@ -402,7 +402,7 @@ class ConversationService {
 			Object.keys(conversationStore.conversations),
 			conversationStore.conversations,
 		)
-		conversationSiderbarStore.setConversationSiderbarGroups(sidebarGroups)
+		conversationSidebarStore.setConversationSidebarGroups(sidebarGroups)
 		ConversationCacheServices.cacheConversationSiderbarGroups(
 			this.magicId,
 			this.organizationCode,
@@ -518,7 +518,7 @@ class ConversationService {
 		ConversationCacheServices.cacheConversationSiderbarGroups(
 			this.magicId,
 			this.organizationCode,
-			conversationSiderbarStore.getConversationSiderbarGroups(),
+			conversationSidebarStore.getConversationSiderbarGroups(),
 		)
 	}
 
@@ -813,10 +813,10 @@ class ConversationService {
 			menuKey = ConversationGroupKey.Top
 		}
 
-		conversationSiderbarStore.moveConversationFirst(conversation_id, menuKey)
+		conversationSidebarStore.moveConversationFirst(conversation_id, menuKey)
 
 		if ([ConversationGroupKey.User, ConversationGroupKey.AI].includes(menuKey)) {
-			conversationSiderbarStore.moveConversationFirst(
+			conversationSidebarStore.moveConversationFirst(
 				conversation_id,
 				ConversationGroupKey.Single,
 			)

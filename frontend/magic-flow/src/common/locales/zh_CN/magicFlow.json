@@ -120,7 +120,9 @@
         "fullscreen": "全屏查看",
         "closeFullscreen": "关闭全屏",
         "jsonHighlight": "JSON高亮",
-        "viewFullscreen": "全屏查看"
+        "viewFullscreen": "全屏查看",
+        "disableHelperLines": "禁用辅助线",
+        "enableHelperLines": "启用辅助线"
     },
     "expression": {
         "const": "固定值",

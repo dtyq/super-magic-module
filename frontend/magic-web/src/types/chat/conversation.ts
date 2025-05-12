@@ -1,4 +1,5 @@
-import type { MessageReceiveType, ControlEventMessageType } from "."
+import type { MessageReceiveType } from "."
+import type { ControlEventMessageType } from "./control_message"
 import type { SeqMessageBase } from "./base"
 
 export const enum ConversationStatus {

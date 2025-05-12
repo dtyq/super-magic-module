@@ -1,5 +1,5 @@
-import type { CMessage} from "@/types/chat";
-import { ControlEventMessageType } from "@/types/chat"
+import type { CMessage } from "@/types/chat"
+import { ControlEventMessageType } from "@/types/chat/control_message"
 import type {
 	ConversationMessageSend,
 	ConversationMessage,

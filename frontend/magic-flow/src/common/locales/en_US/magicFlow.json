@@ -120,7 +120,9 @@
         "fullscreen": "Fullscreen View",
         "closeFullscreen": "Close Fullscreen",
         "jsonHighlight": "JSON Highlight",
-        "viewFullscreen": "View in Fullscreen"
+        "viewFullscreen": "View in Fullscreen",
+        "disableHelperLines": "Disable helper lines",
+        "enableHelperLines": "Enable helper lines"
     },
     "expression": {
         "const": "Constant",

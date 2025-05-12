@@ -32,7 +32,7 @@ A4打印机、佳能纸质打印机故障? 物料工程售后类
 ### 步骤二：创建知识库
 对于已有的知识库，或者公司制度类的，我们选择引入其他团队已经维护好的知识库。
 对于故障类等常见问题咨询，则新建一个知识库，进行添加维护，具体步骤如下：
-1. 登录[天书](https://teamshare.kkguan.com/workspace/wiki)
+1. 登录[麦吉]
 2. 创建知识库「门店知识库」，并按照分类创建文件夹
 3. 文本的内容，我选择用「问答对」的方式进行填充，并且有更高的检索命中率
 将所有内容填入完毕后即可
@@ -44,7 +44,7 @@ A4打印机、佳能纸质打印机故障? 物料工程售后类
 3. 编排机器人工作流
 整体流程如下：
 
-![FigxmKkXEa2k3XAdDoUgHxf77g2Z.png](https://cdn.letsmagic.cn/static/img/FigxmKkXEa2k3XAdDoUgHxf77g2Z.png)
+![FigxmKkXEa2k3XAdDoUgHxf77g2Z.png](https://cdn.letsmagic.cn/static/img/20250512162935.jpg)
 
 
 
@@ -205,13 +205,13 @@ A4打印机、佳能纸质打印机故障? 物料工程售后类
 ## 最终效果
 麦吉效果：
 
-![FhbtWpxoNRJbF936PjraCXt_Rj0K.png](https://cdn.letsmagic.cn/static/img/FhbtWpxoNRJbF936PjraCXt_Rj0K.png)
+![20250512171912.jpg](https://cdn.letsmagic.cn/static/img/20250512171912.jpg)
 
 
 
 钉钉效果：
 
-![Fve-M5bgWGVlCAP-lQ4YMhM3XuHT.png](https://cdn.letsmagic.cn/static/img/Fve-M5bgWGVlCAP-lQ4YMhM3XuHT.png)
+![20250512172022.jpg](https://cdn.letsmagic.cn/static/img/20250512172022.jpg)
 
 
 

@@ -13,6 +13,7 @@ use App\Domain\KnowledgeBase\Entity\ValueObject\Query\KnowledgeBaseQuery;
 use App\Interfaces\Authorization\Web\MagicUserAuthorization;
 use App\Interfaces\Kernel\DTO\PageDTO;
 use App\Interfaces\KnowledgeBase\Assembler\KnowledgeBaseAssembler;
+use App\Interfaces\KnowledgeBase\Assembler\KnowledgeBaseDocumentAssembler;
 use App\Interfaces\KnowledgeBase\DTO\Request\CreateKnowledgeBaseRequestDTO;
 use App\Interfaces\KnowledgeBase\DTO\Request\UpdateKnowledgeBaseRequestDTO;
 use Dtyq\ApiResponse\Annotation\ApiResponse;
@@ -25,7 +26,8 @@ class KnowledgeBaseApi extends AbstractKnowledgeBaseApi
         $authorization = $this->getAuthorization();
         $dto = CreateKnowledgeBaseRequestDTO::fromRequest($this->request);
         $entity = (new KnowledgeBaseEntity($dto->toArray()))->setType(KnowledgeType::UserKnowledgeBase->value);
-        $entity = $this->knowledgeBaseAppService->save($authorization, $entity, $dto->getDocumentFiles());
+        $documentFiles = array_map(fn ($dto) => KnowledgeBaseDocumentAssembler::documentFileDTOToVO($dto), $dto->getDocumentFiles());
+        $entity = $this->knowledgeBaseAppService->save($authorization, $entity, $documentFiles);
         return KnowledgeBaseAssembler::entityToDTO($entity);
     }
 
@@ -46,7 +48,8 @@ class KnowledgeBaseApi extends AbstractKnowledgeBaseApi
         $authorization = $this->getAuthorization();
         $query = new KnowledgeBaseQuery($this->request->all());
         $query->setOrder(['updated_at' => 'desc']);
-        $query->setType(KnowledgeType::UserKnowledgeBase->value);
+        $queryKnowledgeTypes = $this->knowledgeBaseStrategy->getQueryKnowledgeTypes();
+        $query->setTypes($queryKnowledgeTypes);
         $page = $this->createPage();
 
         $result = $this->knowledgeBaseAppService->queries($authorization, $query, $page);

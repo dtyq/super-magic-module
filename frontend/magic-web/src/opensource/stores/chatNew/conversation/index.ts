@@ -6,10 +6,10 @@ import { makeAutoObservable } from "mobx"
 import { getConversationGroupKey } from "@/opensource/services/chat/conversation/utils"
 import { ConversationStatus, type ConversationFromService } from "@/types/chat/conversation"
 import Logger from "@/utils/log/Logger"
-import conversationSiderbarStore from "@/opensource/stores/chatNew/conversationSiderbar"
+import conversationSiderbarStore from "@/opensource/stores/chatNew/conversationSidebar"
 import type { UserTask } from "@/types/chat/task"
 import type { ConversationMessageType } from "@/types/chat/conversation_message"
-import type { ControlEventMessageType } from "@/types/chat"
+import type { ControlEventMessageType } from "@/types/chat/control_message"
 
 const console = new Logger("ConversationStore")
 
@@ -588,6 +588,16 @@ class ConversationStore {
 		filteredConversationList.forEach((conversation) => {
 			this.conversations[conversation.id]?.updateFromRemote(conversation)
 		})
+	}
+
+	reset() {
+		this.conversations = {}
+		this.currentConversation = undefined
+		this.conversationTaskList = []
+		this.topicOpen = false
+		this.settingOpen = false
+		this.conversationReceiveInputing = false
+		this.selectText = ""
 	}
 }
 

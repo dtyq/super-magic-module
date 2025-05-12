@@ -1,4 +1,4 @@
-import type { ControlEventMessageType } from "@/types/chat"
+import type { ControlEventMessageType } from "@/types/chat/control_message"
 import { ConversationMessageType } from "@/types/chat/conversation_message"
 
 /**

@@ -38,7 +38,8 @@ Second step: Collect data and organize content
 ### Step Two: Create a Knowledge Base
 For existing knowledge bases or company policy documents, we choose to import knowledge bases already maintained by other teams.
 For common troubleshooting inquiries, create a new knowledge base and maintain it as follows:
-1. Log in to [Teamshare](https://teamshare.kkguan.com/workspace/wiki)
+
+1. Log in to [Magic]
 2. Create a knowledge base "Store Knowledge Base" and create folders according to categories
 3. For text content, I choose to use "Q&A pairs" for filling, which has a higher retrieval hit rate
 Once all content is filled in, it's ready to use
@@ -209,10 +210,10 @@ Magic also supports other third-party IM platforms. To add the AI assistant, thi
 ## Final Result
 Magic effect:
 
-![FhbtWpxoNRJbF936PjraCXt_Rj0K.png](https://cdn.letsmagic.cn/static/img/FhbtWpxoNRJbF936PjraCXt_Rj0K.png)
+![20250512171912.jpg](https://cdn.letsmagic.cn/static/img/20250512171912.jpg)
 
 DingTalk effect:
 
-![Fve-M5bgWGVlCAP-lQ4YMhM3XuHT.png](https://cdn.letsmagic.cn/static/img/Fve-M5bgWGVlCAP-lQ4YMhM3XuHT.png)
+![20250512172022.jpg](https://cdn.letsmagic.cn/static/img/20250512172022.jpg)
 
 With this, the store knowledge assistant has been successfully built. 

@@ -3,21 +3,11 @@ import type { User } from "../user"
 import type {
 	AggregateAISearchCardConversationMessage,
 	ConversationMessage,
-	SuperMagicContent
+	SuperMagicContent,
 } from "./conversation_message"
-import type {
-	HideConversationMessage,
-	MuteConversationMessage,
-	TopConversationMessage,
-} from "./control_message"
-import type { CreateTopicMessage, DeleteTopicMessage, UpdateTopicMessage } from "./topic"
-import type { ConversationFromService, OpenConversationMessage } from "./conversation"
-import type {
-	StartConversationInputMessage,
-	EndConversationInputMessage,
-} from "./conversation_input"
-import type { SeenMessage } from "./seen_message"
-import { AddFriendSuccessMessage } from "./control_message"
+import type { ControlMessage } from "./control_message"
+import type { ConversationFromService } from "./conversation"
+import type { IntermediateMessage } from "./intermediate_message"
 
 /** 消息接收方类型 */
 export const enum MessageReceiveType {
@@ -55,6 +45,8 @@ export const enum EventType {
 	Stream = "stream",
 	/** 控制 */
 	Control = "control",
+	/** 即时消息 */
+	Intermediate = "intermediate",
 	/** 创建会话窗口 */
 	CreateConversationWindow = "create_conversation_window",
 }
@@ -68,6 +60,7 @@ export interface EventResponseMap {
 	[EventType.Control]: { type: "seq"; seq: SeqResponse<CMessage> }
 	[EventType.Stream]: { type: "seq"; seq: SeqResponse<CMessage> }
 	[EventType.CreateConversationWindow]: { conversation: ConversationFromService }
+	[EventType.Intermediate]: { type: "seq"; seq: SeqResponse<CMessage> }
 }
 
 /**
@@ -79,66 +72,11 @@ export type EventResponse<E extends EventType> = {
 }
 
 /**
- * 控制事件类型
- */
-export enum ControlEventMessageType {
-	/** 打开（创建）会话 */
-	OpenConversation = "open_conversation",
-	/** 创建会话 */
-	CreateConversation = "create_conversation",
-	/** 已读回执 */
-	SeenMessages = "seen_messages",
-	/** 创建话题 */
-	CreateTopic = "create_topic",
-	/** 更新话题 */
-	UpdateTopic = "update_topic",
-	/** 删除话题 */
-	DeleteTopic = "delete_topic",
-	/** 设置会话话题 */
-	SetConversationTopic = "set_conversation_topic",
-	/** 开始会话输入 */
-	StartConversationInput = "start_conversation_input",
-	/** 结束会话输入 */
-	EndConversationInput = "end_conversation_input",
-	/** 撤回消息 */
-	RevokeMessage = "revoke_message",
-	/** 免打扰 */
-	MuteConversation = "mute_conversation",
-	/** 置顶群聊 */
-	TopConversation = "top_conversation",
-	/** 隐藏会话 */
-	HideConversation = "hide_conversation",
-	/** 群聊创建 */
-	GroupCreate = "group_create",
-	/** 群新增成员消息 */
-	GroupAddMember = "group_users_add",
-	/** 群解散 */
-	GroupDisband = "group_disband",
-	/** 群人员退群 */
-	GroupUsersRemove = "group_users_remove",
-	/** 群更新 */
-	GroupUpdate = "group_update",
-	/** 添加好友成功 */
-	AddFriendSuccess = "add_friend_success",
-	/** 编辑消息 */
-	EditMessage = "edit_message",
-}
-
-/**
  * 消息
  */
 export type CMessage =
-	| OpenConversationMessage
-	| CreateTopicMessage
-	| UpdateTopicMessage
-	| DeleteTopicMessage
+	| ControlMessage
+	| IntermediateMessage
 	| ConversationMessage
-	| SeenMessage
-	| StartConversationInputMessage
-	| EndConversationInputMessage
-	| TopConversationMessage
-	| MuteConversationMessage
-	| HideConversationMessage
 	| AggregateAISearchCardConversationMessage<true>
-	| AddFriendSuccessMessage
 	| SuperMagicContent

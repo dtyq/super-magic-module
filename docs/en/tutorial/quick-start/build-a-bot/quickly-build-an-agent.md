@@ -4,7 +4,7 @@ Whether you have programming experience or not, you can quickly build an AI assi
 
 ## AI Assistant Demo
 
-![demo](https://cdn.letsmagic.cn/static/img/quick-start-demo.png)
+![demo](https://cdn.letsmagic.cn/static/img/20250512165243.jpg)
 
 ## Building Steps
 Follow these steps to quickly build an AI assistant.
@@ -12,7 +12,7 @@ Follow these steps to quickly build an AI assistant.
 ### Create AI Assistant
 1. Log in to [Magic](https://www.letsmagic.cn/) and click on "AI Assistant" in the left menu
 2. Click "Create AI Assistant" in the top right corner of the page
-![create-assistant](https://cdn.letsmagic.cn/static/img/create-assistant.png)
+![create-assistant](https://cdn.letsmagic.cn/static/img/20250512164212.jpg)
 
 3. Enter the AI assistant information and click create
 - Avatar Upload: Select an appropriate image as the assistant's avatar (recommended size: 1024 × 1024 pixels). If not uploaded, the default avatar will be used.

@@ -4,7 +4,7 @@
 
 ## AI 助手演示
 
-![演示](https://cdn.letsmagic.cn/static/img/quick-start-demo.png)
+![演示](https://cdn.letsmagic.cn/static/img/20250512165243.jpg)
 
 ## 构建步骤
 按照以下步骤快速构建一个 AI 助手。
@@ -12,7 +12,7 @@
 ### 创建 AI 助手
 1. 登录 [Magic](https://www.letsmagic.cn/) 并点击左侧菜单中的"AI 助手"
 2. 点击页面右上角的"创建 AI 助手"
-![创建助手](https://cdn.letsmagic.cn/static/img/create-assistant.png)
+![创建助手](https://cdn.letsmagic.cn/static/img/20250512164212.jpg)
 
 3. 输入 AI 助手信息并点击创建
 - 头像上传：选择合适的图片作为助手头像（推荐尺寸：1024 × 1024 像素）。如不上传，将使用默认头像。

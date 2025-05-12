@@ -53,10 +53,7 @@ function MobilePage() {
 					<div className={styles.item}>
 						<MacIcon />
 						<span>Mac 客户端</span>
-						<a
-							href="https://teamshare.kkguan.com/knowledge/preview/720822492427685888/720822529786298368"
-							className={styles.button}
-						>
+						<a href="" className={styles.button}>
 							点击下载
 						</a>
 					</div>

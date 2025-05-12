@@ -10,6 +10,7 @@ namespace App\Interfaces\KnowledgeBase\Facade;
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseFragmentEntity;
 use App\Infrastructure\Core\ValueObject\Page;
 use App\Interfaces\Kernel\DTO\PageDTO;
+use App\Interfaces\KnowledgeBase\Assembler\KnowledgeBaseDocumentAssembler;
 use App\Interfaces\KnowledgeBase\Assembler\KnowledgeBaseFragmentAssembler;
 use App\Interfaces\KnowledgeBase\DTO\Request\CreateFragmentRequestDTO;
 use App\Interfaces\KnowledgeBase\DTO\Request\FragmentPreviewRequestDTO;
@@ -80,7 +81,8 @@ class KnowledgeBaseFragmentApi extends AbstractKnowledgeBaseApi
         $dto = FragmentPreviewRequestDTO::fromRequest($this->request);
         $userAuthorization = $this->getAuthorization();
 
-        $result = $this->knowledgeBaseFragmentAppService->fragmentPreview($userAuthorization, $dto->getDocumentFile(), $dto->getFragmentConfig());
+        $documentFile = KnowledgeBaseDocumentAssembler::documentFileDTOToVO($dto->getDocumentFile());
+        $result = $this->knowledgeBaseFragmentAppService->fragmentPreview($userAuthorization, $documentFile, $dto->getFragmentConfig());
         $list = array_map(function (KnowledgeBaseFragmentEntity $entity) {
             return KnowledgeBaseFragmentAssembler::entityToDTO($entity);
         }, $result);

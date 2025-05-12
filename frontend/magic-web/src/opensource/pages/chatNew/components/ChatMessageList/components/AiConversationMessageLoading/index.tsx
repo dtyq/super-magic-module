@@ -2,7 +2,7 @@ import MagicMemberAvatar from "@/opensource/components/business/MagicMemberAvata
 import { calculateRelativeSize } from "@/utils/styles"
 import { Flex } from "antd"
 import type { HTMLAttributes } from "react"
-import { useMemo } from "react"
+import { memo, useMemo } from "react"
 import { getUserName } from "@/utils/modules/chat"
 import TextAnimation from "@/opensource/components/animations/TextAnimation"
 import { useTranslation } from "react-i18next"
@@ -47,6 +47,7 @@ const AiConversationMessageLoading = observer(
 				className={cx(styles.container, styles.reverse, className)}
 				gap={12}
 				data-message-id="ai-conversation-message-loading"
+				style={{ willChange: "transform" }}
 			>
 				<MagicMemberAvatar
 					uid={ConversationStore.currentConversation?.receive_id}
@@ -76,4 +77,6 @@ const AiConversationMessageLoading = observer(
 	},
 )
 
-export default AiConversationMessageLoading
+const MemoizedAiConversationMessageLoading = memo(AiConversationMessageLoading)
+
+export default MemoizedAiConversationMessageLoading

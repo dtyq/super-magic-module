@@ -7,18 +7,20 @@ declare(strict_types=1);
 
 namespace App\Application\KnowledgeBase\Event\Subscribe;
 
+use App\Application\KnowledgeBase\Service\KnowledgeBaseVectorAppService;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeSyncStatus;
 use App\Domain\KnowledgeBase\Event\KnowledgeBaseRemovedEvent;
 use App\Domain\KnowledgeBase\Service\KnowledgeBaseDomainService;
 use Hyperf\Event\Annotation\Listener;
 use Hyperf\Event\Contract\ListenerInterface;
-use Psr\Container\ContainerInterface;
 use Throwable;
+
+use function di;
 
 #[Listener]
 readonly class KnowledgeBaseDestroySubscriber implements ListenerInterface
 {
-    public function __construct(private ContainerInterface $container)
+    public function __construct()
     {
     }
 
@@ -35,11 +37,14 @@ readonly class KnowledgeBaseDestroySubscriber implements ListenerInterface
             return;
         }
         $knowledge = $event->magicFlowKnowledgeEntity;
-        $magicFlowKnowledgeDomainService = $this->container->get(KnowledgeBaseDomainService::class);
+        /** @var KnowledgeBaseDomainService $magicFlowKnowledgeDomainService */
+        $magicFlowKnowledgeDomainService = di(KnowledgeBaseDomainService::class);
+        /** @var KnowledgeBaseVectorAppService $knowledgeBaseVectorService */
+        $knowledgeBaseVectorService = di(KnowledgeBaseVectorAppService::class);
 
         try {
-            $vector = $knowledge->getVectorDBDriver();
-            $vector->removeCollection($knowledge->getCollectionName());
+            $knowledgeBaseVectorService->checkCollectionExists($knowledge);
+            $knowledge->getVectorDBDriver()->removeCollection($knowledge->getCollectionName());
             $knowledge->setSyncStatus(KnowledgeSyncStatus::Deleted);
         } catch (Throwable $throwable) {
             $knowledge->setSyncStatus(KnowledgeSyncStatus::DeleteFailed);

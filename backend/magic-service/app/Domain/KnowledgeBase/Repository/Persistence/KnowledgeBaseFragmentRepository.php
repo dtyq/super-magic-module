@@ -106,6 +106,9 @@ class KnowledgeBaseFragmentRepository extends KnowledgeBaseAbstractRepository im
         if (! is_null($query->getMaxSyncTimes())) {
             $builder->where('sync_times', '<', $query->getMaxSyncTimes());
         }
+        if ($query->getVersion()) {
+            $builder->where('version', $query->getVersion());
+        }
 
         $data = $this->getByPage($builder, $page, $query);
         if (! empty($data['list'])) {

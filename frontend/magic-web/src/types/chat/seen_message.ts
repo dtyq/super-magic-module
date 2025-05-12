@@ -1,5 +1,5 @@
 import type { CreateGroupConversationParamKey } from "@/opensource/apis/modules/chat/types"
-import type { ControlEventMessageType } from "."
+import type { ControlEventMessageType } from "./control_message"
 import type { SeqMessageBase } from "./base"
 import type { GroupConversationType } from "./conversation"
 import type { ConversationMessageStatus } from "./conversation_message"

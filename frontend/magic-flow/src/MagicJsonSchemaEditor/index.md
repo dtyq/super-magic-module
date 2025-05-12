@@ -396,7 +396,7 @@ export default () => {
 
 ## 支持加密
 
-如果需要进行字段的隐藏显示，则需要开启加密字段，并且需要由后端进行加密后赋值到encryption_value，value会一直是null，如果修改了value，则后端会进一步进行加密，详情见方案：https://teamshare.kkguan.com/docx/709799524976812032
+如果需要进行字段的隐藏显示，则需要开启加密字段，并且需要由后端进行加密后赋值到encryption_value，value会一直是null，如果修改了value，则后端会进一步进行加密
 
 ```jsx
 import JsonSchemaEditor from './index';
