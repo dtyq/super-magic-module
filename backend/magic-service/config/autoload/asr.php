@@ -20,7 +20,6 @@ return [
     'text_replacer' => [ // 目前火山大模型仅支持热词，不支持替换，用于极端情况下备用
         'fuzz' => [
             'replacement' => [
-                //   '开开集团' => 'KK集团',
             ],
             'threshold' => 70,
         ],
