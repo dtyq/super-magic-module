@@ -57,8 +57,8 @@ cd magic
 ###  Access Services
 - API Service: http://localhost:9501
 - Web Application: http://localhost:8080
-  - Account `13800138001`：Password `123456`
-  - Account `13900139001`：Password `123456`
+  - Account `13800138001`：Password `magic-igvv6s4EabUewuxPK8Aw`
+  - Account `13900139001`：Password `magic-igvv6s4EabUewuxPK8Aw`
 - RabbitMQ Management Interface: http://localhost:15672
   - Username: admin
   - Password: magic123456
