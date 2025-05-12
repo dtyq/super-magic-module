@@ -27,7 +27,6 @@ use Dtyq\SuperMagic\Domain\SuperAgent\Entity\ValueObject\WorkspaceArchiveStatus;
 use Dtyq\SuperMagic\Domain\SuperAgent\Entity\ValueObject\WorkspaceCreationParams;
 use Dtyq\SuperMagic\Domain\SuperAgent\Service\TaskDomainService;
 use Dtyq\SuperMagic\Domain\SuperAgent\Service\WorkspaceDomainService;
-use Dtyq\SuperMagic\Infrastructure\ExternalAPI\Sandbox\SandboxResult;
 use Dtyq\SuperMagic\Infrastructure\ExternalAPI\Sandbox\Volcengine\SandboxService;
 use Dtyq\SuperMagic\Infrastructure\Utils\AccessTokenUtil;
 use Dtyq\SuperMagic\Interfaces\SuperAgent\DTO\Request\DeleteTopicRequestDTO;
@@ -302,36 +301,6 @@ class WorkspaceAppService extends AbstractAppService
         }
 
         return TopicItemDTO::fromEntity($topicEntity);
-    }
-
-    public function getSandboxStatus(RequestContext $requestContext, int $id): array
-    {
-        // 获取话题内容
-        $topicEntity = $this->workspaceDomainService->getTopicById($id);
-        if (! $topicEntity) {
-            ExceptionBuilder::throw(GenericErrorCode::SystemError, 'topic.not_found');
-        }
-        // 查看沙箱状态
-        if (! $topicEntity->getSandboxId()) {
-            return [];
-        }
-        $result = $this->sandboxService->checkSandboxExists($topicEntity->getSandboxId());
-        if ($result->getCode() === SandboxResult::NotFound) {
-            return [
-                'code' => $result->getCode(),
-                'status' => 'not found',
-            ];
-        }
-        return [
-            'code' => $result->getCode(),
-            'status' => $result->getSandboxData()->getStatus(),
-        ];
-    }
-
-    public function getSandboxDownloadUrl(RequestContext $requestContext, int $id): string
-    {
-        // 获取话题内容
-        return '';
     }
 
     /**
@@ -635,7 +604,7 @@ class WorkspaceAppService extends AbstractAppService
     }
 
     /**
-     * 通过话题ID集合获取工作区信息.
+     * 获取工作区信息通过话题ID集合.
      *
      * @param array $topicIds 话题ID集合（字符串数组）
      * @return array 以话题ID为键，工作区信息为值的关联数组
@@ -647,32 +616,6 @@ class WorkspaceAppService extends AbstractAppService
 
         // 调用领域服务获取工作区信息
         return $this->workspaceDomainService->getWorkspaceInfoByTopicIds($intTopicIds);
-    }
-
-    /**
-     * 获取所有工作区的唯一组织代码列表.
-     *
-     * @param MagicUserAuthorization $userAuthorization 用户授权信息
-     * @return array 唯一的组织代码列表
-     */
-    public function getUniqueOrganizationCodes(MagicUserAuthorization $userAuthorization): array
-    {
-        // 创建数据隔离对象
-        $dataIsolation = $this->createDataIsolation($userAuthorization);
-
-        // 获取唯一组织代码列表
-        $organizationCodes = $this->workspaceDomainService->getUniqueOrganizationCodes();
-
-        $result = [];
-        foreach ($organizationCodes as $organizationCode) {
-            $result[] = [
-                'organization_code' => $organizationCode,
-                'organization_name' => $this->magicDepartmentDomainService->getOrganizationNameByCode($organizationCode),
-            ];
-        }
-
-        // 返回结果
-        return $result;
     }
 
     public function getTopicAttachmentList(DataIsolation $dataIsolation, GetTopicAttachmentsRequestDTO $requestDto): array
@@ -946,7 +889,7 @@ class WorkspaceAppService extends AbstractAppService
         $this->logger->info('开始初始化用户工作区');
         // 获取超级麦吉用户
         [$chatConversationId, $chatConversationTopicId] = $this->initMagicChatConversation($dataIsolation);
-        $this->logger->info(sprintf("初始化超级麦吉, chatConversationId=%s, chatConversationTopicId=%s", $chatConversationId, $chatConversationTopicId));
+        $this->logger->info(sprintf('初始化超级麦吉, chatConversationId=%s, chatConversationTopicId=%s', $chatConversationId, $chatConversationTopicId));
         // 新建工作区，绑定会话id
         $result = $this->workspaceDomainService->createWorkspace(
             $dataIsolation,

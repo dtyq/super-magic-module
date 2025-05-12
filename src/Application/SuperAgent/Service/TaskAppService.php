@@ -9,6 +9,7 @@ namespace Dtyq\SuperMagic\Application\SuperAgent\Service;
 
 use App\Application\Chat\Service\MagicChatMessageAppService;
 use App\Application\File\Service\FileAppService;
+use App\Application\Kernel\SuperPermissionEnum;
 use App\Domain\Chat\Entity\Items\SeqExtra;
 use App\Domain\Chat\Entity\MagicSeqEntity;
 use App\Domain\Chat\Entity\ValueObject\ConversationType;
@@ -40,7 +41,6 @@ use Dtyq\SuperMagic\Infrastructure\ExternalAPI\Sandbox\Config\WebSocketConfig;
 use Dtyq\SuperMagic\Infrastructure\ExternalAPI\Sandbox\SandboxResult;
 use Dtyq\SuperMagic\Infrastructure\ExternalAPI\Sandbox\SandboxStruct;
 use Dtyq\SuperMagic\Infrastructure\ExternalAPI\Sandbox\Volcengine\SandboxService;
-use App\Application\Kernel\SuperPermissionEnum;
 // use Dtyq\BillingManager\Service\QuotaService;
 use Dtyq\SuperMagic\Infrastructure\ExternalAPI\Sandbox\WebSocket\WebSocketSession;
 use Dtyq\SuperMagic\Interfaces\SuperAgent\DTO\TopicTaskMessageDTO;
@@ -112,14 +112,13 @@ class TaskAppService extends AbstractAppService
                     $userPhoneNumber
                 ));
 
-               
-                $isOrganizationAdmin=false;
-                $isInviteUser=false;
-                $isSuperMagicBoardManager=false;
-                $isSuperMagicBoardOperator=false;
+                $isOrganizationAdmin = false;
+                $isInviteUser = false;
+                $isSuperMagicBoardManager = false;
+                $isSuperMagicBoardOperator = false;
 
                 // 检查是否是组织拥有者或者管理员
-                if (class_exists(PermissionChecker::class) ){
+                if (class_exists(PermissionChecker::class)) {
                     $permissionChecker = make(PermissionChecker::class);
                     $isOrganizationAdmin = $permissionChecker->isOrganizationAdmin($dataIsolation->getCurrentOrganizationCode(), $userPhoneNumber);
 
@@ -133,14 +132,13 @@ class TaskAppService extends AbstractAppService
                     $isSuperMagicBoardOperator = PermissionChecker::mobileHasPermission($userPhoneNumber, SuperPermissionEnum::SUPER_MAGIC_BOARD_OPERATOR);
                 }
 
-                if (!$isOrganizationAdmin && !$isInviteUser && !$isSuperMagicBoardManager && !$isSuperMagicBoardOperator) {
+                if (! $isOrganizationAdmin && ! $isInviteUser && ! $isSuperMagicBoardManager && ! $isSuperMagicBoardOperator) {
                     // 根据header 判断返回中文还是英文
                     ExceptionBuilder::throw(GenericErrorCode::IllegalOperation, '十分抱歉，目前您暂未获得内测资格。还请您密切留意我们发布的邀请内测相关信息，以便及时获取内测资格。');
                 }
 
                 // 获取配置的任务数量限制
                 $defaultTaskLimit = 3;
-
 
                 // 获取当前用户正在运行的任务数量@
                 $runningTasks = $this->taskRepository->getTasksByUserId($userId, ['task_status' => TaskStatus::RUNNING->value]);
