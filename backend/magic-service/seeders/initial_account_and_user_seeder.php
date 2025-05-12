@@ -64,7 +64,7 @@ class InitialAccountAndUserSeeder extends Seeder
                         'country_code' => $accountInfo['country_code'],
                         'phone' => $accountInfo['phone'],
                         'email' => $accountInfo['email'],
-                        'password' => hash('sha256', '123456'), // 默认密码
+                        'password' => hash('sha256', 'magic-igvv6s4EabUewuxPK8Aw'), // 默认密码
                         'real_name' => $accountInfo['real_name'],
                         'gender' => $accountInfo['gender'],
                         'created_at' => date('Y-m-d H:i:s'),
