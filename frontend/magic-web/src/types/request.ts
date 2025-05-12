@@ -1,6 +1,7 @@
 import type { SeqRecord } from "@/opensource/apis/modules/chat/types"
 import type { User } from "./user"
 import type { CMessage, EventType } from "./chat"
+import type { IntermediateMessage } from "./chat/intermediate_message"
 
 /**
  * 流式消息状态
@@ -47,6 +48,11 @@ export type StreamResponse = {
 	content: string
 	llm_response: string
 }
+
+/**
+ * 即时消息响应
+ */
+export type IntermediateResponse = SeqRecord<IntermediateMessage>
 
 /**
  * 分页响应

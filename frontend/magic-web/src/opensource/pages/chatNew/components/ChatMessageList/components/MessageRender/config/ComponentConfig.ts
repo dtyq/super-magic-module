@@ -1,5 +1,5 @@
-import { ControlEventMessageType } from "@/types/chat"
 import {
+	ControlEventMessageType,
 	GroupAddMemberMessage,
 	GroupCreateMessage,
 	GroupUsersRemoveMessage,

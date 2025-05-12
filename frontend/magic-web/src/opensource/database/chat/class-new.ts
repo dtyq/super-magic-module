@@ -120,6 +120,7 @@ class ChatDatabase {
 			record_summary_message_queue: "&send_time",
 			text_avatar_cache: "&text",
 			topic_list: "&conversation_id",
+			editor_draft: "&key, topic_id, conversation_id",
 		}
 	}
 
@@ -189,6 +190,15 @@ class ChatDatabase {
 			})
 		}
 		return this.db?.text_avatar_cache
+	}
+
+	getEditorDraftTable() {
+		if (!this.db?.editor_draft) {
+			this.changeSchema({
+				editor_draft: this.defaultSchema.editor_draft,
+			})
+		}
+		return this.db?.editor_draft
 	}
 }
 

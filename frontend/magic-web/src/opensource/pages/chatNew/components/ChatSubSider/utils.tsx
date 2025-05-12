@@ -1,4 +1,4 @@
-import { ControlEventMessageType } from "@/types/chat"
+import { ControlEventMessageType } from "@/types/chat/control_message"
 import type { CMessage } from "@/types/chat"
 import i18next from "i18next"
 import { isNumber } from "radash"
@@ -180,7 +180,7 @@ export function getMessageText(
 				? generateRichText(message.message.rich_text?.content)
 				: (findAndReplaceMagicEmoji(
 						generateRichText(message.message.rich_text?.content),
-					) as string)
+				  ) as string)
 		case ConversationMessageType.Markdown:
 			return onlyText
 				? message.message.markdown?.content

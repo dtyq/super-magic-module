@@ -4,7 +4,7 @@ import type {
 	ConversationMessageType,
 	SendStatus,
 } from "@/types/chat/conversation_message"
-import type { ControlEventMessageType } from "."
+import type { ControlEventMessageType } from "./control_message"
 
 export interface Message<M extends ConversationMessage = ConversationMessage> {
 	/** 本地临时id */

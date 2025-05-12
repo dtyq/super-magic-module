@@ -12,12 +12,9 @@ import type {
 	ConversationMessage,
 } from "@/types/chat/conversation_message"
 import type { RevokeMessage, GroupCreateMessage } from "@/types/chat/control_message"
-import {
-	type CMessage,
-	type MessageReceiveType,
-	EventType,
-	ControlEventMessageType,
-} from "@/types/chat"
+import { type CMessage, type MessageReceiveType, EventType } from "@/types/chat"
+import { ControlEventMessageType } from "@/types/chat/control_message"
+import { IntermediateMessageType } from "@/types/chat/intermediate_message"
 import type { LoginResponse, PaginationResponse, SeqResponse } from "@/types/request"
 import { encodeSocketIoMessage } from "@/utils/socketio"
 import { genAppMessageId, genRequestId } from "@/utils/random"
@@ -291,8 +288,8 @@ export const generateChatApi = (fetch: HttpClient, socket: ChatWebSocket) => ({
 		return socket.apiSend(
 			encodeSocketIoMessage(EventType.Control, {
 				message: {
-					type: ControlEventMessageType.StartConversationInput,
-					[ControlEventMessageType.StartConversationInput]: {
+					type: IntermediateMessageType.StartConversationInput,
+					[IntermediateMessageType.StartConversationInput]: {
 						conversation_id,
 					},
 				},
@@ -309,8 +306,8 @@ export const generateChatApi = (fetch: HttpClient, socket: ChatWebSocket) => ({
 		return socket.apiSend(
 			encodeSocketIoMessage(EventType.Control, {
 				message: {
-					type: ControlEventMessageType.EndConversationInput,
-					[ControlEventMessageType.EndConversationInput]: {
+					type: IntermediateMessageType.EndConversationInput,
+					[IntermediateMessageType.EndConversationInput]: {
 						conversation_id,
 					},
 				},

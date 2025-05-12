@@ -49,7 +49,7 @@ export const env = (
  * @description 是否生产环境
  * @returns {boolean} 是否生产环境
  */
-export const isProduction = (): boolean => env("MAGIC_APP_ENV") === AppEnv.Production
+export const isProductionEnv = (): boolean => env("MAGIC_APP_ENV") === AppEnv.Production
 
 /** 商业化版本 */
 export const isCommercial = () => env("MAGIC_EDITION") === "ENTERPRISE"

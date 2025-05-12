@@ -1,4 +1,4 @@
-import type { ControlEventMessageType } from "."
+import type { ControlEventMessageType } from "./control_message"
 import type { SeqMessageBase } from "./base"
 import type { ConversationMessageBase } from "./conversation_message"
 

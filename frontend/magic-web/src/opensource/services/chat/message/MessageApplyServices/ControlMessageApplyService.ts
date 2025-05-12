@@ -1,5 +1,6 @@
 import type { CMessage } from "@/types/chat"
-import { ControlEventMessageType, MessageReceiveType } from "@/types/chat"
+import { MessageReceiveType } from "@/types/chat"
+import { ControlEventMessageType } from "@/types/chat/control_message"
 import type { SeqResponse } from "@/types/request"
 
 // 导入新的服务
@@ -23,7 +24,12 @@ import type {
 	TopConversationMessage,
 } from "@/types/chat/control_message"
 import type { SeenMessage } from "@/types/chat/seen_message"
-import type { CreateTopicMessage, UpdateTopicMessage, DeleteTopicMessage } from "@/types/chat/topic"
+import type {
+	CreateTopicMessage,
+	UpdateTopicMessage,
+	DeleteTopicMessage,
+	EditMessage,
+} from "@/types/chat/topic"
 import { ConversationStatus } from "@/types/chat/conversation"
 import groupInfoService from "@/opensource/services/groupInfo"
 import MessageService from "../MessageService"
@@ -54,8 +60,6 @@ class ControlMessageApplyService {
 			ControlEventMessageType.MuteConversation,
 			ControlEventMessageType.TopConversation,
 			ControlEventMessageType.HideConversation,
-			ControlEventMessageType.StartConversationInput,
-			ControlEventMessageType.EndConversationInput,
 			ControlEventMessageType.CreateTopic,
 			ControlEventMessageType.UpdateTopic,
 			ControlEventMessageType.DeleteTopic,
@@ -67,7 +71,6 @@ class ControlMessageApplyService {
 			ControlEventMessageType.GroupUsersRemove,
 			ControlEventMessageType.GroupDisband,
 			ControlEventMessageType.AddFriendSuccess,
-			ControlEventMessageType.EditMessage,
 		].includes(message.message.type as ControlEventMessageType)
 	}
 
@@ -111,12 +114,6 @@ class ControlMessageApplyService {
 				break
 			case ControlEventMessageType.HideConversation:
 				this.applyHideConversationMessage(message, isHistoryMessage)
-				break
-			case ControlEventMessageType.StartConversationInput:
-				this.applyStartConversationInputMessage(message, isHistoryMessage)
-				break
-			case ControlEventMessageType.EndConversationInput:
-				this.applyEndConversationInputMessage(message, isHistoryMessage)
 				break
 			case ControlEventMessageType.CreateTopic:
 				this.applyCreateTopicMessage(message as SeqResponse<CreateTopicMessage>)
@@ -361,34 +358,6 @@ class ControlMessageApplyService {
 			return
 		}
 		ConversationService.deleteConversation(message.conversation_id)
-	}
-
-	/**
-	 * 应用开始会话输入消息
-	 * @param message 消息对象
-	 * @param isHistoryMessage 是否为历史消息
-	 */
-	applyStartConversationInputMessage(message: SeqResponse<CMessage>, isHistoryMessage: boolean) {
-		// 如果是历史消息，忽略开始会话输入消息
-		if (isHistoryMessage) {
-			return
-		}
-
-		ConversationService.startConversationInput(message.conversation_id)
-	}
-
-	/**
-	 * 应用结束会话输入消息
-	 * @param message 消息对象
-	 * @param isHistoryMessage 是否为历史消息
-	 */
-	applyEndConversationInputMessage(message: SeqResponse<CMessage>, isHistoryMessage: boolean) {
-		// 如果是历史消息，忽略结束会话输入消息
-		if (isHistoryMessage) {
-			return
-		}
-
-		ConversationService.endConversationInput(message.conversation_id)
 	}
 
 	/**

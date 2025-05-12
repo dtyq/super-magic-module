@@ -426,7 +426,9 @@ class MessageDbService {
 	) {
 		const table = await this.getMessageTable(conversation_id)
 		if (table) {
-			table.update(localMessageId, changes)
+			table.update(localMessageId, changes).catch((err) => {
+				console.error("updateMessage error", err)
+			})
 		}
 	}
 
