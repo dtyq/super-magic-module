@@ -38,7 +38,7 @@ Second step: Collect data and organize content
 ### Step Two: Create a Knowledge Base
 For existing knowledge bases or company policy documents, we choose to import knowledge bases already maintained by other teams.
 For common troubleshooting inquiries, create a new knowledge base and maintain it as follows:
-1. Log in to [Teamshare](https://teamshare.kkguan.com/workspace/wiki)
+1. Log in to [Teamshare]
 2. Create a knowledge base "Store Knowledge Base" and create folders according to categories
 3. For text content, I choose to use "Q&A pairs" for filling, which has a higher retrieval hit rate
 Once all content is filled in, it's ready to use
