@@ -32,6 +32,7 @@ class MagicFlowKnowledgeFragmentFactory
         $entity->setModifier($model->updated_uid);
         $entity->setUpdatedAt($model->updated_at);
         $entity->setVersion($model->version);
+        $entity->setWordCount($model->word_count);
         return $entity;
     }
 }
