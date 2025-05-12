@@ -7,9 +7,9 @@ declare(strict_types=1);
 
 namespace App\Domain\KnowledgeBase\Entity\ValueObject;
 
-use App\Infrastructure\Core\AbstractDTO;
+use App\Infrastructure\Core\AbstractValueObject;
 
-class FragmentConfig extends AbstractDTO
+class FragmentConfig extends AbstractValueObject
 {
     protected FragmentMode $mode;
 

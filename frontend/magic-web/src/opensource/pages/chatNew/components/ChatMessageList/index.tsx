@@ -44,6 +44,8 @@ const ChatMessageList = observer(() => {
 		isLoadingMore: false,
 		isAtBottom: true,
 		openDropdown: false,
+		marginSize: 4,
+		size: { width: 92, height: 240 },
 		dropdownPosition: { x: 0, y: 0 },
 		setIsLoadingMore: (value: boolean) => {
 			state.isLoadingMore = value
@@ -56,6 +58,34 @@ const ChatMessageList = observer(() => {
 		},
 		setDropdownPosition: (value: { x: number; y: number }) => {
 			state.dropdownPosition = value
+			state.adjustPosition()
+		},
+		adjustPosition: () => {
+			// 调整位置, 防止超出屏幕
+			if (typeof window !== "undefined") {
+				const windowWidth = window.innerWidth - state.marginSize * 2
+				const windowHeight = window.innerHeight - state.marginSize * 2
+
+				// 确保卡片右边界不超出屏幕
+				if (state.dropdownPosition.x + state.size.width + state.marginSize > windowWidth) {
+					state.dropdownPosition.x = windowWidth - state.size.width - state.marginSize
+				}
+
+				// 确保卡片不超出左边界
+				if (state.dropdownPosition.x < 0) {
+					state.dropdownPosition.x = state.marginSize
+				}
+
+				// 确保卡片底部不超出屏幕
+				if (state.dropdownPosition.y + state.size.height > windowHeight) {
+					state.dropdownPosition.y = windowHeight - state.size.height - state.marginSize
+				}
+
+				// 确保卡片不超出顶部边界
+				if (state.dropdownPosition.y < 0) {
+					state.dropdownPosition.y = state.marginSize
+				}
+			}
 		},
 		reset() {
 			state.isLoadingMore = false

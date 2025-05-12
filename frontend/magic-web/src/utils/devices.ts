@@ -25,7 +25,6 @@ export async function getDeviceInfo(i18n: i18n) {
 	// 平台映射
 	const platformMapping = {
 		DingTalk: i18n.t("device.dingTalk", { ns: "interface" }),
-		kkgroup: "App",
 		DingTalkAvoid: i18n.t("device.dingTalk", { ns: "interface" }),
 		TeamshareWebAPP: `Teamshare {${i18n.t("device.app")}}`,
 	}

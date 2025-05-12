@@ -8,6 +8,7 @@ declare(strict_types=1);
 namespace App\Interfaces\KnowledgeBase\DTO;
 
 use App\Infrastructure\Core\AbstractDTO;
+use App\Interfaces\KnowledgeBase\DTO\DocumentFile\DocumentFileDTOInterface;
 
 class KnowledgeBaseDocumentDTO extends AbstractDTO
 {
@@ -64,6 +65,8 @@ class KnowledgeBaseDocumentDTO extends AbstractDTO
     public ?string $deletedAt = null;
 
     public string $organizationCode;
+
+    public ?DocumentFileDTOInterface $documentFile = null;
 
     public function getId(): ?int
     {
@@ -359,6 +362,17 @@ class KnowledgeBaseDocumentDTO extends AbstractDTO
     public function setModifierInfo(array $modifierInfo): KnowledgeBaseDocumentDTO
     {
         $this->modifierInfo = $modifierInfo;
+        return $this;
+    }
+
+    public function getDocumentFile(): ?DocumentFileDTOInterface
+    {
+        return $this->documentFile;
+    }
+
+    public function setDocumentFile(?DocumentFileDTOInterface $documentFile): static
+    {
+        $this->documentFile = $documentFile;
         return $this;
     }
 }

@@ -197,7 +197,6 @@ export default () => {
 import { MagicExpressionWidget } from '@/index';
 import React,{ useState, useCallback } from "react"
 import { mockDataSource, mockNodeMap } from "./components/dataSource"
-import { filterMemberList } from "@/MagicExpressionWidget/components/nodes/LabelMember/mock"
 import { mockMultipleList } from "@/MagicExpressionWidget/components/nodes/LabelMultiple/mock"
 import DepartmentModal from "./mock/DepartmentModal"
 
@@ -206,6 +205,8 @@ export default () => {
     const [expression, setExpression] = useState(null)
 
     const [multiple, setMultiple] = useState(null)
+
+    const filterMemberList = []
 
     const [select, setSelect] = useState(null)
 

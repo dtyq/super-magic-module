@@ -20,6 +20,7 @@ import ConversationStore from "@/opensource/stores/chatNew/conversation"
 import { useFontSize } from "@/opensource/providers/AppearanceProvider/hooks"
 import { useStyles } from "./style"
 import Attachments from "./Attachments"
+import { observer } from "mobx-react-lite"
 
 interface MagicFileProps {
 	data?: ConversationMessageAttachment[]
@@ -27,7 +28,7 @@ interface MagicFileProps {
 	display?: boolean // 是否显示
 }
 
-const MagicFiles = ({ data, messageId, display = true }: MagicFileProps) => {
+const MagicFiles = observer(({ data, messageId, display = true }: MagicFileProps) => {
 	const { t } = useTranslation("interface")
 	const { fontSize, buttonSize } = useFontSize()
 	const { isUnReceived } = useConversationMessage()
@@ -111,7 +112,7 @@ const MagicFiles = ({ data, messageId, display = true }: MagicFileProps) => {
 	const loading = isLoading || isUnReceived
 
 	return (
-		<Flex vertical className={styles.container}>
+		<Flex vertical className={styles.container} onClick={(e) => e.stopPropagation()}>
 			<Flex className={styles.top} gap={calculateRelativeSize(8, fontSize)} align="center">
 				<FileIcon ext={dataFirst.file_extension} size={32} />
 				<Flex vertical justify="space-between" gap={loading ? 0 : 4}>
@@ -181,6 +182,6 @@ const MagicFiles = ({ data, messageId, display = true }: MagicFileProps) => {
 			</Flex>
 		</Flex>
 	)
-}
+})
 
-export default memo(MagicFiles, (prev, next) => prev.data === next.data)
+export default MagicFiles

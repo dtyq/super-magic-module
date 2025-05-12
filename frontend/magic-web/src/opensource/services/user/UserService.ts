@@ -21,6 +21,10 @@ import conversationService from "@/opensource/services/chat/conversation/Convers
 import { interfaceStore } from "@/opensource/stores/interface"
 import { ChatApi } from "@/apis"
 import ChatFileService from "../chat/file/ChatFileService"
+import EditorDraftService from "../chat/editor/DraftService"
+import Logger from "@/utils/log/Logger"
+
+const console = new Logger("UserService")
 
 export interface OrganizationResponse {
 	magicOrganizationMap: Record<string, User.MagicOrganization>
@@ -35,9 +39,6 @@ export class UserService {
 	private readonly contactApi: typeof apis.ContactApi
 
 	private readonly service: Container
-
-	magicId: string | undefined
-	userId: string | undefined
 
 	lastLogin: {
 		authorization: string
@@ -399,6 +400,7 @@ export class UserService {
 
 		// 如果当前登录的 authorization 与 lastLogin 的 authorization 相同，则返回 lastLogin 的 promise
 		if (authorization === this.lastLogin?.authorization) {
+			console.log("authorization 相同，返回 lastLogin 的 promise", this.lastLogin)
 			return this.lastLogin.promise
 		}
 
@@ -407,18 +409,24 @@ export class UserService {
 			promise: ChatApi.login(authorization)
 				.then(async (res) => {
 					userStore.user.setUserInfo(res.data.user)
+					console.log("ws 登录成功", res)
 					// 切换 chat 数据
 					await this.switchUser(res.data.user, showLoginLoading)
 				})
 				.catch((err) => {
+					console.log("ws 登录失败", err)
 					if (err.code === 3103) {
 						console.log(err)
 						// accountBusiness.accountLogout() -》 this.deleteAccount()
 						this.deleteAccount()
 					}
+					if (this.lastLogin?.authorization === authorization) {
+						this.lastLogin.promise = Promise.reject(err)
+					}
 				})
 				.finally(() => {
-					if (this.lastLogin) {
+					console.log("ws 登录结束")
+					if (this.lastLogin?.authorization === authorization) {
 						this.lastLogin.promise = Promise.resolve()
 					}
 				}),
@@ -437,32 +445,26 @@ export class UserService {
 	async switchUser(magicUser: User.UserInfo, showSwitchLoading = true) {
 		try {
 			const magicId = magicUser.magic_id
+			const userId = magicUser.user_id
+			
 			console.log("切换账户", magicId)
 			if (showSwitchLoading) interfaceStore.setIsSwitchingOrganization(true)
 
 			// 如果当前账户ID与传入的账户ID相同，则不进行切换
-			if (this.magicId !== magicId) {
-				this.magicId = magicId
-				chatDb.switchDb(magicId)
-				ChatFileService.init()
-			}
+			chatDb.switchDb(magicId)
+			ChatFileService.init()
+			EditorDraftService.initDrafts()
 
-			if (this.userId !== magicUser.user_id) {
-				const db = initDataContextDb(magicUser.magic_id, magicUser.user_id)
-				await userInfoService.loadData(db)
-				await groupInfoService.loadData(db)
-			}
+			const db = initDataContextDb(magicId, userId)
+			await userInfoService.loadData(db)
+			await groupInfoService.loadData(db)
 
 			// 检查所有组织的渲染序列号
 			MessageSeqIdService.checkAllOrganizationRenderSeqId()
 
-			if (this.userId !== magicUser.user_id || this.magicId !== magicUser.magic_id) {
-				// 重置消息数据视图
-				conversationService.reset() // 切换到空会话
-				MessageService.reset()
-			}
-
-			this.userId = magicUser.user_id
+			// 重置消息数据视图
+			conversationService.reset() // 切换到空会话
+			MessageService.reset()
 
 			/** 如果是第一次加载，则拉取 消息 */
 			if (!MessageSeqIdService.getGlobalPullSeqId()) {
@@ -476,7 +478,7 @@ export class UserService {
 					magicUser.organization_code,
 					magicUser,
 				)
-				// 拉取离线消息（内部只会应用改组织的信息）
+				// 拉取离线消息（内部只会应用该组织的信息）
 				MessageService.pullOfflineMessages()
 			}
 

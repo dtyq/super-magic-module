@@ -5,28 +5,17 @@ declare(strict_types=1);
  * Copyright (c) The Magic , Distributed under the software license
  */
 
-namespace App\Domain\KnowledgeBase\Entity\ValueObject;
+namespace App\Domain\KnowledgeBase\Entity\ValueObject\DocumentFile;
 
-use App\Infrastructure\Core\AbstractDTO;
 use Dtyq\CloudFile\Kernel\Struct\FileLink;
 
-class DocumentFileVO extends AbstractDTO
+class ExternalDocumentFile extends AbstractDocumentFile
 {
-    public string $name;
+    public DocumentFileType $type = DocumentFileType::EXTERNAL;
 
     public string $key;
 
     public ?FileLink $fileLink = null;
-
-    public function getName(): string
-    {
-        return $this->name;
-    }
-
-    public function setName(string $name): void
-    {
-        $this->name = $name;
-    }
 
     public function getKey(): string
     {

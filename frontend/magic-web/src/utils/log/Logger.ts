@@ -1,6 +1,7 @@
 import { v4 } from "uuid"
 import { userStore } from "@/opensource/models/user"
-import { isDev, isProduction } from "../env"
+import { isDev, isProductionEnv } from "../env"
+import { isDebug } from "../debug"
 
 interface EnableConfig {
 	console?: boolean
@@ -54,7 +55,7 @@ class Logger {
 
 	// 记录普通日志
 	log(...args: unknown[]): void {
-		if (!isProduction() && this.enableConfig?.console) {
+		if ((!isProductionEnv() || isDebug()) && this.enableConfig?.console) {
 			console.groupCollapsed(
 				`%c [${this.namespace}] `,
 				`color: white; background: ${this.color};`,
@@ -66,7 +67,7 @@ class Logger {
 	}
 
 	warn(...args: unknown[]) {
-		if (!isProduction() && this.enableConfig?.warn) {
+		if ((!isProductionEnv() || isDebug()) && this.enableConfig?.warn) {
 			console.groupCollapsed(
 				`%c [${this.namespace} warn] `,
 				"color: white; background: yellow;",
@@ -78,7 +79,7 @@ class Logger {
 	}
 
 	error(...args: unknown[]) {
-		if (!isProduction() && this.enableConfig?.error) {
+		if ((!isProductionEnv() || isDebug()) && this.enableConfig?.error) {
 			console.groupCollapsed(
 				`%c [${this.namespace} error] `,
 				"color: white; background: red;",
@@ -114,7 +115,7 @@ class Logger {
 	}
 
 	trace(...args: unknown[]) {
-		if (!isProduction() && this.enableConfig?.trace) {
+		if ((!isProductionEnv() || isDebug()) && this.enableConfig?.trace) {
 			console.groupCollapsed(
 				`%c [${this.namespace} trace] `,
 				"color: white; background: blue;",

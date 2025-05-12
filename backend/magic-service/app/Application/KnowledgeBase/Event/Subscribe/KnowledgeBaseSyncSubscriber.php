@@ -7,6 +7,7 @@ declare(strict_types=1);
 
 namespace App\Application\KnowledgeBase\Event\Subscribe;
 
+use App\Application\KnowledgeBase\Service\Strategy\DocumentFile\DocumentFileStrategy;
 use App\Application\ModelGateway\Mapper\ModelGatewayMapper;
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseDocumentEntity;
 use App\Domain\KnowledgeBase\Entity\ValueObject\KnowledgeBaseDataIsolation;
@@ -47,6 +48,9 @@ readonly class KnowledgeBaseSyncSubscriber implements ListenerInterface
         /** @var KnowledgeBaseDocumentDomainService $knowledgeBaseDocumentDomainService */
         $knowledgeBaseDocumentDomainService = di(KnowledgeBaseDocumentDomainService::class);
 
+        /** @var DocumentFileStrategy $documentFileStrategy */
+        $documentFileStrategy = di(DocumentFileStrategy::class);
+
         /** @var LoggerInterface $logger */
         $logger = di(LoggerInterface::class);
 
@@ -75,8 +79,10 @@ readonly class KnowledgeBaseSyncSubscriber implements ListenerInterface
                     ->setFragmentConfig($knowledge->getFragmentConfig())
                     ->setEmbeddingConfig($knowledge->getEmbeddingConfig())
                     ->setRetrieveConfig($knowledge->getRetrieveConfig())
-                    ->setVectorDb($knowledge->getVectorDb());
-                $knowledgeBaseDocumentDomainService->create($dataIsolation, $knowledge, $documentEntity, $file);
+                    ->setVectorDb($knowledge->getVectorDb())
+                    ->setDocumentFile($file);
+                $documentEntity->getDocumentFile() && $documentFileStrategy->parseDocType($dataIsolation, $documentEntity->getDocumentFile());
+                $knowledgeBaseDocumentDomainService->create($dataIsolation, $knowledge, $documentEntity);
             }
         } catch (Throwable $throwable) {
             $logger->error($throwable->getMessage() . PHP_EOL . $throwable->getTraceAsString());

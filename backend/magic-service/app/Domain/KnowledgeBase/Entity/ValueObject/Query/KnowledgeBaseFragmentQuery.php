@@ -23,6 +23,8 @@ class KnowledgeBaseFragmentQuery extends Query
 
     public bool $isDefaultDocumentCode = false;
 
+    public ?int $version = null;
+
     public function getKnowledgeCode(): string
     {
         return $this->knowledgeCode;
@@ -94,6 +96,17 @@ class KnowledgeBaseFragmentQuery extends Query
     public function setIsDefaultDocumentCode(bool $isDefaultDocumentCode): static
     {
         $this->isDefaultDocumentCode = $isDefaultDocumentCode;
+        return $this;
+    }
+
+    public function getVersion(): ?int
+    {
+        return $this->version;
+    }
+
+    public function setVersion(?int $version): static
+    {
+        $this->version = $version;
         return $this;
     }
 }

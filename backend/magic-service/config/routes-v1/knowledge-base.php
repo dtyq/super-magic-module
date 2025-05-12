@@ -28,6 +28,7 @@ Router::addGroup('/api/v1/knowledge-bases', static function () {
         Router::post('/queries', [KnowledgeBaseDocumentApi::class, 'queries']);
         Router::get('/{code}', [KnowledgeBaseDocumentApi::class, 'show']);
         Router::delete('/{code}', [KnowledgeBaseDocumentApi::class, 'destroy']);
+        Router::post('/{code}/re-vectorized', [KnowledgeBaseDocumentApi::class, 'reVectorized']);
     });
 
     // 片段

@@ -61,6 +61,9 @@ return [
         'embedding_failed' => '[:model_name] Nhúng thất bại, vui lòng kiểm tra cấu hình nhúng',
         'vector_size_not_match' => '[:model_name] Kích thước vector không khớp, vui lòng kiểm tra kích thước vector',
     ],
+    'knowledge_base' => [
+        're_vectorized_not_support' => 'Không hỗ trợ tái vector hóa',
+    ],
     'max_record' => [
         'positive_integer' => 'Số lượng bản ghi tối đa phải là số nguyên dương từ :min đến :max',
     ],

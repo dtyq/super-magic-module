@@ -10,6 +10,7 @@ namespace App\Application\KnowledgeBase\Service;
 use App\Application\ModelGateway\Mapper\ModelGatewayMapper;
 use App\Domain\Contact\Entity\MagicUserEntity;
 use App\Domain\KnowledgeBase\Entity\KnowledgeBaseEntity;
+use App\Domain\KnowledgeBase\Entity\ValueObject\DocumentFile\DocumentFileInterface;
 use App\Domain\KnowledgeBase\Entity\ValueObject\Query\KnowledgeBaseQuery;
 use App\Domain\Permission\Entity\ValueObject\OperationPermission\Operation;
 use App\Domain\Permission\Entity\ValueObject\OperationPermission\ResourceType;
@@ -18,14 +19,13 @@ use App\Infrastructure\Core\Embeddings\EmbeddingGenerator\EmbeddingGenerator;
 use App\Infrastructure\Core\Embeddings\VectorStores\VectorStoreDriver;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Infrastructure\Core\ValueObject\Page;
-use App\Interfaces\KnowledgeBase\DTO\DocumentFileDTO;
 use Qbhy\HyperfAuth\Authenticatable;
 use Throwable;
 
 class KnowledgeBaseAppService extends AbstractKnowledgeAppService
 {
     /**
-     * @param array<DocumentFileDTO> $documentFiles
+     * @param array<DocumentFileInterface> $documentFiles
      */
     public function save(Authenticatable $authorization, KnowledgeBaseEntity $magicFlowKnowledgeEntity, array $documentFiles = []): KnowledgeBaseEntity
     {
@@ -48,7 +48,7 @@ class KnowledgeBaseAppService extends AbstractKnowledgeAppService
         }
         $operation = Operation::None;
         if ($oldKnowledge) {
-            $operation = $this->getKnowledgeOperation($dataIsolation, $oldKnowledge->getCode());
+            $operation = $this->knowledgeBaseStrategy->getKnowledgeOperation($dataIsolation, $oldKnowledge->getCode());
             $operation->validate('w', $oldKnowledge->getCode());
 
             // 使用原来的模型和向量库
@@ -77,14 +77,6 @@ class KnowledgeBaseAppService extends AbstractKnowledgeAppService
             $magicFlowKnowledgeEntity->setVectorDB(VectorStoreDriver::default()->value);
         }
 
-        // 获取 文件
-        $files = $this->getFileLinks($dataIsolation->getCurrentOrganizationCode(), array_map(fn ($dto) => $dto->getKey(), $documentFiles));
-        foreach ($documentFiles as $documentFile) {
-            if ($fileLink = $files[$documentFile->getKey()] ?? null) {
-                $documentFile->setFileLink($fileLink);
-            }
-        }
-
         $modelName = $magicFlowKnowledgeEntity->getModel();
         // 创建知识库前，先对嵌入模型进行连通性测试
         try {
@@ -105,7 +97,7 @@ class KnowledgeBaseAppService extends AbstractKnowledgeAppService
             ExceptionBuilder::throw(FlowErrorCode::KnowledgeValidateFailed, 'flow.model.embedding_failed', ['model_name' => $modelName]);
         }
 
-        $knowledgeBaseEntity = $this->knowledgeBaseDomainService->save($dataIsolation, $magicFlowKnowledgeEntity, $this->documentFileDTOListToVOList($documentFiles));
+        $knowledgeBaseEntity = $this->knowledgeBaseDomainService->save($dataIsolation, $magicFlowKnowledgeEntity, $documentFiles);
         $knowledgeBaseEntity->setUserOperation($operation->value);
         $iconFileLink = $this->getFileLink($dataIsolation->getCurrentOrganizationCode(), $knowledgeBaseEntity->getIcon());
         $knowledgeBaseEntity->setIcon($iconFileLink?->getUrl() ?? '');
@@ -150,16 +142,10 @@ class KnowledgeBaseAppService extends AbstractKnowledgeAppService
     public function queries(Authenticatable $authorization, KnowledgeBaseQuery $query, Page $page): array
     {
         $dataIsolation = $this->createKnowledgeBaseDataIsolation($authorization);
-        $permissionDataIsolation = $this->createPermissionDataIsolation($dataIsolation);
 
-        $resources = $this->operationPermissionAppService->getResourceOperationByUserIds(
-            $permissionDataIsolation,
-            ResourceType::Knowledge,
-            [$authorization->getId()]
-        )[$authorization->getId()] ?? [];
-        $resourceIds = array_keys($resources);
+        $resources = $this->knowledgeBaseStrategy->getKnowledgeBaseOperations($dataIsolation);
 
-        $query->setCodes($resourceIds);
+        $query->setCodes(array_keys($resources));
         $result = $this->knowledgeBaseDomainService->queries($dataIsolation, $query, $page);
         $userIds = [];
         $iconFileLinks = $this->getIcons($dataIsolation->getCurrentOrganizationCode(), array_map(fn ($item) => $item->getIcon(), $result['list']));

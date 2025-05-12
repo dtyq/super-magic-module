@@ -1,4 +1,5 @@
 import Conversation from "@/opensource/models/chat/conversation"
+import { EditorDraftWithInfo } from "@/opensource/stores/chatNew/editorDraft"
 import { CMessage } from "@/types/chat"
 import {
 	ConversationMessageSend,
@@ -7,6 +8,7 @@ import {
 } from "@/types/chat/conversation_message"
 import { ConversationTopic } from "@/types/chat/topic"
 import { SeqResponse } from "@/types/request"
+import { JSONContent } from "@tiptap/core"
 import Dexie, { EntityTable } from "dexie"
 
 export type ChatDb = Dexie & {
@@ -39,4 +41,5 @@ export type ChatDb = Dexie & {
 		"conversation_id"
 	>
 	text_avatar_cache: EntityTable<{ text: string; base64: string }, "text">
+	editor_draft: EntityTable<EditorDraftWithInfo, "key">
 } & Record<string, EntityTable<SeqResponse<CMessage>, "seq_id">>

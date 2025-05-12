@@ -4,10 +4,9 @@ import { EventType } from "@/types/chat"
 import MagicSpin from "@/opensource/components/base/MagicSpin"
 import { useTranslation } from "react-i18next"
 import { useLocation } from "react-router"
-import { RoutePath } from "@/const/routes"
 import { bigNumCompare } from "@/utils/string"
 import { interfaceStore } from "@/opensource/stores/interface"
-import type { StreamResponse, WebSocketPayload } from "@/types/request"
+import type { IntermediateResponse, StreamResponse, WebSocketPayload } from "@/types/request"
 import MessageSeqIdService from "@/opensource/services/chat/message/MessageSeqIdService"
 import MessageService from "@/opensource/services/chat/message/MessageService"
 import StreamMessageApplyService from "@/opensource/services/chat/message/MessageApplyServices/StreamMessageApplyService"
@@ -19,11 +18,11 @@ import { userStore } from "@/opensource/models/user"
 import ContactProvider from "@/opensource/providers/ContactProvider"
 import { observer } from "mobx-react-lite"
 import { useStyles } from "./styles"
+import IntermediateMessageApplyService from "@/opensource/services/chat/message/MessageApplyServices/IntermediateMessageApplyService"
 
 interface ChatServiceProps extends PropsWithChildren {}
 
 const ChatProvider = observer(function ChatProvider({ children }: ChatServiceProps) {
-	const location = useLocation()
 	const { t } = useTranslation("interface")
 	const { styles } = useStyles()
 
@@ -34,6 +33,9 @@ const ChatProvider = observer(function ChatProvider({ children }: ChatServicePro
 			switch (message.type) {
 				case EventType.Stream:
 					StreamMessageApplyService.apply(message.payload as StreamResponse)
+					break
+				case EventType.Intermediate:
+					IntermediateMessageApplyService.apply(message.payload as IntermediateResponse)
 					break
 				default:
 					const payload = message.payload as SeqRecord<CMessage>

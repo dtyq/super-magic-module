@@ -72,6 +72,7 @@ const FlowDesign = memo(function FlowDesign() {
 		onZoomOut,
 		onEdgeTypeChange,
 		onLock,
+		helperLinesEnabled,
 	} = useFlowControls({
 		setShowParamsComp,
 		flowInstance,
@@ -183,6 +184,7 @@ const FlowDesign = memo(function FlowDesign() {
 			interaction,
 			flowInstance,
 			onlyRenderVisibleElements: visibleElements,
+			helperLinesEnabled,
 		}),
 		[
 			nodes,
@@ -207,6 +209,7 @@ const FlowDesign = memo(function FlowDesign() {
 			interaction,
 			flowInstance,
 			visibleElements,
+			helperLinesEnabled,
 		],
 	)
 

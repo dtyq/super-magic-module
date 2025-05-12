@@ -24,6 +24,7 @@ import {
 	IconLock,
 	IconLockOpen,
 	IconMouse,
+	IconRuler,
 	IconVectorSpline,
 	IconZoomIn,
 	IconZoomOut,
@@ -207,6 +208,9 @@ export default function useFlowLayout({ setShowParamsComp, flowInstance }: FlowL
 
 		setEdges([...newEdges])
 	})
+
+	// 在hooks的状态部分添加辅助线控制状态
+	const [helperLinesEnabled, setHelperLinesEnabled] = useState(false)
 
 	// 操作栏列表
 	const controlItemGroups = useMemo(() => {
@@ -393,6 +397,36 @@ export default function useFlowLayout({ setShowParamsComp, flowInstance }: FlowL
 					showMinMap,
 				},
 			],
+			[
+				{
+					icon: helperLinesEnabled ? (
+						<IconRuler stroke={1} color="#FF7D00" />
+					) : (
+						<IconRuler stroke={1} />
+					),
+					callback: () => setHelperLinesEnabled(!helperLinesEnabled),
+					tooltips: (
+						<Flex justify="space-between" gap={4}>
+							<span>
+								{helperLinesEnabled
+									? i18next.t("flow.disableHelperLines", {
+											ns: "magicFlow",
+											defaultValue: "禁用辅助线",
+									  })
+									: i18next.t("flow.enableHelperLines", {
+											ns: "magicFlow",
+											defaultValue: "启用辅助线",
+									  })}
+							</span>
+							<div className={styles.shortCutsBlock}>
+								{navigator.platform.indexOf("Mac") > -1 ? "⌘" : "Ctrl"}
+							</div>
+							<div className={styles.shortCutsBlock}>H</div>
+						</Flex>
+					),
+					helperLinesEnabled,
+				},
+			],
 		]
 	}, [
 		currentZoom,
@@ -409,6 +443,7 @@ export default function useFlowLayout({ setShowParamsComp, flowInstance }: FlowL
 		openInteractionSelect,
 		interaction,
 		onInteractionChange,
+		helperLinesEnabled,
 	])
 
 	useUpdateEffect(() => {
@@ -541,6 +576,32 @@ export default function useFlowLayout({ setShowParamsComp, flowInstance }: FlowL
 		onInteractionChange,
 		showMinMap,
 	])
+
+	// 在useKeyboardShortcuts或相关的键盘快捷键处理部分添加辅助线快捷键支持
+	useEffect(() => {
+		const handleKeyDown = (event: KeyboardEvent) => {
+			// 避免在输入框中触发快捷键
+			if (
+				document.activeElement?.tagName === "INPUT" ||
+				document.activeElement?.tagName === "TEXTAREA"
+			) {
+				return
+			}
+
+			// Ctrl+H 或 Command+H 切换辅助线功能
+			if ((event.ctrlKey || event.metaKey) && event.key === "h") {
+				event.preventDefault()
+				setHelperLinesEnabled(!helperLinesEnabled)
+			}
+
+			// 其他快捷键处理...
+		}
+
+		document.addEventListener("keydown", handleKeyDown)
+		return () => {
+			document.removeEventListener("keydown", handleKeyDown)
+		}
+	}, [helperLinesEnabled, setHelperLinesEnabled])
 
 	const handlePaste = useMemoizedFn((e: any) => {
 		// 获取活动元素，检查是否在输入框或可编辑区域
@@ -675,5 +736,6 @@ export default function useFlowLayout({ setShowParamsComp, flowInstance }: FlowL
 		onEdgeTypeChange,
 		onLock,
 		onInteractionChange,
+		helperLinesEnabled,
 	}
 }

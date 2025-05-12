@@ -7,10 +7,10 @@ declare(strict_types=1);
 
 namespace App\Domain\KnowledgeBase\Entity\ValueObject;
 
-use App\Infrastructure\Core\AbstractDTO;
+use App\Infrastructure\Core\AbstractValueObject;
 use App\Infrastructure\Util\Text\TextPreprocess\ValueObject\TextPreprocessRule;
 
-class ParentChildFragmentConfig extends AbstractDTO
+class ParentChildFragmentConfig extends AbstractValueObject
 {
     protected ParentMode $parentMode;
 

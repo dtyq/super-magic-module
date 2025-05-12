@@ -82,7 +82,7 @@ class ConversationSiderbarStore {
 	/**
 	 * 重置会话组
 	 */
-	resetConversationSiderbarGroups() {
+	resetConversationSidebarGroups() {
 		this.conversationSiderbarGroups = {
 			[ConversationGroupKey.Top]: [],
 			[ConversationGroupKey.Single]: [],
@@ -124,7 +124,7 @@ class ConversationSiderbarStore {
 	 * 设置会话组
 	 * @param conversationSiderbarGroups 会话组
 	 */
-	setConversationSiderbarGroups(
+	setConversationSidebarGroups(
 		conversationSiderbarGroups: Record<ConversationGroupKey, string[]>,
 	) {
 		this.conversationSiderbarGroups = conversationSiderbarGroups

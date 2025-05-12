@@ -4,14 +4,7 @@ import { IconSend, IconCircleX, IconMessage2Plus } from "@tabler/icons-react"
 import MagicButton from "@/opensource/components/base/MagicButton"
 import { useMemo, useRef, useState, useEffect } from "react"
 import type { HTMLAttributes } from "react"
-import {
-	useThrottleFn,
-	useKeyPress,
-	useMemoizedFn,
-	useUpdateEffect,
-	useMount,
-	useDeepCompareEffect,
-} from "ahooks"
+import { useThrottleFn, useKeyPress, useMemoizedFn, useMount, useDebounceFn } from "ahooks"
 import { useUpload } from "@/opensource/hooks/useUploadFiles"
 import type { JSONContent, UseEditorOptions } from "@tiptap/react"
 import { cloneDeep, omit } from "lodash-es"
@@ -41,7 +34,7 @@ import EditorDraftStore from "@/opensource/stores/chatNew/editorDraft"
 import EditorStore from "@/opensource/stores/chatNew/messageUI/editor"
 import { isWindows } from "@/utils/devices"
 import ConversationBotDataService from "@/opensource/services/chat/conversation/ConversationBotDataService"
-import { autorun } from "mobx"
+import { autorun, toJS } from "mobx"
 import type { FileData } from "./components/InputFiles/types"
 import InputFiles from "./components/InputFiles"
 import UploadButton from "./components/UploadButton"
@@ -173,6 +166,8 @@ const MessageEditor = observer(function MessageEditor({
 		if (list.length > MAX_UPLOAD_COUNT) {
 			message.error(t("file.uploadLimit", { count: MAX_UPLOAD_COUNT }))
 		}
+		// 写入草稿
+		writeCurrentDraft()
 	})
 	const { upload, uploading } = useUpload<FileData>({
 		storageType: "private",
@@ -323,6 +318,10 @@ const MessageEditor = observer(function MessageEditor({
 						}
 
 						clearSessionInstructConfig()
+
+						if (conversationId && topicId) {
+							EditorDraftService.deleteDraft(conversationId, topicId)
+						}
 
 						MessageReplyService.reset()
 						setFiles([])
@@ -539,6 +538,18 @@ const MessageEditor = observer(function MessageEditor({
 
 	/** ========================== 草稿 ========================== */
 
+	const { run: writeCurrentDraft } = useDebounceFn(
+		() => {
+			if (conversationId) {
+				EditorDraftService.writeDraft(conversationId, topicId ?? "", {
+					content: editorRef.current?.editor?.getJSON() ?? {},
+					files: files.map((file) => omit(file, ["error", "cancel"])),
+				})
+			}
+		},
+		{ wait: 1000 },
+	)
+
 	/** 切换会话或者话题时, 保存和读取草稿 */
 	useEffect(() => {
 		if (conversationId && editorReady && !settingContent.current) {
@@ -561,15 +572,20 @@ const MessageEditor = observer(function MessageEditor({
 			if (EditorDraftStore.hasDraft(conversationId, topicId ?? "")) {
 				const draft = EditorDraftStore.getDraft(conversationId, topicId ?? "")
 				editorRef.current?.editor?.commands.setContent(draft?.content ?? "", true)
+				console.log("draft", toJS(draft))
+				// 设置内部状态
+				setValue(draft?.content)
 				setFiles(draft?.files ?? [])
+				const text = editorRef.current?.editor?.getText()
+				setIsEmpty(!text)
 			} else {
 				editorRef.current?.editor?.chain().clearContent().run()
 				setIsEmpty(true)
+				// 重置内部状态
+				setValue(undefined)
 				setFiles([])
 			}
 
-			// 重置内部状态
-			setValue(undefined)
 			settingContent.current = false
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
@@ -620,6 +636,9 @@ const MessageEditor = observer(function MessageEditor({
 					if (json && typeof json === "object" && "type" in json) {
 						// 更新内部状态
 						setValue?.(json)
+						// 写入草稿
+						writeCurrentDraft()
+						// 设置空状态
 						setIsEmpty(!text)
 					}
 				} catch (error) {
@@ -636,7 +655,7 @@ const MessageEditor = observer(function MessageEditor({
 			enableContentCheck: false, // 关闭内置内容检查，我们自己处理
 			...omit(tiptapProps, ["extensions", "onContentError"]),
 		}
-	}, [tiptapProps, openAiCompletion, isValidContent, value, setValue])
+	}, [tiptapProps, openAiCompletion, isValidContent, value, setValue, writeCurrentDraft])
 
 	const getEditorJSON = useMemoizedFn(() => {
 		try {
