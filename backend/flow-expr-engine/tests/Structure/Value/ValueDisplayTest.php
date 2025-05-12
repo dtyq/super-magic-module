@@ -31,7 +31,7 @@ class ValueDisplayTest extends BaseTestCase
                 {
                     "id": "430379931150888960",
                     "name": "蔡伦多",
-                    "avatar": "https://static-legacy.dingtalk.com/media/lADPD3lG5dW_3IjNAgzNAeA_480_524.jpg",
+                    "avatar": "",
                     "position": "管培生",
                     "user_groups": [],
                     "email": "team@dtyq.cn",
