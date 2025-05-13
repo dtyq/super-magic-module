@@ -19,7 +19,7 @@ use Throwable;
 /**
  * 检查长时间处于运行状态的任务
  */
-#[Crontab(rule: '*/30 * * * *', name: 'CheckTaskStatus', singleton: true, onOneServer: true, callback: 'execute', memo: '每30分钟检查超过7小时未完成的任务和容器状态')]
+#[Crontab(rule: '15 * * * *', name: 'CheckTaskStatus', singleton: true, onOneServer: true, callback: 'execute', memo: '每小时的第15分钟检查超过6小时未完成的话题和容器状态')]
 readonly class CheckTaskStatusTask
 {
     public function __construct(
@@ -50,24 +50,24 @@ readonly class CheckTaskStatusTask
     private function checkTasksStatus(): void
     {
         try {
-            // 获取3小时前的时间点
-            $timeThreshold = date('Y-m-d H:i:s', strtotime('-7 hours'));
+            // 获取6小时前的时间点
+            $timeThreshold = date('Y-m-d H:i:s', strtotime('-6 hours'));
 
-            // 获取超时任务列表（更新时间超过3小时的任务，最多100条）
-            $staleRunningTasks = $this->taskDomainService->getTasksExceedingUpdateTime($timeThreshold, 100);
+            // 获取超时话题列表（更新时间超过7小时的话题，最多100条）
+            $staleRunningTopics = $this->topicDomainService->getTopicsExceedingUpdateTime($timeThreshold, 100);
 
-            if (empty($staleRunningTasks)) {
-                $this->logger->info('[CheckTaskStatusTask] 没有需要检查的超时任务');
+            if (empty($staleRunningTopics)) {
+                $this->logger->info('[CheckTaskStatusTask] 没有需要检查的超时话题');
                 return;
             }
 
-            $this->logger->info(sprintf('[CheckTaskStatusTask] 开始检查 %d 个超时任务的容器状态', count($staleRunningTasks)));
+            $this->logger->info(sprintf('[CheckTaskStatusTask] 开始检查 %d 个超时话题的容器状态', count($staleRunningTopics)));
 
             $updatedToRunningCount = 0;
             $updatedToErrorCount = 0;
 
-            foreach ($staleRunningTasks as $task) {
-                $sandboxId = $task->getSandboxId();
+            foreach ($staleRunningTopics as $topic) {
+                $sandboxId = $topic->getSandboxId();
                 if (empty($sandboxId)) {
                     continue;
                 }
@@ -85,7 +85,7 @@ readonly class CheckTaskStatusTask
                     continue;
                 }
 
-                // 记录需要创建新沙箱的原因（调试使用，没有业务逻辑，可忽略）
+                // 记录需要创建新沙箱的原因
                 if ($result->getCode() === SandboxResult::NotFound) {
                     $errMsg = '沙箱不存在';
                 } elseif ($result->getCode() === SandboxResult::Normal
@@ -95,14 +95,20 @@ readonly class CheckTaskStatusTask
                     $errMsg = '沙箱异常';
                 }
 
-                // 更新任务表
-                $this->taskDomainService->updateTaskStatusByTaskId($task->getId(), TaskStatus::ERROR, $errMsg);
-                // 更新话题表
-                $this->topicDomainService->updateTopicStatus($task->getTopicId(), $task->getId(), TaskStatus::ERROR);
+                // 获取当前任务
+                $taskId = $topic->getCurrentTaskId();
+                if ($taskId) {
+                    // 更新任务状态
+                    $this->taskDomainService->updateTaskStatusByTaskId($taskId, TaskStatus::ERROR, $errMsg);
+                }
+
+                // 更新话题状态
+                $this->topicDomainService->updateTopicStatus($topic->getId(), $taskId, TaskStatus::ERROR);
+                ++$updatedToErrorCount;
             }
 
             $this->logger->info(sprintf(
-                '[CheckTaskStatusTask] 检查完成，共更新 %d 个任务为运行状态，%d 个任务为错误状态',
+                '[CheckTaskStatusTask] 检查完成，共更新 %d 个话题为运行状态，%d 个话题为错误状态',
                 $updatedToRunningCount,
                 $updatedToErrorCount
             ));

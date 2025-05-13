@@ -27,4 +27,16 @@ class TopicDomainService
     {
         return $this->topicRepository->updateTopicStatus($id, $taskId, $taskStatus);
     }
+
+    /**
+     * 获取最近更新时间超过指定时间的话题列表.
+     *
+     * @param string $timeThreshold 时间阈值，如果话题的更新时间早于此时间，则会被包含在结果中
+     * @param int $limit 返回结果的最大数量
+     * @return array<TopicEntity> 话题实体列表
+     */
+    public function getTopicsExceedingUpdateTime(string $timeThreshold, int $limit = 100): array
+    {
+        return $this->topicRepository->getTopicsExceedingUpdateTime($timeThreshold, $limit);
+    }
 }
