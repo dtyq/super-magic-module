@@ -161,6 +161,9 @@ class TaskDomainService
 
         // 如果提供了错误信息，并且状态为ERROR，则设置错误信息
         if ($status === TaskStatus::ERROR && $errMsg !== null) {
+            if (mb_strlen($errMsg, 'UTF-8') > 500) {
+                $errMsg = mb_substr($errMsg, 0, 497, 'UTF-8') . '...';
+            }
             $taskEntity->setErrMsg($errMsg);
         }
 

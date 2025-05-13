@@ -520,9 +520,10 @@ class WorkspaceAppService extends AbstractAppService
      *
      * @param MagicUserAuthorization $userAuthorization 用户授权信息
      * @param array $fileIds 文件ID列表
+     * @param string $downloadMode 下载模式（download:下载, preview:预览）
      * @return array 文件URL列表
      */
-    public function getFileUrls(MagicUserAuthorization $userAuthorization, array $fileIds): array
+    public function getFileUrls(MagicUserAuthorization $userAuthorization, array $fileIds, string $downloadMode): array
     {
         // 创建数据隔离对象
         $organizationCode = $userAuthorization->getOrganizationCode();
@@ -536,7 +537,11 @@ class WorkspaceAppService extends AbstractAppService
                 continue;
             }
 
-            $fileLink = $this->fileAppService->getLink($organizationCode, $fileEntity->getFileKey());
+            $downloadNames = [];
+            if ($downloadMode == 'download') {
+                $downloadNames[$fileEntity->getFileKey()] = $fileEntity->getFileName();
+            }
+            $fileLink = $this->fileAppService->getLink($organizationCode, $fileEntity->getFileKey(), null, $downloadNames);
             if (empty($fileLink)) {
                 // 如果获取URL失败，跳过
                 continue;
@@ -557,9 +562,10 @@ class WorkspaceAppService extends AbstractAppService
      *
      * @param array $fileIds 文件ID列表
      * @param string $token 访问令牌
+     * @param string $downloadMode 下载模式 默认下载 download 预览 preview
      * @return array 文件URL列表
      */
-    public function getFileUrlsByAccessToken(array $fileIds, string $token): array
+    public function getFileUrlsByAccessToken(array $fileIds, string $token, string $downloadMode): array
     {
         // 从缓存里获取数据
         if (! AccessTokenUtil::validate($token)) {
@@ -578,7 +584,11 @@ class WorkspaceAppService extends AbstractAppService
                 continue;
             }
 
-            $fileLink = $this->fileAppService->getLink($organizationCode, $fileEntity->getFileKey());
+            $downloadNames = [];
+            if ($downloadMode == 'download') {
+                $downloadNames[$fileEntity->getFileKey()] = $fileEntity->getFileName();
+            }
+            $fileLink = $this->fileAppService->getLink($organizationCode, $fileEntity->getFileKey(), null, $downloadNames);
             if (empty($fileLink)) {
                 // 如果获取URL失败，跳过
                 continue;
@@ -730,8 +740,30 @@ class WorkspaceAppService extends AbstractAppService
             break;
         }
 
+        // 如果没有找到有效的根目录，创建一个扁平的目录结构
         if (empty($rootDir)) {
-            return []; // 没有找到有效的根目录
+            // 直接将所有文件作为根节点的子节点
+            foreach ($files as $file) {
+                if (empty($file['file_key'])) {
+                    continue; // 跳过没有文件路径的记录
+                }
+
+                // 提取文件名，通常是路径最后一部分
+                $pathParts = explode('/', $file['file_key']);
+                $fileName = end($pathParts);
+
+                // 创建文件节点
+                $fileNode = $file;
+                $fileNode['type'] = 'file';
+                $fileNode['is_directory'] = false;
+                $fileNode['children'] = [];
+                $fileNode['name'] = $fileName;
+
+                // 添加到根节点
+                $root['children'][] = $fileNode;
+            }
+
+            return $root['children'];
         }
 
         // 处理所有文件

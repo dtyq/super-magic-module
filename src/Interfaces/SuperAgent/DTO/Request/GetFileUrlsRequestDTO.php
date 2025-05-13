@@ -21,6 +21,10 @@ class GetFileUrlsRequestDTO
 
     private string $token;
 
+    private string $downloadMode;
+
+    private string $topicId;
+
     /**
      * 构造函数.
      */
@@ -28,6 +32,8 @@ class GetFileUrlsRequestDTO
     {
         $this->fileIds = $params['file_ids'] ?? [];
         $this->token = $params['token'] ?? '';
+        $this->downloadMode = $params['download_mode'] ?? 'download';
+        $this->topicId = $params['topic_id'] ?? '';
 
         $this->validate();
     }
@@ -51,6 +57,16 @@ class GetFileUrlsRequestDTO
     public function getToken(): string
     {
         return $this->token;
+    }
+
+    public function getDownloadMode(): string
+    {
+        return $this->downloadMode;
+    }
+
+    public function getTopicId(): string
+    {
+        return $this->topicId;
     }
 
     /**
