@@ -60,6 +60,23 @@ sync-from-github:
     - git merge origin/master -m "Auto-sync from GitHub master" || echo "Nothing to merge"
     # 推送到GitLab的master分支
     - git push -f gitlab master
+    - echo "master 分支同步完成"
+    
+    # 同步 pre-release 分支
+    - echo "正在同步 pre-release 分支..."
+    # 获取GitHub的pre-release分支
+    - git fetch origin pre-release || echo "GitHub pre-release branch not found, skipping..."
+    # 切换到本地pre-release分支
+    - git checkout pre-release || git checkout -b pre-release
+    # 获取GitLab的pre-release分支
+    - git fetch gitlab pre-release || true
+    # 从GitLab拉取当前pre-release分支
+    - git pull gitlab pre-release || echo "First time setup for pre-release branch, continuing..."
+    # 合并GitHub的pre-release分支
+    - git merge origin/pre-release -m "Auto-sync from GitHub pre-release" || echo "Nothing to merge in pre-release"
+    # 推送到GitLab的pre-release分支
+    - git push -f gitlab pre-release
+    - echo "pre-release 分支同步完成"
     
     # 同步 released 分支
     - echo "正在同步 released 分支..."
