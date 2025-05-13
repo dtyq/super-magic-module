@@ -234,6 +234,32 @@ class TopicRepository implements TopicRepositoryInterface
     }
 
     /**
+     * 获取最近更新时间超过指定时间的话题列表.
+     *
+     * @param string $timeThreshold 时间阈值，如果话题的更新时间早于此时间，则会被包含在结果中
+     * @param int $limit 返回结果的最大数量
+     * @return array<TopicEntity> 话题实体列表
+     */
+    public function getTopicsExceedingUpdateTime(string $timeThreshold, int $limit = 100): array
+    {
+        $models = $this->model::query()
+            ->where('updated_at', '<', $timeThreshold)
+            ->where('current_task_status', TaskStatus::RUNNING->value)
+            ->whereNull('deleted_at')
+            ->orderBy('id', 'asc')
+            ->limit($limit)
+            ->get();
+
+        $result = [];
+        foreach ($models as $model) {
+            $data = $this->convertModelToEntityData($model->toArray());
+            $result[] = new TopicEntity($data);
+        }
+
+        return $result;
+    }
+
+    /**
      * 将数据库模型数据转换为实体数据.
      * @param array $modelData 模型数据
      * @return array 实体数据

@@ -235,7 +235,8 @@ class TaskAppService extends AbstractAppService
                         $taskContext->getTask(),
                         $taskContext->getDataIsolation(),
                         $taskContext->getTaskId(),
-                        TaskStatus::ERROR
+                        TaskStatus::ERROR,
+                        $e->getMessage()
                     );
                 }
             });
@@ -411,7 +412,7 @@ class TaskAppService extends AbstractAppService
                 'sandbox_id' => $task->getSandboxId(),
                 'ws_url' => $wsUrl,
             ]);
-            $this->updateTaskStatus($task, $dataIsolation, $taskContext->getTaskId(), TaskStatus::ERROR);
+            $this->updateTaskStatus($task, $dataIsolation, $taskContext->getTaskId(), TaskStatus::ERROR, $e->getMessage());
             $this->sendErrorMessageToClient($task->getTopicId(), (string) $task->getId(), $taskContext->getChatTopicId(), $taskContext->getChatConversationId(), '系统繁忙，请稍后重试');
             throw $e;
         } finally {
@@ -570,7 +571,7 @@ class TaskAppService extends AbstractAppService
                             $taskContext->getTaskId()
                         ));
 
-                        $this->updateTaskStatus($task, $taskContext->getDataIsolation(), $taskContext->getTaskId(), TaskStatus::ERROR);
+                        $this->updateTaskStatus($task, $taskContext->getDataIsolation(), $taskContext->getTaskId(), TaskStatus::ERROR, $e->getMessage());
                         return; // 退出处理
                     }
                 }
@@ -580,13 +581,14 @@ class TaskAppService extends AbstractAppService
                 if ($message === null) {
                     // 定期检查任务是否已经超时
                     if (time() - $startTime > $taskTimeout) {
-                        $this->logger->warning(sprintf(
+                        $errMsg = sprintf(
                             '任务处理超时，任务ID: %s，运行时间: %d秒，任务超时时间: %d秒',
                             $taskContext->getTaskId(),
                             time() - $startTime,
                             $taskTimeout
-                        ));
-                        $this->updateTaskStatus($task, $taskContext->getDataIsolation(), $taskContext->getTaskId(), TaskStatus::ERROR);
+                        );
+                        $this->logger->warning($errMsg);
+                        $this->updateTaskStatus($task, $taskContext->getDataIsolation(), $taskContext->getTaskId(), TaskStatus::ERROR, $errMsg);
                         return; // 退出处理
                     }
                     continue;
@@ -615,7 +617,7 @@ class TaskAppService extends AbstractAppService
 
                 // 判断是否是致命错误，如果是则终止处理
                 if ($this->isFatalError($e)) {
-                    $this->updateTaskStatus($task, $taskContext->getDataIsolation(), $taskContext->getTaskId(), TaskStatus::ERROR);
+                    $this->updateTaskStatus($task, $taskContext->getDataIsolation(), $taskContext->getTaskId(), TaskStatus::ERROR, $e->getMessage());
                     return; // 退出处理
                 }
 
@@ -710,9 +712,11 @@ class TaskAppService extends AbstractAppService
             );
 
             // 6. 判断是否需要继续处理
-            if (in_array($status, [TaskStatus::ERROR->value, TaskStatus::FINISHED->value, TaskStatus::Suspended->value])) {
-                $taskStatus = TaskStatus::tryFrom($status) ?? TaskStatus::ERROR;
+            $taskStatus = TaskStatus::tryFrom($status) ?? TaskStatus::ERROR;
+            if (TaskStatus::tryFrom($status)) {
                 $this->updateTaskStatus($taskContext->getTask(), $taskContext->getDataIsolation(), $taskContext->getTaskId(), $taskStatus);
+            }
+            if (in_array($status, [TaskStatus::ERROR->value, TaskStatus::FINISHED->value, TaskStatus::Suspended->value])) {
                 return true;
             }
         } catch (Exception $e) {
@@ -1044,7 +1048,8 @@ class TaskAppService extends AbstractAppService
         TaskEntity $task,
         DataIsolation $dataIsolation,
         string $taskId,
-        TaskStatus $status
+        TaskStatus $status,
+        string $errMsg = ''
     ): void {
         try {
             $this->taskDomainService->updateTaskStatus(
@@ -1053,7 +1058,8 @@ class TaskAppService extends AbstractAppService
                 status: $status,
                 id: $task->getId(),
                 taskId: $taskId,
-                sandboxId: $task->getSandboxId()
+                sandboxId: $task->getSandboxId(),
+                errMsg: $errMsg
             );
 
             // 记录日志

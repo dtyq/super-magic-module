@@ -34,9 +34,9 @@ readonly class FileDomainService
         return $list;
     }
 
-    public function getLink(string $organizationCode, string $filePath, ?StorageBucketType $bucketType = null): ?FileLink
+    public function getLink(string $organizationCode, string $filePath, ?StorageBucketType $bucketType = null, array $downloadNames = []): ?FileLink
     {
-        return $this->cloudFileRepository->getLinks($organizationCode, [$filePath], $bucketType)[$filePath] ?? null;
+        return $this->cloudFileRepository->getLinks($organizationCode, [$filePath], $bucketType, $downloadNames)[$filePath] ?? null;
     }
 
     public function uploadByCredential(string $organizationCode, UploadFile $uploadFile, StorageBucketType $storage = StorageBucketType::Private, bool $autoDir = true): void
@@ -65,7 +65,7 @@ readonly class FileDomainService
     /**
      * @return array<string,FileLink>
      */
-    public function getLinks(string $organizationCode, array $filePaths, ?StorageBucketType $bucketType = null, array $downloadNames = []): array
+    public function getLinks(string $organizationCode, array $filePaths, ?StorageBucketType $bucketType = null, array $downloadNames = [], array $options = []): array
     {
         return $this->cloudFileRepository->getLinks($organizationCode, $filePaths, $bucketType, $downloadNames);
     }

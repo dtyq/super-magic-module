@@ -95,7 +95,7 @@ class TaskApi extends AbstractApi
         $dto = GetFileUrlsRequestDTO::fromRequest($this->request);
         if (! empty($dto->getToken())) {
             // 走令牌校验逻辑
-            return $this->workspaceAppService->getFileUrlsByAccessToken($dto->getFileIds(), $dto->getToken());
+            return $this->workspaceAppService->getFileUrlsByAccessToken($dto->getFileIds(), $dto->getToken(), $dto->getDownloadMode());
         }
         // 设置用户授权信息
         $requestContext->setUserAuthorization(di(AuthManager::class)->guard(name: 'web')->user());
@@ -104,7 +104,8 @@ class TaskApi extends AbstractApi
         // 调用应用服务
         return $this->workspaceAppService->getFileUrls(
             $userAuthorization,
-            $dto->getFileIds()
+            $dto->getFileIds(),
+            $dto->getDownloadMode()
         );
     }
 }

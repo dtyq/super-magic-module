@@ -360,9 +360,9 @@ class FileProcessAppService extends AbstractAppService
             // 调用文件服务获取STS Token
             return $this->fileDomainService->getStsTemporaryCredential(
                 $organizationCode,
-                StorageBucketType::Private,
+                $storageType,
                 $workDir,
-                7200
+                $expires
             );
         } catch (Throwable $e) {
             $this->logger->error(sprintf(

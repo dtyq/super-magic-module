@@ -309,9 +309,9 @@ class TaskRepository implements TaskRepositoryInterface
     {
         $models = $this->model::query()
             ->where('updated_at', '<', $timeThreshold)
-            ->whereIn('task_status', [TaskStatus::WAITING->value, TaskStatus::RUNNING->value])
+            ->where('task_status', TaskStatus::RUNNING->value)
             ->whereNull('deleted_at')
-            ->orderBy('updated_at', 'asc')
+            ->orderBy('id', 'asc')
             ->limit($limit)
             ->get();
 
