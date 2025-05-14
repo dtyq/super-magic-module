@@ -50,7 +50,12 @@
     ],
     "extra": {
         "hyperf": {
-            "config": "Dtyq\\SuperMagic\\ConfigProvider"
+            "config": "Dtyq\\SuperMagic\\ConfigProvider",
+            "migrate": {
+                "paths": [
+                    "migrations"
+                ]
+            }
         }
     },
     "scripts": {
