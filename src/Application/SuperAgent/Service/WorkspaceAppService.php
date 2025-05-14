@@ -372,11 +372,15 @@ class WorkspaceAppService extends AbstractAppService
         }
 
         // 调用领域服务执行重命名（这一步与magic-service进行绑定）
-        $text = $this->magicChatMessageAppService->summarizeText($authorization, $userQuestion);
-
-        // 更新话题名称
-        $dataIsolation = $this->createDataIsolation($authorization);
-        $this->workspaceDomainService->updateTopicName($dataIsolation, $topicId, $text);
+        try {
+            $text = $this->magicChatMessageAppService->summarizeText($authorization, $userQuestion);
+            // 更新话题名称
+            $dataIsolation = $this->createDataIsolation($authorization);
+            $this->workspaceDomainService->updateTopicName($dataIsolation, $topicId, $text);
+        } catch (Exception $e) {
+            $this->logger->error('rename topic error: ' . $e->getMessage());
+            $text = $topicEntity->getTopicName();
+        }
 
         return ['topic_name' => $text];
     }

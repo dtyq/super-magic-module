@@ -13,6 +13,8 @@ use App\Domain\File\Service\FileDomainService;
 use App\ErrorCode\GenericErrorCode;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Infrastructure\Core\ValueObject\StorageBucketType;
+use App\Infrastructure\Util\IdGenerator\IdGenerator;
+use Dtyq\CloudFile\Kernel\AdapterName;
 use Dtyq\SuperMagic\Domain\SuperAgent\Constant\TaskFileType;
 use Dtyq\SuperMagic\Domain\SuperAgent\Entity\TaskEntity;
 use Dtyq\SuperMagic\Domain\SuperAgent\Service\TaskDomainService;
@@ -20,6 +22,7 @@ use Dtyq\SuperMagic\Interfaces\SuperAgent\DTO\Request\RefreshStsTokenRequestDTO;
 use Hyperf\Codec\Json;
 use Hyperf\Logger\LoggerFactory;
 use Psr\Log\LoggerInterface;
+use Psr\SimpleCache\CacheInterface;
 use Throwable;
 
 /**
@@ -34,6 +37,7 @@ class FileProcessAppService extends AbstractAppService
         private readonly MagicChatFileAppService $magicChatFileAppService,
         private readonly TaskDomainService $taskDomainService,
         private readonly FileDomainService $fileDomainService,
+        private CacheInterface $cache,
         LoggerFactory $loggerFactory
     ) {
         $this->logger = $loggerFactory->get(get_class($this));
@@ -358,12 +362,22 @@ class FileProcessAppService extends AbstractAppService
             $expires = 7200; // 凭证有效期2小时
 
             // 调用文件服务获取STS Token
-            return $this->fileDomainService->getStsTemporaryCredential(
+            $data = $this->fileDomainService->getStsTemporaryCredential(
                 $organizationCode,
                 $storageType,
                 $workDir,
                 $expires
             );
+
+            // 如果是本地驱动，那么增加一个临时 key
+            if ($data['platform'] === AdapterName::LOCAL) {
+                $localCredential = 'local_credential:' . IdGenerator::getUniqueId32();
+                $data['temporary_credential']['dir'] = $organizationCode . '/' . $data['temporary_credential']['dir'];
+                $data['temporary_credential']['credential'] = $localCredential;
+                $data['temporary_credential']['read_host'] = env('FILE_LOCAL_READ_HOST', '');
+                $this->cache->set($localCredential, ['organization_code' => $organizationCode], (int) ($data['expires'] - time()));
+            }
+            return $data;
         } catch (Throwable $e) {
             $this->logger->error(sprintf(
                 '刷新STS Token失败: %s，组织编码: %s，沙箱ID: %s',
