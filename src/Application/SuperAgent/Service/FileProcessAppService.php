@@ -367,7 +367,7 @@ class FileProcessAppService extends AbstractAppService
             // 创建用户授权对象
             $userAuthorization = new MagicUserAuthorization();
             $userAuthorization->setOrganizationCode($organizationCode);
-            
+
             // 使用统一的FileAppService获取STS Token
             return $this->fileAppService->getStsTemporaryCredential($userAuthorization, $storageType, $workDir, $expires);
         } catch (Throwable $e) {
