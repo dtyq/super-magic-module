@@ -794,18 +794,6 @@ class TaskAppService extends AbstractAppService
         }
 
         if (! empty($file)) {
-            // 获取文件URL
-            $fileLink = $this->fileAppService->getLink(
-                $taskContext->getDataIsolation()->getCurrentOrganizationCode(),
-                $file['file_key']
-            );
-            if (empty($fileLink)) {
-                // 如果获取URL失败，跳过
-                return;
-            }
-            $fileUrl = $fileLink->getUrl();
-            // 读取文件内容，放到 content 中
-            $content = file_get_contents($fileUrl);
             $tool = [
                 'id' => (string) IdGenerator::getSnowId(),
                 'name' => 'finish_task',
@@ -815,7 +803,8 @@ class TaskAppService extends AbstractAppService
                     'type' => $file['file_extension'] === 'html' ? 'html' : ($file['file_extension'] === 'md' ? 'md' : 'text'),
                     'data' => [
                         'file_name' => $file['filename'],
-                        'content' => $content,
+                        'content' => '',
+                        'file_id' => $file['file_id'],
                     ],
                 ],
                 'remark' => '',
