@@ -8,6 +8,7 @@ declare(strict_types=1);
 namespace Dtyq\SuperMagic\Application\SuperAgent\Event\Subscribe;
 
 use App\Infrastructure\Core\Exception\BusinessException;
+use App\Infrastructure\Util\IdGenerator\IdGenerator;
 use Dtyq\SuperMagic\Application\SuperAgent\Service\TaskAppService;
 use Dtyq\SuperMagic\Interfaces\SuperAgent\DTO\TopicTaskMessageDTO;
 use Hyperf\Amqp\Annotation\Consumer;
@@ -17,7 +18,6 @@ use Hyperf\Contract\StdoutLoggerInterface;
 use PhpAmqpLib\Message\AMQPMessage;
 use PhpAmqpLib\Wire\AMQPTable;
 use Throwable;
-use App\Infrastructure\Util\IdGenerator\IdGenerator;
 
 /**
  * 话题任务消息订阅者.
@@ -36,12 +36,12 @@ class TopicTaskMessageSubscriber extends ConsumerMessage
     protected AMQPTable|array $queueArguments = [];
 
     /**
-     * @var array|null QoS 配置，用于控制预取数量等
+     * @var null|array QoS 配置，用于控制预取数量等
      */
     protected ?array $qos = [
         'prefetch_count' => 1, // 每次只预取1条消息
         'prefetch_size' => 0,
-        'global' => false
+        'global' => false,
     ];
 
     /**
@@ -81,7 +81,7 @@ class TopicTaskMessageSubscriber extends ConsumerMessage
             $actualOriginalTimestamp = null; // 初始化变量以避免 linter 警告
 
             if ($originalTimestampFromHeader !== null) {
-                $actualOriginalTimestamp = (int)$originalTimestampFromHeader; // 确保是整数
+                $actualOriginalTimestamp = (int) $originalTimestampFromHeader; // 确保是整数
                 $this->logger->info(sprintf('消息已存在原始秒级时间戳: %d (%s), message_id: %s', $actualOriginalTimestamp, date('Y-m-d H:i:s', $actualOriginalTimestamp), $data['payload']['message_id'] ?? 'N/A'));
             } else {
                 // 如果生产者没有设置 x-original-timestamp，这通常是一个需要注意的情况。
@@ -121,7 +121,7 @@ class TopicTaskMessageSubscriber extends ConsumerMessage
 
             $lockAcquired = (bool) $this->superAgentAppService->acquireLock($lockKey, $lockOwner, $lockExpireSeconds);
 
-            if (!$lockAcquired) {
+            if (! $lockAcquired) {
                 $this->logger->info(sprintf(
                     '无法获取sandbox %s的锁，该sandbox可能有其他消息正在处理中，将消息重新入队等待处理，原始接收秒级时间: %d (%s), message_id: %s',
                     $sandboxId,
@@ -231,158 +231,5 @@ class TopicTaskMessageSubscriber extends ConsumerMessage
                 }
             }
         }
-    }
-
-    /**
-     * 打印消息详情.
-     *
-     * @param array $data 消息数据
-     */
-    private function logMessageDetails(array $data): void
-    {
-        if (isset($data['metadata'], $data['payload'])) {
-            // 新格式消息
-            $payload = $data['payload'];
-            $metadata = $data['metadata'];
-
-            // 记录元数据
-            $this->logger->info(sprintf(
-                '话题任务消息元数据 - sandbox_id: %s, agent_user_id: %s',
-                $metadata['sandbox_id'] ?? '未提供',
-                $metadata['agent_user_id'] ?? '未提供'
-            ));
-
-            // 记录负载数据
-            $this->logger->info(sprintf(
-                '话题任务消息负载 - message_id: %s, type: %s, task_id: %s, status: %s',
-                $payload['message_id'] ?? '未提供',
-                $payload['type'] ?? '未提供',
-                $payload['task_id'] ?? '未提供',
-                $payload['status'] ?? '未提供'
-            ));
-
-            // 记录消息内容
-            if (isset($payload['content']) && ! empty($payload['content'])) {
-                $this->logger->info(sprintf(
-                    '话题任务消息内容: %s',
-                    $payload['content']
-                ));
-            }
-
-            // 记录步骤信息
-            if (isset($payload['steps']) && ! empty($payload['steps'])) {
-                $this->logger->info(sprintf(
-                    '话题任务步骤信息: %s',
-                    json_encode($payload['steps'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
-                ));
-            }
-
-            // 记录工具信息
-            if (isset($payload['tool']) && ! empty($payload['tool'])) {
-                $this->logger->info(sprintf(
-                    '话题任务工具信息: %s',
-                    json_encode($payload['tool'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
-                ));
-            }
-        } else {
-            // 旧格式消息
-            // 记录消息ID和类型
-            $this->logger->info(sprintf(
-                '话题任务消息详情(旧格式) - message_id: %s, type: %s, task_id: %s, status: %s',
-                $data['message_id'] ?? '未提供',
-                $data['type'] ?? '未提供',
-                $data['task_id'] ?? '未提供',
-                $data['status'] ?? '未提供'
-            ));
-
-            // 记录消息内容
-            if (isset($data['content']) && ! empty($data['content'])) {
-                $this->logger->info(sprintf(
-                    '话题任务消息内容: %s',
-                    $data['content']
-                ));
-            }
-
-            // 记录步骤信息
-            if (isset($data['steps']) && ! empty($data['steps'])) {
-                $this->logger->info(sprintf(
-                    '话题任务步骤信息: %s',
-                    json_encode($data['steps'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
-                ));
-            }
-
-            // 记录工具信息
-            if (isset($data['tool']) && ! empty($data['tool'])) {
-                $this->logger->info(sprintf(
-                    '话题任务工具信息: %s',
-                    json_encode($data['tool'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
-                ));
-            }
-        }
-    }
-
-    /**
-     * 带重试机制的获取锁.
-     *
-     * @param string $sandboxId 沙箱ID
-     * @param TopicTaskMessageDTO $messageDTO 消息DTO
-     * @return array 包含锁信息的数组，acquired表示是否成功获取锁，owner表示锁的持有者，key表示锁的键名
-     */
-    private function acquireLockWithRetry(?string $sandboxId, TopicTaskMessageDTO $messageDTO): array
-    {
-        $result = [
-            'acquired' => false,
-            'owner' => '',
-            'key' => '',
-        ];
-
-        if (empty($sandboxId)) {
-            return $result;
-        }
-
-        $lockKey = 'handle_sandbox_message_lock:' . $sandboxId;
-        $lockOwner = IdGenerator::getUniqueId32(); // 使用唯一ID作为锁持有者标识
-        $lockExpireSeconds = 30; // 锁的过期时间（秒），消息处理可能需要更长时间
-
-        $maxRetries = 3;
-        $retryCount = 0;
-        $baseWaitTime = 1; // 基础等待时间（秒）
-
-        while ($retryCount <= $maxRetries) {
-            $lockAcquired = (bool) $this->superAgentAppService->acquireLock($lockKey, $lockOwner, $lockExpireSeconds);
-
-            if ($lockAcquired) {
-                $this->logger->debug(sprintf('已获取sandbox %s的锁，持有者: %s', $sandboxId, $lockOwner));
-                $result['acquired'] = true;
-                $result['owner'] = $lockOwner;
-                $result['key'] = $lockKey;
-                return $result;
-            }
-
-            if ($retryCount === $maxRetries) {
-                $this->logger->error(sprintf(
-                    '在重试%d次后仍无法获取sandbox %s的锁，该sandbox可能有其他消息正在处理中，message_id: %s',
-                    $maxRetries,
-                    $sandboxId,
-                    $messageDTO->getPayload()?->getMessageId()
-                ));
-                // 可以选择将消息重新入队或实现延迟重试策略
-                return $result;
-            }
-
-            $waitTime = $baseWaitTime * pow(2, $retryCount); // 指数退避
-            $this->logger->warning(sprintf(
-                '无法获取sandbox %s的锁，该sandbox可能有其他消息正在处理中，message_id: %s，将在%d秒后进行第%d次重试',
-                $sandboxId,
-                $messageDTO->getPayload()?->getMessageId(),
-                $waitTime,
-                $retryCount + 1
-            ));
-
-            sleep($waitTime);
-            $retryCount++;
-        }
-
-        return $result;
     }
 }

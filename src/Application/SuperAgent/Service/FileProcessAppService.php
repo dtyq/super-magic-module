@@ -14,9 +14,7 @@ use App\Domain\File\Service\FileDomainService;
 use App\ErrorCode\GenericErrorCode;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Infrastructure\Core\ValueObject\StorageBucketType;
-use App\Infrastructure\Util\IdGenerator\IdGenerator;
 use App\Interfaces\Authorization\Web\MagicUserAuthorization;
-use Dtyq\CloudFile\Kernel\AdapterName;
 use Dtyq\SuperMagic\Domain\SuperAgent\Constant\TaskFileType;
 use Dtyq\SuperMagic\Domain\SuperAgent\Entity\TaskEntity;
 use Dtyq\SuperMagic\Domain\SuperAgent\Service\TaskDomainService;
@@ -38,9 +36,7 @@ class FileProcessAppService extends AbstractAppService
     public function __construct(
         private readonly MagicChatFileAppService $magicChatFileAppService,
         private readonly TaskDomainService $taskDomainService,
-        private readonly FileDomainService $fileDomainService,
         private readonly FileAppService $fileAppService,
-        private CacheInterface $cache,
         LoggerFactory $loggerFactory
     ) {
         $this->logger = $loggerFactory->get(get_class($this));

@@ -333,7 +333,7 @@ class TaskAppService extends AbstractAppService
 
     /**
      * 获取分布式互斥锁.
-     * 
+     *
      * @param string $lockKey 锁的键名
      * @param string $lockOwner 锁的持有者
      * @param int $lockExpireSeconds 锁的过期时间（秒）
@@ -343,10 +343,10 @@ class TaskAppService extends AbstractAppService
     {
         return $this->locker->mutexLock($lockKey, $lockOwner, $lockExpireSeconds);
     }
-    
+
     /**
      * 释放分布式互斥锁.
-     * 
+     *
      * @param string $lockKey 锁的键名
      * @param string $lockOwner 锁的持有者
      * @return bool 是否成功释放锁
