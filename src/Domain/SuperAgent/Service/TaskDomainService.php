@@ -375,6 +375,8 @@ class TaskDomainService
             $taskFileEntity->setFileName($fileData['display_filename'] ?? $fileData['filename'] ?? '');
             $taskFileEntity->setFileExtension($fileData['file_extension'] ?? '');
             $taskFileEntity->setFileSize($fileData['file_size'] ?? 0);
+            // 判断并设置是否为隐藏文件
+            $taskFileEntity->setIsHidden($this->isHiddenFile($fileKey));
             // 更新存储类型，如果提供了的话
             if (isset($fileData['storage_type'])) {
                 $taskFileEntity->setStorageType($fileData['storage_type']);
@@ -406,6 +408,8 @@ class TaskDomainService
         $taskFileEntity->setFileName($fileData['display_filename'] ?? $fileData['filename'] ?? '');
         $taskFileEntity->setFileExtension($fileData['file_extension'] ?? '');
         $taskFileEntity->setFileSize($fileData['file_size'] ?? 0);
+        // 判断并设置是否为隐藏文件
+        $taskFileEntity->setIsHidden($this->isHiddenFile($fileKey));
         // 设置存储类型，默认为workspace
         $taskFileEntity->setStorageType($fileData['storage_type'] ?? 'workspace');
 
@@ -467,6 +471,8 @@ class TaskDomainService
         $taskFileEntity->setFileExtension($fileData['file_extension'] ?? '');
         $taskFileEntity->setFileSize($fileData['file_size'] ?? 0);
         $taskFileEntity->setExternalUrl($fileData['external_url'] ?? '');
+        // 判断并设置是否为隐藏文件
+        $taskFileEntity->setIsHidden($this->isHiddenFile($fileKey));
         // 设置存储类型，默认为workspace
         $taskFileEntity->setStorageType($fileData['storage_type'] ?? 'workspace');
 
@@ -645,6 +651,30 @@ class TaskDomainService
             return $this->taskRepository->updateTaskStatusAndErrMsgByTaskId($id, $status, $errMsg);
         }
         return $this->taskRepository->updateTaskStatusByTaskId($id, $status);
+    }
+
+    /**
+     * 判断文件是否为隐藏文件
+     *
+     * @param string $fileKey 文件路径
+     * @return bool 是否为隐藏文件：true-是，false-否
+     */
+    private function isHiddenFile(string $fileKey): bool
+    {
+        // 移除开头的斜杠，统一处理
+        $fileKey = ltrim($fileKey, '/');
+
+        // 分割路径为各个部分
+        $pathParts = explode('/', $fileKey);
+
+        // 检查每个路径部分是否以 . 开头
+        foreach ($pathParts as $part) {
+            if (!empty($part) && str_starts_with($part, '.')) {
+                return true; // 是隐藏文件
+            }
+        }
+
+        return false; // 不是隐藏文件
     }
 
     /**
