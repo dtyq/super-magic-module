@@ -86,4 +86,31 @@ class FileApi extends AbstractApi
 
         return $this->fileProcessAppService->refreshStsToken($refreshStsTokenDTO);
     }
+
+    public function workspaceAttachments(RequestContext $requestContext): array
+    {
+        $topicId = $this->request->input('topic_id', '');
+        $commitHash = $this->request->input('commit_hash', '');
+        $sandboxId = $this->request->input('sandbox_id', '');
+        $dir = $this->request->input('dir', '');
+
+        if (empty($topicId)) {
+            ExceptionBuilder::throw(GenericErrorCode::ParameterMissing, 'topic_id_required');
+        }
+
+        if (empty($commitHash)) {
+            ExceptionBuilder::throw(GenericErrorCode::ParameterMissing, 'commit_hash_required');
+        }
+
+
+        if (empty($sandboxId)) {
+            ExceptionBuilder::throw(GenericErrorCode::ParameterMissing, 'sandbox_id_required');
+        }
+
+        if (empty($dir)) {
+            ExceptionBuilder::throw(GenericErrorCode::ParameterMissing, 'dir_required');
+        }
+
+        return $this->fileProcessAppService->workspaceAttachments($topicId, $commitHash, $sandboxId, $dir);
+    }
 }

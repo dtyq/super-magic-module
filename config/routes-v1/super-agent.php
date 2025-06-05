@@ -75,5 +75,7 @@ Router::addGroup('/api/v1/super-agent', static function () {
         Router::post('/refresh-sts-token', [FileApi::class, 'refreshStsToken']);
         // 批量处理附件
         Router::post('/process-attachments', [FileApi::class, 'processAttachments']);
+        // 新增工作区附件关系
+        Router::post('/workspace-attachments', [FileApi::class, 'workspaceAttachments']);
     });
 });

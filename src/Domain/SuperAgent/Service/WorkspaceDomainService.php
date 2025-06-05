@@ -20,12 +20,15 @@ use Dtyq\SuperMagic\Domain\SuperAgent\Entity\ValueObject\WorkspaceArchiveStatus;
 use Dtyq\SuperMagic\Domain\SuperAgent\Entity\ValueObject\WorkspaceCreationParams;
 use Dtyq\SuperMagic\Domain\SuperAgent\Entity\ValueObject\WorkspaceStatus;
 use Dtyq\SuperMagic\Domain\SuperAgent\Entity\WorkspaceEntity;
+use Dtyq\SuperMagic\Domain\SuperAgent\Entity\WorkspaceVersionEntity;
 use Dtyq\SuperMagic\Domain\SuperAgent\Repository\Facade\TaskFileRepositoryInterface;
 use Dtyq\SuperMagic\Domain\SuperAgent\Repository\Facade\TaskRepositoryInterface;
 use Dtyq\SuperMagic\Domain\SuperAgent\Repository\Facade\TopicRepositoryInterface;
 use Dtyq\SuperMagic\Domain\SuperAgent\Repository\Facade\WorkspaceRepositoryInterface;
+use Dtyq\SuperMagic\Domain\SuperAgent\Repository\Facade\WorkspaceVersionRepositoryInterface;
 use Exception;
 use RuntimeException;
+
 
 class WorkspaceDomainService
 {
@@ -35,6 +38,7 @@ class WorkspaceDomainService
         protected TaskFileRepositoryInterface $taskFileRepository,
         protected TaskRepositoryInterface $taskRepository,
         protected TaskDomainService $taskDomainService,
+        protected WorkspaceVersionRepositoryInterface $workspaceVersionRepository,
     ) {
     }
 
@@ -706,5 +710,13 @@ class WorkspaceDomainService
     private function generateWorkDir(string $userId, int $topicId): string
     {
         return sprintf('/%s/%s/topic_%d', AgentConstant::SUPER_MAGIC_CODE, $userId, $topicId);
+    }
+
+    /**
+     * Create a new workspace version record
+     */
+    public function createWorkspaceVersion(WorkspaceVersionEntity $versionEntity): void
+    {
+        $this->workspaceVersionRepository->create($versionEntity);
     }
 }

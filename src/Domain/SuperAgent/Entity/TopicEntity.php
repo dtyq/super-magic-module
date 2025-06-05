@@ -111,6 +111,11 @@ class TopicEntity extends AbstractEntity
      */
     protected string $updatedUid = '';
 
+    /**
+     * @var string commit hash
+     */
+    protected string $commitHash = '';
+
     public function __construct(array $data = [])
     {
         $this->initProperty($data);
@@ -141,6 +146,7 @@ class TopicEntity extends AbstractEntity
             'deleted_at' => $this->deletedAt,
             'created_uid' => $this->createdUid,
             'updated_uid' => $this->updatedUid,
+            'commit_hash' => $this->commitHash,
         ];
 
         // 移除null值
@@ -432,6 +438,17 @@ class TopicEntity extends AbstractEntity
     public function setTaskMode(string $taskMode): self
     {
         $this->taskMode = $taskMode;
+        return $this;
+    }
+
+    public function getCommitHash(): string
+    {
+        return $this->commitHash;
+    }
+
+    public function setCommitHash(string $commitHash): self
+    {
+        $this->commitHash = $commitHash;
         return $this;
     }
 }

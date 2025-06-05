@@ -17,12 +17,17 @@ use App\Infrastructure\Core\ValueObject\StorageBucketType;
 use App\Interfaces\Authorization\Web\MagicUserAuthorization;
 use Dtyq\SuperMagic\Domain\SuperAgent\Constant\TaskFileType;
 use Dtyq\SuperMagic\Domain\SuperAgent\Entity\TaskEntity;
+use Dtyq\SuperMagic\Domain\SuperAgent\Entity\WorkspaceVersionEntity;
 use Dtyq\SuperMagic\Domain\SuperAgent\Service\TaskDomainService;
+use Dtyq\SuperMagic\Domain\SuperAgent\Service\TopicDomainService;
+use Dtyq\SuperMagic\Domain\SuperAgent\Service\WorkspaceDomainService;
 use Dtyq\SuperMagic\Interfaces\SuperAgent\DTO\Request\RefreshStsTokenRequestDTO;
 use Hyperf\Codec\Json;
+use Hyperf\DbConnection\Db;
 use Hyperf\Logger\LoggerFactory;
 use Psr\Log\LoggerInterface;
 use Throwable;
+use App\Infrastructure\Util\IdGenerator\IdGenerator;
 
 /**
  * 文件处理应用服务
@@ -36,7 +41,9 @@ class FileProcessAppService extends AbstractAppService
         private readonly MagicChatFileAppService $magicChatFileAppService,
         private readonly TaskDomainService $taskDomainService,
         private readonly FileAppService $fileAppService,
-        LoggerFactory $loggerFactory
+        private readonly TopicDomainService $topicDomainService,
+        private readonly WorkspaceDomainService $workspaceDomainService,
+        LoggerFactory $loggerFactory,
     ) {
         $this->logger = $loggerFactory->get(get_class($this));
     }
@@ -374,5 +381,37 @@ class FileProcessAppService extends AbstractAppService
             ));
             ExceptionBuilder::throw(GenericErrorCode::SystemError, $e->getMessage());
         }
+    }
+
+    public function workspaceAttachments(string $topicId, string $commitHash, string $sandboxId, string $dir): array
+    {
+        $task = $this->taskDomainService->getTaskBySandboxId($sandboxId);
+        if (empty($task)) {
+            ExceptionBuilder::throw(SuperAgentErrorCode::TASK_NOT_FOUND, 'task.not_found');
+        }
+
+        $topic = $this->topicDomainService->getTopicById((int) $topicId);
+        if (empty($topic)) {
+            ExceptionBuilder::throw(SuperAgentErrorCode::TOPIC_NOT_FOUND, 'topic.not_found');
+        }
+
+        // 更新 commit_hash
+        $topic->setCommitHash($commitHash);
+
+        // 新增 workspace version 记录
+        $versionEntity = new WorkspaceVersionEntity();
+        $versionEntity->setId(IdGenerator::getSnowId());
+        $versionEntity->setTopicId((int)$topicId);
+        $versionEntity->setSandboxId($sandboxId);
+        $versionEntity->setCommitHash($commitHash);
+        $versionEntity->setDir($dir);
+
+        // 使用事务确保 topic 更新和 workspace version 创建的原子性
+        Db::transaction(function () use ($topic, $versionEntity) {
+            $this->topicDomainService->updateTopic($topic);
+            $this->workspaceDomainService->createWorkspaceVersion($versionEntity);
+        });
+
+        return ['success' => true];
     }
 }

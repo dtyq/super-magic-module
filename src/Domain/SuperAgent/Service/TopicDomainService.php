@@ -58,4 +58,9 @@ class TopicDomainService
 
         return $result['list'][0];
     }
+
+    public function updateTopic(TopicEntity $topicEntity): bool
+    {
+        return $this->topicRepository->updateTopic($topicEntity);
+    }
 }
