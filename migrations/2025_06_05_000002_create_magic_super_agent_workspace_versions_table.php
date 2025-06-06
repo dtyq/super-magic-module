@@ -23,11 +23,9 @@ return new class extends Migration {
             $table->string('sandbox_id', 255)->comment('沙箱id。');
             $table->string('commit_hash', 255)->comment('commit hash。');
             $table->text('dir')->comment('话题文件列表');
+            $table->string('folder', 255)->comment('文件夹');
             $table->timestamps();
             $table->softDeletes();
-
-            // 创建索引
-            $table->index(['user_id', 'workspace_id'], 'idx_user_workspace');
         });
     }
 

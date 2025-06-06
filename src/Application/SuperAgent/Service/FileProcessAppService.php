@@ -383,7 +383,7 @@ class FileProcessAppService extends AbstractAppService
         }
     }
 
-    public function workspaceAttachments(string $topicId, string $commitHash, string $sandboxId, string $dir): array
+    public function workspaceAttachments(string $topicId, string $commitHash, string $sandboxId, string $dir, string $folder): array
     {
         $task = $this->taskDomainService->getTaskBySandboxId($sandboxId);
         if (empty($task)) {
@@ -405,13 +405,28 @@ class FileProcessAppService extends AbstractAppService
         $versionEntity->setSandboxId($sandboxId);
         $versionEntity->setCommitHash($commitHash);
         $versionEntity->setDir($dir);
+        $versionEntity->setFolder($folder);
+        $versionEntity->setCreatedAt(date('Y-m-d H:i:s'));
+        $versionEntity->setUpdatedAt(date('Y-m-d H:i:s'));
 
-        // 使用事务确保 topic 更新和 workspace version 创建的原子性
-        Db::transaction(function () use ($topic, $versionEntity) {
-            $this->topicDomainService->updateTopic($topic);
-            $this->workspaceDomainService->createWorkspaceVersion($versionEntity);
-        });
+        try {
+            // 使用事务确保 topic 更新和 workspace version 创建的原子性
+            Db::transaction(function () use ($topic, $versionEntity) {
+                $this->topicDomainService->updateTopic($topic);
+                $this->workspaceDomainService->createWorkspaceVersion($versionEntity);
+            });
 
-        return ['success' => true];
+            return ['success' => true];
+        } catch (Throwable $e) {
+            $this->logger->error(sprintf(
+                '新增 workspace version 记录失败: %s，话题ID: %s，沙箱ID: %s',
+                $e->getMessage(),
+                $topicId,
+                $sandboxId
+            ));
+            ExceptionBuilder::throw(SuperAgentErrorCode::CREATE_WORKSPACE_VERSION_FAILED, $e->getMessage());
+        }
+
+        return ['success' => false];
     }
 }

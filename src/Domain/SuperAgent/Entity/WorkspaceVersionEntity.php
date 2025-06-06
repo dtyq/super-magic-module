@@ -13,6 +13,7 @@ class WorkspaceVersionEntity extends AbstractEntity
     protected string $sandboxId = '';
     protected string $commitHash = '';
     protected string $dir = '';
+    protected string $folder = '';
     protected ?string $createdAt = null;
     protected ?string $updatedAt = null;
     protected ?string $deletedAt = null;
@@ -31,6 +32,9 @@ class WorkspaceVersionEntity extends AbstractEntity
 
     public function getDir(): string { return $this->dir; }
     public function setDir(string $dir): self { $this->dir = $dir; return $this; }
+
+    public function getFolder(): string { return $this->folder; }
+    public function setFolder(string $folder): self { $this->folder = $folder; return $this; }
 
     public function getCreatedAt(): ?string { return $this->createdAt; }
     public function setCreatedAt(?string $createdAt): self { $this->createdAt = $createdAt; return $this; }

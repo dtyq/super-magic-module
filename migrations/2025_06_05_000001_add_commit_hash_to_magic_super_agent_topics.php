@@ -6,8 +6,9 @@ use Hyperf\Database\Migrations\Migration;
 use Hyperf\Database\Schema\Blueprint;
 use Hyperf\Database\Schema\Schema;
 
-class AddCommitHashToMagicSuperAgentTopicsTable extends Migration
-{
+
+return new class extends Migration {
+
     public function up(): void
     {
         Schema::table('magic_super_agent_topics', function (Blueprint $table) {
@@ -21,4 +22,4 @@ class AddCommitHashToMagicSuperAgentTopicsTable extends Migration
             $table->dropColumn('commit_hash');
         });
     }
-}
+};

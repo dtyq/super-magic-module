@@ -92,8 +92,10 @@ class FileApi extends AbstractApi
         $topicId = $this->request->input('topic_id', '');
         $commitHash = $this->request->input('commit_hash', '');
         $sandboxId = $this->request->input('sandbox_id', '');
+        $folder = $this->request->input('folder', '');
         $dir = $this->request->input('dir', '');
 
+        var_dump($topicId, $commitHash, $sandboxId, $folder, $dir);
         if (empty($topicId)) {
             ExceptionBuilder::throw(GenericErrorCode::ParameterMissing, 'topic_id_required');
         }
@@ -111,6 +113,10 @@ class FileApi extends AbstractApi
             ExceptionBuilder::throw(GenericErrorCode::ParameterMissing, 'dir_required');
         }
 
-        return $this->fileProcessAppService->workspaceAttachments($topicId, $commitHash, $sandboxId, $dir);
+        if (empty($folder)) {
+            ExceptionBuilder::throw(GenericErrorCode::ParameterMissing, 'folder_required');
+        }
+
+        return $this->fileProcessAppService->workspaceAttachments($topicId, $commitHash, $sandboxId, $dir, $folder);
     }
 }
