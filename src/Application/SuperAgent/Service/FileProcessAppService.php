@@ -440,7 +440,10 @@ class FileProcessAppService extends AbstractAppService
 
             // 使用事务确保 topic 更新和 workspace version 创建的原子性
             Db::transaction(function () use ($topic, $versionEntity) {
-                $this->topicDomainService->updateTopicWhereUpdatedAt($topic, $topic->getUpdatedAt());
+                $bool=$this->topicDomainService->updateTopicWhereUpdatedAt($topic, $topic->getUpdatedAt());
+                if (!$bool) {
+                    ExceptionBuilder::throw(SuperAgentErrorCode::TOPIC_LOCK_FAILED, 'topic.concurrent_operation_failed');
+                }
                 $this->workspaceDomainService->createWorkspaceVersion($versionEntity);
             });
 

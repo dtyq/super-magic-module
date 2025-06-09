@@ -553,7 +553,6 @@ class WorkspaceAppService extends AbstractAppService
 
     public function getTopicAttachmentList(DataIsolation $dataIsolation, GetTopicAttachmentsRequestDTO $requestDto): array
     {
-        var_dump("===============getTopicAttachmentList");
         // 判断话题是否存在
         $topicEntity = $this->workspaceDomainService->getTopicById((int) $requestDto->getTopicId());
         if (empty($topicEntity)) {
@@ -571,7 +570,6 @@ class WorkspaceAppService extends AbstractAppService
             $requestDto->getFileType()
         );
 
-        var_dump("===============getTopicAttachmentList2");
 
         $result = $this->filterResultByGitVersion($result, $topicEntity->getWorkspaceCommitHash(), $topicEntity->getId());
 
@@ -872,8 +870,6 @@ class WorkspaceAppService extends AbstractAppService
                 $tempResult1[] = $item;
             }
         }
-
-
 
         $dir = json_decode($workspaceVersion->getDir(), true);
 
