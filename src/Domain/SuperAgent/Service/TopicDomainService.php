@@ -80,4 +80,9 @@ class TopicDomainService
     {
         return $this->topicRepository->updateTopic($topicEntity);
     }
+
+    public function updateTopicWhereUpdatedAt(TopicEntity $topicEntity, string $updatedAt): bool
+    {
+        return $this->topicRepository->updateTopicWithUpdatedAt($topicEntity, $updatedAt);
+    }
 }

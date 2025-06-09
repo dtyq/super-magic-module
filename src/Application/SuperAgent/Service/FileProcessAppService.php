@@ -29,6 +29,8 @@ use Hyperf\Logger\LoggerFactory;
 use Psr\Log\LoggerInterface;
 use Throwable;
 use App\Infrastructure\Util\IdGenerator\IdGenerator;
+use App\Infrastructure\Util\Locker\LockerInterface;
+use Dtyq\SuperMagic\Infrastructure\Util\TaskFileDataIsolation;
 
 /**
  * 文件处理应用服务
@@ -36,7 +38,7 @@ use App\Infrastructure\Util\IdGenerator\IdGenerator;
  */
 class FileProcessAppService extends AbstractAppService
 {
-    protected LoggerInterface $logger;
+    private readonly LoggerInterface $logger;
 
     public function __construct(
         private readonly MagicChatFileAppService $magicChatFileAppService,
@@ -44,6 +46,7 @@ class FileProcessAppService extends AbstractAppService
         private readonly FileAppService $fileAppService,
         private readonly TopicDomainService $topicDomainService,
         private readonly WorkspaceDomainService $workspaceDomainService,
+        private readonly LockerInterface $locker,
         LoggerFactory $loggerFactory,
     ) {
         $this->logger = $loggerFactory->get(get_class($this));
@@ -386,7 +389,6 @@ class FileProcessAppService extends AbstractAppService
 
     public function workspaceAttachments(WorkspaceAttachmentsRequestDTO $requestDTO): array
     {
-
         $task = $this->taskDomainService->getTaskBySandboxId($requestDTO->getSandboxId());
         if (empty($task)) {
             ExceptionBuilder::throw(SuperAgentErrorCode::TASK_NOT_FOUND, 'task.not_found');
@@ -405,9 +407,6 @@ class FileProcessAppService extends AbstractAppService
             $topic->setWorkspaceCommitHash($requestDTO->getCommitHash());
         }
 
-        // 更新 commit_hash
-        $topic->setWorkspaceCommitHash($requestDTO->getCommitHash());
-
         // 新增 workspace version 记录
         $versionEntity = new WorkspaceVersionEntity();
         $versionEntity->setId(IdGenerator::getSnowId());
@@ -419,13 +418,33 @@ class FileProcessAppService extends AbstractAppService
         $versionEntity->setCreatedAt(date('Y-m-d H:i:s'));
         $versionEntity->setUpdatedAt(date('Y-m-d H:i:s'));
 
+        // Add Redis lock for topic_id to prevent concurrent modifications
+        $lockKey = 'workspace_attachments_topic_lock:' . $topic->getId();
+        $lockOwner = IdGenerator::getUniqueId32(); // Use unique ID as lock owner
+        $lockExpireSeconds = 30; // Lock expiration time in seconds
+        $lockAcquired = false;
+
         try {
+            // Try to acquire distributed mutex lock
+            $lockAcquired = $this->locker->mutexLock($lockKey, $lockOwner, $lockExpireSeconds);
+
+            if (!$lockAcquired) {
+                $this->logger->warning(sprintf(
+                    'Failed to acquire workspace attachments lock for topic %s. Concurrent operation may be in progress.',
+                    $topic->getId()
+                ));
+                ExceptionBuilder::throw(SuperAgentErrorCode::TOPIC_LOCK_FAILED, 'topic.concurrent_operation_failed');
+            }
+
+            $this->logger->debug(sprintf('Lock acquired for topic %s by %s', $topic->getId(), $lockOwner));
+
             // 使用事务确保 topic 更新和 workspace version 创建的原子性
             Db::transaction(function () use ($topic, $versionEntity) {
-                $this->topicDomainService->updateTopic($topic);
+                $this->topicDomainService->updateTopicWhereUpdatedAt($topic, $topic->getUpdatedAt());
                 $this->workspaceDomainService->createWorkspaceVersion($versionEntity);
             });
 
+            $this->logger->debug(sprintf('Workspace attachments operation completed for topic %s', $topic->getId()));
             return ['success' => true];
         } catch (Throwable $e) {
             $this->logger->error(sprintf(
@@ -435,6 +454,12 @@ class FileProcessAppService extends AbstractAppService
                 $requestDTO->getSandboxId()
             ));
             ExceptionBuilder::throw(SuperAgentErrorCode::CREATE_WORKSPACE_VERSION_FAILED, $e->getMessage());
+        } finally {
+            // Ensure lock is released even if an exception occurs
+            if ($lockAcquired) {
+                $this->locker->release($lockKey, $lockOwner);
+                $this->logger->debug(sprintf('Lock released for topic %s by %s', $topic->getId(), $lockOwner));
+            }
         }
 
         return ['success' => false];

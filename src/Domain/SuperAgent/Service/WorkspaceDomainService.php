@@ -719,4 +719,22 @@ class WorkspaceDomainService
     {
         $this->workspaceVersionRepository->create($versionEntity);
     }
+
+        /**
+     * Get workspace version by commit hash, topic ID and folder
+     *
+     * @param string $commitHash The commit hash
+     * @param int $topicId The topic ID
+     * @param string $folder The folder path
+     * @return WorkspaceVersionEntity|null The workspace version entity or null if not found
+     */
+    public function getWorkspaceVersionByCommitAndTopic(string $commitHash, int $topicId, string $folder = ''): ?WorkspaceVersionEntity
+    {
+        // Get all versions for the topic
+        $version = $this->workspaceVersionRepository->findByCommitHashAndTopicId($commitHash, $topicId, $folder);
+
+        return $version;
+    }
+
+
 }
