@@ -14,6 +14,7 @@ use Dtyq\ApiResponse\Annotation\ApiResponse;
 use Dtyq\SuperMagic\Application\SuperAgent\Service\FileProcessAppService;
 use Dtyq\SuperMagic\Application\SuperAgent\Service\WorkspaceAppService;
 use Dtyq\SuperMagic\Interfaces\SuperAgent\DTO\Request\RefreshStsTokenRequestDTO;
+use Dtyq\SuperMagic\Interfaces\SuperAgent\DTO\Request\WorkspaceAttachmentsRequestDTO;
 use Hyperf\HttpServer\Contract\RequestInterface;
 
 #[ApiResponse('low_code')]
@@ -89,34 +90,36 @@ class FileApi extends AbstractApi
 
     public function workspaceAttachments(RequestContext $requestContext): array
     {
-        $topicId = $this->request->input('topic_id', '');
-        $commitHash = $this->request->input('commit_hash', '');
-        $sandboxId = $this->request->input('sandbox_id', '');
-        $folder = $this->request->input('folder', '');
-        $dir = $this->request->input('dir', '');
+        // $topicId = $this->request->input('topic_id', '');
+        // $commitHash = $this->request->input('commit_hash', '');
+        // $sandboxId = $this->request->input('sandbox_id', '');
+        // $folder = $this->request->input('folder', '');
+        // $dir = $this->request->input('dir', '');
+        $requestDTO = new WorkspaceAttachmentsRequestDTO();
+        $requestDTO = $requestDTO->fromRequest($this->request);
 
-        var_dump($topicId, $commitHash, $sandboxId, $folder, $dir);
-        if (empty($topicId)) {
+        if (empty($requestDTO->getTopicId())) {
             ExceptionBuilder::throw(GenericErrorCode::ParameterMissing, 'topic_id_required');
         }
 
-        if (empty($commitHash)) {
+        if (empty($requestDTO->getCommitHash())) {
             ExceptionBuilder::throw(GenericErrorCode::ParameterMissing, 'commit_hash_required');
         }
 
 
-        if (empty($sandboxId)) {
+        if (empty($requestDTO->getSandboxId())) {
             ExceptionBuilder::throw(GenericErrorCode::ParameterMissing, 'sandbox_id_required');
         }
 
-        if (empty($dir)) {
+        if (empty($requestDTO->getDir())) {
             ExceptionBuilder::throw(GenericErrorCode::ParameterMissing, 'dir_required');
         }
 
-        if (empty($folder)) {
+        if (empty($requestDTO->getFolder())) {
             ExceptionBuilder::throw(GenericErrorCode::ParameterMissing, 'folder_required');
         }
 
-        return $this->fileProcessAppService->workspaceAttachments($topicId, $commitHash, $sandboxId, $dir, $folder);
+
+        return $this->fileProcessAppService->workspaceAttachments($requestDTO);
     }
 }

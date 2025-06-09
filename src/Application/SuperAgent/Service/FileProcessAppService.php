@@ -22,6 +22,7 @@ use Dtyq\SuperMagic\Domain\SuperAgent\Service\TaskDomainService;
 use Dtyq\SuperMagic\Domain\SuperAgent\Service\TopicDomainService;
 use Dtyq\SuperMagic\Domain\SuperAgent\Service\WorkspaceDomainService;
 use Dtyq\SuperMagic\Interfaces\SuperAgent\DTO\Request\RefreshStsTokenRequestDTO;
+use Dtyq\SuperMagic\Interfaces\SuperAgent\DTO\Request\WorkspaceAttachmentsRequestDTO;
 use Hyperf\Codec\Json;
 use Hyperf\DbConnection\Db;
 use Hyperf\Logger\LoggerFactory;
@@ -383,29 +384,30 @@ class FileProcessAppService extends AbstractAppService
         }
     }
 
-    public function workspaceAttachments(string $topicId, string $commitHash, string $sandboxId, string $dir, string $folder): array
+    public function workspaceAttachments(WorkspaceAttachmentsRequestDTO $requestDTO): array
     {
-        $task = $this->taskDomainService->getTaskBySandboxId($sandboxId);
+
+        $task = $this->taskDomainService->getTaskBySandboxId($requestDTO->getSandboxId());
         if (empty($task)) {
             ExceptionBuilder::throw(SuperAgentErrorCode::TASK_NOT_FOUND, 'task.not_found');
         }
 
-        $topic = $this->topicDomainService->getTopicById((int) $topicId);
+        $topic = $this->topicDomainService->getTopicOnlyByChatTopicId($requestDTO->getTopicId());
         if (empty($topic)) {
             ExceptionBuilder::throw(SuperAgentErrorCode::TOPIC_NOT_FOUND, 'topic.not_found');
         }
 
         // 更新 commit_hash
-        $topic->setCommitHash($commitHash);
+        $topic->setCommitHash($requestDTO->getCommitHash());
 
         // 新增 workspace version 记录
         $versionEntity = new WorkspaceVersionEntity();
         $versionEntity->setId(IdGenerator::getSnowId());
-        $versionEntity->setTopicId((int)$topicId);
-        $versionEntity->setSandboxId($sandboxId);
-        $versionEntity->setCommitHash($commitHash);
-        $versionEntity->setDir($dir);
-        $versionEntity->setFolder($folder);
+        $versionEntity->setTopicId((int)$topic->getId());
+        $versionEntity->setSandboxId($requestDTO->getSandboxId());
+        $versionEntity->setCommitHash($requestDTO->getCommitHash());
+        $versionEntity->setDir(json_encode($requestDTO->getDir()));
+        $versionEntity->setFolder($requestDTO->getFolder());
         $versionEntity->setCreatedAt(date('Y-m-d H:i:s'));
         $versionEntity->setUpdatedAt(date('Y-m-d H:i:s'));
 
@@ -421,8 +423,8 @@ class FileProcessAppService extends AbstractAppService
             $this->logger->error(sprintf(
                 '新增 workspace version 记录失败: %s，话题ID: %s，沙箱ID: %s',
                 $e->getMessage(),
-                $topicId,
-                $sandboxId
+                $topic->getId(),
+                $requestDTO->getSandboxId()
             ));
             ExceptionBuilder::throw(SuperAgentErrorCode::CREATE_WORKSPACE_VERSION_FAILED, $e->getMessage());
         }
