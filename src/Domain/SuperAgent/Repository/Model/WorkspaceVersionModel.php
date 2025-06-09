@@ -14,7 +14,7 @@ class WorkspaceVersionModel extends AbstractModel
     protected ?string $table = 'magic_super_agent_workspace_versions';
 
     protected array $fillable = [
-        'id', 'topic_id', 'sandbox_id', 'commit_hash', 'dir', 'created_at', 'updated_at', 'deleted_at',
+        'id', 'topic_id', 'sandbox_id', 'commit_hash', 'dir', 'folder', 'created_at', 'updated_at', 'deleted_at',
     ];
 
     protected array $casts = [

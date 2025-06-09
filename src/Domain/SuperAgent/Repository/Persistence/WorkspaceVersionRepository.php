@@ -19,6 +19,7 @@ class WorkspaceVersionRepository implements WorkspaceVersionRepositoryInterface
             'sandbox_id' => $entity->getSandboxId(),
             'commit_hash' => $entity->getCommitHash(),
             'dir' => $entity->getDir(),
+            'folder' => $entity->getFolder(),
             'created_at' => $entity->getCreatedAt(),
             'updated_at' => $entity->getUpdatedAt(),
             'deleted_at' => $entity->getDeletedAt(),
@@ -53,6 +54,7 @@ class WorkspaceVersionRepository implements WorkspaceVersionRepositoryInterface
         $entity->setSandboxId((string)$model->sandbox_id);
         $entity->setCommitHash((string)$model->commit_hash);
         $entity->setDir((string)$model->dir);
+        $entity->setFolder((string)$model->folder);
         $entity->setCreatedAt($model->created_at ? (string)$model->created_at : null);
         $entity->setUpdatedAt($model->updated_at ? (string)$model->updated_at : null);
         $entity->setDeletedAt($model->deleted_at ? (string)$model->deleted_at : null);

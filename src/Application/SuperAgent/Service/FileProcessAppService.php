@@ -397,8 +397,16 @@ class FileProcessAppService extends AbstractAppService
             ExceptionBuilder::throw(SuperAgentErrorCode::TOPIC_NOT_FOUND, 'topic.not_found');
         }
 
+        if ($requestDTO->getFolder() === ".chat_history") {
+            $topic->setChatHistoryCommitHash($requestDTO->getCommitHash());
+        }
+
+        if ($requestDTO->getFolder() === ".workspace") {
+            $topic->setWorkspaceCommitHash($requestDTO->getCommitHash());
+        }
+
         // 更新 commit_hash
-        $topic->setCommitHash($requestDTO->getCommitHash());
+        $topic->setWorkspaceCommitHash($requestDTO->getCommitHash());
 
         // 新增 workspace version 记录
         $versionEntity = new WorkspaceVersionEntity();
