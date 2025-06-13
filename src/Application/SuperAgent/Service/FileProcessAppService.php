@@ -14,6 +14,8 @@ use App\ErrorCode\GenericErrorCode;
 use App\ErrorCode\SuperAgentErrorCode;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Infrastructure\Core\ValueObject\StorageBucketType;
+use App\Infrastructure\Util\IdGenerator\IdGenerator;
+use App\Infrastructure\Util\Locker\LockerInterface;
 use App\Interfaces\Authorization\Web\MagicUserAuthorization;
 use Dtyq\SuperMagic\Domain\SuperAgent\Constant\TaskFileType;
 use Dtyq\SuperMagic\Domain\SuperAgent\Entity\TaskEntity;
@@ -28,9 +30,6 @@ use Hyperf\DbConnection\Db;
 use Hyperf\Logger\LoggerFactory;
 use Psr\Log\LoggerInterface;
 use Throwable;
-use App\Infrastructure\Util\IdGenerator\IdGenerator;
-use App\Infrastructure\Util\Locker\LockerInterface;
-use Dtyq\SuperMagic\Infrastructure\Util\TaskFileDataIsolation;
 
 /**
  * 文件处理应用服务
@@ -252,85 +251,151 @@ class FileProcessAppService extends AbstractAppService
             $sandboxId,
             $stats['total']
         ));
-        // 对每个附件进行处理
-        foreach ($attachments as $attachment) {
-            // 确保有file_key
-            if (empty($attachment['file_key'])) {
-                $this->logger->warning(sprintf(
-                    '附件缺少file_key，沙箱ID: %s，附件内容: %s',
-                    $sandboxId,
-                    json_encode($attachment, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
-                ));
-                ++$stats['error'];
-                continue;
-            }
-            try {
-                // 确保任务存在并有ID
-                if (empty($task) || empty($task->getId())) {
-                    $this->logger->error(sprintf('无法找到任务或任务ID为空，沙箱ID: %s', $sandboxId));
+
+        Db::beginTransaction();
+        try {
+            // 对每个附件进行处理
+            foreach ($attachments as $attachment) {
+                // 确保有file_key
+                if (empty($attachment['file_key'])) {
+                    $this->logger->warning(sprintf(
+                        '附件缺少file_key，沙箱ID: %s，附件内容: %s',
+                        $sandboxId,
+                        json_encode($attachment, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
+                    ));
                     ++$stats['error'];
                     continue;
                 }
+                try {
+                    // 确保任务存在并有ID
+                    if (empty($task) || empty($task->getId())) {
+                        $this->logger->error(sprintf('无法找到任务或任务ID为空，沙箱ID: %s', $sandboxId));
+                        ++$stats['error'];
+                        continue;
+                    }
 
-                // 检查文件是否已存在
-                $existingFile = $this->taskDomainService->getTaskFileByFileKey($attachment['file_key']);
-                if ($existingFile) {
-                    // 如果已存在，记录并跳过
-                    $this->logger->info(sprintf(
-                        '附件已存在，跳过处理，文件Key: %s，沙箱ID: %s',
+                    // 创建文件锁的key
+                    $fileLockKey = sprintf('file_process_lock:%s:%d', $attachment['file_key'], $topicId);
+                    $lockOwner = IdGenerator::getUniqueId32();
+                    $lockExpireSeconds = 30;
+                    $lockAcquired = false;
+
+                    try {
+                        // 尝试获取分布式锁
+                        $lockAcquired = $this->locker->mutexLock($fileLockKey, $lockOwner, $lockExpireSeconds);
+
+                        if (! $lockAcquired) {
+                            $this->logger->warning(sprintf(
+                                '无法获取文件处理锁，文件Key: %s，话题ID: %d，沙箱ID: %s',
+                                $attachment['file_key'],
+                                $topicId,
+                                $sandboxId
+                            ));
+                            ++$stats['error'];
+                            continue;
+                        }
+
+                        $this->logger->debug(sprintf(
+                            '获取文件处理锁成功，文件Key: %s，话题ID: %d，锁所有者: %s',
+                            $attachment['file_key'],
+                            $topicId,
+                            $lockOwner
+                        ));
+
+                        // 检查文件是否已存在
+                        $existingFile = $this->taskDomainService->getTaskFileByFileKey($attachment['file_key'], (int) $topicId);
+                        if ($existingFile) {
+                            // 如果已存在，更新更新时间并记录
+                            $existingFile->setUpdatedAt(date('Y-m-d H:i:s'));
+                            $this->taskDomainService->updateTaskFile($existingFile);
+
+                            $this->logger->info(sprintf(
+                                '附件已存在，更新处理时间，文件Key: %s，沙箱ID: %s',
+                                $attachment['file_key'],
+                                $sandboxId
+                            ));
+                            ++$stats['skipped'];
+                            $stats['files'][] = [
+                                'file_id' => $existingFile->getFileId(),
+                                'file_key' => $existingFile->getFileKey(),
+                                'file_name' => $existingFile->getFileName(),
+                                'storage_type' => $existingFile->getStorageType(),
+                                'status' => 'updated',
+                            ];
+                            continue;
+                        }
+                        // 如果不存在，则保存
+                        $taskFileEntity = $this->taskDomainService->saveOrCreateTaskFileByFileKey(
+                            $attachment['file_key'],
+                            $dataIsolation,
+                            $attachment,
+                            $topicId,
+                            $sandboxId,
+                            $task->getId(),
+                            $attachment['file_type'] ?? 'system_auto_upload'
+                        );
+                        ++$stats['success'];
+                        $stats['files'][] = [
+                            'file_id' => $taskFileEntity->getFileId(),
+                            'file_key' => $taskFileEntity->getFileKey(),
+                            'file_name' => $taskFileEntity->getFileName(),
+                            'storage_type' => $taskFileEntity->getStorageType(),
+                            'status' => 'created',
+                        ];
+                        $this->logger->info(sprintf(
+                            '附件保存成功，文件Key: %s，沙箱ID: %s，文件名: %s',
+                            $attachment['file_key'],
+                            $sandboxId,
+                            $attachment['filename'] ?? $attachment['display_filename'] ?? '未知'
+                        ));
+                    } catch (Throwable $e) {
+                        $this->logger->error(sprintf(
+                            '处理附件异常: %s, 文件Key: %s, 沙箱ID: %s',
+                            $e->getMessage(),
+                            $attachment['file_key'],
+                            $sandboxId
+                        ));
+                        ++$stats['error'];
+                        $stats['files'][] = [
+                            'file_key' => $attachment['file_key'],
+                            'file_name' => $attachment['filename'] ?? $attachment['display_filename'] ?? '未知',
+                            'status' => 'error',
+                            'error' => $e->getMessage(),
+                        ];
+                    } finally {
+                        // 确保锁被释放
+                        if ($lockAcquired) {
+                            $this->locker->release($fileLockKey, $lockOwner);
+                            $this->logger->debug(sprintf(
+                                '释放文件处理锁，文件Key: %s，话题ID: %d，锁所有者: %s',
+                                $attachment['file_key'],
+                                $topicId,
+                                $lockOwner
+                            ));
+                        }
+                    }
+                } catch (Throwable $e) {
+                    $this->logger->error(sprintf(
+                        '处理附件异常: %s, 文件Key: %s, 沙箱ID: %s',
+                        $e->getMessage(),
                         $attachment['file_key'],
                         $sandboxId
                     ));
-                    ++$stats['skipped'];
+                    ++$stats['error'];
                     $stats['files'][] = [
-                        'file_id' => $existingFile->getFileId(),
-                        'file_key' => $existingFile->getFileKey(),
-                        'file_name' => $existingFile->getFileName(),
-                        'storage_type' => $existingFile->getStorageType(),
-                        'status' => 'skipped',
+                        'file_key' => $attachment['file_key'],
+                        'file_name' => $attachment['filename'] ?? $attachment['display_filename'] ?? '未知',
+                        'status' => 'error',
+                        'error' => $e->getMessage(),
                     ];
-                    continue;
                 }
-                // 如果不存在，则保存
-                $taskFileEntity = $this->taskDomainService->saveOrCreateTaskFileByFileKey(
-                    $attachment['file_key'],
-                    $dataIsolation,
-                    $attachment,
-                    $topicId,
-                    $sandboxId,
-                    $task->getId(),
-                    $attachment['file_type'] ?? 'system_auto_upload'
-                );
-                ++$stats['success'];
-                $stats['files'][] = [
-                    'file_id' => $taskFileEntity->getFileId(),
-                    'file_key' => $taskFileEntity->getFileKey(),
-                    'file_name' => $taskFileEntity->getFileName(),
-                    'storage_type' => $taskFileEntity->getStorageType(),
-                    'status' => 'created',
-                ];
-                $this->logger->info(sprintf(
-                    '附件保存成功，文件Key: %s，沙箱ID: %s，文件名: %s',
-                    $attachment['file_key'],
-                    $sandboxId,
-                    $attachment['filename'] ?? $attachment['display_filename'] ?? '未知'
-                ));
-            } catch (Throwable $e) {
-                $this->logger->error(sprintf(
-                    '处理附件异常: %s, 文件Key: %s, 沙箱ID: %s',
-                    $e->getMessage(),
-                    $attachment['file_key'],
-                    $sandboxId
-                ));
-                ++$stats['error'];
-                $stats['files'][] = [
-                    'file_key' => $attachment['file_key'],
-                    'file_name' => $attachment['filename'] ?? $attachment['display_filename'] ?? '未知',
-                    'status' => 'error',
-                    'error' => $e->getMessage(),
-                ];
             }
+        } catch (Throwable $e) {
+            Db::rollBack();
+            throw $e;
         }
+
+        Db::commit();
 
         $this->logger->info(sprintf(
             '附件批量处理完成，沙箱ID: %s，处理结果: 总数=%d，成功=%d，跳过=%d，失败=%d',
@@ -399,18 +464,18 @@ class FileProcessAppService extends AbstractAppService
             ExceptionBuilder::throw(SuperAgentErrorCode::TOPIC_NOT_FOUND, 'topic.not_found');
         }
 
-        if ($requestDTO->getFolder() === ".chat_history") {
+        if ($requestDTO->getFolder() === '.chat_history') {
             $topic->setChatHistoryCommitHash($requestDTO->getCommitHash());
         }
 
-        if ($requestDTO->getFolder() === ".workspace") {
+        if ($requestDTO->getFolder() === '.workspace') {
             $topic->setWorkspaceCommitHash($requestDTO->getCommitHash());
         }
 
         // 新增 workspace version 记录
         $versionEntity = new WorkspaceVersionEntity();
         $versionEntity->setId(IdGenerator::getSnowId());
-        $versionEntity->setTopicId((int)$topic->getId());
+        $versionEntity->setTopicId((int) $topic->getId());
         $versionEntity->setSandboxId($requestDTO->getSandboxId());
         $versionEntity->setCommitHash($requestDTO->getCommitHash());
         $versionEntity->setDir(json_encode($requestDTO->getDir()));
@@ -428,7 +493,7 @@ class FileProcessAppService extends AbstractAppService
             // Try to acquire distributed mutex lock
             $lockAcquired = $this->locker->mutexLock($lockKey, $lockOwner, $lockExpireSeconds);
 
-            if (!$lockAcquired) {
+            if (! $lockAcquired) {
                 $this->logger->warning(sprintf(
                     'Failed to acquire workspace attachments lock for topic %s. Concurrent operation may be in progress.',
                     $topic->getId()
@@ -440,8 +505,8 @@ class FileProcessAppService extends AbstractAppService
 
             // 使用事务确保 topic 更新和 workspace version 创建的原子性
             Db::transaction(function () use ($topic, $versionEntity) {
-                $bool=$this->topicDomainService->updateTopicWhereUpdatedAt($topic, $topic->getUpdatedAt());
-                if (!$bool) {
+                $bool = $this->topicDomainService->updateTopicWhereUpdatedAt($topic, $topic->getUpdatedAt());
+                if (! $bool) {
                     ExceptionBuilder::throw(SuperAgentErrorCode::TOPIC_LOCK_FAILED, 'topic.concurrent_operation_failed');
                 }
                 $this->workspaceDomainService->createWorkspaceVersion($versionEntity);

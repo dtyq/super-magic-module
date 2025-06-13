@@ -59,7 +59,7 @@ class TopicDomainService
         return $result['list'][0];
     }
 
-        /**
+    /**
      * 通过ChatTopicId获取话题实体.
      */
     public function getTopicOnlyByChatTopicId(string $chatTopicId): ?TopicEntity

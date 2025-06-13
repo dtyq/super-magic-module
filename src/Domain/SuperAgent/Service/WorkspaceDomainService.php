@@ -29,7 +29,6 @@ use Dtyq\SuperMagic\Domain\SuperAgent\Repository\Facade\WorkspaceVersionReposito
 use Exception;
 use RuntimeException;
 
-
 class WorkspaceDomainService
 {
     public function __construct(
@@ -694,6 +693,28 @@ class WorkspaceDomainService
     }
 
     /**
+     * Create a new workspace version record.
+     */
+    public function createWorkspaceVersion(WorkspaceVersionEntity $versionEntity): void
+    {
+        $this->workspaceVersionRepository->create($versionEntity);
+    }
+
+    /**
+     * Get workspace version by commit hash, topic ID and folder.
+     *
+     * @param string $commitHash The commit hash
+     * @param int $topicId The topic ID
+     * @param string $folder The folder path
+     * @return null|WorkspaceVersionEntity The workspace version entity or null if not found
+     */
+    public function getWorkspaceVersionByCommitAndTopic(string $commitHash, int $topicId, string $folder = ''): ?WorkspaceVersionEntity
+    {
+        // Get all versions for the topic
+        return $this->workspaceVersionRepository->findByCommitHashAndTopicId($commitHash, $topicId, $folder);
+    }
+
+    /**
      * 应用数据隔离到查询条件.
      */
     private function applyDataIsolation(array $conditions, DataIsolation $dataIsolation): array
@@ -711,30 +732,4 @@ class WorkspaceDomainService
     {
         return sprintf('/%s/%s/topic_%d', AgentConstant::SUPER_MAGIC_CODE, $userId, $topicId);
     }
-
-    /**
-     * Create a new workspace version record
-     */
-    public function createWorkspaceVersion(WorkspaceVersionEntity $versionEntity): void
-    {
-        $this->workspaceVersionRepository->create($versionEntity);
-    }
-
-        /**
-     * Get workspace version by commit hash, topic ID and folder
-     *
-     * @param string $commitHash The commit hash
-     * @param int $topicId The topic ID
-     * @param string $folder The folder path
-     * @return WorkspaceVersionEntity|null The workspace version entity or null if not found
-     */
-    public function getWorkspaceVersionByCommitAndTopic(string $commitHash, int $topicId, string $folder = ''): ?WorkspaceVersionEntity
-    {
-        // Get all versions for the topic
-        $version = $this->workspaceVersionRepository->findByCommitHashAndTopicId($commitHash, $topicId, $folder);
-
-        return $version;
-    }
-
-
 }

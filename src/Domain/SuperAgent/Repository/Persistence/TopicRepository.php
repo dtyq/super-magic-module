@@ -123,8 +123,7 @@ class TopicRepository implements TopicRepositoryInterface
             ->update($entityArray) > 0;
     }
 
-
-    //使用updated_at 作为乐观锁
+    // 使用updated_at 作为乐观锁
     public function updateTopicWithUpdatedAt(TopicEntity $topicEntity, string $updatedAt): bool
     {
         $topicEntity->setUpdatedAt(date('Y-m-d H:i:s'));

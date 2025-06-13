@@ -77,4 +77,4 @@ return new class extends Migration {
             Db::statement("DROP INDEX `{$indexName}` ON `{$table}`");
         }
     }
-}; 
+};

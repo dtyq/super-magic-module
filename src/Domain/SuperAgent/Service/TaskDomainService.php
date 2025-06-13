@@ -358,11 +358,11 @@ class TaskDomainService
     }
 
     /**
-     * 通过文件key和taskId获取任务文件.
+     * 通过文件key和topicId获取任务文件.
      */
-    public function getTaskFileByFileKey(string $fileKey): ?TaskFileEntity
+    public function getTaskFileByFileKey(string $fileKey, int $topicId): ?TaskFileEntity
     {
-        return $this->taskFileRepository->getByFileKey($fileKey);
+        return $this->taskFileRepository->getByFileKey($fileKey, $topicId);
     }
 
     public function saveOrCreateTaskFileByFileId(
@@ -375,7 +375,7 @@ class TaskDomainService
         string $fileType = TaskFileType::PROCESS->value
     ): TaskFileEntity {
         // 先通过fileId检查是否已存在文件
-        $taskFileEntity = $this->getTaskFileByFileKey($fileKey);
+        $taskFileEntity = $this->getTaskFileByFileKey($fileKey, $topicId);
 
         // 如果已存在，则更新并返回
         if ($taskFileEntity) {
@@ -457,7 +457,7 @@ class TaskDomainService
         $taskId = $taskEntity ? $taskEntity->getId() : $taskId;
 
         // 先检查是否已存在相同fileKey的记录
-        $taskFileEntity = $this->getTaskFileByFileKey($fileKey);
+        $taskFileEntity = $this->getTaskFileByFileKey($fileKey, $topicId);
 
         // 如果已存在，直接返回
         if ($taskFileEntity) {
@@ -685,6 +685,14 @@ class TaskDomainService
     public function getUserFirstMessageByTopicId(int $topicId, string $userId): ?TaskMessageEntity
     {
         return $this->messageRepository->getUserFirstMessageByTopicId($topicId, $userId);
+    }
+
+    /**
+     * 更新任务文件实体.
+     */
+    public function updateTaskFile(TaskFileEntity $entity): void
+    {
+        $this->taskFileRepository->updateById($entity);
     }
 
     /**

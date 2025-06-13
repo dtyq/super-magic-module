@@ -106,7 +106,6 @@ class FileApi extends AbstractApi
             ExceptionBuilder::throw(GenericErrorCode::ParameterMissing, 'commit_hash_required');
         }
 
-
         if (empty($requestDTO->getSandboxId())) {
             ExceptionBuilder::throw(GenericErrorCode::ParameterMissing, 'sandbox_id_required');
         }
@@ -118,7 +117,6 @@ class FileApi extends AbstractApi
         if (empty($requestDTO->getFolder())) {
             ExceptionBuilder::throw(GenericErrorCode::ParameterMissing, 'folder_required');
         }
-
 
         return $this->fileProcessAppService->workspaceAttachments($requestDTO);
     }

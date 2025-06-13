@@ -15,18 +15,18 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        if (!Schema::hasTable('magic_super_agent_message')) {
+        if (! Schema::hasTable('magic_super_agent_message')) {
             return;
         }
 
         Schema::table('magic_super_agent_message', function (Blueprint $table) {
             // Check if idx_id index exists
-            if (!$this->indexExists('magic_super_agent_message', 'idx_id')) {
+            if (! $this->indexExists('magic_super_agent_message', 'idx_id')) {
                 $table->index(['id'], 'idx_id');
             }
 
             // Check if idx_topic_show_deleted index exists
-            if (!$this->indexExists('magic_super_agent_message', 'idx_topic_show_deleted')) {
+            if (! $this->indexExists('magic_super_agent_message', 'idx_topic_show_deleted')) {
                 $table->index(['topic_id', 'show_in_ui', 'deleted_at'], 'idx_topic_show_deleted');
             }
         });
@@ -37,7 +37,7 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        if (!Schema::hasTable('magic_super_agent_message')) {
+        if (! Schema::hasTable('magic_super_agent_message')) {
             return;
         }
 
@@ -54,20 +54,20 @@ return new class extends Migration {
     }
 
     /**
-     * Check if index exists on table
+     * Check if index exists on table.
      */
     private function indexExists(string $tableName, string $indexName): bool
     {
         $database = config('databases.default.database');
-        
-        $result = Db::select("
+
+        $result = Db::select('
             SELECT COUNT(*) as count 
             FROM information_schema.statistics 
             WHERE table_schema = ? 
             AND table_name = ? 
             AND index_name = ?
-        ", [$database, $tableName, $indexName]);
+        ', [$database, $tableName, $indexName]);
 
         return $result[0]->count > 0;
     }
-}; 
+};

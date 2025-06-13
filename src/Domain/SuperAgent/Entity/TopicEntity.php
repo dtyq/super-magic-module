@@ -115,6 +115,7 @@ class TopicEntity extends AbstractEntity
      * @var string commit hash
      */
     protected ?string $workspaceCommitHash = '';
+
     protected ?string $chatHistoryCommitHash = '';
 
     public function __construct(array $data = [])

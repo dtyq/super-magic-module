@@ -48,7 +48,6 @@ interface TopicRepositoryInterface
      */
     public function updateTopic(TopicEntity $topicEntity): bool;
 
-
     /**
      * 使用updated_at 作为乐观锁更新话题.
      */

@@ -93,7 +93,7 @@ class WorkspaceAttachmentsRequestDTO extends AbstractDTO
     }
 
     /**
-     * Get validation rules
+     * Get validation rules.
      */
     public function rules(): array
     {
@@ -107,7 +107,7 @@ class WorkspaceAttachmentsRequestDTO extends AbstractDTO
     }
 
     /**
-     * Get validation error messages
+     * Get validation error messages.
      */
     public function messages(): array
     {
