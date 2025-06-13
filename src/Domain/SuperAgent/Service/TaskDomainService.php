@@ -423,14 +423,14 @@ class TaskDomainService
 
         // 处理用户ID: 优先使用DataIsolation中的用户ID，如果为null则从任务中获取
         $userId = $dataIsolation->getCurrentUserId();
-        if ($userId === null) {
+        if (empty($userId)) {
             // 通过任务ID获取任务实体，获取用户ID
             $taskEntity = $this->taskRepository->getTaskById($taskId);
             if ($taskEntity) {
                 $userId = $taskEntity->getUserId();
             }
         }
-        $taskFileEntity->setUserId($userId !== null ? $userId : 'system');
+        $taskFileEntity->setUserId($userId ?? 'system');
         $taskFileEntity->setOrganizationCode($dataIsolation->getCurrentOrganizationCode());
         $taskFileEntity->setTopicId($topicId);
         $taskFileEntity->setTaskId($taskId);

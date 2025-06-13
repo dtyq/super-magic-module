@@ -240,6 +240,7 @@ class FileProcessAppService extends AbstractAppService
             }
             $topicId = $task->getTopicId();
         }
+        $dataIsolation->setCurrentUserId($task->getUserId());
 
         $this->logger->info(sprintf(
             'Starting batch attachment processing, Sandbox ID: %s, Attachment count: %d',
