@@ -31,12 +31,13 @@ class TaskFileRepository implements TaskFileRepositoryInterface
     /**
      * 根据fileKey获取文件.
      */
-    public function getByFileKey(string $fileKey, int $topicId): ?TaskFileEntity
+    public function getByFileKey(string $fileKey, ?int $topicId = 0): ?TaskFileEntity
     {
-        $model = $this->model::query()
-            ->where('file_key', $fileKey)
-            ->where('topic_id', $topicId)
-            ->first();
+        $query = $this->model::query()->where('file_key', $fileKey);
+        if ($topicId) {
+            $query = $query->where('topic_id', $topicId);
+        }
+        $model = $query->first();
 
         if (! $model) {
             return null;
