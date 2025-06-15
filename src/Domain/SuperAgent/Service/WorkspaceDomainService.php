@@ -563,7 +563,7 @@ class WorkspaceDomainService
             // 向 agent 发送停止命令
             $taskEntity = $this->taskRepository->getTaskById($topicEntity->getCurrentTaskId());
             if (! empty($taskEntity)) {
-                $this->taskDomainService->handleInterruptInstruction($taskEntity);
+                $this->taskDomainService->handleInterruptInstruction($dataIsolation, $taskEntity);
             }
         }
 
