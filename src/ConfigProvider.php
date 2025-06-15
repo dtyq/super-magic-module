@@ -94,7 +94,7 @@ class ConfigProvider
             ],
             'error_message' => [
                 'error_code_mapper' => [
-                    SuperAgentErrorCode::class => [51000, 51300],
+                    SuperAgentErrorCode::class => [51000, 51299],
                     ShareErrorCode::class => [51300, 51400],
                 ],
             ],

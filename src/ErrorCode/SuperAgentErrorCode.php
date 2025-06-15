@@ -10,60 +10,69 @@ namespace Dtyq\SuperMagic\ErrorCode;
 use App\Infrastructure\Core\Exception\Annotation\ErrorMessage;
 
 /**
- * 错误码范围:51000-51300.
+ * 错误码范围:51000-51299 (300个可用码)
+ * 分配方案：
+ * - Workspace: 51000-51049 (50个)
+ * - Topic: 51050-51099 (50个)
+ * - Task: 51100-51149 (50个)
+ * - File: 51150-51199 (50个)
+ * - Reserved1: 51200-51249 (50个)
+ * - Reserved2: 51250-51299 (50个)
  */
 enum SuperAgentErrorCode: int
 {
+    // Workspace related error codes (51000-51049)
     #[ErrorMessage('workspace.parameter_check_failure')]
     case VALIDATE_FAILED = 51000;
 
     #[ErrorMessage('workspace.access_denied')]
     case WORKSPACE_ACCESS_DENIED = 51001;
 
+    // Topic related error codes (51050-51099)
     #[ErrorMessage('topic.topic_not_found')]
-    case TOPIC_NOT_FOUND = 51100;
+    case TOPIC_NOT_FOUND = 51050;
 
     #[ErrorMessage('topic.create_topic_failed')]
-    case CREATE_TOPIC_FAILED = 51101;
+    case CREATE_TOPIC_FAILED = 51051;
 
+    // Task related error codes (51100-51149)
     #[ErrorMessage('task.not_found')]
-    case TASK_NOT_FOUND = 51200;
+    case TASK_NOT_FOUND = 51100;
 
     #[ErrorMessage('task.work_dir_not_found')]
-    case WORK_DIR_NOT_FOUND = 51201;
+    case WORK_DIR_NOT_FOUND = 51101;
 
-    // File save related error codes
+    // File related error codes (51150-51199)
     #[ErrorMessage('file.permission_denied')]
-    case FILE_PERMISSION_DENIED = 51102;
+    case FILE_PERMISSION_DENIED = 51150;
 
     #[ErrorMessage('file.content_too_large')]
-    case FILE_CONTENT_TOO_LARGE = 51103;
+    case FILE_CONTENT_TOO_LARGE = 51151;
 
     #[ErrorMessage('file.concurrent_modification')]
-    case FILE_CONCURRENT_MODIFICATION = 51104;
+    case FILE_CONCURRENT_MODIFICATION = 51152;
 
     #[ErrorMessage('file.save_rate_limit')]
-    case FILE_SAVE_RATE_LIMIT = 51105;
+    case FILE_SAVE_RATE_LIMIT = 51153;
 
     #[ErrorMessage('file.upload_failed')]
-    case FILE_UPLOAD_FAILED = 51106;
+    case FILE_UPLOAD_FAILED = 51154;
 
-    // File batch download related error codes
     #[ErrorMessage('file.batch_file_ids_required')]
-    case BATCH_FILE_IDS_REQUIRED = 51107;
+    case BATCH_FILE_IDS_REQUIRED = 51155;
 
     #[ErrorMessage('file.batch_file_ids_invalid')]
-    case BATCH_FILE_IDS_INVALID = 51108;
+    case BATCH_FILE_IDS_INVALID = 51156;
 
     #[ErrorMessage('file.batch_too_many_files')]
-    case BATCH_TOO_MANY_FILES = 51109;
+    case BATCH_TOO_MANY_FILES = 51157;
 
     #[ErrorMessage('file.batch_no_valid_files')]
-    case BATCH_NO_VALID_FILES = 51110;
+    case BATCH_NO_VALID_FILES = 51158;
 
     #[ErrorMessage('file.batch_access_denied')]
-    case BATCH_ACCESS_DENIED = 51111;
+    case BATCH_ACCESS_DENIED = 51159;
 
     #[ErrorMessage('file.batch_publish_failed')]
-    case BATCH_PUBLISH_FAILED = 51112;
+    case BATCH_PUBLISH_FAILED = 51160;
 }
