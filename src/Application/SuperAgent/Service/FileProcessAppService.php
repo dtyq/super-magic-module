@@ -307,9 +307,12 @@ class FileProcessAppService extends AbstractAppService
                         // Check if file already exists
                         $existingFile = $this->taskDomainService->getTaskFileByFileKey($attachment['file_key']);
                         if ($existingFile) {
-                            // If already exists, log and skip
+                            // If already exists, update timestamp and skip
+                            $existingFile->setUpdatedAt(date('Y-m-d H:i:s'));
+                            $this->taskDomainService->updateTaskFile($existingFile);
+
                             $this->logger->info(sprintf(
-                                'Attachment already exists, skipping processing, File Key: %s, Sandbox ID: %s',
+                                'Attachment already exists, updating timestamp, File Key: %s, Sandbox ID: %s',
                                 $attachment['file_key'],
                                 $sandboxId
                             ));
