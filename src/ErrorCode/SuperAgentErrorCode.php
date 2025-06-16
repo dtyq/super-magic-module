@@ -35,6 +35,9 @@ enum SuperAgentErrorCode: int
     #[ErrorMessage('topic.create_topic_failed')]
     case CREATE_TOPIC_FAILED = 51051;
 
+    #[ErrorMessage('topic.concurrent_operation_failed')]
+    case TOPIC_LOCK_FAILED = 51052;
+
     // Task related error codes (51100-51149)
     #[ErrorMessage('task.not_found')]
     case TASK_NOT_FOUND = 51100;
@@ -42,14 +45,10 @@ enum SuperAgentErrorCode: int
     #[ErrorMessage('task.work_dir_not_found')]
     case WORK_DIR_NOT_FOUND = 51101;
 
-    // File related error codes (51150-51199)
     #[ErrorMessage('task.create_workspace_version_failed')]
-    case CREATE_WORKSPACE_VERSION_FAILED = 51202;
+    case CREATE_WORKSPACE_VERSION_FAILED = 51102;
 
-    #[ErrorMessage('topic.concurrent_operation_failed')]
-    case TOPIC_LOCK_FAILED = 51203;
-
-    // File save related error codes
+    // File related error codes (51150-51199)
     #[ErrorMessage('file.permission_denied')]
     case FILE_PERMISSION_DENIED = 51150;
 
@@ -88,4 +87,11 @@ enum SuperAgentErrorCode: int
 
     #[ErrorMessage('file.batch_file_ids_or_topic_id_required')]
     case BATCH_FILE_IDS_OR_TOPIC_ID_REQUIRED = 51162;
+
+    // Reserved1 area - keeping original error codes that were outside planned ranges
+    #[ErrorMessage('task.create_workspace_version_failed')]
+    case CREATE_WORKSPACE_VERSION_FAILED_LEGACY = 51202;
+
+    #[ErrorMessage('topic.concurrent_operation_failed')]
+    case TOPIC_LOCK_FAILED_LEGACY = 51203;
 }
