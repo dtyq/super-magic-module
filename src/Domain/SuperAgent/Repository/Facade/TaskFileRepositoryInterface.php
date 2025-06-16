@@ -83,4 +83,6 @@ interface TaskFileRepositoryInterface
      * @return TaskFileEntity[] 用户文件列表
      */
     public function findUserFilesByIds(array $fileIds, string $userId): array;
+
+    public function findUserFilesByTopicId(string $topicId): array;
 }

@@ -75,4 +75,10 @@ enum SuperAgentErrorCode: int
 
     #[ErrorMessage('file.batch_publish_failed')]
     case BATCH_PUBLISH_FAILED = 51160;
+
+    #[ErrorMessage('file.batch_topic_id_invalid')]
+    case BATCH_TOPIC_ID_INVALID = 51161;
+
+    #[ErrorMessage('file.batch_file_ids_or_topic_id_required')]
+    case BATCH_FILE_IDS_OR_TOPIC_ID_REQUIRED = 51162;
 }
