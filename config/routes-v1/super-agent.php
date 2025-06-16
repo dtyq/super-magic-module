@@ -11,7 +11,6 @@ use Dtyq\SuperMagic\Interfaces\SuperAgent\Facade\WorkspaceApi;
 use Dtyq\SuperMagic\Interfaces\SuperAgent\Facade\TopicApi;
 use Dtyq\SuperMagic\Interfaces\SuperAgent\Facade\TaskApi;
 use Hyperf\HttpServer\Router\Router;
-use Dtyq\SuperMagic\Infrastructure\Utils\Middleware\RequestContextMiddlewareV2;
 
 Router::addGroup('/api/v1/super-agent', static function () {
     // 工作区管理
