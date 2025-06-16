@@ -43,6 +43,13 @@ enum SuperAgentErrorCode: int
     case WORK_DIR_NOT_FOUND = 51101;
 
     // File related error codes (51150-51199)
+    #[ErrorMessage('task.create_workspace_version_failed')]
+    case CREATE_WORKSPACE_VERSION_FAILED = 51202;
+
+    #[ErrorMessage('topic.concurrent_operation_failed')]
+    case TOPIC_LOCK_FAILED = 51203;
+
+    // File save related error codes
     #[ErrorMessage('file.permission_denied')]
     case FILE_PERMISSION_DENIED = 51150;
 

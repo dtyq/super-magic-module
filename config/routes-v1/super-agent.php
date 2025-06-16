@@ -4,13 +4,13 @@ declare(strict_types=1);
 /**
  * Copyright (c) The Magic , Distributed under the software license
  */
+use Dtyq\SuperMagic\Infrastructure\Utils\Middleware\RequestContextMiddlewareV2;
 use Dtyq\SuperMagic\Interfaces\SuperAgent\Facade\AccountApi;
 use Dtyq\SuperMagic\Interfaces\SuperAgent\Facade\FileApi;
 use Dtyq\SuperMagic\Interfaces\SuperAgent\Facade\WorkspaceApi;
 use Dtyq\SuperMagic\Interfaces\SuperAgent\Facade\TopicApi;
 use Dtyq\SuperMagic\Interfaces\SuperAgent\Facade\TaskApi;
 use Hyperf\HttpServer\Router\Router;
-use Dtyq\SuperMagic\Infrastructure\Utils\Middleware\RequestContextMiddlewareV2;
 
 Router::addGroup('/api/v1/super-agent', static function () {
     // 工作区管理
@@ -86,5 +86,7 @@ Router::addGroup('/api/v1/super-agent', static function () {
         Router::post('/refresh-sts-token', [FileApi::class, 'refreshStsToken']);
         // 批量处理附件
         Router::post('/process-attachments', [FileApi::class, 'processAttachments']);
+        // 新增话题附件列表(git 管理)
+        Router::post('/workspace-attachments', [FileApi::class, 'workspaceAttachments']);
     });
 });

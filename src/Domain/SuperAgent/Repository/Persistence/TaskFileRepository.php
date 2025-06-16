@@ -31,11 +31,13 @@ class TaskFileRepository implements TaskFileRepositoryInterface
     /**
      * 根据fileKey获取文件.
      */
-    public function getByFileKey(string $fileKey): ?TaskFileEntity
+    public function getByFileKey(string $fileKey, ?int $topicId = 0): ?TaskFileEntity
     {
-        $model = $this->model::query()
-            ->where('file_key', $fileKey)
-            ->first();
+        $query = $this->model::query()->where('file_key', $fileKey);
+        if ($topicId) {
+            $query = $query->where('topic_id', $topicId);
+        }
+        $model = $query->first();
 
         if (! $model) {
             return null;
@@ -53,7 +55,7 @@ class TaskFileRepository implements TaskFileRepositoryInterface
      * @param string $storageType 存储类型
      * @return array{list: TaskFileEntity[], total: int} 文件列表和总数
      */
-    public function getByTopicId(int $topicId, int $page, int $pageSize, array $fileType = [], string $storageType = 'workspace'): array
+    public function getByTopicId(int $topicId, int $page, int $pageSize = 200, array $fileType = [], string $storageType = 'workspace'): array
     {
         $offset = ($page - 1) * $pageSize;
 
