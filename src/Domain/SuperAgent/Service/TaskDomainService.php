@@ -418,7 +418,8 @@ class TaskDomainService
 
         // 如果不存在，则创建新实体
         $taskFileEntity = new TaskFileEntity();
-        $taskFileEntity->setFileId(IdGenerator::getSnowId());
+        $fileId = ! empty($fileData['file_id']) ? $fileData['file_id'] : IdGenerator::getSnowId();
+        $taskFileEntity->setFileId($fileId);
         $taskFileEntity->setFileKey($fileKey);
 
         // 处理用户ID: 优先使用DataIsolation中的用户ID，如果为null则从任务中获取
