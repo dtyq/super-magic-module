@@ -369,7 +369,7 @@ class TaskDomainService
     /**
      * 通过文件key和taskId获取任务文件.
      */
-    public function getTaskFileByFileKey(string $fileKey): ?TaskFileEntity
+    public function getTaskFileByFileKey(string $fileKey,int $topicId): ?TaskFileEntity
     {
         return $this->taskFileRepository->getByFileKey($fileKey);
     }
@@ -387,7 +387,7 @@ class TaskDomainService
         bool $isUpdate = false
     ): TaskFileEntity {
         // 先通过 fileKey 检查是否已存在文件
-        $taskFileEntity = $this->getTaskFileByFileKey($fileKey);
+        $taskFileEntity = $this->getTaskFileByFileKey($fileKey,$topicId);
 
         // 如果存在，并且不需要更新，则直接返回
         if ($taskFileEntity && ! $isUpdate) {
