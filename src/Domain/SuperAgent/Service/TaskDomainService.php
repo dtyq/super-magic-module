@@ -396,22 +396,23 @@ class TaskDomainService
 
         // 如果已存在，则更新并返回
         if ($taskFileEntity) {
-            $taskFileEntity->setFileKey($fileKey);
-            $taskFileEntity->setOrganizationCode($dataIsolation->getCurrentOrganizationCode());
-            $taskFileEntity->setTopicId($topicId);
-            $taskFileEntity->setTaskId($taskId);
-            $taskFileEntity->setFileType($fileType);
-            $taskFileEntity->setFileName($fileData['display_filename'] ?? $fileData['filename'] ?? '');
-            $taskFileEntity->setFileExtension($fileData['file_extension'] ?? '');
-            $taskFileEntity->setFileSize($fileData['file_size'] ?? 0);
-            // 判断并设置是否为隐藏文件
-            $taskFileEntity->setIsHidden($this->isHiddenFile($fileKey));
-            // 更新存储类型，如果提供了的话
-            if (isset($fileData['storage_type'])) {
-                $taskFileEntity->setStorageType($fileData['storage_type']);
-            }
+            // $taskFileEntity->setFileKey($fileKey);
+            // $taskFileEntity->setOrganizationCode($dataIsolation->getCurrentOrganizationCode());
+            // $taskFileEntity->setTopicId($topicId);
+            // $taskFileEntity->setTaskId($taskId);
+            // $taskFileEntity->setFileType($fileType);
+            // $taskFileEntity->setFileName($fileData['display_filename'] ?? $fileData['filename'] ?? '');
+            // $taskFileEntity->setFileExtension($fileData['file_extension'] ?? '');
+            // $taskFileEntity->setFileSize($fileData['file_size'] ?? 0);
+            // // 判断并设置是否为隐藏文件
+            // $taskFileEntity->setIsHidden($this->isHiddenFile($fileKey));
+            // // 更新存储类型，如果提供了的话
+            // if (isset($fileData['storage_type'])) {
+            //     $taskFileEntity->setStorageType($fileData['storage_type']);
+            // }
 
-            return $this->taskFileRepository->updateById($taskFileEntity);
+            // return $this->taskFileRepository->updateById($taskFileEntity);
+            return $taskFileEntity;
         }
 
         // 如果不存在，则创建新实体
