@@ -88,7 +88,7 @@ class FileVersionAppService extends AbstractAppService
         ]);
 
         // 返回结果
-        return CreateFileVersionResponseDTO::createEmpty();
+        return CreateFileVersionResponseDTO::create($versionEntity->getVersion());
     }
 
     /**
