@@ -19,6 +19,7 @@ use Dtyq\SuperMagic\Interfaces\SuperAgent\DTO\Request\GetFileVersionsRequestDTO;
 use Dtyq\SuperMagic\Interfaces\SuperAgent\DTO\Request\RollbackFileToVersionRequestDTO;
 use Dtyq\SuperMagic\Interfaces\SuperAgent\DTO\Response\CreateFileVersionResponseDTO;
 use Dtyq\SuperMagic\Interfaces\SuperAgent\DTO\Response\GetFileVersionsResponseDTO;
+use Dtyq\SuperMagic\Interfaces\SuperAgent\DTO\Response\GetLatestFileVersionResponseDTO;
 use Dtyq\SuperMagic\Interfaces\SuperAgent\DTO\Response\RollbackFileToVersionResponseDTO;
 use Hyperf\Logger\LoggerFactory;
 use Psr\EventDispatcher\EventDispatcherInterface;
@@ -150,6 +151,46 @@ class FileVersionAppService extends AbstractAppService
 
         // 返回结果
         return GetFileVersionsResponseDTO::fromData($result['list'], $result['total'], $requestDTO->getPage());
+    }
+
+    /**
+     * 获取文件最新版本号.
+     *
+     * @param RequestContext $requestContext 请求上下文
+     * @param int $fileId 文件ID
+     * @return GetLatestFileVersionResponseDTO 查询结果
+     */
+    public function getLatestFileVersion(
+        RequestContext $requestContext,
+        int $fileId
+    ): GetLatestFileVersionResponseDTO {
+        $userAuthorization = $requestContext->getUserAuthorization();
+        $dataIsolation = $this->createDataIsolation($userAuthorization);
+
+        $this->logger->info('Getting latest file version', [
+            'file_id' => $fileId,
+            'user_id' => $dataIsolation->getCurrentUserId(),
+            'organization_code' => $dataIsolation->getCurrentOrganizationCode(),
+        ]);
+
+        $fileEntity = $this->taskFileDomainService->getById($fileId);
+        if (! $fileEntity) {
+            ExceptionBuilder::throw(SuperAgentErrorCode::FILE_NOT_FOUND, 'file.file_not_found');
+        }
+
+        if ($fileEntity->getIsDirectory()) {
+            ExceptionBuilder::throw(SuperAgentErrorCode::FILE_PERMISSION_DENIED, 'file.cannot_version_directory');
+        }
+
+        if ($fileEntity->getProjectId() > 0) {
+            $this->getAccessibleProject(
+                $fileEntity->getProjectId(),
+                $dataIsolation->getCurrentUserId(),
+                $dataIsolation->getCurrentOrganizationCode()
+            );
+        }
+
+        return GetLatestFileVersionResponseDTO::create($fileEntity->getFileId(), $fileEntity->getLatestVersion());
     }
 
     /**
