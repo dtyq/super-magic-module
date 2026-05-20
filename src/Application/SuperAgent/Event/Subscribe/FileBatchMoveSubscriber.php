@@ -16,6 +16,7 @@ use Dtyq\SuperMagic\Domain\SuperAgent\Entity\ProjectEntity;
 use Dtyq\SuperMagic\Domain\SuperAgent\Entity\TaskFileEntity;
 use Dtyq\SuperMagic\Domain\SuperAgent\Entity\ValueObject\TaskFileSource;
 use Dtyq\SuperMagic\Domain\SuperAgent\Event\AttachmentsProcessedEvent;
+use Dtyq\SuperMagic\Domain\SuperAgent\Event\DeleteEventSource;
 use Dtyq\SuperMagic\Domain\SuperAgent\Event\DirectoryDeletedEvent;
 use Dtyq\SuperMagic\Domain\SuperAgent\Event\FileBatchMoveEvent;
 use Dtyq\SuperMagic\Domain\SuperAgent\Event\FileDeletedEvent;
@@ -254,7 +255,11 @@ class FileBatchMoveSubscriber extends ConsumerMessage
                         $dirUserAuth = new MagicUserAuthorization();
                         $dirUserAuth->setId($sourceDirEntity->getUserId());
                         $dirUserAuth->setOrganizationCode($sourceDirEntity->getOrganizationCode());
-                        $this->eventDispatcher->dispatch(new DirectoryDeletedEvent($sourceDirEntity, $dirUserAuth));
+                        $this->eventDispatcher->dispatch(new DirectoryDeletedEvent(
+                            $sourceDirEntity,
+                            $dirUserAuth,
+                            DeleteEventSource::InternalOverwrite
+                        ));
                     }
                 }
             } else {
@@ -576,7 +581,8 @@ class FileBatchMoveSubscriber extends ConsumerMessage
             $this->eventDispatcher->dispatch(new FileDeletedEvent(
                 $conflictEntity,
                 $conflictEntity->getUserId(),
-                $conflictEntity->getOrganizationCode()
+                $conflictEntity->getOrganizationCode(),
+                DeleteEventSource::InternalOverwrite
             ));
             $targetFileEntity = null;
         }

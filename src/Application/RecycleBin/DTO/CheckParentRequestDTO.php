@@ -12,6 +12,8 @@ use Hyperf\HttpServer\Contract\RequestInterface;
 use InvalidArgumentException;
 use ValueError;
 
+use function Hyperf\Translation\trans;
+
 /**
  * 检查父级请求 DTO.
  *
@@ -26,23 +28,23 @@ class CheckParentRequestDTO
     public function __construct(array $data)
     {
         if (! isset($data['resource_ids']) || ! is_array($data['resource_ids'])) {
-            throw new InvalidArgumentException('参数 resource_ids 必须是数组');
+            throw new InvalidArgumentException(trans('recycle_bin.validation.resource_ids_must_be_array'));
         }
 
         $this->resourceIds = array_map(fn ($id) => (string) $id, $data['resource_ids']);
 
         if (empty($this->resourceIds)) {
-            throw new InvalidArgumentException('参数 resource_ids 不能为空');
+            throw new InvalidArgumentException(trans('recycle_bin.validation.resource_ids_empty'));
         }
 
         if (! isset($data['resource_type'])) {
-            throw new InvalidArgumentException('参数 resource_type 不能为空');
+            throw new InvalidArgumentException(trans('recycle_bin.validation.resource_type_required'));
         }
 
         try {
             $this->resourceType = RecycleBinResourceType::from((int) $data['resource_type']);
         } catch (ValueError $e) {
-            throw new InvalidArgumentException('参数 resource_type 必须是有效的资源类型枚举值');
+            throw new InvalidArgumentException(trans('recycle_bin.validation.resource_type_invalid'));
         }
     }
 

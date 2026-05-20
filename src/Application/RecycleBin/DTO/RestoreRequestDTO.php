@@ -30,7 +30,7 @@ class RestoreRequestDTO
 
     /**
      * Per-resource conflict resolution map.
-     * Shape: [ 'resource_id' => [ 'parent_missing' => 'restore_to_root', 'name_conflict' => 'overwrite' ] ]
+     * Shape: [ 'resource_id' => [ 'parent_missing' => 'restore_to_root', 'name_conflict' => 'overwrite' ] ].
      *
      * @var array<string, array<string, string>>
      */
@@ -80,7 +80,7 @@ class RestoreRequestDTO
 
     /**
      * Returns the conflict resolution map.
-     * Shape: [ 'resource_id' => [ 'parent_missing' => 'restore_to_root', 'name_conflict' => 'overwrite' ] ]
+     * Shape: [ 'resource_id' => [ 'parent_missing' => 'restore_to_root', 'name_conflict' => 'overwrite' ] ].
      *
      * @return array<string, array<string, string>>
      */
@@ -92,8 +92,8 @@ class RestoreRequestDTO
     public function toArray(): array
     {
         return [
-            'resource_ids'         => $this->resourceIds,
-            'resource_type'        => $this->resourceType->value,
+            'resource_ids' => $this->resourceIds,
+            'resource_type' => $this->resourceType->value,
             'conflict_resolutions' => $this->conflictResolutions,
         ];
     }

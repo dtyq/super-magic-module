@@ -30,6 +30,16 @@ class TaskFileRepository implements TaskFileRepositoryInterface
         return new TaskFileEntity($model->toArray());
     }
 
+    public function getByIdWithTrash(int $id): ?TaskFileEntity
+    {
+        /* @phpstan-ignore-next-line - TaskFileModel uses SoftDeletes trait which provides withTrashed() */
+        $model = $this->model::withTrashed()->where('file_id', $id)->first();
+        if (! $model) {
+            return null;
+        }
+        return new TaskFileEntity($model->toArray());
+    }
+
     public function getFilesByIds(array $fileIds, int $projectId = 0, ?string $storageType = null): array
     {
         // 如果 ID 列表为空，直接返回空数组

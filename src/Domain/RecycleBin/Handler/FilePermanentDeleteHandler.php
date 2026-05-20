@@ -15,7 +15,7 @@ use Throwable;
 /**
  * 文件彻底删除处理器.
  *
- * 当前仅删除回收站表记录；后续可在此处增加文件及关联表（如存储等）的物理删除，与回收站删除同事务。
+ * 当前只将文件回收站记录标记为已移除，真正的文件/目录资源清理由后续定时任务完成。
  */
 class FilePermanentDeleteHandler implements PermanentDeleteHandlerInterface
 {
@@ -37,8 +37,7 @@ class FilePermanentDeleteHandler implements PermanentDeleteHandlerInterface
             try {
                 Db::beginTransaction();
 
-                // 后续可在此处增加：文件表及关联表（如存储、版本等）的物理删除，与回收站删除同事务
-                $this->recycleBinRepository->deleteById($entity->getId());
+                $this->recycleBinRepository->markRemovedByIds([$entity->getId()], 'system');
 
                 Db::commit();
             } catch (Throwable $e) {

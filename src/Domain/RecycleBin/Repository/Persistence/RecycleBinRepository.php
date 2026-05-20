@@ -64,6 +64,7 @@ class RecycleBinRepository extends AbstractRepository implements RecycleBinRepos
         $model = $this->model::query()
             ->where('resource_type', $resourceType->value)
             ->where('resource_id', $resourceId)
+            ->whereNull('removed_at')
             ->first();
 
         return $this->modelToEntity($model);
@@ -125,6 +126,7 @@ class RecycleBinRepository extends AbstractRepository implements RecycleBinRepos
     ): array {
         $table = $this->model->getTable();
         $query = $this->applyVisibleToUserScope($this->model::query(), $userId);
+        $query->whereNull($table . '.removed_at');
 
         // 资源类型筛选
         if ($resourceType !== null) {
@@ -176,6 +178,7 @@ class RecycleBinRepository extends AbstractRepository implements RecycleBinRepos
         $models = $this->applyVisibleToUserScope($this->model::query(), $userId)
             ->whereIn($table . '.id', $ids)
             ->where($table . '.resource_type', $resourceType)
+            ->whereNull($table . '.removed_at')
             ->select($table . '.*')
             ->get();
 
@@ -206,6 +209,7 @@ class RecycleBinRepository extends AbstractRepository implements RecycleBinRepos
         $table = $this->model->getTable();
         $models = $this->applyVisibleToUserScope($this->model::query(), $userId)
             ->whereIn($table . '.id', $ids)
+            ->whereNull($table . '.removed_at')
             ->select($table . '.*')
             ->get();
 
@@ -237,6 +241,23 @@ class RecycleBinRepository extends AbstractRepository implements RecycleBinRepos
             ->delete();
     }
 
+    public function markRemovedByIds(array $ids, string $removedBy): int
+    {
+        if (empty($ids)) {
+            return 0;
+        }
+
+        $now = date('Y-m-d H:i:s');
+        return $this->model::query()
+            ->whereIn('id', $ids)
+            ->whereNull('removed_at')
+            ->update([
+                'removed_at' => $now,
+                'removed_by' => $removedBy,
+                'updated_at' => $now,
+            ]);
+    }
+
     /**
      * 根据资源ID批量查询回收站记录（用于恢复）.
      * 每个资源在回收站中只有一条记录（恢复时会物理删除回收站记录）.
@@ -257,6 +278,7 @@ class RecycleBinRepository extends AbstractRepository implements RecycleBinRepos
         $models = $this->applyVisibleToUserScope($this->model::query(), $userId)
             ->whereIn($table . '.resource_id', $resourceIds)
             ->where($table . '.resource_type', $resourceType->value)
+            ->whereNull($table . '.removed_at')
             ->select($table . '.*')
             ->get();
 
@@ -282,6 +304,7 @@ class RecycleBinRepository extends AbstractRepository implements RecycleBinRepos
     {
         return $this->model::query()
             ->whereRaw('DATE_ADD(deleted_at, INTERVAL retain_days DAY) < NOW()')
+            ->whereNull('removed_at')
             ->orderBy('deleted_at', 'asc')
             ->limit($limit)
             ->pluck('id')
@@ -315,6 +338,40 @@ class RecycleBinRepository extends AbstractRepository implements RecycleBinRepos
         }
 
         return $entities;
+    }
+
+    public function findFilePurgeCandidates(int $limit = 1000): array
+    {
+        $models = $this->model::query()
+            ->where('resource_type', RecycleBinResourceType::File->value)
+            ->whereNotNull('removed_at')
+            ->whereNull('purged_at')
+            ->whereRaw('removed_at <= DATE_SUB(NOW(), INTERVAL 60 DAY)')
+            ->orderBy('removed_at', 'asc')
+            ->limit($limit)
+            ->get();
+
+        $entities = [];
+        foreach ($models as $model) {
+            $entity = $this->modelToEntity($model);
+            if ($entity !== null) {
+                $entities[] = $entity;
+            }
+        }
+
+        return $entities;
+    }
+
+    public function markPurged(int $id): bool
+    {
+        $now = date('Y-m-d H:i:s');
+        return $this->model::query()
+            ->where('id', $id)
+            ->whereNull('purged_at')
+            ->update([
+                'purged_at' => $now,
+                'updated_at' => $now,
+            ]) > 0;
     }
 
     /**
@@ -358,6 +415,9 @@ class RecycleBinRepository extends AbstractRepository implements RecycleBinRepos
             ->setDeletedBy((string) $model->deleted_by)
             ->setDeletedAt($model->deleted_at?->format('Y-m-d H:i:s') ?? '')
             ->setRetainDays($model->retain_days)
+            ->setRemovedAt($model->removed_at?->format('Y-m-d H:i:s'))
+            ->setRemovedBy($model->removed_by)
+            ->setPurgedAt($model->purged_at?->format('Y-m-d H:i:s'))
             ->setParentId($model->parent_id)
             ->setExtraData($model->extra_data)
             ->setCreatedAt($model->created_at?->format('Y-m-d H:i:s'))

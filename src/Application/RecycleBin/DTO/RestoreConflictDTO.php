@@ -19,7 +19,8 @@ class RestoreConflictDTO
         public readonly ?int $existingFileId = null,
         /** For name_conflict: whether the conflicting entry is a directory */
         public readonly ?bool $existingIsDirectory = null,
-    ) {}
+    ) {
+    }
 
     public function toArray(): array
     {

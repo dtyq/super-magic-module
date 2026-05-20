@@ -15,6 +15,8 @@ use Hyperf\Logger\LoggerFactory;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 
+use function Hyperf\Translation\trans;
+
 /**
  * 回收站话题移动领域服务.
  *
@@ -50,12 +52,12 @@ class TopicRecycleDomainService
 
         $topic = $this->topicRepository->getTopicById($topicId);
         if (! $topic) {
-            throw new RuntimeException('话题不存在');
+            throw new RuntimeException(trans('recycle_bin.move.topic_not_found'));
         }
 
         $targetProject = $this->projectRepository->findById($targetProjectId);
         if (! $targetProject) {
-            throw new RuntimeException('目标项目不存在');
+            throw new RuntimeException(trans('recycle_bin.move.target_project_not_found'));
         }
 
         $originalProjectId = $topic->getProjectId();
@@ -88,7 +90,7 @@ class TopicRecycleDomainService
         );
 
         if (! $topicUpdateResult) {
-            throw new RuntimeException('更新话题信息失败');
+            throw new RuntimeException(trans('recycle_bin.move.topic_update_failed'));
         }
 
         // 级联更新任务（任务跟随话题移动）
@@ -110,7 +112,7 @@ class TopicRecycleDomainService
 
         $updatedTopic = $this->topicRepository->getTopicById($topicId);
         if (! $updatedTopic) {
-            throw new RuntimeException('移动后无法获取话题信息');
+            throw new RuntimeException(trans('recycle_bin.move.topic_fetch_after_move_failed'));
         }
 
         return $updatedTopic;

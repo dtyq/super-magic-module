@@ -31,6 +31,12 @@ class RecycleBinEntity extends AbstractEntity
 
     protected int $retainDays = 30;
 
+    protected ?string $removedAt = null;
+
+    protected ?string $removedBy = null;
+
+    protected ?string $purgedAt = null;
+
     protected ?int $parentId = null;
 
     protected ?array $extraData = null;
@@ -127,6 +133,39 @@ class RecycleBinEntity extends AbstractEntity
         return $this;
     }
 
+    public function getRemovedAt(): ?string
+    {
+        return $this->removedAt;
+    }
+
+    public function setRemovedAt(?string $removedAt): self
+    {
+        $this->removedAt = $removedAt;
+        return $this;
+    }
+
+    public function getRemovedBy(): ?string
+    {
+        return $this->removedBy;
+    }
+
+    public function setRemovedBy(?string $removedBy): self
+    {
+        $this->removedBy = $removedBy;
+        return $this;
+    }
+
+    public function getPurgedAt(): ?string
+    {
+        return $this->purgedAt;
+    }
+
+    public function setPurgedAt(?string $purgedAt): self
+    {
+        $this->purgedAt = $purgedAt;
+        return $this;
+    }
+
     public function getParentId(): ?int
     {
         return $this->parentId;
@@ -185,6 +224,9 @@ class RecycleBinEntity extends AbstractEntity
             'deleted_by' => $this->deletedBy,
             'deleted_at' => $this->deletedAt,
             'retain_days' => $this->retainDays,
+            'removed_at' => $this->removedAt,
+            'removed_by' => $this->removedBy,
+            'purged_at' => $this->purgedAt,
             'parent_id' => $this->parentId,
             'extra_data' => $this->extraData,
             'created_at' => $this->createdAt,

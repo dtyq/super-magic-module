@@ -11,9 +11,11 @@ use Dtyq\SuperMagic\Domain\RecycleBin\Entity\RecycleBinEntity;
 use Dtyq\SuperMagic\Domain\RecycleBin\Enum\RecycleBinResourceType;
 use Dtyq\SuperMagic\Domain\RecycleBin\Repository\Facade\RecycleBinRepositoryInterface;
 use Dtyq\SuperMagic\Domain\SuperAgent\Entity\ProjectEntity;
+use Dtyq\SuperMagic\Domain\SuperAgent\Entity\TaskFileEntity;
 use Dtyq\SuperMagic\Domain\SuperAgent\Entity\TopicEntity;
 use Dtyq\SuperMagic\Domain\SuperAgent\Repository\Facade\ProjectMemberRepositoryInterface;
 use Dtyq\SuperMagic\Domain\SuperAgent\Repository\Facade\ProjectRepositoryInterface;
+use Dtyq\SuperMagic\Domain\SuperAgent\Repository\Facade\TaskFileRepositoryInterface;
 use Dtyq\SuperMagic\Domain\SuperAgent\Repository\Facade\TopicRepositoryInterface;
 use Dtyq\SuperMagic\Domain\SuperAgent\Repository\Facade\WorkspaceRepositoryInterface;
 use Hyperf\DbConnection\Db;
@@ -21,6 +23,8 @@ use Hyperf\Logger\LoggerFactory;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
+
+use function Hyperf\Translation\trans;
 
 /**
  * 回收站恢复领域服务.
@@ -36,6 +40,7 @@ class RecycleBinRestoreDomainService
         protected WorkspaceRepositoryInterface $workspaceRepository,
         protected ProjectRepositoryInterface $projectRepository,
         protected TopicRepositoryInterface $topicRepository,
+        protected TaskFileRepositoryInterface $taskFileRepository,
         protected ProjectMemberRepositoryInterface $projectMemberRepository,
         LoggerFactory $loggerFactory
     ) {
@@ -100,7 +105,7 @@ class RecycleBinRestoreDomainService
     {
         $restored = $this->projectRepository->restore($projectId, $userId);
         if (! $restored) {
-            throw new RuntimeException('恢复项目失败');
+            throw new RuntimeException(trans('recycle_bin.restore.project_failed'));
         }
 
         $restoredMembers = $this->projectMemberRepository->restoreByProjectIds(
@@ -143,7 +148,7 @@ class RecycleBinRestoreDomainService
     {
         $restored = $this->topicRepository->restore($topicId, $userId);
         if (! $restored) {
-            throw new RuntimeException('恢复话题失败');
+            throw new RuntimeException(trans('recycle_bin.restore.topic_failed'));
         }
 
         $this->logger->info('恢复话题成功', [
@@ -189,7 +194,8 @@ class RecycleBinRestoreDomainService
             RecycleBinResourceType::Workspace => $this->restoreWorkspace($entity, $userId),
             RecycleBinResourceType::Project => $this->restoreProject($entity, $userId),
             RecycleBinResourceType::Topic => $this->restoreTopic($entity, $userId),
-            default => throw new RuntimeException('不支持的资源类型: ' . $resourceType->value),
+            RecycleBinResourceType::File => $this->restoreFile($entity, $userId),
+            default => throw new RuntimeException(trans('recycle_bin.restore.unsupported_resource_type', ['type' => $resourceType->value])),
         };
     }
 
@@ -204,7 +210,7 @@ class RecycleBinRestoreDomainService
         try {
             $restored = $this->workspaceRepository->restore($workspaceId, $userId);
             if (! $restored) {
-                throw new RuntimeException('工作区不存在或已被永久删除');
+                throw new RuntimeException(trans('recycle_bin.restore.workspace_not_found_or_permanently_deleted'));
             }
 
             // 查询用户曾单独删除的项目，恢复时排除
@@ -276,7 +282,7 @@ class RecycleBinRestoreDomainService
         Db::transaction(function () use ($projectId, $entity, $userId) {
             $project = $this->projectRepository->findByIdWithTrashed($projectId);
             if (! $project) {
-                throw new RuntimeException('项目不存在或已被永久删除');
+                throw new RuntimeException(trans('recycle_bin.restore.project_not_found_or_permanently_deleted'));
             }
 
             // 验证父级工作区是否存在
@@ -284,7 +290,7 @@ class RecycleBinRestoreDomainService
             if ($workspaceId !== null) {
                 $workspaceExists = $this->workspaceRepository->existsAndNotDeleted($workspaceId);
                 if (! $workspaceExists) {
-                    throw new RuntimeException('父级工作区不存在，请先移动项目到其他工作区');
+                    throw new RuntimeException(trans('recycle_bin.restore.parent_workspace_missing'));
                 }
             } else {
                 $this->logger->warning('恢复项目时 workspace_id 为空', [
@@ -312,7 +318,7 @@ class RecycleBinRestoreDomainService
         Db::transaction(function () use ($topicId, $entity, $userId) {
             $topic = $this->topicRepository->findByIdWithTrashed($topicId);
             if (! $topic) {
-                throw new RuntimeException('话题不存在或已被永久删除');
+                throw new RuntimeException(trans('recycle_bin.restore.topic_not_found_or_permanently_deleted'));
             }
 
             // 验证父级项目是否存在
@@ -320,7 +326,7 @@ class RecycleBinRestoreDomainService
             if ($parentId !== null) {
                 $parentExists = $this->projectRepository->existsAndNotDeleted($parentId);
                 if (! $parentExists) {
-                    throw new RuntimeException('父级项目不存在，请先移动话题到其他项目');
+                    throw new RuntimeException(trans('recycle_bin.restore.parent_project_missing'));
                 }
             } else {
                 $this->logger->warning('恢复话题时 parent_id 为空', [
@@ -332,5 +338,138 @@ class RecycleBinRestoreDomainService
             $this->restoreTopicWithoutParentCheck($topicId, $userId);
             $this->recycleBinRepository->deleteById($entity->getId());
         });
+    }
+
+    /**
+     * 恢复文件或目录（目录只恢复自身，子级依赖父级恢复后重新可见）.
+     */
+    private function restoreFile(RecycleBinEntity $entity, string $userId): void
+    {
+        $fileId = (int) $entity->getResourceId();
+
+        Db::transaction(function () use ($fileId, $entity, $userId) {
+            if ($entity->getRemovedAt() !== null || $entity->getPurgedAt() !== null) {
+                throw new RuntimeException(trans('recycle_bin.restore.file_removed_cannot_restore'));
+            }
+
+            $file = $this->taskFileRepository->getByIdWithTrash($fileId);
+            if ($file === null) {
+                throw new RuntimeException(trans('recycle_bin.restore.file_not_found_or_permanently_deleted'));
+            }
+
+            if ($file->getDeletedAt() === null) {
+                $this->recycleBinRepository->deleteById($entity->getId());
+                return;
+            }
+
+            $targetParentId = $this->resolveRestoreParentId($entity, $file);
+            $targetName = $this->resolveRestoreFileName($file, $targetParentId);
+
+            $this->taskFileRepository->restoreFile($fileId);
+            $restored = $this->taskFileRepository->getById($fileId);
+            if ($restored === null) {
+                throw new RuntimeException(trans('recycle_bin.restore.file_failed'));
+            }
+
+            $restored->setParentId($targetParentId);
+            $restored->setFileName($targetName);
+            $restored->setFileExtension($restored->getIsDirectory() ? '' : (pathinfo($targetName, PATHINFO_EXTENSION) ?: ''));
+            $restored->setDeletedAt(null);
+            $restored->setUpdatedAt(date('Y-m-d H:i:s'));
+            $this->taskFileRepository->updateById($restored);
+
+            if ($targetParentId !== null && $targetParentId > 0) {
+                $this->taskFileRepository->incrementMetadataVersionByIds([$targetParentId]);
+            }
+
+            $this->logger->info('恢复文件成功', [
+                'file_id' => $fileId,
+                'target_parent_id' => $targetParentId,
+                'target_name' => $targetName,
+                'user_id' => $userId,
+            ]);
+
+            $this->recycleBinRepository->deleteById($entity->getId());
+        });
+    }
+
+    private function resolveRestoreParentId(RecycleBinEntity $entity, TaskFileEntity $file): ?int
+    {
+        $extraData = $entity->getExtraData() ?? [];
+        $targetParentId = array_key_exists('original_parent_id', $extraData)
+            ? ($extraData['original_parent_id'] === null ? null : (int) $extraData['original_parent_id'])
+            : $file->getParentId();
+
+        if ($targetParentId !== null && $targetParentId > 0) {
+            $parent = $this->taskFileRepository->getById($targetParentId);
+            if ($parent === null || ! $parent->getIsDirectory()) {
+                throw new RuntimeException(trans('recycle_bin.restore.parent_directory_missing'));
+            }
+        }
+
+        return $targetParentId;
+    }
+
+    private function resolveRestoreFileName(TaskFileEntity $file, ?int $targetParentId): string
+    {
+        $targetName = $file->getFileName();
+        $existing = $this->taskFileRepository->getByProjectParentAndName(
+            $file->getProjectId(),
+            $targetParentId,
+            $targetName
+        );
+
+        if ($existing === null || $existing->getFileId() === $file->getFileId()) {
+            return $targetName;
+        }
+
+        return $this->generateUniqueFileNameInParent(
+            $file->getProjectId(),
+            $targetParentId ?? 0,
+            $targetName,
+            $file->getIsDirectory()
+        );
+    }
+
+    private function generateUniqueFileNameInParent(
+        int $projectId,
+        int $parentId,
+        string $originalFileName,
+        bool $isDirectory
+    ): string {
+        $siblings = $this->taskFileRepository->getChildrenByParentAndProject($projectId, $parentId, 10000);
+
+        $existingNames = [];
+        foreach ($siblings as $sibling) {
+            $existingNames[$sibling->getFileName()] = true;
+        }
+
+        if (! isset($existingNames[$originalFileName])) {
+            return $originalFileName;
+        }
+
+        if ($isDirectory) {
+            for ($i = 1; $i <= 20; ++$i) {
+                $candidate = $originalFileName . '(' . $i . ')';
+                if (! isset($existingNames[$candidate])) {
+                    return $candidate;
+                }
+            }
+
+            return $originalFileName . '_' . time() . substr((string) microtime(true), -6);
+        }
+
+        $pathInfo = pathinfo($originalFileName);
+        $baseName = $pathInfo['filename'] ?? $originalFileName;
+        $extension = isset($pathInfo['extension']) ? '.' . $pathInfo['extension'] : '';
+
+        for ($i = 1; $i <= 20; ++$i) {
+            $candidate = $baseName . '(' . $i . ')' . $extension;
+            if (! isset($existingNames[$candidate])) {
+                return $candidate;
+            }
+        }
+
+        return $baseName . '_' . time() . substr((string) microtime(true), -6) . $extension;
     }
 }

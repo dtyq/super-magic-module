@@ -9,6 +9,8 @@ namespace Dtyq\SuperMagic\Application\RecycleBin\DTO;
 
 use App\Infrastructure\Core\AbstractRequestDTO;
 
+use function Hyperf\Translation\trans;
+
 /**
  * 批量移动回收站项目请求 DTO.
  *
@@ -83,15 +85,15 @@ class BatchMoveProjectInRecycleBinRequestDTO extends AbstractRequestDTO
     protected static function getHyperfValidationMessage(): array
     {
         return [
-            'project_ids.required' => '项目ID列表不能为空',
-            'project_ids.array' => '项目ID必须是数组',
-            'project_ids.min' => '至少需要选择一个项目',
-            'project_ids.max' => '最多只能同时移动20个项目',
-            'project_ids.*.required' => '每个项目ID不能为空',
-            'project_ids.*.string' => '每个项目ID必须是字符串',
-            'target_workspace_id.present' => '目标工作区ID字段必填',
-            'target_workspace_id.string' => '目标工作区ID必须是字符串',
-            'target_workspace_id.max' => '目标工作区ID不能超过64个字符',
+            'project_ids.required' => trans('recycle_bin.validation.project_ids_required'),
+            'project_ids.array' => trans('recycle_bin.validation.project_ids_array'),
+            'project_ids.min' => trans('recycle_bin.validation.project_ids_min'),
+            'project_ids.max' => trans('recycle_bin.validation.project_ids_max'),
+            'project_ids.*.required' => trans('recycle_bin.validation.project_id_required'),
+            'project_ids.*.string' => trans('recycle_bin.validation.project_id_string'),
+            'target_workspace_id.present' => trans('recycle_bin.validation.target_workspace_id_present'),
+            'target_workspace_id.string' => trans('recycle_bin.validation.target_workspace_id_string'),
+            'target_workspace_id.max' => trans('recycle_bin.validation.target_workspace_id_max'),
         ];
     }
 }

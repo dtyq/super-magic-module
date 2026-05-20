@@ -11,6 +11,7 @@ use App\Domain\Chat\DTO\Message\ChatMessage\SuperAgentMessageInterface;
 use App\Domain\Chat\Event\Agent\AgentExecuteInterface;
 use Dtyq\SuperMagic\Application\Contract\DefaultUserAiWatermarkPolicy;
 use Dtyq\SuperMagic\Application\Contract\UserAiWatermarkPolicyInterface;
+use Dtyq\SuperMagic\Application\RecycleBin\Service\FileRecycleBinSubscriber;
 use Dtyq\SuperMagic\Application\Share\Adapter\SingleFileShareableResource;
 use Dtyq\SuperMagic\Application\Share\Adapter\TopicShareableResource;
 use Dtyq\SuperMagic\Application\Share\Factory\ShareableResourceFactory;
@@ -250,6 +251,7 @@ class ConfigProvider
             'listeners' => [
                 AddRouteListener::class,
                 ProjectOperatorLogSubscriber::class,
+                FileRecycleBinSubscriber::class,
                 CustomAiAbilitySubscriber::class => 2,
                 ImageModelVersionListAddDynamicConfigSubscriber::class,
             ],

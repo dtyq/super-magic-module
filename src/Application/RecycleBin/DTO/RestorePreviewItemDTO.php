@@ -14,7 +14,8 @@ class RestorePreviewItemDTO
         public readonly string $resourceName,
         public readonly bool $isDirectory,
         public readonly ?RestoreConflictDTO $conflict = null,
-    ) {}
+    ) {
+    }
 
     public function hasConflict(): bool
     {
@@ -24,9 +25,9 @@ class RestorePreviewItemDTO
     public function toArray(): array
     {
         $data = [
-            'resource_id'   => $this->resourceId,
+            'resource_id' => $this->resourceId,
             'resource_name' => $this->resourceName,
-            'is_directory'  => $this->isDirectory,
+            'is_directory' => $this->isDirectory,
         ];
 
         if ($this->conflict !== null) {

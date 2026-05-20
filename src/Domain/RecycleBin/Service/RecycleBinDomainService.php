@@ -101,6 +101,14 @@ class RecycleBinDomainService
     }
 
     /**
+     * 标记回收站记录已从用户可见回收站移除.
+     */
+    public function markRemovedByIds(array $ids, string $removedBy): int
+    {
+        return $this->recycleBinRepository->markRemovedByIds($ids, $removedBy);
+    }
+
+    /**
      * 查询某个父级下在回收站有记录的资源ID列表.
      * 用于恢复项目/工作区时排除用户曾删的子资源.
      *
@@ -184,6 +192,22 @@ class RecycleBinDomainService
     }
 
     /**
+     * 查询等待文件物理清理的回收站记录.
+     */
+    public function findFilePurgeCandidates(int $limit = 1000): array
+    {
+        return $this->recycleBinRepository->findFilePurgeCandidates($limit);
+    }
+
+    /**
+     * 标记回收站记录对应资源已完成物理清理.
+     */
+    public function markPurged(int $id): bool
+    {
+        return $this->recycleBinRepository->markPurged($id);
+    }
+
+    /**
      * 彻底删除回收站记录.
      *
      * @param array $ids 回收站记录ID数组
@@ -208,6 +232,15 @@ class RecycleBinDomainService
         $allFailed = [];
         foreach ($grouped as $typeValue => $list) {
             $type = RecycleBinResourceType::from($typeValue);
+
+            if ($type === RecycleBinResourceType::File) {
+                $this->recycleBinRepository->markRemovedByIds(
+                    array_values(array_filter(array_map(fn (RecycleBinEntity $entity) => $entity->getId(), $list))),
+                    $userId
+                );
+                continue;
+            }
+
             $handler = $this->resolveHandler($type);
 
             if ($handler === null) {
@@ -254,6 +287,15 @@ class RecycleBinDomainService
         $allFailed = [];
         foreach ($grouped as $typeValue => $list) {
             $type = RecycleBinResourceType::from($typeValue);
+
+            if ($type === RecycleBinResourceType::File) {
+                $this->recycleBinRepository->markRemovedByIds(
+                    array_values(array_filter(array_map(fn (RecycleBinEntity $entity) => $entity->getId(), $list))),
+                    'system'
+                );
+                continue;
+            }
+
             $handler = $this->resolveHandler($type);
 
             if ($handler === null) {

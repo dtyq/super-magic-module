@@ -18,7 +18,7 @@ class RestorePreviewResponseDTO
     public function __construct(array $itemsWithConflict, array $itemsNoConflict)
     {
         $this->itemsWithConflict = $itemsWithConflict;
-        $this->itemsNoConflict   = $itemsNoConflict;
+        $this->itemsNoConflict = $itemsNoConflict;
     }
 
     public function toArray(): array

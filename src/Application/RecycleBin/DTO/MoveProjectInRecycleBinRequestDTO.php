@@ -9,6 +9,8 @@ namespace Dtyq\SuperMagic\Application\RecycleBin\DTO;
 
 use App\Infrastructure\Core\AbstractRequestDTO;
 
+use function Hyperf\Translation\trans;
+
 /**
  * 回收站内移动项目请求 DTO.
  *
@@ -79,11 +81,11 @@ class MoveProjectInRecycleBinRequestDTO extends AbstractRequestDTO
     protected static function getHyperfValidationMessage(): array
     {
         return [
-            'source_project_id.required' => '源项目ID不能为空',
-            'source_project_id.numeric' => '源项目ID必须是有效的数字',
-            'target_workspace_id.present' => '目标工作区ID字段必填',
-            'target_workspace_id.string' => '目标工作区ID必须是字符串',
-            'target_workspace_id.max' => '目标工作区ID不能超过64个字符',
+            'source_project_id.required' => trans('recycle_bin.validation.source_project_id_required'),
+            'source_project_id.numeric' => trans('recycle_bin.validation.source_project_id_numeric'),
+            'target_workspace_id.present' => trans('recycle_bin.validation.target_workspace_id_present'),
+            'target_workspace_id.string' => trans('recycle_bin.validation.target_workspace_id_string'),
+            'target_workspace_id.max' => trans('recycle_bin.validation.target_workspace_id_max'),
         ];
     }
 }

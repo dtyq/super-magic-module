@@ -36,6 +36,8 @@ use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
 
+use function Hyperf\Translation\trans;
+
 class RecycleBinAppService extends AbstractAppService
 {
     protected LoggerInterface $logger;
@@ -252,11 +254,11 @@ class RecycleBinAppService extends AbstractAppService
         Db::transaction(function () use ($sourceProjectId, $targetWorkspaceId, $userId) {
             $project = $this->recycleBinRestoreDomainService->findProjectByIdWithTrashed($sourceProjectId);
             if (! $project) {
-                throw new RuntimeException('项目不存在或已被永久删除');
+                throw new RuntimeException(trans('recycle_bin.restore.project_not_found_or_permanently_deleted'));
             }
 
             if (! $project->isDeleted()) {
-                throw new RuntimeException('该项目不在回收站中，请使用正常的移动接口');
+                throw new RuntimeException(trans('recycle_bin.move.project_not_in_recycle_bin_use_normal_move'));
             }
 
             // 恢复 → 移动 → 清理回收站记录
@@ -315,11 +317,11 @@ class RecycleBinAppService extends AbstractAppService
 
                     $project = $this->recycleBinRestoreDomainService->findProjectByIdWithTrashed($projectIdInt);
                     if (! $project) {
-                        throw new RuntimeException('项目不存在或已被永久删除');
+                        throw new RuntimeException(trans('recycle_bin.restore.project_not_found_or_permanently_deleted'));
                     }
 
                     if (! $project->isDeleted()) {
-                        throw new RuntimeException('该项目不在回收站中');
+                        throw new RuntimeException(trans('recycle_bin.move.project_not_in_recycle_bin'));
                     }
 
                     // 恢复 → 移动 → 清理回收站记录
@@ -340,7 +342,7 @@ class RecycleBinAppService extends AbstractAppService
                 $results[] = [
                     'project_id' => $projectId,
                     'success' => true,
-                    'message' => '移动并恢复成功',
+                    'message' => trans('recycle_bin.move.success'),
                 ];
             } catch (Throwable $e) {
                 $results[] = [
@@ -390,11 +392,11 @@ class RecycleBinAppService extends AbstractAppService
         Db::transaction(function () use ($sourceTopicId, $targetProjectId, $userId) {
             $topic = $this->recycleBinRestoreDomainService->findTopicByIdWithTrashed($sourceTopicId);
             if (! $topic) {
-                throw new RuntimeException('话题不存在或已被永久删除');
+                throw new RuntimeException(trans('recycle_bin.restore.topic_not_found_or_permanently_deleted'));
             }
 
             if ($topic->getDeletedAt() === null) {
-                throw new RuntimeException('该话题不在回收站中，请使用正常的移动接口');
+                throw new RuntimeException(trans('recycle_bin.move.topic_not_in_recycle_bin_use_normal_move'));
             }
 
             // 恢复 → 移动 → 清理回收站记录
@@ -421,7 +423,7 @@ class RecycleBinAppService extends AbstractAppService
         return [
             'success' => true,
             'topic_id' => (string) $sourceTopicId,
-            'message' => '话题移动并恢复成功',
+            'message' => trans('recycle_bin.move.topic_success'),
         ];
     }
 
@@ -455,11 +457,11 @@ class RecycleBinAppService extends AbstractAppService
                 Db::transaction(function () use ($topicId, $targetProjectId, $userId) {
                     $topic = $this->recycleBinRestoreDomainService->findTopicByIdWithTrashed($topicId);
                     if (! $topic) {
-                        throw new RuntimeException('话题不存在或已被永久删除');
+                        throw new RuntimeException(trans('recycle_bin.restore.topic_not_found_or_permanently_deleted'));
                     }
 
                     if ($topic->getDeletedAt() === null) {
-                        throw new RuntimeException('该话题不在回收站中');
+                        throw new RuntimeException(trans('recycle_bin.move.topic_not_in_recycle_bin'));
                     }
 
                     // 恢复 → 移动 → 清理回收站记录
@@ -480,7 +482,7 @@ class RecycleBinAppService extends AbstractAppService
                 $succeeded[] = [
                     'topic_id' => (string) $topicId,
                     'success' => true,
-                    'message' => '移动并恢复成功',
+                    'message' => trans('recycle_bin.move.success'),
                 ];
 
                 $this->logger->info('话题移动成功', [

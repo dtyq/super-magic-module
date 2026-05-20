@@ -11,8 +11,10 @@ enum RestoreConflictResolution: string
 {
     /** Restore to project root directory — for parent_missing only */
     case RestoreToRoot = 'restore_to_root';
+
     /** Soft-delete the conflicting file/directory (self only, no recursive) — for name_conflict only */
     case Overwrite = 'overwrite';
+
     /** Do not restore this resource — valid for both conflict types */
     case Skip = 'skip';
 
