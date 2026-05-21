@@ -46,11 +46,16 @@ class RecycleBinApi extends AbstractApi
     }
 
     /**
-     * 检查父级是否存在.
+     * Check restore conflicts for a batch of resources (all resource types).
+     *
+     * Returns unified items_with_conflict / items_no_conflict for all types:
+     * - File: parent_missing + name_conflict
+     * - Project/Topic: parent_missing
+     * - Workspace: always no-conflict
      *
      * @throws BusinessException
      */
-    public function checkParent(RequestContext $requestContext): array
+    public function checkConflicts(RequestContext $requestContext): array
     {
         $requestContext->setUserAuthorization($this->getAuthorization());
 
@@ -63,7 +68,7 @@ class RecycleBinApi extends AbstractApi
             );
         }
 
-        return $this->recycleBinAppService->checkParent($requestContext, $requestDTO)->toArray();
+        return $this->recycleBinAppService->checkConflicts($requestContext, $requestDTO)->toArray();
     }
 
     /**
