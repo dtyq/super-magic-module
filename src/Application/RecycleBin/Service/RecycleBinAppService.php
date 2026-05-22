@@ -15,11 +15,13 @@ use Dtyq\SuperMagic\Application\RecycleBin\DTO\CheckParentRequestDTO;
 use Dtyq\SuperMagic\Application\RecycleBin\DTO\MoveProjectInRecycleBinRequestDTO;
 use Dtyq\SuperMagic\Application\RecycleBin\DTO\MoveTopicInRecycleBinRequestDTO;
 use Dtyq\SuperMagic\Application\RecycleBin\DTO\PermanentDeleteRequestDTO;
+use Dtyq\SuperMagic\Application\RecycleBin\DTO\RecycleBinCountsRequestDTO;
+use Dtyq\SuperMagic\Application\RecycleBin\DTO\RecycleBinCountsResponseDTO;
+use Dtyq\SuperMagic\Application\RecycleBin\DTO\RecycleBinListRequestDTO;
+use Dtyq\SuperMagic\Application\RecycleBin\DTO\RecycleBinListResponseDTO;
 use Dtyq\SuperMagic\Application\RecycleBin\DTO\RestoreConflictDTO;
 use Dtyq\SuperMagic\Application\RecycleBin\DTO\RestorePreviewItemDTO;
 use Dtyq\SuperMagic\Application\RecycleBin\DTO\RestorePreviewResponseDTO;
-use Dtyq\SuperMagic\Application\RecycleBin\DTO\RecycleBinListRequestDTO;
-use Dtyq\SuperMagic\Application\RecycleBin\DTO\RecycleBinListResponseDTO;
 use Dtyq\SuperMagic\Application\RecycleBin\DTO\RestoreRequestDTO;
 use Dtyq\SuperMagic\Application\RecycleBin\DTO\RestoreResponseDTO;
 use Dtyq\SuperMagic\Application\RecycleBin\DTO\RestoreResultItemDTO;
@@ -100,6 +102,30 @@ class RecycleBinAppService extends AbstractAppService
     }
 
     /**
+     * 获取各资源类型的回收站数量.
+     */
+    public function getRecycleBinCounts(
+        RequestContext $requestContext,
+        RecycleBinCountsRequestDTO $requestDTO
+    ): RecycleBinCountsResponseDTO {
+        $userAuthorization = $requestContext->getUserAuthorization();
+        $userId = $userAuthorization->getId();
+
+        $countsByType = $this->recycleBinDomainService->getCountsByType(
+            $userId,
+            $requestDTO->getKeyword()
+        );
+
+        $this->logger->info('查询回收站类型数量', [
+            'user_id' => $userId,
+            'keyword' => $requestDTO->getKeyword(),
+            'counts' => $countsByType,
+        ]);
+
+        return new RecycleBinCountsResponseDTO($countsByType);
+    }
+
+    /**
      * Check restore conflicts for a batch of resources (all types).
      *
      * Unified endpoint for all resource types:
@@ -117,16 +143,16 @@ class RecycleBinAppService extends AbstractAppService
         $userId = $userAuthorization->getId();
 
         $resourceType = $requestDTO->getResourceType();
-        $resourceIds  = $requestDTO->getResourceIds();
+        $resourceIds = $requestDTO->getResourceIds();
 
         $itemsWithConflict = [];
-        $itemsNoConflict   = [];
+        $itemsNoConflict = [];
 
         if ($resourceType === RecycleBinResourceType::File) {
             // File type: full conflict detection (parent_missing + name_conflict)
             $result = $this->recycleBinRestoreDomainService->previewFileConflicts($resourceIds, $userId);
             $itemsWithConflict = $result['items_with_conflict'];
-            $itemsNoConflict   = $result['items_no_conflict'];
+            $itemsNoConflict = $result['items_no_conflict'];
         } else {
             // Project/Topic/Workspace: parent-existence check only
             $entities = $this->recycleBinDomainService->findLatestByResourceIds(
@@ -136,16 +162,16 @@ class RecycleBinAppService extends AbstractAppService
             );
 
             foreach ($entities as $entity) {
-                $parentId    = $entity->getParentId();
-                $resourceId  = (string) $entity->getResourceId();
+                $parentId = $entity->getParentId();
+                $resourceId = (string) $entity->getResourceId();
                 $resourceName = $entity->getResourceName();
 
                 // Workspace or root-level resource — no parent check needed
                 if ($resourceType === RecycleBinResourceType::Workspace || $parentId === null) {
                     $itemsNoConflict[] = new RestorePreviewItemDTO(
-                        resourceId:   $resourceId,
+                        resourceId: $resourceId,
                         resourceName: $resourceName,
-                        isDirectory:  true,
+                        isDirectory: true,
                     );
                     continue;
                 }
@@ -166,16 +192,16 @@ class RecycleBinAppService extends AbstractAppService
 
                 if ($parentExists) {
                     $itemsNoConflict[] = new RestorePreviewItemDTO(
-                        resourceId:   $resourceId,
+                        resourceId: $resourceId,
                         resourceName: $resourceName,
-                        isDirectory:  true,
+                        isDirectory: true,
                     );
                 } else {
                     $itemsWithConflict[] = new RestorePreviewItemDTO(
-                        resourceId:   $resourceId,
+                        resourceId: $resourceId,
                         resourceName: $resourceName,
-                        isDirectory:  true,
-                        conflict:     new RestoreConflictDTO(
+                        isDirectory: true,
+                        conflict: new RestoreConflictDTO(
                             type: RestoreConflictType::ParentMissing,
                         ),
                     );
@@ -184,10 +210,10 @@ class RecycleBinAppService extends AbstractAppService
         }
 
         $this->logger->info('Check restore conflicts', [
-            'user_id'             => $userId,
-            'resource_type'       => $resourceType->value,
+            'user_id' => $userId,
+            'resource_type' => $resourceType->value,
             'with_conflict_count' => count($itemsWithConflict),
-            'no_conflict_count'   => count($itemsNoConflict),
+            'no_conflict_count' => count($itemsNoConflict),
         ]);
 
         return new RestorePreviewResponseDTO($itemsWithConflict, $itemsNoConflict);
@@ -233,6 +259,7 @@ class RecycleBinAppService extends AbstractAppService
             $dto->resourceId = (string) $entity->getResourceId();
             $dto->resourceName = $entity->getResourceName();
             $dto->success = false;
+            $dto->errorMessage = (string) ($failedItem['error'] ?? '');
 
             $resultDTOs[] = $dto;
         }
@@ -565,6 +592,4 @@ class RecycleBinAppService extends AbstractAppService
 
         return $result;
     }
-
 }
-

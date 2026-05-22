@@ -17,6 +17,7 @@ use Dtyq\SuperMagic\Application\RecycleBin\DTO\CheckParentRequestDTO;
 use Dtyq\SuperMagic\Application\RecycleBin\DTO\MoveProjectInRecycleBinRequestDTO;
 use Dtyq\SuperMagic\Application\RecycleBin\DTO\MoveTopicInRecycleBinRequestDTO;
 use Dtyq\SuperMagic\Application\RecycleBin\DTO\PermanentDeleteRequestDTO;
+use Dtyq\SuperMagic\Application\RecycleBin\DTO\RecycleBinCountsRequestDTO;
 use Dtyq\SuperMagic\Application\RecycleBin\DTO\RecycleBinListRequestDTO;
 use Dtyq\SuperMagic\Application\RecycleBin\DTO\RestoreRequestDTO;
 use Dtyq\SuperMagic\Application\RecycleBin\Service\RecycleBinAppService;
@@ -43,6 +44,17 @@ class RecycleBinApi extends AbstractApi
         $requestDTO = RecycleBinListRequestDTO::fromRequest($this->request);
 
         return $this->recycleBinAppService->getRecycleBinList($requestContext, $requestDTO)->toArray();
+    }
+
+    /**
+     * 获取各资源类型的回收站数量.
+     */
+    public function getRecycleBinCounts(RequestContext $requestContext): array
+    {
+        $requestContext->setUserAuthorization($this->getAuthorization());
+        $requestDTO = RecycleBinCountsRequestDTO::fromRequest($this->request);
+
+        return $this->recycleBinAppService->getRecycleBinCounts($requestContext, $requestDTO)->toArray();
     }
 
     /**

@@ -13,6 +13,7 @@ use Dtyq\SuperMagic\Domain\RecycleBin\Enum\RecycleBinResourceType;
 use Dtyq\SuperMagic\Domain\RecycleBin\Repository\Facade\RecycleBinRepositoryInterface;
 use Dtyq\SuperMagic\Domain\RecycleBin\Repository\Model\RecycleBinModel;
 use Hyperf\Database\Model\Builder;
+use Hyperf\Database\Query\Builder as QueryBuilder;
 
 /**
  * 回收站仓储.
@@ -157,6 +158,30 @@ class RecycleBinRepository extends AbstractRepository implements RecycleBinRepos
             'total' => $total,
             'list' => $entities,
         ];
+    }
+
+    /**
+     * 获取当前用户各资源类型的回收站数量.
+     *
+     * 类型数量固定且不同类型可见性不同，因此按类型拆分 COUNT，避免单条 SQL 中 OR + JOIN 影响索引命中。
+     *
+     * @return array<int, int>
+     */
+    public function getCountsByTypeVisibleToUser(string $userId, ?string $keyword = null): array
+    {
+        $counts = [];
+
+        foreach (RecycleBinResourceType::cases() as $type) {
+            if ($type === RecycleBinResourceType::File) {
+                $counts[$type->value] = $this->countOwnerVisibleByType($type, $userId, $keyword)
+                    + $this->countCollaborativeFilesExcludingOwner($userId, $keyword);
+                continue;
+            }
+
+            $counts[$type->value] = $this->countOwnerVisibleByType($type, $userId, $keyword);
+        }
+
+        return $counts;
     }
 
     /**
@@ -424,5 +449,46 @@ class RecycleBinRepository extends AbstractRepository implements RecycleBinRepos
             ->setUpdatedAt($model->updated_at?->format('Y-m-d H:i:s'));
 
         return $entity;
+    }
+
+    private function countOwnerVisibleByType(RecycleBinResourceType $type, string $userId, ?string $keyword): int
+    {
+        $query = $this->model::query()
+            ->where('resource_type', $type->value)
+            ->whereNull('removed_at')
+            ->where('owner_id', $userId);
+
+        $this->applyKeywordFilter($query, 'resource_name', $keyword);
+
+        return (int) $query->count('id');
+    }
+
+    private function countCollaborativeFilesExcludingOwner(string $userId, ?string $keyword): int
+    {
+        $table = $this->model->getTable();
+        $query = $this->model::query()
+            ->from($table . ' as rb')
+            ->join('magic_super_agent_project_members as pm', function ($join) use ($userId): void {
+                $join->on('rb.parent_id', '=', 'pm.project_id')
+                    ->where('pm.target_type', '=', 'User')
+                    ->where('pm.target_id', '=', $userId)
+                    ->whereNull('pm.deleted_at');
+            })
+            ->where('rb.resource_type', RecycleBinResourceType::File->value)
+            ->whereNull('rb.removed_at')
+            ->where('rb.owner_id', '<>', $userId);
+
+        $this->applyKeywordFilter($query, 'rb.resource_name', $keyword);
+
+        return (int) $query->count('rb.id');
+    }
+
+    private function applyKeywordFilter(Builder|QueryBuilder $query, string $column, ?string $keyword): void
+    {
+        if ($keyword === null || $keyword === '') {
+            return;
+        }
+
+        $query->where($column, 'like', '%' . $keyword . '%');
     }
 }

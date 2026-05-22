@@ -14,6 +14,9 @@ Router::addGroup(
         // 获取回收站列表
         Router::get('/list', [RecycleBinApi::class, 'getRecycleBinList']);
 
+        // 获取各资源类型的回收站数量
+        Router::get('/counts', [RecycleBinApi::class, 'getRecycleBinCounts']);
+
         // Check restore conflicts (all resource types: parent_missing + name_conflict for File, parent_missing for Project/Topic)
         Router::post('/check', [RecycleBinApi::class, 'checkConflicts']);
 

@@ -153,6 +153,16 @@ class RecycleBinDomainService
     }
 
     /**
+     * 获取当前用户各资源类型的回收站数量.
+     *
+     * @return array<int, int> key 为 RecycleBinResourceType->value，value 为数量
+     */
+    public function getCountsByType(string $userId, ?string $keyword = null): array
+    {
+        return $this->recycleBinRepository->getCountsByTypeVisibleToUser($userId, $keyword);
+    }
+
+    /**
      * 批量查询当前用户可访问的回收站记录（带类型过滤）.
      * 与列表使用同一套可访问条件，供检查父级/恢复等使用.
      *
