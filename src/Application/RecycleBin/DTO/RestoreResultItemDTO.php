@@ -22,6 +22,8 @@ class RestoreResultItemDTO
 
     public bool $success = true;
 
+    public string $errorMessage = '';
+
     /**
      * 转换为数组.
      */
@@ -33,6 +35,7 @@ class RestoreResultItemDTO
             'resource_id' => $this->resourceId,
             'resource_name' => $this->resourceName,
             'success' => $this->success,
+            'error_message' => $this->errorMessage,
         ];
     }
 }

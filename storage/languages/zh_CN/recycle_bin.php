@@ -55,7 +55,7 @@ return [
         'file_failed' => '文件恢复失败',
         'parent_directory_missing'        => '父级目录不存在，请先移动文件到其他目录',
         'file_parent_missing'             => '父级目录不存在，请选择恢复到根目录或跳过',
-        'file_name_conflict'              => '目标位置已存在同名文件或目录，请选择覆盖或跳过',
+        'file_name_conflict'              => '目标位置已存在同名文件或目录，请选择覆盖或退出',
         'file_restore_to_root_failed'     => '无法找到项目根目录，文件恢复失败',
         'file_conflict_requires_decision' => '文件恢复存在冲突，请提供解决策略',
     ],

@@ -233,6 +233,7 @@ class RecycleBinAppService extends AbstractAppService
             $dto->resourceId = (string) $entity->getResourceId();
             $dto->resourceName = $entity->getResourceName();
             $dto->success = false;
+            $dto->errorMessage = (string) ($failedItem['error'] ?? '');
 
             $resultDTOs[] = $dto;
         }
@@ -567,4 +568,3 @@ class RecycleBinAppService extends AbstractAppService
     }
 
 }
-
