@@ -36,6 +36,8 @@ class CreateOpenMessageScheduleFormRequest extends FormRequest
             'specify_topic' => 'required|integer|in:0,1',
             'topic_id' => 'required',
             'model_id' => 'required|string',
+            'topic_pattern' => 'nullable|string|max:50',
+            'agent_code' => 'nullable|string|max:128',
             'remark' => 'nullable|string',
             'deadline' => 'nullable|date_format:Y-m-d H:i:s',
         ];
@@ -57,6 +59,10 @@ class CreateOpenMessageScheduleFormRequest extends FormRequest
             'topic_id.required' => 'Topic ID is required',
             'model_id.required' => 'Model ID is required',
             'model_id.string' => 'Model ID must be a string',
+            'topic_pattern.string' => 'Topic pattern must be a string',
+            'topic_pattern.max' => 'Topic pattern cannot exceed 50 characters',
+            'agent_code.string' => 'Agent code must be a string',
+            'agent_code.max' => 'Agent code cannot exceed 128 characters',
             'deadline.date_format' => 'Deadline must be in Y-m-d H:i:s format',
         ];
     }

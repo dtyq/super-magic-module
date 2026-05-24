@@ -24,6 +24,8 @@ class OpenMessageScheduleAssembler
         $entity->setEnabled(1);
         $entity->setRemark($dto->getRemark());
         $entity->setModelId($dto->getModelId());
+        $entity->setTopicPattern($dto->getTopicPattern());
+        $entity->setOpenAgentCode($dto->getAgentCode());
         $entity->setMessageContentText($dto->getMessageContentText());
         $entity->setDeadline($dto->getDeadline());
 
