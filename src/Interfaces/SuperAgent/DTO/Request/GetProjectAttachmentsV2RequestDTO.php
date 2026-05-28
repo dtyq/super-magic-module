@@ -11,17 +11,21 @@ use Hyperf\HttpServer\Contract\RequestInterface;
 
 class GetProjectAttachmentsV2RequestDTO
 {
+    public const DEFAULT_PAGE_SIZE = 1000;
+
+    public const MAX_PAGE_SIZE = 1000;
+
     protected string $projectId;
 
     /**
-     * Current page number.
-     */
-    protected int $page;
-
-    /**
-     * Items per page.
+     * Items per page, clamped to [1, MAX_PAGE_SIZE].
      */
     protected int $pageSize;
+
+    /**
+     * Keyset cursor: last file_id of the previous page. Empty means first page.
+     */
+    protected string $cursor = '';
 
     /**
      * File type filter.
@@ -40,29 +44,21 @@ class GetProjectAttachmentsV2RequestDTO
 
     public function __construct(array $data = [], ?string $projectId = null)
     {
-        // Use passed projectId parameter first
         $this->projectId = $projectId ?? (string) ($data['project_id'] ?? '');
-        $this->page = (int) ($data['page'] ?? 1);
-        $this->pageSize = (int) ($data['page_size'] ?? 200);
+        $this->pageSize = $this->clampPageSize((int) ($data['page_size'] ?? self::DEFAULT_PAGE_SIZE));
+        $this->cursor = (string) ($data['cursor'] ?? '');
         $this->token = $data['token'] ?? null;
         $this->updatedAfter = $data['updated_after'] ?? null;
 
-        // Handle file type, can accept string or array
         if (isset($data['file_type'])) {
             if (is_array($data['file_type'])) {
                 $this->fileType = $data['file_type'];
-            } elseif (is_string($data['file_type']) && ! empty($data['file_type'])) {
+            } elseif (is_string($data['file_type']) && $data['file_type'] !== '') {
                 $this->fileType = [$data['file_type']];
             }
         }
     }
 
-    /**
-     * Create DTO from request.
-     *
-     * @param RequestInterface $request Request object
-     * @return self Return a new DTO instance
-     */
     public static function fromRequest(RequestInterface $request): self
     {
         return new self(
@@ -76,14 +72,14 @@ class GetProjectAttachmentsV2RequestDTO
         return $this->projectId;
     }
 
-    public function getPage(): int
-    {
-        return $this->page;
-    }
-
     public function getPageSize(): int
     {
         return $this->pageSize;
+    }
+
+    public function getCursor(): string
+    {
+        return $this->cursor;
     }
 
     public function getFileType(): array
@@ -91,95 +87,57 @@ class GetProjectAttachmentsV2RequestDTO
         return $this->fileType;
     }
 
-    /**
-     * Get updated after timestamp.
-     *
-     * @return null|string Updated after timestamp
-     */
     public function getUpdatedAfter(): ?string
     {
         return $this->updatedAfter;
     }
 
-    /**
-     * Set project ID.
-     *
-     * @param string $projectId Project ID
-     * @return self Return current instance for method chaining
-     */
+    public function getToken(): ?string
+    {
+        return $this->token;
+    }
+
     public function setProjectId(string $projectId): self
     {
         $this->projectId = $projectId;
         return $this;
     }
 
-    /**
-     * Set current page number.
-     *
-     * @param int $page Current page number
-     * @return self Return current instance for method chaining
-     */
-    public function setPage(int $page): self
-    {
-        $this->page = $page;
-        return $this;
-    }
-
-    /**
-     * Set items per page.
-     *
-     * @param int $pageSize Items per page
-     * @return self Return current instance for method chaining
-     */
     public function setPageSize(int $pageSize): self
     {
-        $this->pageSize = $pageSize;
+        $this->pageSize = $this->clampPageSize($pageSize);
         return $this;
     }
 
-    /**
-     * Set file type filter.
-     *
-     * @param array $fileType File type filter array
-     * @return self Return current instance for method chaining
-     */
+    public function setCursor(string $cursor): self
+    {
+        $this->cursor = $cursor;
+        return $this;
+    }
+
     public function setFileType(array $fileType): self
     {
         $this->fileType = $fileType;
         return $this;
     }
 
-    /**
-     * Get access token.
-     *
-     * @return null|string Access token
-     */
-    public function getToken(): ?string
-    {
-        return $this->token;
-    }
-
-    /**
-     * Set access token.
-     *
-     * @param null|string $token Access token
-     * @return self Return current instance for method chaining
-     */
     public function setToken(?string $token): self
     {
         $this->token = $token;
         return $this;
     }
 
-    /**
-     * Set updated after timestamp.
-     *
-     * @param null|string $updatedAfter Updated after timestamp
-     * @return self Return current instance for method chaining
-     */
     public function setUpdatedAfter(?string $updatedAfter): self
     {
         $this->updatedAfter = $updatedAfter;
         return $this;
+    }
+
+    private function clampPageSize(int $value): int
+    {
+        if ($value <= 0) {
+            return self::DEFAULT_PAGE_SIZE;
+        }
+        return min($value, self::MAX_PAGE_SIZE);
     }
 }

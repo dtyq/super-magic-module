@@ -96,6 +96,27 @@ interface TaskFileRepositoryInterface
     public function getByProjectId(int $projectId, int $page, int $pageSize = 200, array $fileType = [], string $storageType = '', ?string $updatedAfter = null): array;
 
     /**
+     * Keyset cursor pagination over project files. Returns raw associative rows
+     * (no Eloquent hydration, no entity construction) for hot read paths.
+     *
+     * @param int $projectId project id
+     * @param string $storageType storage type, e.g. workspace
+     * @param null|int $afterFileId previous page's last file_id (exclusive); null/0 for first page
+     * @param int $limit page size
+     * @param string[] $fileTypes optional file_type filter
+     * @param null|string $updatedAfter optional updated_at filter
+     * @return array<int, array<string, mixed>> raw rows from PDO
+     */
+    public function getProjectFilesByCursor(
+        int $projectId,
+        string $storageType,
+        ?int $afterFileId,
+        int $limit,
+        array $fileTypes = [],
+        ?string $updatedAfter = null
+    ): array;
+
+    /**
      * 根据任务ID获取文件列表.
      *
      * @param int $taskId 任务ID
@@ -306,6 +327,12 @@ interface TaskFileRepositoryInterface
      * @return int Total count of files in the project
      */
     public function countFilesByProjectId(int $projectId): int;
+
+    /**
+     * Count attachments aligned with the V2 list endpoint semantics
+     * (workspace + not deleted; no is_hidden filter, no root-row trim).
+     */
+    public function countAttachmentsByProjectIdV2(int $projectId): int;
 
     /**
      * Batch count files by project IDs.
