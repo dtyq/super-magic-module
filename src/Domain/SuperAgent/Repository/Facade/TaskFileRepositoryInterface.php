@@ -117,6 +117,24 @@ interface TaskFileRepositoryInterface
     ): array;
 
     /**
+     * Cursor pagination for one parent's direct children using tree order.
+     * Directories are always included so the client can continue traversal even
+     * when file type filters are applied to files.
+     *
+     * @param string[] $fileTypes optional file_type filter for non-directory files
+     * @return array<int, array<string, mixed>> raw rows from PDO
+     */
+    public function getProjectFileChildrenByParentCursor(
+        int $projectId,
+        int $parentId,
+        string $storageType,
+        ?int $afterSort,
+        ?int $afterFileId,
+        int $limit,
+        array $fileTypes = []
+    ): array;
+
+    /**
      * 根据任务ID获取文件列表.
      *
      * @param int $taskId 任务ID

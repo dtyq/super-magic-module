@@ -23,9 +23,11 @@ class GetProjectAttachmentsV2RequestDTO
     protected int $pageSize;
 
     /**
-     * Keyset cursor: last file_id of the previous page. Empty means first page.
+     * Backend-managed breadth-first traversal queue.
+     *
+     * @var array<int, array{parent_id: string, after_sort: null|int, after_file_id: null|string}>
      */
-    protected string $cursor = '';
+    protected array $nextParentIds = [];
 
     /**
      * File type filter.
@@ -37,18 +39,12 @@ class GetProjectAttachmentsV2RequestDTO
      */
     protected ?string $token = null;
 
-    /**
-     * Updated after timestamp (for filtering files updated after this time).
-     */
-    protected ?string $updatedAfter = null;
-
     public function __construct(array $data = [], ?string $projectId = null)
     {
         $this->projectId = $projectId ?? (string) ($data['project_id'] ?? '');
         $this->pageSize = $this->clampPageSize((int) ($data['page_size'] ?? self::DEFAULT_PAGE_SIZE));
-        $this->cursor = (string) ($data['cursor'] ?? '');
+        $this->nextParentIds = $this->normalizeNextParentIds($data['next_parent_ids'] ?? []);
         $this->token = $data['token'] ?? null;
-        $this->updatedAfter = $data['updated_after'] ?? null;
 
         if (isset($data['file_type'])) {
             if (is_array($data['file_type'])) {
@@ -77,19 +73,17 @@ class GetProjectAttachmentsV2RequestDTO
         return $this->pageSize;
     }
 
-    public function getCursor(): string
+    /**
+     * @return array<int, array{parent_id: string, after_sort: null|int, after_file_id: null|string}>
+     */
+    public function getNextParentIds(): array
     {
-        return $this->cursor;
+        return $this->nextParentIds;
     }
 
     public function getFileType(): array
     {
         return $this->fileType;
-    }
-
-    public function getUpdatedAfter(): ?string
-    {
-        return $this->updatedAfter;
     }
 
     public function getToken(): ?string
@@ -109,9 +103,9 @@ class GetProjectAttachmentsV2RequestDTO
         return $this;
     }
 
-    public function setCursor(string $cursor): self
+    public function setNextParentIds(array $nextParentIds): self
     {
-        $this->cursor = $cursor;
+        $this->nextParentIds = $this->normalizeNextParentIds($nextParentIds);
         return $this;
     }
 
@@ -127,17 +121,94 @@ class GetProjectAttachmentsV2RequestDTO
         return $this;
     }
 
-    public function setUpdatedAfter(?string $updatedAfter): self
-    {
-        $this->updatedAfter = $updatedAfter;
-        return $this;
-    }
-
     private function clampPageSize(int $value): int
     {
         if ($value <= 0) {
             return self::DEFAULT_PAGE_SIZE;
         }
         return min($value, self::MAX_PAGE_SIZE);
+    }
+
+    /**
+     * @return array<int, array{parent_id: string, after_sort: null|int, after_file_id: null|string}>
+     */
+    private function normalizeNextParentIds(mixed $value): array
+    {
+        if (is_string($value)) {
+            $decoded = json_decode($value, true);
+            $value = is_array($decoded) ? $decoded : [$value];
+        }
+
+        if (! is_array($value)) {
+            return [];
+        }
+
+        $result = [];
+        $seen = [];
+        foreach ($value as $item) {
+            $state = $this->normalizeParentState($item);
+            if ($state === null) {
+                continue;
+            }
+
+            $key = implode(':', [
+                $state['parent_id'],
+                (string) ($state['after_sort'] ?? ''),
+                (string) ($state['after_file_id'] ?? ''),
+            ]);
+            if (isset($seen[$key])) {
+                continue;
+            }
+
+            $seen[$key] = true;
+            $result[] = $state;
+        }
+
+        return $result;
+    }
+
+    /**
+     * @return null|array{parent_id: string, after_sort: null|int, after_file_id: null|string}
+     */
+    private function normalizeParentState(mixed $item): ?array
+    {
+        if (is_string($item) || is_int($item)) {
+            $parentId = trim((string) $item);
+            if ($parentId === '' || $parentId === '0') {
+                return null;
+            }
+
+            return [
+                'parent_id' => $parentId,
+                'after_sort' => null,
+                'after_file_id' => null,
+            ];
+        }
+
+        if (! is_array($item)) {
+            return null;
+        }
+
+        $parentId = trim((string) ($item['parent_id'] ?? ''));
+        if ($parentId === '' || $parentId === '0') {
+            return null;
+        }
+
+        $afterSort = isset($item['after_sort']) && is_numeric($item['after_sort'])
+            ? (int) $item['after_sort']
+            : null;
+        $afterFileId = isset($item['after_file_id'])
+            ? trim((string) $item['after_file_id'])
+            : null;
+
+        if ($afterSort === null || $afterFileId === '') {
+            $afterFileId = null;
+        }
+
+        return [
+            'parent_id' => $parentId,
+            'after_sort' => $afterSort,
+            'after_file_id' => $afterFileId,
+        ];
     }
 }

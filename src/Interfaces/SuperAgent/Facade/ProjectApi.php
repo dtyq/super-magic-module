@@ -251,7 +251,7 @@ class ProjectApi extends AbstractApi
     }
 
     /**
-     * V2 project attachments: keyset cursor pagination, raw rows, no tree.
+     * V2 project attachments: backend-managed parent traversal, raw rows, no tree.
      */
     public function getProjectAttachmentsV2(RequestContext $requestContext): array
     {

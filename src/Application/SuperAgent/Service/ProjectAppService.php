@@ -118,6 +118,12 @@ class ProjectAppService extends AbstractAppService
      */
     private const MAX_HIDDEN_PROJECTS_PER_WORKSPACE = 3;
 
+    /**
+     * Guardrail for V2 attachment tree traversal. A single request may return
+     * fewer than page_size rows when it hits this query budget.
+     */
+    private const ATTACHMENT_V2_MAX_PARENT_QUERIES = 50;
+
     protected LoggerInterface $logger;
 
     public function __construct(
@@ -874,9 +880,10 @@ class ProjectAppService extends AbstractAppService
         $userAuthorization = $requestContext->getUserAuthorization();
 
         // 验证项目存在性和所有权
-        $this->getAccessibleProject((int) $requestDTO->getProjectId(), $userAuthorization->getId(), $userAuthorization->getOrganizationCode());
+        $projectEntity = $this->getAccessibleProject((int) $requestDTO->getProjectId(), $userAuthorization->getId(), $userAuthorization->getOrganizationCode());
+        $dataIsolation = $this->createDataIsolation($userAuthorization);
 
-        return $this->buildAttachmentListV2((int) $requestDTO->getProjectId(), $requestDTO);
+        return $this->buildAttachmentListV2((int) $requestDTO->getProjectId(), $requestDTO, $dataIsolation, $projectEntity);
     }
 
     /**
@@ -975,6 +982,7 @@ class ProjectAppService extends AbstractAppService
 
         // 由于前端当前的分享话题也会获取项目列表的接口，所以这里需要兼容分享类型是话题的情况，否则直接处理 ResourceType::Project 即可
         $projectId = '';
+        $projectEntity = null;
         switch ($shareEntity->getResourceType()) {
             case ResourceType::Topic->value:
                 $topicEntity = $this->topicDomainService->getTopicWithDeleted((int) $shareEntity->getResourceId());
@@ -982,6 +990,10 @@ class ProjectAppService extends AbstractAppService
                     ExceptionBuilder::throw(SuperAgentErrorCode::TOPIC_NOT_FOUND, 'topic.topic_not_found');
                 }
                 $projectId = (string) $topicEntity->getProjectId();
+                $projectEntity = $this->projectDomainService->getProjectNotUserId((int) $projectId);
+                if (empty($projectEntity)) {
+                    ExceptionBuilder::throw(SuperAgentErrorCode::PROJECT_NOT_FOUND, 'project.project_not_found');
+                }
                 break;
             case ResourceType::Project->value:
                 $projectEntity = $this->projectDomainService->getProjectNotUserId((int) $shareEntity->getResourceId());
@@ -995,7 +1007,9 @@ class ProjectAppService extends AbstractAppService
         }
 
         $requestDto->setProjectId($projectId);
-        return $this->buildAttachmentListV2((int) $projectId, $requestDto);
+        $organizationCode = AccessTokenUtil::getOrganizationCode($token);
+        $dataIsolation = DataIsolation::simpleMake($organizationCode, '');
+        return $this->buildAttachmentListV2((int) $projectId, $requestDto, $dataIsolation, $projectEntity);
     }
 
     /**
@@ -2238,64 +2252,159 @@ class ProjectAppService extends AbstractAppService
     }
 
     /**
-     * 获取项目附件列表的核心逻辑 V2（不返回树状结构，支持数据库级别的更新时间过滤）.
+     * V2 attachment list using backend-managed breadth-first tree traversal.
+     *
+     * The client treats next_parent_ids as an opaque ordered queue and sends it
+     * back unchanged. Each state points to a parent directory and, for very large
+     * directories, the last emitted child position under that parent.
      */
-    /**
-     * Keyset-paginated V2 attachment list. Returns raw, pre-decoded rows; skips
-     * tree building, relative path resolution, entity/DTO transforms and COUNT(*).
-     */
-    private function buildAttachmentListV2(int $projectId, GetProjectAttachmentsV2RequestDTO $requestDTO): array
-    {
+    private function buildAttachmentListV2(
+        int $projectId,
+        GetProjectAttachmentsV2RequestDTO $requestDTO,
+        ?DataIsolation $dataIsolation = null,
+        ?ProjectEntity $projectEntity = null
+    ): array {
         $pageSize = $requestDTO->getPageSize();
-        $cursor = $requestDTO->getCursor();
-        $afterFileId = $cursor !== '' ? (int) $cursor : null;
+        $queue = $requestDTO->getNextParentIds();
+        if (empty($queue)) {
+            $rootId = $this->resolveAttachmentTraversalRootId($projectId, $requestDTO, $dataIsolation, $projectEntity);
+            if ($rootId === '') {
+                return [
+                    'list' => [],
+                    'next_parent_ids' => [],
+                    'has_more' => false,
+                ];
+            }
 
-        $rows = $this->taskFileDomainService->getProjectFilesByCursor(
-            $projectId,
-            StorageType::WORKSPACE->value,
-            $afterFileId,
-            $pageSize,
-            $requestDTO->getFileType(),
-            $requestDTO->getUpdatedAfter()
-        );
-
-        $list = [];
-        $lastFileId = null;
-        foreach ($rows as $row) {
-            $row = (array) $row;
-            $fileId = (string) ($row['file_id'] ?? '');
-            $lastFileId = $fileId;
-
-            $displayConfig = FileMetadataUtil::decodeJsonObject($row['display_config'] ?? null);
-
-            $list[] = [
-                'file_id' => $fileId,
-                'task_id' => (string) ($row['task_id'] ?? ''),
-                'project_id' => (string) ($row['project_id'] ?? ''),
-                'topic_id' => (string) ($row['topic_id'] ?? ''),
-                'parent_id' => (string) ($row['parent_id'] ?? ''),
-                'file_type' => (string) ($row['file_type'] ?? ''),
-                'file_name' => (string) ($row['file_name'] ?? ''),
-                'file_extension' => (string) ($row['file_extension'] ?? ''),
-                'file_key' => (string) ($row['file_key'] ?? ''),
-                'file_size' => (int) ($row['file_size'] ?? 0),
-                'file_url' => '',
-                'is_hidden' => (bool) ($row['is_hidden'] ?? false),
-                'is_directory' => (bool) ($row['is_directory'] ?? false),
-                'sort' => (int) ($row['sort'] ?? 0),
-                'source' => (int) ($row['source'] ?? 0),
-                'updated_at' => (string) ($row['updated_at'] ?? ''),
-                'display_config' => $displayConfig,
-                // metadata 与 display_config 保持 V1/V2 旧行为一致（同源）
-                'metadata' => $displayConfig,
-            ];
+            $queue[] = $this->makeAttachmentParentState($rootId);
         }
 
-        $hasMore = count($rows) === $pageSize;
+        $list = [];
+        $remaining = $pageSize;
+        $parentQueryCount = 0;
+
+        while ($remaining > 0 && ! empty($queue) && $parentQueryCount < self::ATTACHMENT_V2_MAX_PARENT_QUERIES) {
+            $state = array_shift($queue);
+            $parentId = (int) ($state['parent_id'] ?? 0);
+            if ($parentId <= 0) {
+                continue;
+            }
+
+            ++$parentQueryCount;
+            $rows = $this->taskFileDomainService->getProjectFileChildrenByParentCursor(
+                $projectId,
+                $parentId,
+                StorageType::WORKSPACE->value,
+                $state['after_sort'] ?? null,
+                isset($state['after_file_id']) ? (int) $state['after_file_id'] : null,
+                $remaining + 1,
+                $requestDTO->getFileType()
+            );
+
+            $rowsToEmit = array_slice($rows, 0, $remaining);
+            $lastEmittedRow = null;
+            foreach ($rowsToEmit as $row) {
+                $row = (array) $row;
+                $lastEmittedRow = $row;
+
+                $list[] = $this->formatAttachmentRowV2($row);
+                --$remaining;
+
+                if ((bool) ($row['is_directory'] ?? false)) {
+                    $childParentId = (string) ($row['file_id'] ?? '');
+                    if ($childParentId !== '' && $childParentId !== (string) $parentId) {
+                        $queue[] = $this->makeAttachmentParentState($childParentId);
+                    }
+                }
+            }
+
+            if (count($rows) > count($rowsToEmit) && $lastEmittedRow !== null) {
+                array_unshift(
+                    $queue,
+                    $this->makeAttachmentParentState(
+                        (string) $parentId,
+                        (int) ($lastEmittedRow['sort'] ?? 0),
+                        (string) ($lastEmittedRow['file_id'] ?? '')
+                    )
+                );
+                break;
+            }
+        }
+
         return [
             'list' => $list,
-            'next_cursor' => $hasMore && $lastFileId !== null ? $lastFileId : '',
-            'has_more' => $hasMore,
+            'next_parent_ids' => array_values($queue),
+            'has_more' => ! empty($queue),
+        ];
+    }
+
+    private function resolveAttachmentTraversalRootId(
+        int $projectId,
+        GetProjectAttachmentsV2RequestDTO $requestDTO,
+        ?DataIsolation $dataIsolation,
+        ?ProjectEntity $projectEntity
+    ): string {
+        if ($projectEntity === null) {
+            $rootFile = $this->taskFileDomainService->getRootFile($projectId);
+            return $rootFile === null ? '' : (string) $rootFile->getFileId();
+        }
+
+        if ($dataIsolation === null) {
+            $rootFile = $this->taskFileDomainService->getRootFile($projectId);
+            return $rootFile === null ? '' : (string) $rootFile->getFileId();
+        }
+
+        $userId = $dataIsolation->getCurrentUserId() ?: $projectEntity->getUserId();
+        $organizationCode = $dataIsolation->getCurrentOrganizationCode();
+        $projectOrganizationCode = $projectEntity->getUserOrganizationCode() ?: $organizationCode;
+
+        $rootId = $this->taskFileDomainService->findOrCreateProjectRootDirectory(
+            (int) $requestDTO->getProjectId(),
+            $projectEntity->getWorkDir() ?? '',
+            (string) $userId,
+            $organizationCode,
+            $projectOrganizationCode
+        );
+
+        return (string) $rootId;
+    }
+
+    /**
+     * @return array{parent_id: string, after_sort: null|int, after_file_id: null|string}
+     */
+    private function makeAttachmentParentState(string $parentId, ?int $afterSort = null, ?string $afterFileId = null): array
+    {
+        return [
+            'parent_id' => $parentId,
+            'after_sort' => $afterSort,
+            'after_file_id' => $afterFileId === '' ? null : $afterFileId,
+        ];
+    }
+
+    private function formatAttachmentRowV2(array $row): array
+    {
+        $displayConfig = FileMetadataUtil::decodeJsonObject($row['display_config'] ?? null);
+
+        return [
+            'file_id' => (string) ($row['file_id'] ?? ''),
+            'task_id' => (string) ($row['task_id'] ?? ''),
+            'project_id' => (string) ($row['project_id'] ?? ''),
+            'topic_id' => (string) ($row['topic_id'] ?? ''),
+            'parent_id' => (string) ($row['parent_id'] ?? ''),
+            'file_type' => (string) ($row['file_type'] ?? ''),
+            'file_name' => (string) ($row['file_name'] ?? ''),
+            'file_extension' => (string) ($row['file_extension'] ?? ''),
+            'file_key' => (string) ($row['file_key'] ?? ''),
+            'file_size' => (int) ($row['file_size'] ?? 0),
+            'file_url' => '',
+            'is_hidden' => (bool) ($row['is_hidden'] ?? false),
+            'is_directory' => (bool) ($row['is_directory'] ?? false),
+            'sort' => (int) ($row['sort'] ?? 0),
+            'source' => (int) ($row['source'] ?? 0),
+            'updated_at' => (string) ($row['updated_at'] ?? ''),
+            'display_config' => $displayConfig,
+            // metadata 与 display_config 保持 V1/V2 旧行为一致（同源）
+            'metadata' => $displayConfig,
         ];
     }
 

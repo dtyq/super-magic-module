@@ -333,6 +333,32 @@ class TaskFileDomainService
     }
 
     /**
+     * Cursor pagination for one parent's direct children using tree order.
+     *
+     * @param string[] $fileTypes
+     * @return array<int, array<string, mixed>>
+     */
+    public function getProjectFileChildrenByParentCursor(
+        int $projectId,
+        int $parentId,
+        string $storageType,
+        ?int $afterSort,
+        ?int $afterFileId,
+        int $limit,
+        array $fileTypes = []
+    ): array {
+        return $this->taskFileRepository->getProjectFileChildrenByParentCursor(
+            $projectId,
+            $parentId,
+            $storageType,
+            $afterSort,
+            $afterFileId,
+            $limit,
+            $fileTypes
+        );
+    }
+
+    /**
      * 递归获取目录的所有子文件ID.
      * 使用广度优先遍历，逐层查询，避免深度递归.
      *

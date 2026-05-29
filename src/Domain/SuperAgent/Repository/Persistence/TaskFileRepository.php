@@ -370,6 +370,54 @@ class TaskFileRepository implements TaskFileRepositoryInterface
         return Db::select($query->toSql(), $query->getBindings());
     }
 
+    public function getProjectFileChildrenByParentCursor(
+        int $projectId,
+        int $parentId,
+        string $storageType,
+        ?int $afterSort,
+        ?int $afterFileId,
+        int $limit,
+        array $fileTypes = []
+    ): array {
+        $query = $this->model::query()
+            ->select([
+                'file_id', 'task_id', 'project_id', 'topic_id', 'parent_id',
+                'file_type', 'file_name', 'file_extension', 'file_key', 'file_size',
+                'is_hidden', 'is_directory', 'sort', 'source',
+                'updated_at', 'display_config', 'metadata',
+            ])
+            ->where('project_id', $projectId)
+            ->where('parent_id', $parentId)
+            ->whereNull('deleted_at');
+
+        if ($storageType !== '') {
+            $query->where('storage_type', $storageType);
+        }
+
+        if (! empty($fileTypes)) {
+            $query->where(static function ($query) use ($fileTypes): void {
+                $query->where('is_directory', true)
+                    ->orWhereIn('file_type', $fileTypes);
+            });
+        }
+
+        if ($afterSort !== null && $afterFileId !== null && $afterFileId > 0) {
+            $query->where(static function ($query) use ($afterSort, $afterFileId): void {
+                $query->where('sort', '>', $afterSort)
+                    ->orWhere(static function ($query) use ($afterSort, $afterFileId): void {
+                        $query->where('sort', $afterSort)
+                            ->where('file_id', '>', $afterFileId);
+                    });
+            });
+        }
+
+        $query->orderBy('sort', 'ASC')
+            ->orderBy('file_id', 'ASC')
+            ->limit($limit);
+
+        return Db::select($query->toSql(), $query->getBindings());
+    }
+
     /**
      * 根据任务ID获取文件列表.
      *

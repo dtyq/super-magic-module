@@ -416,7 +416,7 @@ Router::addGroup(
 Router::addGroup(
     '/api/v2/super-agent',
     static function () {
-        // 获取项目的附件列表 V2 (不返回树状结构)
+        // 获取项目的附件列表 V2 (按 parent_id 层级遍历，不返回树状结构)
         Router::addGroup('/projects', static function () {
             Router::post('/{id}/attachments', [ProjectApi::class, 'getProjectAttachmentsV2']);
         });
