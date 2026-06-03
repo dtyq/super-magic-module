@@ -119,10 +119,18 @@ class ProjectAppService extends AbstractAppService
     private const MAX_HIDDEN_PROJECTS_PER_WORKSPACE = 3;
 
     /**
-     * Guardrail for V2 attachment tree traversal. A single request may return
-     * fewer than page_size rows when it hits this query budget.
+     * Defensive runaway guard for V2 attachment tree traversal: the maximum number
+     * of per-parent cursor queries a single request may issue.
+     *
+     * This is NOT a page-size limiter. The traversal keeps filling the current page
+     * until page_size rows are emitted or the queue is drained, so a non-final page
+     * is always full and the client-side call count stays predictable
+     * (ceil(emittedItems / page_size)). This guard only trips on pathological,
+     * extremely sparse trees (e.g. many empty directories) to bound worst-case work;
+     * when it trips the queue is still non-empty, so has_more remains true and the
+     * client simply continues paging.
      */
-    private const ATTACHMENT_V2_MAX_PARENT_QUERIES = 50;
+    private const ATTACHMENT_V2_MAX_PARENT_QUERIES = 1000;
 
     protected LoggerInterface $logger;
 
@@ -2266,9 +2274,19 @@ class ProjectAppService extends AbstractAppService
     ): array {
         $pageSize = $requestDTO->getPageSize();
         $queue = $requestDTO->getNextParentIds();
+
+        $list = [];
+        $remaining = $pageSize;
+        $parentQueryCount = 0;
+
+        // An empty incoming queue marks the first page. Resolve the project root,
+        // emit the root directory row itself as the very first item (keeps the list
+        // consistent with countAttachmentsByProjectIdV2(), which also counts the
+        // root), then seed the traversal queue with the root as a parent so its
+        // descendants are paged afterwards.
         if (empty($queue)) {
-            $rootId = $this->resolveAttachmentTraversalRootId($projectId, $requestDTO, $dataIsolation, $projectEntity);
-            if ($rootId === '') {
+            $rootEntity = $this->resolveAttachmentTraversalRoot($projectId, $requestDTO, $dataIsolation, $projectEntity);
+            if ($rootEntity === null) {
                 return [
                     'list' => [],
                     'next_parent_ids' => [],
@@ -2276,12 +2294,10 @@ class ProjectAppService extends AbstractAppService
                 ];
             }
 
-            $queue[] = $this->makeAttachmentParentState($rootId);
+            $list[] = $this->formatAttachmentRowV2($rootEntity->toArray());
+            --$remaining;
+            $queue[] = $this->makeAttachmentParentState((string) $rootEntity->getFileId());
         }
-
-        $list = [];
-        $remaining = $pageSize;
-        $parentQueryCount = 0;
 
         while ($remaining > 0 && ! empty($queue) && $parentQueryCount < self::ATTACHMENT_V2_MAX_PARENT_QUERIES) {
             $state = array_shift($queue);
@@ -2318,6 +2334,12 @@ class ProjectAppService extends AbstractAppService
                 }
             }
 
+            // The current directory still has more children than we could emit on
+            // this page (we fetched $remaining + 1 rows as a look-ahead). Push the
+            // directory back to the FRONT of the queue carrying a (sort, file_id)
+            // cursor so the NEXT request resumes this exact directory before
+            // descending into any sibling/child directories discovered above. At
+            // this point $remaining is always 0, so the returned page is full.
             if (count($rows) > count($rowsToEmit) && $lastEmittedRow !== null) {
                 array_unshift(
                     $queue,
@@ -2338,20 +2360,22 @@ class ProjectAppService extends AbstractAppService
         ];
     }
 
-    private function resolveAttachmentTraversalRootId(
+    /**
+     * Resolve the project root directory entity used as the V2 traversal start.
+     *
+     * Returns the root TaskFileEntity (so the caller can emit it as the first list
+     * item) or null when the project has no resolvable root. For the share/audit
+     * paths (no project entity or no data isolation) the existing root is read
+     * directly; for the login path the root is created on demand if missing.
+     */
+    private function resolveAttachmentTraversalRoot(
         int $projectId,
         GetProjectAttachmentsV2RequestDTO $requestDTO,
         ?DataIsolation $dataIsolation,
         ?ProjectEntity $projectEntity
-    ): string {
-        if ($projectEntity === null) {
-            $rootFile = $this->taskFileDomainService->getRootFile($projectId);
-            return $rootFile === null ? '' : (string) $rootFile->getFileId();
-        }
-
-        if ($dataIsolation === null) {
-            $rootFile = $this->taskFileDomainService->getRootFile($projectId);
-            return $rootFile === null ? '' : (string) $rootFile->getFileId();
+    ): ?TaskFileEntity {
+        if ($projectEntity === null || $dataIsolation === null) {
+            return $this->taskFileDomainService->getRootFile($projectId);
         }
 
         $userId = $dataIsolation->getCurrentUserId() ?: $projectEntity->getUserId();
@@ -2366,7 +2390,11 @@ class ProjectAppService extends AbstractAppService
             $projectOrganizationCode
         );
 
-        return (string) $rootId;
+        if ((int) $rootId <= 0) {
+            return null;
+        }
+
+        return $this->taskFileDomainService->getById((int) $rootId);
     }
 
     /**

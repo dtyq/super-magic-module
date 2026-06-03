@@ -23,7 +23,19 @@ class GetProjectAttachmentsV2RequestDTO
     protected int $pageSize;
 
     /**
-     * Backend-managed breadth-first traversal queue.
+     * Backend-managed breadth-first traversal queue (opaque pagination cursor).
+     *
+     * Round-trip contract: the server returns this array as `next_parent_ids` in the
+     * response; the client MUST send it back verbatim on the next page and MUST NOT
+     * craft or mutate it. An empty array means "first page" (the server resolves the
+     * project root, emits the root directory row, then seeds the queue).
+     *
+     * Each entry is a keyset cursor for one directory:
+     *  - parent_id:     directory whose children are being paged
+     *  - after_sort:    last emitted child's `sort` (manual drag-sort value; defaults
+     *                   to 0 for agent/uploaded files and only becomes meaningful after
+     *                   a move/reorder via POST /files/{id}/move)
+     *  - after_file_id: last emitted child's `file_id`, the stable tiebreaker
      *
      * @var array<int, array{parent_id: string, after_sort: null|int, after_file_id: null|string}>
      */
