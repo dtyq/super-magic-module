@@ -3604,7 +3604,11 @@ class TaskFileDomainService
                 ExceptionBuilder::throw(SuperAgentErrorCode::FILE_EXIST, trans('file.file_exist'));
             }
             if ($existingTarget->getIsDirectory()) {
-                ExceptionBuilder::throw(SuperAgentErrorCode::FILE_EXIST, trans('file.file_exist'));
+                if (! $file->getIsDirectory()) {
+                    ExceptionBuilder::throw(SuperAgentErrorCode::FILE_EXIST, trans('file.file_exist'));
+                }
+
+                $this->getMagicFSFileDomainService()->deleteFile((string) $existingTarget->getFileId(), true);
             }
         }
 
@@ -3673,11 +3677,7 @@ class TaskFileDomainService
                 if (! $existingTarget->getIsDirectory()) {
                     $this->taskFileRepository->deleteById($existingTarget->getFileId(), false);
                 } else {
-                    $targetFileName = $this->generateUniqueFileNameInParent(
-                        $targetProjectId,
-                        $targetParentIdInt ?? 0,
-                        $targetFileName
-                    );
+                    ExceptionBuilder::throw(SuperAgentErrorCode::FILE_EXIST, trans('file.file_exist'));
                 }
             }
         } else {

@@ -355,17 +355,18 @@ class FileBatchCopySubscriber extends ConsumerMessage
         }
 
         if (! $shouldKeepBoth && $targetFileEntity !== null) {
-            if ($targetFileEntity->getIsDirectory()) {
-                $this->logger->info('Reusing existing directory at new location', [
-                    'source_id' => $sourceFileId,
-                    'existing_id' => $targetFileEntity->getFileId(),
-                    'target_parent_id' => $parentId,
-                ]);
-                return $targetFileEntity;
-            }
+            $this->logger->info('Deleting existing target before directory copy overwrite', [
+                'source_id' => $sourceFileId,
+                'existing_id' => $targetFileEntity->getFileId(),
+                'target_parent_id' => $parentId,
+                'existing_is_directory' => $targetFileEntity->getIsDirectory(),
+            ]);
 
-            // Overwrite file with directory in copy mode.
-            $this->magicFSFileDomainService->deleteFile((string) $targetFileEntity->getFileId());
+            $this->magicFSFileDomainService->deleteFile(
+                (string) $targetFileEntity->getFileId(),
+                $targetFileEntity->getIsDirectory()
+            );
+            $targetFileEntity = null;
         }
 
         $createdDirectory = $this->magicFSFileDomainService->createFile(
@@ -566,7 +567,7 @@ class FileBatchCopySubscriber extends ConsumerMessage
         }
 
         foreach ($fileTree as $node) {
-            if (empty($node['file_id']) || $node['parent_id'] === $targetParentId) {
+            if (empty($node['file_id'])) {
                 continue;
             }
 
