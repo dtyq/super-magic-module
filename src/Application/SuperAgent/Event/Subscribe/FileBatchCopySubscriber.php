@@ -230,7 +230,12 @@ class FileBatchCopySubscriber extends ConsumerMessage
                     $targetParentEntity->getFileId(),
                     $keepBothFileIds
                 );
-                if (! empty($children)) {
+                if ($newTargetEntity->getFileId() === $fileId && ! in_array((string) $fileId, $keepBothFileIds, true)) {
+                    $this->logger->info('Skipped directory copy because target directory is source directory itself', [
+                        'source_id' => $fileId,
+                        'target_parent_id' => $targetParentEntity->getFileId(),
+                    ]);
+                } elseif (! empty($children)) {
                     foreach ($children as $child) {
                         $this->copyFile($dataIsolation, $child, $sourceProject, $targetProject, $newTargetEntity, $keepBothFileIds);
                     }
@@ -252,6 +257,16 @@ class FileBatchCopySubscriber extends ConsumerMessage
                     $targetParentEntity->getFileId(),
                     $keepBothFileIds
                 );
+
+                if ($copiedFileEntity->getFileId() === $fileEntity->getFileId()) {
+                    $this->logger->info('Skipped file copy because target file is source file itself', [
+                        'source_id' => $fileId,
+                        'target_parent_id' => $targetParentEntity->getFileId(),
+                    ]);
+                    ++$this->processedFiles;
+                    $this->updateFileCopyingProgress();
+                    return;
+                }
 
                 $this->syncTreeAfterProjectCopy(
                     $copiedFileEntity,
@@ -323,9 +338,10 @@ class FileBatchCopySubscriber extends ConsumerMessage
             $sourceFileName
         );
 
-        // Copying a directory to the same parent should keep both and fall through to rename.
         if ($targetFileEntity !== null && $targetFileEntity->getFileId() === $sourceFileId) {
-            $shouldKeepBoth = true;
+            if (! $shouldKeepBoth) {
+                return $oldFileEntity;
+            }
         }
 
         $newDirName = $sourceFileName;

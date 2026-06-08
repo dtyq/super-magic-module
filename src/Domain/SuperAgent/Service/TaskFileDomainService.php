@@ -1438,9 +1438,15 @@ class TaskFileDomainService
         $shouldKeepBoth = in_array($sourceFileIdStr, $keepBothFileIds, true);
 
         if ($existingTargetFile !== null && $existingTargetFile->getFileId() === $fileEntity->getFileId()) {
-            // Copying to the same directory should not overwrite itself.
-            $shouldKeepBoth = true;
-            $existingTargetFile = null;
+            if (! $shouldKeepBoth) {
+                $this->logger->info('Skipped copy because target file is source file itself', [
+                    'source_file_id' => $fileEntity->getFileId(),
+                    'target_parent_id' => $targetParentId,
+                    'target_file_name' => $targetFileName,
+                ]);
+
+                return $fileEntity;
+            }
         }
 
         if ($existingTargetFile !== null && $shouldKeepBoth) {
@@ -3659,7 +3665,11 @@ class TaskFileDomainService
         );
 
         if ($overwrite) {
-            if ($existingTarget !== null && $existingTarget->getFileId() !== $sourceFile->getFileId()) {
+            if ($existingTarget !== null && $existingTarget->getFileId() === $sourceFile->getFileId()) {
+                return $sourceFile;
+            }
+
+            if ($existingTarget !== null) {
                 if (! $existingTarget->getIsDirectory()) {
                     $this->taskFileRepository->deleteById($existingTarget->getFileId(), false);
                 } else {
@@ -3669,12 +3679,6 @@ class TaskFileDomainService
                         $targetFileName
                     );
                 }
-            } elseif ($existingTarget !== null) {
-                $targetFileName = $this->generateUniqueFileNameInParent(
-                    $targetProjectId,
-                    $targetParentIdInt ?? 0,
-                    $targetFileName
-                );
             }
         } else {
             $targetFileName = $this->generateUniqueFileNameInParent(
