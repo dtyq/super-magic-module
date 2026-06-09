@@ -910,36 +910,6 @@ class AgentDomainService
     }
 
     /**
-     * 重置沙箱保活状态.
-     */
-    public function resetSandboxKeepAlive(string $sandboxId, string $source = 'special-project-crontab'): AgentResponse
-    {
-        $this->logger->debug('[Sandbox][App] Resetting sandbox keepalive', [
-            'sandbox_id' => $sandboxId,
-            'source' => $source,
-        ]);
-
-        $result = $this->agent->resetKeepAlive($sandboxId, $source);
-
-        if (! $result->isSuccess()) {
-            $this->logger->error('[Sandbox][App] Failed to reset sandbox keepalive', [
-                'sandbox_id' => $sandboxId,
-                'source' => $source,
-                'error' => $result->getMessage(),
-                'code' => $result->getCode(),
-            ]);
-            throw new SandboxOperationException('Reset sandbox keepalive', $result->getMessage(), $result->getCode());
-        }
-
-        $this->logger->info('[Sandbox][App] Sandbox keepalive reset successfully', [
-            'sandbox_id' => $sandboxId,
-            'source' => $source,
-        ]);
-
-        return $result;
-    }
-
-    /**
      * Wait for workspace to be ready with optional interrupt check.
      * Polls workspace status until initialization completes, fails, times out, or is interrupted.
      *

@@ -1355,17 +1355,20 @@ class ProjectAppService extends AbstractAppService
         }
 
         // Step 3: Separate valid and invalid projects
+        /** @var array<int, ProjectEntity> $projectMap */
         $projectMap = [];
         foreach ($projectEntities as $entity) {
-            $projectMap[(string) $entity->getId()] = $entity;
+            $projectMap[$entity->getId()] = $entity;
         }
 
+        /** @var int[] $validProjectIds */
         $validProjectIds = [];
         $invalidResults = [];
 
         foreach ($requestDTO->getProjectIds() as $projectId) {
-            if (isset($projectMap[$projectId])) {
-                $project = $projectMap[$projectId];
+            $projectIdInt = (int) $projectId;
+            if (isset($projectMap[$projectIdInt])) {
+                $project = $projectMap[$projectIdInt];
                 // Check if project is already in target workspace
                 if ($project->getWorkspaceId() === $targetWorkspaceId) {
                     $invalidResults[] = [
@@ -1374,7 +1377,7 @@ class ProjectAppService extends AbstractAppService
                         'message' => 'Project is already in target workspace',
                     ];
                 } else {
-                    $validProjectIds[] = (int) $projectId;
+                    $validProjectIds[] = $projectIdInt;
                 }
             } else {
                 $invalidResults[] = [
@@ -1473,9 +1476,8 @@ class ProjectAppService extends AbstractAppService
         if ($successCount > 0) {
             $movedProjects = [];
             foreach ($validProjectIds as $projectId) {
-                $projectKey = (string) $projectId;
-                if (isset($projectMap[$projectKey])) {
-                    $movedProjects[] = $projectMap[$projectKey];
+                if (isset($projectMap[$projectId])) {
+                    $movedProjects[] = $projectMap[$projectId];
                 }
             }
 

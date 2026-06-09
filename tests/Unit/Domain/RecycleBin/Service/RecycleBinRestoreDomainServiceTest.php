@@ -27,17 +27,17 @@ use Psr\Log\LoggerInterface;
  */
 class RecycleBinRestoreDomainServiceTest extends TestCase
 {
-    private RecycleBinRepositoryInterface|MockObject $recycleBinRepo;
+    private MockObject|RecycleBinRepositoryInterface $recycleBinRepo;
 
-    private TaskFileRepositoryInterface|MockObject $taskFileRepo;
+    private MockObject|TaskFileRepositoryInterface $taskFileRepo;
 
-    private ProjectRepositoryInterface|MockObject $projectRepo;
+    private MockObject|ProjectRepositoryInterface $projectRepo;
 
-    private TopicRepositoryInterface|MockObject $topicRepo;
+    private MockObject|TopicRepositoryInterface $topicRepo;
 
-    private WorkspaceRepositoryInterface|MockObject $workspaceRepo;
+    private MockObject|WorkspaceRepositoryInterface $workspaceRepo;
 
-    private ProjectMemberRepositoryInterface|MockObject $projectMemberRepo;
+    private MockObject|ProjectMemberRepositoryInterface $projectMemberRepo;
 
     private RecycleBinRestoreDomainService $service;
 
@@ -45,14 +45,14 @@ class RecycleBinRestoreDomainServiceTest extends TestCase
     {
         parent::setUp();
 
-        $this->recycleBinRepo    = $this->createMock(RecycleBinRepositoryInterface::class);
-        $this->taskFileRepo      = $this->createMock(TaskFileRepositoryInterface::class);
-        $this->projectRepo       = $this->createMock(ProjectRepositoryInterface::class);
-        $this->topicRepo         = $this->createMock(TopicRepositoryInterface::class);
-        $this->workspaceRepo     = $this->createMock(WorkspaceRepositoryInterface::class);
+        $this->recycleBinRepo = $this->createMock(RecycleBinRepositoryInterface::class);
+        $this->taskFileRepo = $this->createMock(TaskFileRepositoryInterface::class);
+        $this->projectRepo = $this->createMock(ProjectRepositoryInterface::class);
+        $this->topicRepo = $this->createMock(TopicRepositoryInterface::class);
+        $this->workspaceRepo = $this->createMock(WorkspaceRepositoryInterface::class);
         $this->projectMemberRepo = $this->createMock(ProjectMemberRepositoryInterface::class);
 
-        $logger        = $this->createMock(LoggerInterface::class);
+        $logger = $this->createMock(LoggerInterface::class);
         $loggerFactory = $this->createMock(LoggerFactory::class);
         $loggerFactory->method('get')->willReturn($logger);
 
@@ -73,11 +73,11 @@ class RecycleBinRestoreDomainServiceTest extends TestCase
 
     public function testPreviewReturnsParentMissingWhenParentNotFound(): void
     {
-        $fileId   = 100;
+        $fileId = 100;
         $parentId = 200;
 
         $entity = $this->makeRecycleBinEntity($fileId);
-        $file   = $this->makeFileEntity($fileId, $parentId, 'report.docx', projectId: 1);
+        $file = $this->makeFileEntity($fileId, $parentId, 'report.docx', projectId: 1);
 
         $this->recycleBinRepo->method('findLatestByResourceIds')->willReturn([$entity]);
         $this->taskFileRepo->method('getByIdWithTrash')
@@ -95,13 +95,13 @@ class RecycleBinRestoreDomainServiceTest extends TestCase
 
     public function testPreviewReturnsNameConflictWhenSameNameExists(): void
     {
-        $fileId     = 101;
-        $parentId   = 300;
+        $fileId = 101;
+        $parentId = 300;
         $conflictId = 999;
 
-        $entity   = $this->makeRecycleBinEntity($fileId);
-        $file     = $this->makeFileEntity($fileId, $parentId, 'imgs', projectId: 1, isDirectory: true);
-        $parent   = $this->makeFileEntity($parentId, null, 'parent', projectId: 1, isDirectory: true);
+        $entity = $this->makeRecycleBinEntity($fileId);
+        $file = $this->makeFileEntity($fileId, $parentId, 'imgs', projectId: 1, isDirectory: true);
+        $parent = $this->makeFileEntity($parentId, null, 'parent', projectId: 1, isDirectory: true);
         $conflict = $this->makeFileEntity($conflictId, $parentId, 'imgs', projectId: 1, isDirectory: true);
 
         $this->recycleBinRepo->method('findLatestByResourceIds')->willReturn([$entity]);
@@ -120,11 +120,11 @@ class RecycleBinRestoreDomainServiceTest extends TestCase
 
     public function testPreviewReturnsNoConflictWhenParentExistsAndNoNameConflict(): void
     {
-        $fileId   = 102;
+        $fileId = 102;
         $parentId = 300;
 
         $entity = $this->makeRecycleBinEntity($fileId);
-        $file   = $this->makeFileEntity($fileId, $parentId, 'test.txt', projectId: 1);
+        $file = $this->makeFileEntity($fileId, $parentId, 'test.txt', projectId: 1);
         $parent = $this->makeFileEntity($parentId, null, 'docs', projectId: 1, isDirectory: true);
 
         $this->recycleBinRepo->method('findLatestByResourceIds')->willReturn([$entity]);
@@ -140,11 +140,11 @@ class RecycleBinRestoreDomainServiceTest extends TestCase
 
     public function testPreviewParentMissingDoesNotCheckNameConflict(): void
     {
-        $fileId   = 103;
+        $fileId = 103;
         $parentId = 200;
 
         $entity = $this->makeRecycleBinEntity($fileId);
-        $file   = $this->makeFileEntity($fileId, $parentId, 'data.csv', projectId: 1);
+        $file = $this->makeFileEntity($fileId, $parentId, 'data.csv', projectId: 1);
 
         $this->recycleBinRepo->method('findLatestByResourceIds')->willReturn([$entity]);
         $this->taskFileRepo->method('getByIdWithTrash')
@@ -174,11 +174,11 @@ class RecycleBinRestoreDomainServiceTest extends TestCase
 
     public function testRestoreFileThrowsWhenParentMissingAndNoResolution(): void
     {
-        $fileId   = 100;
+        $fileId = 100;
         $parentId = 200;
 
         $entity = $this->makeRecycleBinEntity($fileId);
-        $file   = $this->makeDeletedFileEntity($fileId, $parentId, 'report.docx', projectId: 1);
+        $file = $this->makeDeletedFileEntity($fileId, $parentId, 'report.docx', projectId: 1);
 
         $this->recycleBinRepo->method('findLatestByResourceIds')->willReturn([$entity]);
         $this->taskFileRepo->method('getByIdWithTrash')
@@ -193,11 +193,11 @@ class RecycleBinRestoreDomainServiceTest extends TestCase
 
     public function testRestoreFileFailsWhenParentMissingAndSkipResolution(): void
     {
-        $fileId   = 100;
+        $fileId = 100;
         $parentId = 200;
 
         $entity = $this->makeRecycleBinEntity($fileId);
-        $file   = $this->makeDeletedFileEntity($fileId, $parentId, 'report.docx', projectId: 1);
+        $file = $this->makeDeletedFileEntity($fileId, $parentId, 'report.docx', projectId: 1);
 
         $this->recycleBinRepo->method('findLatestByResourceIds')->willReturn([$entity]);
         $this->taskFileRepo->method('getByIdWithTrash')
@@ -216,13 +216,13 @@ class RecycleBinRestoreDomainServiceTest extends TestCase
 
     public function testRestoreFileThrowsWhenNameConflictAndNoResolution(): void
     {
-        $fileId     = 101;
-        $parentId   = 300;
+        $fileId = 101;
+        $parentId = 300;
         $conflictId = 999;
 
-        $entity   = $this->makeRecycleBinEntity($fileId);
-        $file     = $this->makeDeletedFileEntity($fileId, $parentId, 'imgs', projectId: 1, isDirectory: true);
-        $parent   = $this->makeFileEntity($parentId, null, 'docs', projectId: 1, isDirectory: true);
+        $entity = $this->makeRecycleBinEntity($fileId);
+        $file = $this->makeDeletedFileEntity($fileId, $parentId, 'imgs', projectId: 1, isDirectory: true);
+        $parent = $this->makeFileEntity($parentId, null, 'docs', projectId: 1, isDirectory: true);
         $conflict = $this->makeFileEntity($conflictId, $parentId, 'imgs', projectId: 1, isDirectory: true);
 
         $this->recycleBinRepo->method('findLatestByResourceIds')->willReturn([$entity]);
@@ -247,15 +247,15 @@ class RecycleBinRestoreDomainServiceTest extends TestCase
 
     public function testRestoreToRootThenNameConflictOverwrite(): void
     {
-        $fileId     = 100;
-        $parentId   = 200;
-        $rootId     = 1;
+        $fileId = 100;
+        $parentId = 200;
+        $rootId = 1;
         $conflictId = 888;
 
-        $entity       = $this->makeRecycleBinEntity($fileId);
-        $file         = $this->makeDeletedFileEntity($fileId, $parentId, 'report.docx', projectId: 5);
-        $root         = $this->makeFileEntity($rootId, null, '/', projectId: 5, isDirectory: true);
-        $conflict     = $this->makeFileEntity($conflictId, $rootId, 'report.docx', projectId: 5);
+        $entity = $this->makeRecycleBinEntity($fileId);
+        $file = $this->makeDeletedFileEntity($fileId, $parentId, 'report.docx', projectId: 5);
+        $root = $this->makeFileEntity($rootId, null, '/', projectId: 5, isDirectory: true);
+        $conflict = $this->makeFileEntity($conflictId, $rootId, 'report.docx', projectId: 5);
         $restoredFile = $this->makeFileEntity($fileId, $rootId, 'report.docx', projectId: 5);
 
         $this->recycleBinRepo->method('findLatestByResourceIds')->willReturn([$entity]);
@@ -287,13 +287,13 @@ class RecycleBinRestoreDomainServiceTest extends TestCase
 
     public function testRestoreToRootThenNameConflictMissingResolutionFails(): void
     {
-        $fileId   = 100;
+        $fileId = 100;
         $parentId = 200;
-        $rootId   = 1;
+        $rootId = 1;
 
-        $entity   = $this->makeRecycleBinEntity($fileId);
-        $file     = $this->makeDeletedFileEntity($fileId, $parentId, 'report.docx', projectId: 5);
-        $root     = $this->makeFileEntity($rootId, null, '/', projectId: 5, isDirectory: true);
+        $entity = $this->makeRecycleBinEntity($fileId);
+        $file = $this->makeDeletedFileEntity($fileId, $parentId, 'report.docx', projectId: 5);
+        $root = $this->makeFileEntity($rootId, null, '/', projectId: 5, isDirectory: true);
         $conflict = $this->makeFileEntity(888, $rootId, 'report.docx', projectId: 5);
 
         $this->recycleBinRepo->method('findLatestByResourceIds')->willReturn([$entity]);
@@ -320,15 +320,15 @@ class RecycleBinRestoreDomainServiceTest extends TestCase
 
     public function testBatchRestorePartialSuccess(): void
     {
-        $okFileId     = 200;
+        $okFileId = 200;
         $failedFileId = 201;
-        $parentId     = 300;
+        $parentId = 300;
 
-        $okEntity     = $this->makeRecycleBinEntity($okFileId);
+        $okEntity = $this->makeRecycleBinEntity($okFileId);
         $failedEntity = $this->makeRecycleBinEntity($failedFileId);
-        $okFile       = $this->makeDeletedFileEntity($okFileId, $parentId, 'ok.txt', projectId: 1);
-        $failedFile   = $this->makeDeletedFileEntity($failedFileId, 999, 'fail.txt', projectId: 1);
-        $parent       = $this->makeFileEntity($parentId, null, 'docs', projectId: 1, isDirectory: true);
+        $okFile = $this->makeDeletedFileEntity($okFileId, $parentId, 'ok.txt', projectId: 1);
+        $failedFile = $this->makeDeletedFileEntity($failedFileId, 999, 'fail.txt', projectId: 1);
+        $parent = $this->makeFileEntity($parentId, null, 'docs', projectId: 1, isDirectory: true);
         $restoredFile = $this->makeFileEntity($okFileId, $parentId, 'ok.txt', projectId: 1);
 
         $this->recycleBinRepo->method('findLatestByResourceIds')
@@ -338,11 +338,11 @@ class RecycleBinRestoreDomainServiceTest extends TestCase
         $this->taskFileRepo->method('getByIdWithTrash')
             ->willReturnCallback(function (int $id) use ($okFileId, $failedFileId, $parentId, $okFile, $failedFile, $parent) {
                 return match ($id) {
-                    $okFileId     => $okFile,
+                    $okFileId => $okFile,
                     $failedFileId => $failedFile,
-                    $parentId     => $parent,
-                    999           => null,
-                    default       => null,
+                    $parentId => $parent,
+                    999 => null,
+                    default => null,
                 };
             });
 
@@ -390,12 +390,12 @@ class RecycleBinRestoreDomainServiceTest extends TestCase
         bool $isDirectory = false
     ): TaskFileEntity {
         return new TaskFileEntity([
-            'file_id'      => $fileId,
-            'parent_id'    => $parentId,
-            'file_name'    => $fileName,
-            'project_id'   => $projectId,
+            'file_id' => $fileId,
+            'parent_id' => $parentId,
+            'file_name' => $fileName,
+            'project_id' => $projectId,
             'is_directory' => $isDirectory,
-            'deleted_at'   => null,
+            'deleted_at' => null,
         ]);
     }
 
@@ -407,12 +407,12 @@ class RecycleBinRestoreDomainServiceTest extends TestCase
         bool $isDirectory = false
     ): TaskFileEntity {
         return new TaskFileEntity([
-            'file_id'      => $fileId,
-            'parent_id'    => $parentId,
-            'file_name'    => $fileName,
-            'project_id'   => $projectId,
+            'file_id' => $fileId,
+            'parent_id' => $parentId,
+            'file_name' => $fileName,
+            'project_id' => $projectId,
             'is_directory' => $isDirectory,
-            'deleted_at'   => date('Y-m-d H:i:s'),
+            'deleted_at' => date('Y-m-d H:i:s'),
         ]);
     }
 }

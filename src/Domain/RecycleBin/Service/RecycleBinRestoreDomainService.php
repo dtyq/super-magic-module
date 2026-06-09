@@ -54,9 +54,6 @@ class RecycleBinRestoreDomainService
     /**
      * Batch restore resources (partial success allowed).
      *
-     * @param array $resourceIds
-     * @param RecycleBinResourceType $resourceType
-     * @param string $userId
      * @param array<string, array<string, string>> $conflictResolutions resource_id → [conflict_type → resolution]
      * @return array{succeeded: RecycleBinEntity[], failed: array{entity: RecycleBinEntity, error: string}[]}
      */
@@ -73,7 +70,7 @@ class RecycleBinRestoreDomainService
         }
 
         $succeeded = [];
-        $failed    = [];
+        $failed = [];
 
         foreach ($entities as $entity) {
             try {
@@ -82,14 +79,14 @@ class RecycleBinRestoreDomainService
             } catch (Throwable $e) {
                 $this->logger->error('Failed to restore resource', [
                     'recycle_bin_id' => $entity->getId(),
-                    'resource_type'  => $entity->getResourceType()->value,
-                    'resource_id'    => $entity->getResourceId(),
-                    'error'          => $e->getMessage(),
+                    'resource_type' => $entity->getResourceType()->value,
+                    'resource_id' => $entity->getResourceId(),
+                    'error' => $e->getMessage(),
                 ]);
 
                 $failed[] = [
                     'entity' => $entity,
-                    'error'  => $e->getMessage(),
+                    'error' => $e->getMessage(),
                 ];
             }
         }
@@ -101,14 +98,12 @@ class RecycleBinRestoreDomainService
      * Preview file conflicts for a list of resource IDs.
      * Read-only; no side effects.
      *
-     * @param array $resourceIds
-     * @param string $userId
      * @return array{items_with_conflict: RestorePreviewItemDTO[], items_no_conflict: RestorePreviewItemDTO[]}
      */
     public function previewFileConflicts(array $resourceIds, string $userId): array
     {
         $itemsWithConflict = [];
-        $itemsNoConflict   = [];
+        $itemsNoConflict = [];
 
         if (empty($resourceIds)) {
             return ['items_with_conflict' => [], 'items_no_conflict' => []];
@@ -122,14 +117,14 @@ class RecycleBinRestoreDomainService
 
         foreach ($entities as $entity) {
             $fileId = (int) $entity->getResourceId();
-            $file   = $this->taskFileRepository->getByIdWithTrash($fileId);
+            $file = $this->taskFileRepository->getByIdWithTrash($fileId);
 
             // File permanently deleted or purged from recycle bin — no actionable conflict
             if ($file === null || $entity->getRemovedAt() !== null || $entity->getPurgedAt() !== null) {
                 $itemsNoConflict[] = new RestorePreviewItemDTO(
-                    resourceId:   (string) $fileId,
+                    resourceId: (string) $fileId,
                     resourceName: $entity->getResourceName(),
-                    isDirectory:  false,
+                    isDirectory: false,
                 );
                 continue;
             }
@@ -141,11 +136,11 @@ class RecycleBinRestoreDomainService
                 $parent = $this->taskFileRepository->getByIdWithTrash($parentId);
                 if ($parent === null || $parent->getDeletedAt() !== null || ! $parent->getIsDirectory()) {
                     $itemsWithConflict[] = new RestorePreviewItemDTO(
-                        resourceId:   (string) $fileId,
+                        resourceId: (string) $fileId,
                         resourceName: $file->getFileName(),
-                        isDirectory:  $file->getIsDirectory(),
-                        conflict:     new RestoreConflictDTO(
-                            type:             RestoreConflictType::ParentMissing,
+                        isDirectory: $file->getIsDirectory(),
+                        conflict: new RestoreConflictDTO(
+                            type: RestoreConflictType::ParentMissing,
                             originalParentId: $parentId,
                         ),
                     );
@@ -162,12 +157,12 @@ class RecycleBinRestoreDomainService
 
             if ($existing !== null && $existing->getFileId() !== $file->getFileId()) {
                 $itemsWithConflict[] = new RestorePreviewItemDTO(
-                    resourceId:   (string) $fileId,
+                    resourceId: (string) $fileId,
                     resourceName: $file->getFileName(),
-                    isDirectory:  $file->getIsDirectory(),
-                    conflict:     new RestoreConflictDTO(
-                        type:                RestoreConflictType::NameConflict,
-                        existingFileId:      $existing->getFileId(),
+                    isDirectory: $file->getIsDirectory(),
+                    conflict: new RestoreConflictDTO(
+                        type: RestoreConflictType::NameConflict,
+                        existingFileId: $existing->getFileId(),
                         existingIsDirectory: $existing->getIsDirectory(),
                     ),
                 );
@@ -175,15 +170,15 @@ class RecycleBinRestoreDomainService
             }
 
             $itemsNoConflict[] = new RestorePreviewItemDTO(
-                resourceId:   (string) $fileId,
+                resourceId: (string) $fileId,
                 resourceName: $file->getFileName(),
-                isDirectory:  $file->getIsDirectory(),
+                isDirectory: $file->getIsDirectory(),
             );
         }
 
         return [
             'items_with_conflict' => $itemsWithConflict,
-            'items_no_conflict'   => $itemsNoConflict,
+            'items_no_conflict' => $itemsNoConflict,
         ];
     }
 
@@ -199,7 +194,7 @@ class RecycleBinRestoreDomainService
 
         $restoredMembers = $this->projectMemberRepository->restoreByProjectIds([$projectId], $userId);
         $this->logger->info('Restored project members', [
-            'project_id'   => $projectId,
+            'project_id' => $projectId,
             'member_count' => $restoredMembers,
         ]);
 
@@ -210,7 +205,7 @@ class RecycleBinRestoreDomainService
 
         $restoredTopics = $this->topicRepository->restoreByProjectId($projectId, $excludeTopicIds, $userId);
         $this->logger->info('Restored topics under project', [
-            'project_id'     => $projectId,
+            'project_id' => $projectId,
             'restored_count' => $restoredTopics,
             'excluded_count' => count($excludeTopicIds),
         ]);
@@ -257,9 +252,9 @@ class RecycleBinRestoreDomainService
 
         match ($resourceType) {
             RecycleBinResourceType::Workspace => $this->restoreWorkspace($entity, $userId),
-            RecycleBinResourceType::Project   => $this->restoreProject($entity, $userId),
-            RecycleBinResourceType::Topic     => $this->restoreTopic($entity, $userId),
-            RecycleBinResourceType::File      => $this->restoreFile($entity, $userId, $conflictResolutions),
+            RecycleBinResourceType::Project => $this->restoreProject($entity, $userId),
+            RecycleBinResourceType::Topic => $this->restoreTopic($entity, $userId),
+            RecycleBinResourceType::File => $this->restoreFile($entity, $userId, $conflictResolutions),
             default => throw new RuntimeException(
                 trans('recycle_bin.restore.unsupported_resource_type', ['type' => $resourceType->value])
             ),
@@ -289,7 +284,7 @@ class RecycleBinRestoreDomainService
             );
 
             $this->logger->info('Restored projects under workspace', [
-                'workspace_id'   => $workspaceId,
+                'workspace_id' => $workspaceId,
                 'restored_count' => $restoredProjects,
                 'excluded_count' => count($excludeProjectIds),
             ]);
@@ -312,7 +307,7 @@ class RecycleBinRestoreDomainService
             );
 
             $this->logger->info('Restored topics under workspace', [
-                'workspace_id'   => $workspaceId,
+                'workspace_id' => $workspaceId,
                 'restored_count' => $restoredTopics,
                 'excluded_count' => count($excludeTopicIds),
             ]);
@@ -324,7 +319,7 @@ class RecycleBinRestoreDomainService
             Db::rollBack();
             $this->logger->error('Failed to restore workspace', [
                 'workspace_id' => $workspaceId,
-                'error'        => $e->getMessage(),
+                'error' => $e->getMessage(),
             ]);
             throw $e;
         }
@@ -348,7 +343,7 @@ class RecycleBinRestoreDomainService
                 }
             } else {
                 $this->logger->warning('workspace_id is null when restoring project', [
-                    'project_id'     => $projectId,
+                    'project_id' => $projectId,
                     'recycle_bin_id' => $entity->getId(),
                 ]);
             }
@@ -376,7 +371,7 @@ class RecycleBinRestoreDomainService
                 }
             } else {
                 $this->logger->warning('parent_id is null when restoring topic', [
-                    'topic_id'       => $topicId,
+                    'topic_id' => $topicId,
                     'recycle_bin_id' => $entity->getId(),
                 ]);
             }
@@ -399,7 +394,7 @@ class RecycleBinRestoreDomainService
         string $userId,
         array $conflictResolutions = []
     ): void {
-        $fileId     = (int) $entity->getResourceId();
+        $fileId = (int) $entity->getResourceId();
         $resolution = $conflictResolutions[(string) $fileId] ?? [];
 
         Db::transaction(function () use ($fileId, $entity, $userId, $resolution) {
@@ -438,7 +433,7 @@ class RecycleBinRestoreDomainService
                     $this->taskFileRepository->deleteById($existing->getFileId(), false);
                     $this->logger->info('Overwrote conflicting file during restore', [
                         'existing_file_id' => $existing->getFileId(),
-                        'restore_file_id'  => $fileId,
+                        'restore_file_id' => $fileId,
                     ]);
                 } else {
                     throw new RuntimeException(trans('recycle_bin.restore.file_name_conflict'));
@@ -468,9 +463,9 @@ class RecycleBinRestoreDomainService
             }
 
             $this->logger->info('File restored successfully', [
-                'file_id'          => $fileId,
+                'file_id' => $fileId,
                 'target_parent_id' => $targetParentId,
-                'user_id'          => $userId,
+                'user_id' => $userId,
             ]);
 
             // 9. Remove recycle bin record
@@ -492,7 +487,7 @@ class RecycleBinRestoreDomainService
             return null;
         }
 
-        $parent        = $this->taskFileRepository->getByIdWithTrash($parentId);
+        $parent = $this->taskFileRepository->getByIdWithTrash($parentId);
         $parentMissing = $parent === null || $parent->getDeletedAt() !== null || ! $parent->getIsDirectory();
 
         if (! $parentMissing) {
