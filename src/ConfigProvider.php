@@ -84,6 +84,7 @@ use Dtyq\SuperMagic\Domain\SuperAgent\Repository\Facade\TaskRepositoryInterface;
 use Dtyq\SuperMagic\Domain\SuperAgent\Repository\Facade\TokenUsageRecordRepositoryInterface;
 use Dtyq\SuperMagic\Domain\SuperAgent\Repository\Facade\TopicRepositoryInterface;
 use Dtyq\SuperMagic\Domain\SuperAgent\Repository\Facade\TransferLogRepositoryInterface;
+use Dtyq\SuperMagic\Domain\SuperAgent\Repository\Facade\WarmPoolSandboxRepositoryInterface;
 use Dtyq\SuperMagic\Domain\SuperAgent\Repository\Facade\WorkspaceRepositoryInterface;
 use Dtyq\SuperMagic\Domain\SuperAgent\Repository\Facade\WorkspaceVersionRepositoryInterface;
 use Dtyq\SuperMagic\Domain\SuperAgent\Repository\Persistence\AudioMarkerRepository;
@@ -103,6 +104,7 @@ use Dtyq\SuperMagic\Domain\SuperAgent\Repository\Persistence\TaskRepository;
 use Dtyq\SuperMagic\Domain\SuperAgent\Repository\Persistence\TokenUsageRecordRepository;
 use Dtyq\SuperMagic\Domain\SuperAgent\Repository\Persistence\TopicRepository;
 use Dtyq\SuperMagic\Domain\SuperAgent\Repository\Persistence\TransferLogRepository;
+use Dtyq\SuperMagic\Domain\SuperAgent\Repository\Persistence\WarmPoolSandboxRepository;
 use Dtyq\SuperMagic\Domain\SuperAgent\Repository\Persistence\WorkspaceRepository;
 use Dtyq\SuperMagic\Domain\SuperAgent\Repository\Persistence\WorkspaceVersionRepository;
 use Dtyq\SuperMagic\Domain\SuperAgent\Service\MessageScheduleDomainService;
@@ -176,6 +178,7 @@ class ConfigProvider
                 WorkspaceRepositoryInterface::class => WorkspaceRepository::class,
                 TaskMessageRepositoryInterface::class => TaskMessageRepository::class,
                 ProjectRepositoryInterface::class => ProjectRepository::class,
+                WarmPoolSandboxRepositoryInterface::class => WarmPoolSandboxRepository::class,
                 ProjectOperationLogRepositoryInterface::class => ProjectOperationLogRepository::class,
                 ProjectOperationLogDomainService::class => ProjectOperationLogDomainService::class,
                 SandboxInterface::class => SandboxService::class,
