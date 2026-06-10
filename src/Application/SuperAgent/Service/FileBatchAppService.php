@@ -10,6 +10,7 @@ namespace Dtyq\SuperMagic\Application\SuperAgent\Service;
 use App\Application\File\Service\FileAppService;
 use App\Application\File\Service\FileBatchStatusManager;
 use App\Application\File\Service\FileCleanupAppService;
+use App\Domain\Contact\Entity\ValueObject\DataIsolation;
 use App\ErrorCode\GenericErrorCode;
 use App\Infrastructure\Core\Exception\BusinessException;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
@@ -21,9 +22,13 @@ use Dtyq\SuperMagic\Domain\Share\Constant\ResourceType;
 use Dtyq\SuperMagic\Domain\Share\Service\ResourceShareDomainService;
 use Dtyq\SuperMagic\Domain\SuperAgent\Entity\ProjectEntity;
 use Dtyq\SuperMagic\Domain\SuperAgent\Entity\TaskFileEntity;
+use Dtyq\SuperMagic\Domain\SuperAgent\Entity\TopicEntity;
+use Dtyq\SuperMagic\Domain\SuperAgent\Entity\ValueObject\HiddenType;
+use Dtyq\SuperMagic\Domain\SuperAgent\Entity\ValueObject\TaskStatus;
 use Dtyq\SuperMagic\Domain\SuperAgent\Service\AgentDomainService;
 use Dtyq\SuperMagic\Domain\SuperAgent\Service\BatchDownloadPackDomainService;
 use Dtyq\SuperMagic\Domain\SuperAgent\Service\ProjectDomainService;
+use Dtyq\SuperMagic\Domain\SuperAgent\Service\TaskDomainService;
 use Dtyq\SuperMagic\Domain\SuperAgent\Service\TaskFileDomainService;
 use Dtyq\SuperMagic\Domain\SuperAgent\Service\TopicDomainService;
 use Dtyq\SuperMagic\ErrorCode\ShareErrorCode;
@@ -55,6 +60,8 @@ class FileBatchAppService extends AbstractAppService
         protected AgentDomainService $agentDomainService,
         protected MagicFSFileDomainService $magicFSFileDomainService,
         protected FileCleanupAppService $fileCleanupAppService,
+        protected TaskDomainService $taskDomainService,
+        protected TopicAppService $topicAppService,
         LoggerFactory $loggerFactory
     ) {
         $this->logger = $loggerFactory->get(get_class($this));
@@ -120,7 +127,13 @@ class FileBatchAppService extends AbstractAppService
 
         $targetName = $this->buildBatchDownloadTargetName($projectEntity->getProjectName());
         $organizationCode = $projectEntity->getUserOrganizationCode();
-        $sandboxId = $this->generateBatchPackSandboxId($projectEntity->getId());
+        $sandboxId = $this->initializeBatchPackSandbox(
+            $requestContext,
+            $batchKey,
+            $userAuthorization->getId(),
+            $organizationCode,
+            $projectEntity
+        );
 
         $this->statusManager->initializeTask($batchKey, $userId, count($leafFiles), $organizationCode, [
             'sandbox_id' => $sandboxId,
@@ -249,7 +262,13 @@ class FileBatchAppService extends AbstractAppService
 
         $targetName = $this->buildBatchDownloadTargetName($projectEntity->getProjectName());
         $organizationCode = $projectEntity->getUserOrganizationCode();
-        $sandboxId = $this->generateBatchPackSandboxId($projectEntity->getId());
+        $sandboxId = $this->initializeBatchPackSandbox(
+            $requestContext,
+            $batchKey,
+            $userId,
+            $organizationCode,
+            $projectEntity
+        );
 
         $this->statusManager->initializeTask($batchKey, $userId, count($leafFiles), $organizationCode, [
             'sandbox_id' => $sandboxId,
@@ -467,13 +486,7 @@ class FileBatchAppService extends AbstractAppService
 
             $authorization = $this->agentDomainService->getAuthorizationByUserId($userId);
             $stsTemporaryCredential = $this->getStsCredential($organizationCode, $projectWorkDir);
-            $actualSandboxId = $this->agentDomainService->ensureSandboxRunning(
-                $userId,
-                $organizationCode,
-                $sandboxId,
-                (string) $projectEntity->getId(),
-                $fullBaseWorkDir
-            );
+            $actualSandboxId = $sandboxId;
 
             $request = new FileConverterRequest(
                 $actualSandboxId,
@@ -534,6 +547,66 @@ class FileBatchAppService extends AbstractAppService
             $this->statusManager->setTaskFailed($batchKey, $e->getMessage());
             ExceptionBuilder::throw(SuperAgentErrorCode::BATCH_PUBLISH_FAILED, $e->getMessage());
         }
+    }
+
+    private function initializeBatchPackSandbox(
+        RequestContext $requestContext,
+        string $batchKey,
+        string $userId,
+        string $organizationCode,
+        ProjectEntity $projectEntity
+    ): string {
+        $dataIsolation = DataIsolation::simpleMake($organizationCode, $userId);
+        $topicEntity = $this->resolveBatchPackTopic($requestContext, $projectEntity);
+        $taskEntity = $this->taskDomainService->initDefaultTask(
+            $dataIsolation,
+            $topicEntity,
+            'Batch Download Pack Task'
+        );
+
+        $agentContext = $this->agentDomainService->buildInitAgentContext(
+            dataIsolation: $dataIsolation,
+            projectEntity: $projectEntity,
+            topicEntity: $topicEntity,
+            taskEntity: $taskEntity,
+            sandboxId: (string) $topicEntity->getId(),
+            skipInitMessage: true
+        );
+        $sandboxId = $this->agentDomainService->ensureSandboxInitialized($dataIsolation, $agentContext);
+
+        $this->topicDomainService->updateTopicStatusAndSandboxId(
+            $topicEntity->getId(),
+            $taskEntity->getId(),
+            TaskStatus::FINISHED,
+            $sandboxId
+        );
+        $this->taskDomainService->updateTaskStatus(
+            TaskStatus::FINISHED,
+            $taskEntity->getId(),
+            (string) $taskEntity->getId(),
+            $sandboxId
+        );
+
+        $this->logger->info('Batch pack sandbox initialized through sandbox pool', [
+            'batch_key' => $batchKey,
+            'topic_id' => $topicEntity->getId(),
+            'task_id' => $taskEntity->getId(),
+            'sandbox_id' => $sandboxId,
+            'project_id' => $projectEntity->getId(),
+        ]);
+
+        return $sandboxId;
+    }
+
+    private function resolveBatchPackTopic(
+        RequestContext $requestContext,
+        ProjectEntity $projectEntity
+    ): TopicEntity {
+        return $this->topicAppService->ensureHiddenTopic(
+            $requestContext,
+            $projectEntity->getId(),
+            HiddenType::BATCH_DOWNLOAD->value
+        );
     }
 
     private function recoverExistingSandboxPackTask(
@@ -772,11 +845,6 @@ class FileBatchAppService extends AbstractAppService
                 'bucket_type' => $bucketType->value,
             ]);
         }
-    }
-
-    private function generateBatchPackSandboxId(int $projectId): string
-    {
-        return WorkDirectoryUtil::generateUniqueCodeFromSnowflakeId($projectId . '_batch_pack');
     }
 
     private function generateTempDir(string $workDir): string
