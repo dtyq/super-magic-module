@@ -30,7 +30,6 @@ use Dtyq\SuperMagic\Domain\SuperAgent\Event\TopicCreatedEvent;
 use Dtyq\SuperMagic\Domain\SuperAgent\Event\TopicDeletedEvent;
 use Dtyq\SuperMagic\Domain\SuperAgent\Event\TopicRenamedEvent;
 use Dtyq\SuperMagic\Domain\SuperAgent\Event\TopicUpdatedEvent;
-use Dtyq\SuperMagic\Domain\SuperAgent\Service\ProjectDomainService;
 use Dtyq\SuperMagic\Domain\SuperAgent\Service\ProjectMemberDomainService;
 use Dtyq\SuperMagic\Domain\SuperAgent\Service\ProjectOperationLogDomainService;
 use Dtyq\SuperMagic\Infrastructure\Utils\IpUtil;
@@ -54,8 +53,6 @@ class ProjectOperatorLogSubscriber implements ListenerInterface
 
     private ProjectMemberDomainService $projectMemberDomainService;
 
-    private ProjectDomainService $projectDomainService;
-
     public function __construct()
     {
         $container = ApplicationContext::getContainer();
@@ -63,7 +60,6 @@ class ProjectOperatorLogSubscriber implements ListenerInterface
         $this->logger = $loggerFactory->get(static::class);
         $this->projectOperationLogDomainService = $container->get(ProjectOperationLogDomainService::class);
         $this->projectMemberDomainService = $container->get(ProjectMemberDomainService::class);
-        $this->projectDomainService = $container->get(ProjectDomainService::class);
     }
 
     /**
@@ -239,7 +235,6 @@ class ProjectOperatorLogSubscriber implements ListenerInterface
 
         if ($projectId !== null) {
             $this->projectMemberDomainService->updateUserLastActiveTime($userId, $projectId, $organizationCode);
-            $this->projectDomainService->updateUpdatedAtToNow($projectId);
         }
     }
 
