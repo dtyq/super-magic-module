@@ -558,6 +558,8 @@ class FileBatchAppService extends AbstractAppService
     ): string {
         $dataIsolation = DataIsolation::simpleMake($organizationCode, $userId);
         $topicEntity = $this->resolveBatchPackTopic($requestContext, $projectEntity);
+        $sandboxId = $this->resolveReusableBatchPackSandboxId($topicEntity);
+        $topicEntity->setSandboxId($sandboxId);
         $taskEntity = $this->taskDomainService->initDefaultTask(
             $dataIsolation,
             $topicEntity,
@@ -569,7 +571,7 @@ class FileBatchAppService extends AbstractAppService
             projectEntity: $projectEntity,
             topicEntity: $topicEntity,
             taskEntity: $taskEntity,
-            sandboxId: (string) $topicEntity->getId(),
+            sandboxId: $sandboxId,
             skipInitMessage: true
         );
         $sandboxId = $this->agentDomainService->ensureSandboxInitialized($dataIsolation, $agentContext);
@@ -594,6 +596,16 @@ class FileBatchAppService extends AbstractAppService
             'sandbox_id' => $sandboxId,
             'project_id' => $projectEntity->getId(),
         ]);
+
+        return $sandboxId;
+    }
+
+    private function resolveReusableBatchPackSandboxId(TopicEntity $topicEntity): string
+    {
+        $sandboxId = $topicEntity->getSandboxId();
+        if ($sandboxId === (string) $topicEntity->getId()) {
+            return '';
+        }
 
         return $sandboxId;
     }

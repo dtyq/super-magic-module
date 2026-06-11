@@ -316,6 +316,7 @@ class AgentDomainService
                 userSpaceRootFileId: $userSpaceRootFileId,
                 topicId: $topicEntity->getId()
             );
+            $this->refreshInitContextSandboxId($agentContext, $sandboxId);
 
             if ($interruptChecker !== null && $interruptChecker()) {
                 $this->logger->info('[Sandbox][Domain] Interrupted after sandbox creation', [
@@ -1305,6 +1306,18 @@ class AgentDomainService
             ]);
             return '';
         }
+    }
+
+    private function refreshInitContextSandboxId(AgentContext $agentContext, string $sandboxId): void
+    {
+        $initContext = $agentContext->getInitContext();
+        if ($initContext === null) {
+            return;
+        }
+
+        $metadata = $initContext->getMetadata();
+        $metadata['sandbox_id'] = $sandboxId;
+        $initContext->setMetadata($metadata);
     }
 
     /**
