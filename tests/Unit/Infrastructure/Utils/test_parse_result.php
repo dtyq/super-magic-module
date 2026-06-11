@@ -5,7 +5,8 @@ declare(strict_types=1);
 /**
  * Copyright (c) The Magic , Distributed under the software license
  */
-require_once '/Users/liaobw/Workspace/code/develop/magic/backend/magic-service/vendor/autoload.php';
+$autoloadPath = dirname(__DIR__, 5) . '/magic-service/vendor/autoload.php';
+require_once $autoloadPath;
 
 use Dtyq\SuperMagic\Infrastructure\Utils\FileMetadataUtil;
 
