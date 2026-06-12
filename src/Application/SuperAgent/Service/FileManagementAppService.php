@@ -918,6 +918,19 @@ class FileManagementAppService extends AbstractAppService
 
             // 6. Sync move: same project and same organization without keep-both
             $oldParentId = $fileEntity->getParentId();
+            // Pre-detect overwritten file before moveFileWithCheck silently handles it via MagicFS
+            $overwrittenFile = null;
+            if (! $fileEntity->getIsDirectory()) {
+                $targetParentIdForCheck = $targetParentId <= 0 ? null : $targetParentId;
+                $candidate = $this->taskFileDomainService->getByProjectParentAndName(
+                    $fileEntity->getProjectId(),
+                    $targetParentIdForCheck,
+                    $fileEntity->getFileName()
+                );
+                if ($candidate !== null && $candidate->getFileId() !== $fileEntity->getFileId() && ! $candidate->getIsDirectory()) {
+                    $overwrittenFile = $candidate;
+                }
+            }
             $updatedFileEntity = $this->taskFileDomainService->moveFileWithCheck(
                 (string) $fileEntity->getFileId(),
                 (string) $targetParentId,
@@ -928,7 +941,7 @@ class FileManagementAppService extends AbstractAppService
             $movedUserAuth = new MagicUserAuthorization();
             $movedUserAuth->setId($userAuthorization->getId());
             $movedUserAuth->setOrganizationCode($userAuthorization->getOrganizationCode());
-            $this->eventDispatcher->dispatch(new FileMovedEvent($updatedFileEntity, $movedUserAuth, $oldParentId));
+            $this->eventDispatcher->dispatch(new FileMovedEvent($updatedFileEntity, $movedUserAuth, $oldParentId, $overwrittenFile));
 
             // 7. Re-get file entity with updated data
             $newFileEntity = $this->taskFileDomainService->getById($fileId);
@@ -2325,13 +2338,26 @@ class FileManagementAppService extends AbstractAppService
             }
 
             $oldParentId = $sourceFileEntity->getParentId();
+            // Pre-detect overwritten file before moveFileWithCheck silently handles it via MagicFS
+            $syncOverwrittenFile = null;
+            if (! $sourceFileEntity->getIsDirectory()) {
+                $targetParentIdForCheck = $targetParentId <= 0 ? null : $targetParentId;
+                $syncCandidate = $this->taskFileDomainService->getByProjectParentAndName(
+                    $sourceFileEntity->getProjectId(),
+                    $targetParentIdForCheck,
+                    $sourceFileEntity->getFileName()
+                );
+                if ($syncCandidate !== null && $syncCandidate->getFileId() !== $sourceFileEntity->getFileId() && ! $syncCandidate->getIsDirectory()) {
+                    $syncOverwrittenFile = $syncCandidate;
+                }
+            }
             $updatedFileEntity = $this->taskFileDomainService->moveFileWithCheck(
                 (string) $sourceFileEntity->getFileId(),
                 (string) $targetParentId,
                 true
             );
 
-            $this->eventDispatcher->dispatch(new FileMovedEvent($updatedFileEntity, $movedUserAuth, $oldParentId));
+            $this->eventDispatcher->dispatch(new FileMovedEvent($updatedFileEntity, $movedUserAuth, $oldParentId, $syncOverwrittenFile));
 
             // Re-fetch with the updated row so the response reflects the latest state.
             $newFileEntity = $this->taskFileDomainService->getById($intFileId);
