@@ -12,9 +12,6 @@ use App\Domain\Flow\Entity\ValueObject\FlowDataIsolation;
 use App\Domain\Mode\Entity\ModeDataIsolation;
 use App\Domain\Mode\Entity\ValueQuery\ModeQuery;
 use App\Domain\Mode\Service\ModeDomainService;
-use App\Domain\Permission\Entity\ValueObject\PermissionDataIsolation;
-use App\Domain\Permission\Entity\ValueObject\ResourceVisibility\ResourceType as ResourceVisibilityResourceType;
-use App\Domain\Permission\Service\ResourceVisibilityDomainService;
 use App\Infrastructure\Core\DataIsolation\BaseOrganizationInfoManager;
 use App\Infrastructure\Core\DataIsolation\BaseSubscriptionManager;
 use App\Infrastructure\Core\DataIsolation\BaseThirdPlatformDataIsolationManager;
@@ -23,9 +20,8 @@ use App\Infrastructure\Core\DataIsolation\SubscriptionManagerInterface;
 use App\Infrastructure\Core\DataIsolation\ThirdPlatformDataIsolationManagerInterface;
 use App\Infrastructure\Core\Exception\BusinessException;
 use App\Infrastructure\Core\ValueObject\Page;
-use App\Interfaces\Authorization\Web\MagicUserAuthorization;
-use Dtyq\SuperMagic\Application\Collaboration\Policy\ResourceAccessPolicyService;
 use Dtyq\SuperMagic\Application\Agent\Service\SuperMagicAgentAppService;
+use Dtyq\SuperMagic\Application\Collaboration\Policy\ResourceAccessPolicyService;
 use Dtyq\SuperMagic\Domain\Agent\Entity\SuperMagicAgentEntity;
 use Dtyq\SuperMagic\Domain\Agent\Entity\ValueObject\SuperMagicAgentDataIsolation;
 use Dtyq\SuperMagic\Domain\Agent\Entity\ValueObject\SuperMagicAgentTool;
@@ -131,8 +127,7 @@ class SuperMagicAgentAppServiceTest extends TestCase
         $this->setProperty($this->service, 'resourceAccessPolicyService', $resourceAccessPolicyService);
         $this->setProperty($this->service, 'modeDomainService', $this->createModeDomainService([]));
 
-        $dataIsolation = (new ReflectionClass(SuperMagicAgentDataIsolation::class))->newInstanceWithoutConstructor();
-        $dataIsolation->setCurrentOrganizationCode('DT001')->setCurrentUserId('user-1');
+        $dataIsolation = new SuperMagicAgentDataIsolation('DT001', 'user-1');
 
         $method = new ReflectionMethod($this->service, 'assertAgentReadable');
         $method->setAccessible(true);
@@ -237,24 +232,6 @@ class SuperMagicAgentAppServiceTest extends TestCase
         self::assertSame('pooled-agent-sandbox-1', $sandboxId);
     }
 
-    private function createResourceVisibilityDomainService(array $codes): ResourceVisibilityDomainService
-    {
-        return new readonly class($codes) extends ResourceVisibilityDomainService {
-            public function __construct(private array $codes)
-            {
-            }
-
-            public function getUserAccessibleResourceCodes(
-                PermissionDataIsolation $dataIsolation,
-                string $userId,
-                ResourceVisibilityResourceType $resourceType,
-                ?array $resourceIds = null
-            ): array {
-                return $this->codes;
-            }
-        };
-    }
-
     /**
      * @param array<string> $officialCodes
      */
@@ -284,6 +261,15 @@ class SuperMagicAgentAppServiceTest extends TestCase
         return new class($services) implements ContainerInterface {
             public function __construct(private readonly array $services)
             {
+            }
+
+            public function make(string $id, array $parameters = [])
+            {
+                if ($this->has($id)) {
+                    return $this->get($id);
+                }
+
+                return new $id(...array_values($parameters));
             }
 
             public function get(string $id)

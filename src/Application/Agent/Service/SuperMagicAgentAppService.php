@@ -9,26 +9,20 @@ namespace Dtyq\SuperMagic\Application\Agent\Service;
 
 use App\Application\Contact\UserSetting\UserSettingKey;
 use App\Application\Flow\ExecuteManager\NodeRunner\LLM\ToolsExecutor;
-use App\Application\ModelGateway\MicroAgent\MicroAgentFactory;
 use App\Domain\Contact\Entity\MagicDepartmentEntity;
 use App\Domain\Contact\Entity\MagicUserEntity;
 use App\Domain\Contact\Entity\MagicUserSettingEntity;
 use App\Domain\Contact\Entity\ValueObject\DataIsolation as ContactDataIsolation;
 use App\Domain\Contact\Service\MagicDepartmentDomainService;
 use App\Domain\Contact\Service\MagicUserDomainService;
-use App\Domain\Contact\Service\MagicUserSettingDomainService;
-use App\Domain\File\Service\FileDomainService;
 use App\Domain\Mode\Entity\ModeEntity;
 use App\Domain\Mode\Entity\ValueQuery\ModeQuery;
-use App\Domain\Mode\Service\ModeDomainService;
 use App\Domain\Permission\Entity\ValueObject\OperationPermission\Operation;
 use App\Domain\Permission\Entity\ValueObject\OperationPermission\ResourceType;
 use App\Domain\Permission\Entity\ValueObject\ResourceVisibility\PrincipalType;
 use App\Domain\Permission\Entity\ValueObject\ResourceVisibility\ResourceType as ResourceVisibilityResourceType;
 use App\Domain\Permission\Entity\ValueObject\ResourceVisibility\VisibilityType;
-use App\Domain\Permission\Service\OperationPermissionDomainService;
 use App\Domain\Permission\Service\ResourceVisibilityDomainService;
-use App\Domain\Provider\Service\AiAbilityDomainService;
 use App\Infrastructure\Core\DataIsolation\ValueObject\OrganizationType;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Infrastructure\Core\ValueObject\Page;
@@ -53,7 +47,6 @@ use Dtyq\SuperMagic\Domain\Agent\Entity\ValueObject\SuperMagicAgentDataIsolation
 use Dtyq\SuperMagic\Domain\Agent\Entity\ValueObject\SuperMagicAgentType;
 use Dtyq\SuperMagic\Domain\Agent\Event\AgentSkillsAddedEvent;
 use Dtyq\SuperMagic\Domain\Agent\Event\AgentSkillsRemovedEvent;
-use Dtyq\SuperMagic\Domain\Agent\Service\SuperMagicAgentDomainService;
 use Dtyq\SuperMagic\Domain\Agent\Service\SuperMagicAgentPlaybookDomainService;
 use Dtyq\SuperMagic\Domain\Agent\Service\SuperMagicAgentSkillDomainService;
 use Dtyq\SuperMagic\Domain\Agent\Service\SuperMagicAgentVersionDomainService;
@@ -82,7 +75,6 @@ use Dtyq\SuperMagic\Interfaces\Agent\DTO\Response\AgentPublishPrefillResponseDTO
 use Hyperf\DbConnection\Annotation\Transactional;
 use Hyperf\DbConnection\Db;
 use Hyperf\Di\Annotation\Inject;
-use Hyperf\Logger\LoggerFactory;
 use Qbhy\HyperfAuth\Authenticatable;
 use Throwable;
 
@@ -101,6 +93,12 @@ class SuperMagicAgentAppService extends AbstractSuperMagicAppService
     protected SkillVersionDomainService $skillVersionDomainService;
 
     #[Inject]
+    protected ResourceVisibilityDomainService $resourceVisibilityDomainService;
+
+    #[Inject]
+    protected ProjectDomainService $projectDomainService;
+
+    #[Inject]
     protected SuperMagicAgentSkillDomainService $superMagicAgentSkillDomainService;
 
     #[Inject]
@@ -113,6 +111,9 @@ class SuperMagicAgentAppService extends AbstractSuperMagicAppService
     protected UserAgentDomainService $userAgentDomainService;
 
     #[Inject]
+    protected TaskFileDomainService $taskFileDomainService;
+
+    #[Inject]
     protected SkillsMdSyncService $skillsMdSyncService;
 
     #[Inject]
@@ -121,34 +122,14 @@ class SuperMagicAgentAppService extends AbstractSuperMagicAppService
     #[Inject]
     protected MagicUserDomainService $magicUserDomainService;
 
-    public function __construct(
-        OperationPermissionDomainService $operationPermissionDomainService,
-        SuperMagicAgentDomainService $superMagicAgentDomainService,
-        ModeDomainService $modeDomainService,
-        MagicUserSettingDomainService $magicUserSettingDomainService,
-        ResourceVisibilityDomainService $resourceVisibilityDomainService,
-        FileDomainService $fileDomainService,
-        MicroAgentFactory $microAgentFactory,
-        LoggerFactory $loggerFactory,
-        AiAbilityDomainService $aiAbilityDomainService,
-        protected ProjectDomainService $projectDomainService,
-        protected TaskFileDomainService $taskFileDomainService,
-        protected AgentDomainService $agentDomainService,
-        protected TopicDomainService $topicDomainService,
-        protected TaskDomainService $taskDomainService,
-    ) {
-        parent::__construct(
-            $operationPermissionDomainService,
-            $superMagicAgentDomainService,
-            $modeDomainService,
-            $magicUserSettingDomainService,
-            $resourceVisibilityDomainService,
-            $fileDomainService,
-            $microAgentFactory,
-            $loggerFactory,
-            $aiAbilityDomainService
-        );
-    }
+    #[Inject]
+    protected AgentDomainService $agentDomainService;
+
+    #[Inject]
+    protected TopicDomainService $topicDomainService;
+
+    #[Inject]
+    protected TaskDomainService $taskDomainService;
 
     #[Transactional]
     public function save(Authenticatable $authorization, SuperMagicAgentEntity $entity, bool $checkPrompt = true): SuperMagicAgentEntity
