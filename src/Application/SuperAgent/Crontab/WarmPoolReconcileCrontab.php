@@ -43,6 +43,12 @@ use Throwable;
  * touch them). It too only deletes the DB row, never the pod. The TTL is
  * configurable via `super-magic.warm_pool.claimed_ttl_hours` (default 6h,
  * <= 0 disables it).
+ * * A FOURTH pass ({@see WarmPoolSandboxAppService::cleanupErrorPods()}) reaps
+ * `error` tombstones (failed creates) and any pod they leaked, once aged past
+ * `super-magic.warm_pool.error_retention_minutes` (default 15m, <= 0 disables
+ * it). It is the backstop for the immediate teardown refill does on a failed
+ * create, and the GC that bounds the `error` row count the refill circuit
+ * breaker reads.
  * * Disabled by default; enable via `super-magic.warm_pool.enabled = true`.
  */
 #[Crontab(
@@ -62,6 +68,8 @@ readonly class WarmPoolReconcileCrontab
     private const CLAIMED_DEAD_POD_BATCH_LIMIT = 50;
 
     private const AGED_CLAIMED_TOMBSTONE_BATCH_LIMIT = 100;
+
+    private const ERROR_POD_CLEANUP_BATCH_LIMIT = 100;
 
     protected LoggerInterface $logger;
 
@@ -137,6 +145,27 @@ readonly class WarmPoolReconcileCrontab
                 }
             } catch (Throwable $e) {
                 $this->logger->error('[WarmPoolReconcile] aged claimed tombstone eviction failed', [
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
+                ]);
+            }
+
+            // Independent fourth pass: reap `error` tombstones (failed creates)
+            // and any pod they may have leaked, once aged past the retention
+            // window. This is the backstop for refill's immediate teardown and
+            // the GC that keeps failed-create rows from growing the table. It
+            // only deletes rows whose updated_at is older than the retention
+            // TTL, so the refill circuit breaker still sees recent failures.
+            try {
+                $cleaned = $this->warmPoolSandboxAppService->cleanupErrorPods(null, self::ERROR_POD_CLEANUP_BATCH_LIMIT);
+                if (($cleaned['deleted'] ?? 0) > 0) {
+                    $this->logger->info('[WarmPoolReconcile] error pod cleanup done', [
+                        'scanned' => $cleaned['scanned'] ?? 0,
+                        'deleted' => $cleaned['deleted'] ?? 0,
+                    ]);
+                }
+            } catch (Throwable $e) {
+                $this->logger->error('[WarmPoolReconcile] error pod cleanup failed', [
                     'error' => $e->getMessage(),
                     'trace' => $e->getTraceAsString(),
                 ]);

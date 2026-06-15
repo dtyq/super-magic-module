@@ -12,16 +12,24 @@ use Dtyq\SuperMagic\Domain\SuperAgent\Entity\WarmPoolSandboxEntity;
 use Dtyq\SuperMagic\Domain\SuperAgent\Service\WarmPoolSandboxDomainService;
 use Dtyq\SuperMagic\Infrastructure\ExternalAPI\SandboxOS\Gateway\Constant\SandboxStatus;
 use Dtyq\SuperMagic\Infrastructure\ExternalAPI\SandboxOS\Gateway\Result\BatchStatusResult;
+use Dtyq\SuperMagic\Infrastructure\ExternalAPI\SandboxOS\Gateway\Result\GatewayResult;
 use Dtyq\SuperMagic\Infrastructure\ExternalAPI\SandboxOS\Gateway\SandboxGatewayInterface;
 use Hyperf\Logger\LoggerFactory;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 
 /**
- * Unit tests for {@see WarmPoolSandboxAppService::reconcileClaimedDeadPods()}.
+ * Unit tests for {@see WarmPoolSandboxAppService}.
  *
- * Covers the "claimed in DB but pod already reaped by the gateway" path that
- * keeps dead-pod `claimed` rows from piling up forever.
+ * Covers:
+ *   - {@see WarmPoolSandboxAppService::reconcileClaimedDeadPods()} — the
+ *     "claimed in DB but pod already reaped by the gateway" path that keeps
+ *     dead-pod `claimed` rows from piling up forever.
+ *   - {@see WarmPoolSandboxAppService::refill()} — the circuit breaker that
+ *     stops creating into an unhealthy cluster, and the failed-create path
+ *     that marks the row `error` and immediately tears down the leaked pod.
+ *   - {@see WarmPoolSandboxAppService::cleanupErrorPods()} — the backstop
+ *     that reaps aged `error` tombstones and their pods.
  *
  * @internal
  */
@@ -110,6 +118,110 @@ class WarmPoolSandboxAppServiceTest extends TestCase
         $this->assertSame(1, $result['scanned']);
         $this->assertSame(0, $result['reclaimed']);
         $this->assertSame('gateway_error', $result['skipped']);
+    }
+
+    public function testRefillSkipsWhenCircuitBreakerOpen(): void
+    {
+        $domain = $this->createMock(WarmPoolSandboxDomainService::class);
+        // Two recent-error probes: the window count (trips threshold) and the
+        // cooldown count (a fresh failure -> stay fully open, no probe).
+        $domain->method('countRecentErrors')->willReturn(1000);
+        // Breaker is open BEFORE image resolution, so nothing downstream runs.
+        $domain->expects($this->never())->method('countAvailableForImage');
+        $domain->expects($this->never())->method('recordCreating');
+
+        $gateway = $this->createMock(SandboxGatewayInterface::class);
+        // The whole point: an open breaker never asks the gateway to create.
+        $gateway->expects($this->never())->method('createWarmPoolSandbox');
+        $gateway->expects($this->never())->method('getLatestImages');
+
+        $service = $this->makeService($domain, $gateway);
+
+        $result = $service->refill(10);
+
+        $this->assertSame('circuit_open', $result['skipped']);
+        $this->assertSame(0, $result['created']);
+    }
+
+    public function testRefillMarksErrorAndDeletesPodOnCreateFailure(): void
+    {
+        $domain = $this->createMock(WarmPoolSandboxDomainService::class);
+        // Breaker closed.
+        $domain->method('countRecentErrors')->willReturn(0);
+        $domain->method('countAvailableForImage')->willReturn(0);
+        // Record-ahead returns a row with an id so the failure path can mark it.
+        $recorded = $this->entity(7001, 'wp-fail');
+        $domain->method('recordCreating')->willReturn($recorded);
+
+        // Each failed create must: (a) flip the row to error, (b) never mark ready.
+        $markedError = [];
+        $domain->method('markError')->willReturnCallback(function (int $id) use (&$markedError) {
+            $markedError[] = $id;
+        });
+        $domain->expects($this->never())->method('markReady');
+
+        $gateway = $this->createMock(SandboxGatewayInterface::class);
+        $gateway->method('getLatestImages')->willReturn([
+            'agent_image' => 'agent:1',
+            'agfs_image' => 'agfs:1',
+        ]);
+        $gateway->method('createWarmPoolSandbox')->willReturn(GatewayResult::error('disk pressure'));
+        // The leaked pod must be torn down immediately on each failure.
+        $deleted = [];
+        $gateway->method('deleteSandbox')->willReturnCallback(function (string $sandboxId) use (&$deleted) {
+            $deleted[] = $sandboxId;
+            return GatewayResult::success();
+        });
+
+        $service = $this->makeService($domain, $gateway);
+
+        $result = $service->refill(10);
+
+        $this->assertSame(0, $result['created']);
+        // Default max_consecutive_failures = 3, so the burst aborts after 3
+        // back-to-back failures rather than firing all 5 slots.
+        $this->assertCount(3, $markedError);
+        $this->assertCount(3, $deleted);
+        // The deleted pod id is the locally-generated sandbox_id passed to the
+        // gateway, so just assert it's a non-empty id rather than a fixed value.
+        $this->assertNotSame('', $deleted[0]);
+    }
+
+    public function testCleanupErrorPodsDeletesPodAndRow(): void
+    {
+        $row = $this->entity(8001, 'wp-error');
+
+        $domain = $this->createMock(WarmPoolSandboxDomainService::class);
+        $domain->method('listErrorForCleanup')->willReturn([$row]);
+        $domain->expects($this->once())->method('deleteEntry')->with(8001);
+
+        $gateway = $this->createMock(SandboxGatewayInterface::class);
+        $gateway->expects($this->once())
+            ->method('deleteSandbox')
+            ->with('wp-error')
+            ->willReturn(GatewayResult::success());
+
+        $service = $this->makeService($domain, $gateway);
+
+        $result = $service->cleanupErrorPods(15, 100);
+
+        $this->assertSame(['scanned' => 1, 'deleted' => 1], $result);
+    }
+
+    public function testCleanupErrorPodsDisabledWhenRetentionNonPositive(): void
+    {
+        $domain = $this->createMock(WarmPoolSandboxDomainService::class);
+        $domain->expects($this->never())->method('listErrorForCleanup');
+
+        $gateway = $this->createMock(SandboxGatewayInterface::class);
+        $gateway->expects($this->never())->method('deleteSandbox');
+
+        $service = $this->makeService($domain, $gateway);
+
+        $result = $service->cleanupErrorPods(0, 100);
+
+        $this->assertSame('disabled', $result['skipped']);
+        $this->assertSame(0, $result['deleted']);
     }
 
     private function makeService(

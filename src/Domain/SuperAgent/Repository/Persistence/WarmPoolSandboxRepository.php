@@ -218,14 +218,30 @@ class WarmPoolSandboxRepository implements WarmPoolSandboxRepositoryInterface
             ]) > 0;
     }
 
-    public function markReady(int $id, ?int $provisionDurationMs = null): bool
-    {
+    public function markReady(
+        int $id,
+        ?int $provisionDurationMs = null,
+        ?string $sandboxName = null,
+        ?string $agentImage = null,
+        ?string $agfsImage = null
+    ): bool {
         $attrs = [
             'status' => WarmPoolSandboxStatus::Ready->value,
             'updated_at' => date('Y-m-d H:i:s'),
         ];
         if ($provisionDurationMs !== null) {
             $attrs['provision_duration_ms'] = $provisionDurationMs;
+        }
+        // Back-fill the gateway-issued metadata that was only provisional when
+        // the row was recorded ahead of the create call.
+        if ($sandboxName !== null && $sandboxName !== '') {
+            $attrs['sandbox_name'] = $sandboxName;
+        }
+        if ($agentImage !== null && $agentImage !== '') {
+            $attrs['agent_image'] = $agentImage;
+        }
+        if ($agfsImage !== null && $agfsImage !== '') {
+            $attrs['agfs_image'] = $agfsImage;
         }
         return WarmPoolSandboxModel::query()
             ->where('env', $this->env)
@@ -240,6 +256,27 @@ class WarmPoolSandboxRepository implements WarmPoolSandboxRepositoryInterface
             ->where('env', $this->env)
             ->where('id', $id)
             ->delete() > 0;
+    }
+
+    public function countByStatusUpdatedSince(string $status, string $since): int
+    {
+        return WarmPoolSandboxModel::query()
+            ->where('env', $this->env)
+            ->where('status', $status)
+            ->where('updated_at', '>=', $since)
+            ->count();
+    }
+
+    public function findByStatusUpdatedBefore(string $status, string $updatedBefore, int $limit = 100): array
+    {
+        $models = WarmPoolSandboxModel::query()
+            ->where('env', $this->env)
+            ->where('status', $status)
+            ->where('updated_at', '<=', $updatedBefore)
+            ->orderBy('updated_at', 'ASC')
+            ->limit($limit)
+            ->get();
+        return array_map(fn ($m) => $this->toEntity($m), $models->all());
     }
 
     public function findAllPooled(int $limit = 500): array

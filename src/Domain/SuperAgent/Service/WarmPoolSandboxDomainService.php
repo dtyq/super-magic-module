@@ -74,14 +74,51 @@ class WarmPoolSandboxDomainService
         return $this->repository->insert($entity);
     }
 
-    public function markReady(int $id, ?int $provisionDurationMs = null): void
+    public function markReady(int $id, ?int $provisionDurationMs = null, ?string $sandboxName = null, ?string $agentImage = null, ?string $agfsImage = null): void
     {
-        $this->repository->markReady($id, $provisionDurationMs);
+        $this->repository->markReady($id, $provisionDurationMs, $sandboxName, $agentImage, $agfsImage);
     }
 
     public function markDead(int $id, string $reason): void
     {
         $this->repository->updateStatus($id, WarmPoolSandboxStatus::Dead->value, $reason);
+    }
+
+    /**
+     * Flip a `creating` row to `error` after a failed gateway create. The row
+     * is kept (rather than deleted) so the pod it may have leaked stays
+     * traceable for the cleanup pass and so the refill circuit breaker can
+     * count it as a recent failure.
+     */
+    public function markError(int $id, string $reason): void
+    {
+        $this->repository->updateStatus($id, WarmPoolSandboxStatus::Error->value, mb_substr($reason, 0, 250));
+    }
+
+    /**
+     * Number of `error` rows whose updated_at falls within the last
+     * `$withinSeconds`. Drives the refill circuit breaker entirely off the
+     * DB, so it survives restarts and self-heals as old failures age out.
+     */
+    public function countRecentErrors(int $withinSeconds): int
+    {
+        if ($withinSeconds <= 0) {
+            return 0;
+        }
+        $since = date('Y-m-d H:i:s', time() - $withinSeconds);
+        return $this->repository->countByStatusUpdatedSince(WarmPoolSandboxStatus::Error->value, $since);
+    }
+
+    /**
+     * `error` rows whose updated_at is older than `$updatedBefore`, oldest
+     * first. Used by the cleanup pass to reap leaked pods + GC tombstones
+     * once they have aged past the retention window.
+     *
+     * @return WarmPoolSandboxEntity[]
+     */
+    public function listErrorForCleanup(string $updatedBefore, int $limit = 100): array
+    {
+        return $this->repository->findByStatusUpdatedBefore(WarmPoolSandboxStatus::Error->value, $updatedBefore, $limit);
     }
 
     /**

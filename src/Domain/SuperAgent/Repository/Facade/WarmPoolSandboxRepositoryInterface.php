@@ -79,11 +79,39 @@ interface WarmPoolSandboxRepositoryInterface
 
     /**
      * Flip a `creating` row to `ready`. Optionally records how long
-     * (in milliseconds) provisioning took, for debugging.
+     * (in milliseconds) provisioning took, and back-fills the gateway-issued
+     * sandbox name / image generation now that the create call has returned.
+     * The non-duration metadata is passed because the row is persisted
+     * BEFORE the gateway call (record-ahead), so its name/image were only
+     * provisional at insert time.
      */
-    public function markReady(int $id, ?int $provisionDurationMs = null): bool;
+    public function markReady(
+        int $id,
+        ?int $provisionDurationMs = null,
+        ?string $sandboxName = null,
+        ?string $agentImage = null,
+        ?string $agfsImage = null
+    ): bool;
 
     public function deleteById(int $id): bool;
+
+    /**
+     * Count rows currently in `$status` whose updated_at is at or after
+     * `$since`. Used by the refill circuit breaker to size the recent
+     * failure rate without keeping any out-of-band counter.
+     */
+    public function countByStatusUpdatedSince(string $status, string $since): int;
+
+    /**
+     * Return rows in `$status` whose updated_at is at or before
+     * `$updatedBefore`, oldest first. Used by the error-pod cleanup pass to
+     * reap leaked pods and GC their tombstone rows once they have aged past
+     * the retention window (kept long enough for the circuit breaker to have
+     * counted them).
+     *
+     * @return WarmPoolSandboxEntity[]
+     */
+    public function findByStatusUpdatedBefore(string $status, string $updatedBefore, int $limit = 100): array;
 
     /**
      * Return all sandbox rows still sitting in the pool (creating / ready / dead).
