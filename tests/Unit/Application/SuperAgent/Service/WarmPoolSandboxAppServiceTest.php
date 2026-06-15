@@ -187,15 +187,23 @@ class WarmPoolSandboxAppServiceTest extends TestCase
         $this->assertNotSame('', $deleted[0]);
     }
 
-    public function testCleanupErrorPodsDeletesPodAndRow(): void
+    public function testCleanupErrorPodsDeletesRowOnlyAfterSandboxConfirmedDeleted(): void
     {
         $row = $this->entity(8001, 'wp-error');
 
         $domain = $this->createMock(WarmPoolSandboxDomainService::class);
         $domain->method('listErrorForCleanup')->willReturn([$row]);
+        // Row dropped only AFTER deleteSandbox confirms the cluster teardown.
         $domain->expects($this->once())->method('deleteEntry')->with(8001);
 
+        // Status unknown (absent from map) -> must actively delete and require
+        // success before removing the row.
+        $batch = $this->createMock(BatchStatusResult::class);
+        $batch->method('isSuccess')->willReturn(true);
+        $batch->method('getStatusMap')->willReturn([]);
+
         $gateway = $this->createMock(SandboxGatewayInterface::class);
+        $gateway->method('getBatchSandboxStatus')->willReturn($batch);
         $gateway->expects($this->once())
             ->method('deleteSandbox')
             ->with('wp-error')
@@ -205,7 +213,59 @@ class WarmPoolSandboxAppServiceTest extends TestCase
 
         $result = $service->cleanupErrorPods(15, 100);
 
-        $this->assertSame(['scanned' => 1, 'deleted' => 1], $result);
+        $this->assertSame(['scanned' => 1, 'deleted' => 1, 'failed' => 0], $result);
+    }
+
+    public function testCleanupErrorPodsKeepsRowWhenSandboxDeletionUnconfirmed(): void
+    {
+        $row = $this->entity(8002, 'wp-stuck');
+
+        $domain = $this->createMock(WarmPoolSandboxDomainService::class);
+        $domain->method('listErrorForCleanup')->willReturn([$row]);
+        // Deletion not confirmed -> the row MUST be kept so the leaked sandbox
+        // stays traceable for the next cleanup pass.
+        $domain->expects($this->never())->method('deleteEntry');
+
+        $batch = $this->createMock(BatchStatusResult::class);
+        $batch->method('isSuccess')->willReturn(true);
+        $batch->method('getStatusMap')->willReturn(['wp-stuck' => SandboxStatus::RUNNING]);
+
+        $gateway = $this->createMock(SandboxGatewayInterface::class);
+        $gateway->method('getBatchSandboxStatus')->willReturn($batch);
+        $gateway->expects($this->once())
+            ->method('deleteSandbox')
+            ->with('wp-stuck')
+            ->willReturn(GatewayResult::error('cluster unreachable'));
+
+        $service = $this->makeService($domain, $gateway);
+
+        $result = $service->cleanupErrorPods(15, 100);
+
+        $this->assertSame(['scanned' => 1, 'deleted' => 0, 'failed' => 1], $result);
+    }
+
+    public function testCleanupErrorPodsDropsRowWithoutDeleteWhenAlreadyGone(): void
+    {
+        $row = $this->entity(8003, 'wp-gone');
+
+        $domain = $this->createMock(WarmPoolSandboxDomainService::class);
+        $domain->method('listErrorForCleanup')->willReturn([$row]);
+        $domain->expects($this->once())->method('deleteEntry')->with(8003);
+
+        // Cluster already reports it gone -> drop the row with no delete call.
+        $batch = $this->createMock(BatchStatusResult::class);
+        $batch->method('isSuccess')->willReturn(true);
+        $batch->method('getStatusMap')->willReturn(['wp-gone' => SandboxStatus::NOT_FOUND]);
+
+        $gateway = $this->createMock(SandboxGatewayInterface::class);
+        $gateway->method('getBatchSandboxStatus')->willReturn($batch);
+        $gateway->expects($this->never())->method('deleteSandbox');
+
+        $service = $this->makeService($domain, $gateway);
+
+        $result = $service->cleanupErrorPods(15, 100);
+
+        $this->assertSame(['scanned' => 1, 'deleted' => 1, 'failed' => 0], $result);
     }
 
     public function testCleanupErrorPodsDisabledWhenRetentionNonPositive(): void

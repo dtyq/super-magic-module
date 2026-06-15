@@ -287,6 +287,13 @@ class WarmPoolSandboxAppService extends AbstractAppService
      * teardown in {@see refill()} could not reach the gateway, and the GC that
      * keeps the `error` rows from growing the table without bound.
      *
+     * The DB row is the ONLY record that ties us back to a possibly-leaked
+     * cluster sandbox, so it is dropped strictly AFTER the cluster sandbox is
+     * confirmed gone — either the gateway batch-status reports it as
+     * NotFound/Exited, or deleteSandbox returns success. A row whose sandbox
+     * we cannot confirm deleted is left in place to be retried on a later
+     * pass, so a delete failure can never orphan a still-running sandbox.
+     *
      * Retention MUST exceed the circuit-breaker window so a tombstone is only
      * dropped after the breaker has had its full chance to count it.
      *
@@ -305,29 +312,41 @@ class WarmPoolSandboxAppService extends AbstractAppService
             return ['scanned' => 0, 'deleted' => 0];
         }
 
+        // Best-effort batch status lookup: lets us drop rows whose sandbox the
+        // cluster already reports gone WITHOUT a delete round-trip. If the
+        // lookup fails the map is empty, so every row falls through to an
+        // explicit deleteSandbox that must succeed before the row is removed.
+        $statusMap = $this->safeBatchSandboxStatus(
+            array_map(fn (WarmPoolSandboxEntity $row) => $row->getSandboxId(), $rows)
+        );
+
         $deleted = 0;
+        $failed = 0;
         foreach ($rows as $row) {
             $id = $row->getId();
             if ($id === null) {
                 continue;
             }
-            // Best-effort pod teardown: harmless/idempotent if refill already
-            // deleted it; the backstop if refill's immediate delete failed.
-            $this->bestEffortDeletePod($row->getSandboxId(), 'error_cleanup');
+            // Only drop the row once the cluster sandbox is confirmed gone.
+            if (! $this->ensureSandboxDeleted($row->getSandboxId(), $statusMap[$row->getSandboxId()] ?? null, 'error_cleanup')) {
+                ++$failed;
+                continue;
+            }
             $this->domain->deleteEntry($id);
             ++$deleted;
         }
 
-        if ($deleted > 0) {
+        if ($deleted > 0 || $failed > 0) {
             $this->logger->info('[WarmPoolSandbox] Cleaned up error warm-pool sandboxes', [
                 'retention_minutes' => $retentionMinutes,
                 'cutoff' => $cutoff,
                 'scanned' => count($rows),
                 'deleted' => $deleted,
+                'failed' => $failed,
             ]);
         }
 
-        return ['scanned' => count($rows), 'deleted' => $deleted];
+        return ['scanned' => count($rows), 'deleted' => $deleted, 'failed' => $failed];
     }
 
     /**
@@ -654,6 +673,79 @@ class WarmPoolSandboxAppService extends AbstractAppService
             'deleted' => $deleted,
             'errors' => $errors,
         ];
+    }
+
+    /**
+     * Best-effort batch status lookup that never throws. Returns a
+     * sandbox_id => status map, or an empty map when the gateway call fails or
+     * reports an error — callers must treat an absent entry as "unknown /
+     * possibly still alive", never as "gone".
+     *
+     * @param array<string> $sandboxIds
+     * @return array<string, string>
+     */
+    private function safeBatchSandboxStatus(array $sandboxIds): array
+    {
+        if ($sandboxIds === []) {
+            return [];
+        }
+        try {
+            $batch = $this->gateway->getBatchSandboxStatus($sandboxIds);
+        } catch (Throwable $e) {
+            $this->logger->warning('[WarmPoolSandbox] error-cleanup batch-status threw', [
+                'error' => $e->getMessage(),
+                'count' => count($sandboxIds),
+            ]);
+            return [];
+        }
+        if (! $batch->isSuccess()) {
+            $this->logger->warning('[WarmPoolSandbox] error-cleanup batch-status returned error', [
+                'code' => $batch->getCode(),
+                'message' => $batch->getMessage(),
+                'count' => count($sandboxIds),
+            ]);
+            return [];
+        }
+        return $batch->getStatusMap();
+    }
+
+    /**
+     * Confirm a cluster sandbox is gone, deleting it if necessary. Returns
+     * TRUE only when we are certain the cluster no longer hosts it:
+     *
+     *   - the latest known status is NotFound/Exited (already gone), OR
+     *   - deleteSandbox returns success (the gateway confirmed the teardown).
+     *
+     * Returns FALSE when deletion could not be confirmed (gateway error /
+     * exception), so the caller keeps the DB row and retries on a later pass
+     * rather than orphaning a sandbox that may still be running.
+     */
+    private function ensureSandboxDeleted(string $sandboxId, ?string $status, string $reason): bool
+    {
+        // Already gone from the cluster — nothing to tear down, safe to drop.
+        if ($status === SandboxStatus::NOT_FOUND || $status === SandboxStatus::EXITED) {
+            return true;
+        }
+
+        try {
+            $result = $this->gateway->deleteSandbox($sandboxId);
+            if ($result->isSuccess()) {
+                return true;
+            }
+            $this->logger->warning('[WarmPoolSandbox] deleteSandbox returned error; keeping row for retry', [
+                'sandbox_id' => $sandboxId,
+                'reason' => $reason,
+                'code' => $result->getCode(),
+                'message' => $result->getMessage(),
+            ]);
+        } catch (Throwable $e) {
+            $this->logger->warning('[WarmPoolSandbox] deleteSandbox threw; keeping row for retry', [
+                'sandbox_id' => $sandboxId,
+                'reason' => $reason,
+                'error' => $e->getMessage(),
+            ]);
+        }
+        return false;
     }
 
     /**
