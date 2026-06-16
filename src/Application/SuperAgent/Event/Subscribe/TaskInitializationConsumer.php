@@ -357,13 +357,15 @@ class TaskInitializationConsumer extends ConsumerMessage
      *
      * This keeps the fix localized in the consumer:
      * - open-api request-level topic_pattern wins over persisted topic_mode
+     * - open-api request-level agent_code wins over persisted topic agent_code
      * - SMA-* is normalized to custom_agent + agent_code before later layers run
      */
     private function resolveRequestedAgentConfig(TopicEntity $topicEntity, ?SuperAgentExtra $extra): array
     {
         $extraTopicPattern = trim((string) ($extra?->getTopicPattern() ?? ''));
         $agentMode = $extraTopicPattern !== '' ? $extraTopicPattern : trim((string) $topicEntity->getTopicMode());
-        $agentCode = trim((string) $topicEntity->getAgentCode());
+        $extraAgentCode = trim((string) ($extra?->getAgentCode() ?? ''));
+        $agentCode = $extraAgentCode !== '' ? $extraAgentCode : trim((string) $topicEntity->getAgentCode());
 
         if ($agentMode !== '' && str_starts_with($agentMode, 'SMA-')) {
             $agentCode = $agentMode;

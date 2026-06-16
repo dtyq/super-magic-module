@@ -27,6 +27,10 @@ class CreateOpenMessageScheduleRequestDTO extends AbstractDTO
 
     public string $modelId = '';
 
+    public string $topicPattern = 'general';
+
+    public string $agentCode = '';
+
     public string $remark = '';
 
     public ?string $deadline = null;
@@ -38,6 +42,12 @@ class CreateOpenMessageScheduleRequestDTO extends AbstractDTO
         if (array_key_exists('message_content', $data)) {
             $v = $data['message_content'];
             $dto->messageContentText = is_string($v) ? $v : json_encode($v, JSON_UNESCAPED_UNICODE);
+        }
+        if (array_key_exists('topic_pattern', $data) && $data['topic_pattern'] !== '') {
+            $dto->topicPattern = (string) $data['topic_pattern'];
+        }
+        if (array_key_exists('agent_code', $data) && $data['agent_code'] !== '') {
+            $dto->agentCode = (string) $data['agent_code'];
         }
         return $dto;
     }
@@ -70,6 +80,16 @@ class CreateOpenMessageScheduleRequestDTO extends AbstractDTO
     public function getModelId(): string
     {
         return $this->modelId;
+    }
+
+    public function getTopicPattern(): string
+    {
+        return $this->topicPattern;
+    }
+
+    public function getAgentCode(): string
+    {
+        return $this->agentCode;
     }
 
     public function getRemark(): string

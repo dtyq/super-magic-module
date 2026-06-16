@@ -11,6 +11,7 @@ use App\Infrastructure\Util\Context\RequestContext;
 use App\Interfaces\Authorization\Web\MagicUserAuthorization;
 use DateTime;
 use Dtyq\SuperMagic\Application\SuperAgent\Service\MessageScheduleAppService;
+use Dtyq\SuperMagic\Application\SuperAgent\Service\OpenMessageScheduleAppService;
 use Dtyq\SuperMagic\Interfaces\SuperAgent\DTO\Request\UpdateMessageScheduleRequestDTO;
 use Dtyq\TaskScheduler\Service\TaskSchedulerDomainService;
 use Exception;
@@ -25,6 +26,47 @@ use Throwable;
  */
 class MessageScheduleAppServiceTest extends TestCase
 {
+    public function testOpenScheduleMessageContentUsesRequestedTopicPattern(): void
+    {
+        $reflection = new ReflectionClass(OpenMessageScheduleAppService::class);
+        $service = $reflection->newInstanceWithoutConstructor();
+        $method = $reflection->getMethod('buildFullMessageContent');
+        $method->setAccessible(true);
+
+        $result = $method->invoke(
+            $service,
+            '更新 AI 卡片',
+            ['model_id' => 'test-model'],
+            'ip-manager'
+        );
+
+        $this->assertSame(
+            'ip-manager',
+            $result['extra']['super_agent']['topic_pattern']
+        );
+    }
+
+    public function testOpenScheduleMessageContentIncludesRequestedAgentCode(): void
+    {
+        $reflection = new ReflectionClass(OpenMessageScheduleAppService::class);
+        $service = $reflection->newInstanceWithoutConstructor();
+        $method = $reflection->getMethod('buildFullMessageContent');
+        $method->setAccessible(true);
+
+        $result = $method->invoke(
+            $service,
+            '更新自定义员工任务',
+            ['model_id' => 'test-model'],
+            'custom_agent',
+            'SMA-custom-agent'
+        );
+
+        $this->assertSame(
+            'SMA-custom-agent',
+            $result['extra']['super_agent']['agent_code']
+        );
+    }
+
     /**
      * Test messageScheduleCallback with missing message_schedule_id.
      * 测试缺少消息定时任务ID参数的情况.

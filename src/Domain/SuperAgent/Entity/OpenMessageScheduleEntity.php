@@ -32,6 +32,10 @@ class OpenMessageScheduleEntity extends MessageScheduleEntity
     /** 是否指定话题：0=否，1=是 */
     private int $specifyTopic = 0;
 
+    private string $topicPattern = 'general';
+
+    private string $agentCode = '';
+
     public function setSpecifyTopic(int $specifyTopic): self
     {
         $this->specifyTopic = $specifyTopic;
@@ -41,6 +45,28 @@ class OpenMessageScheduleEntity extends MessageScheduleEntity
     public function getSpecifyTopic(): int
     {
         return $this->specifyTopic;
+    }
+
+    public function setTopicPattern(string $topicPattern): self
+    {
+        $this->topicPattern = $topicPattern === '' ? 'general' : $topicPattern;
+        return $this;
+    }
+
+    public function getTopicPattern(): string
+    {
+        return $this->topicPattern;
+    }
+
+    public function setOpenAgentCode(string $agentCode): self
+    {
+        $this->agentCode = $agentCode;
+        return $this;
+    }
+
+    public function getOpenAgentCode(): string
+    {
+        return $this->agentCode;
     }
 
     public function setOpenTaskName(?string $taskName): self
