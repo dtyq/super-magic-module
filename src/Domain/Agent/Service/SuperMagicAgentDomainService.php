@@ -35,7 +35,6 @@ use Dtyq\SuperMagic\Domain\SuperAgent\Entity\ValueObject\ProjectMode;
 use Dtyq\SuperMagic\ErrorCode\SuperMagicErrorCode;
 use Dtyq\SuperMagic\Infrastructure\ExternalAPI\SandboxOS\Workspace\Request\ExportWorkspaceRequest;
 use Dtyq\SuperMagic\Infrastructure\ExternalAPI\SandboxOS\Workspace\WorkspaceExporterInterface;
-use Dtyq\SuperMagic\Infrastructure\Utils\WorkDirectoryUtil;
 use Hyperf\DbConnection\Annotation\Transactional;
 
 readonly class SuperMagicAgentDomainService
@@ -382,6 +381,7 @@ readonly class SuperMagicAgentDomainService
      * @param string $code Agent code, e.g. "SMA-xxx"
      * @param int $projectId Associated project ID
      * @param string $fullWorkdir Full working directory path on object storage
+     * @param string $sandboxId Sandbox ID resolved by the application layer
      * @param null|string $sourcePath Optional relative source path under workspace root
      * @return array{file_key: string, metadata: array} Export result containing file_key and metadata
      */
@@ -390,11 +390,9 @@ readonly class SuperMagicAgentDomainService
         string $code,
         int $projectId,
         string $fullWorkdir,
+        string $sandboxId,
         ?string $sourcePath = null
     ): array {
-        // Build sandbox ID (same strategy as file converter)
-        $sandboxId = WorkDirectoryUtil::generateUniqueCodeFromSnowflakeId($projectId . '_custom_agent');
-
         // Build upload_config: STS credentials for private bucket, matches sandbox API contract
         $uploadConfig = $this->cloudFileRepository->getStsTemporaryCredential(
             $dataIsolation->getCurrentOrganizationCode(),

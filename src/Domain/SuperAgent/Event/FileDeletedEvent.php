@@ -18,6 +18,7 @@ class FileDeletedEvent extends AbstractEvent
         private readonly TaskFileEntity $fileEntity,
         private readonly string $userId,
         private readonly string $organizationCode,
+        private readonly DeleteEventSource $source = DeleteEventSource::User,
     ) {
         parent::__construct();
     }
@@ -35,5 +36,10 @@ class FileDeletedEvent extends AbstractEvent
     public function getOrganizationCode(): string
     {
         return $this->organizationCode;
+    }
+
+    public function getSource(): DeleteEventSource
+    {
+        return $this->source;
     }
 }

@@ -12,19 +12,23 @@ use App\Infrastructure\Util\Context\RequestContext;
 use Dtyq\SuperMagic\Application\RecycleBin\DTO\BatchMoveProjectInRecycleBinRequestDTO;
 use Dtyq\SuperMagic\Application\RecycleBin\DTO\BatchMoveTopicsInRecycleBinRequestDTO;
 use Dtyq\SuperMagic\Application\RecycleBin\DTO\CheckParentRequestDTO;
-use Dtyq\SuperMagic\Application\RecycleBin\DTO\CheckParentResponseDTO;
 use Dtyq\SuperMagic\Application\RecycleBin\DTO\MoveProjectInRecycleBinRequestDTO;
 use Dtyq\SuperMagic\Application\RecycleBin\DTO\MoveTopicInRecycleBinRequestDTO;
-use Dtyq\SuperMagic\Application\RecycleBin\DTO\ParentNotFoundItemDTO;
 use Dtyq\SuperMagic\Application\RecycleBin\DTO\PermanentDeleteRequestDTO;
+use Dtyq\SuperMagic\Application\RecycleBin\DTO\RecycleBinCountsRequestDTO;
+use Dtyq\SuperMagic\Application\RecycleBin\DTO\RecycleBinCountsResponseDTO;
 use Dtyq\SuperMagic\Application\RecycleBin\DTO\RecycleBinListRequestDTO;
 use Dtyq\SuperMagic\Application\RecycleBin\DTO\RecycleBinListResponseDTO;
+use Dtyq\SuperMagic\Application\RecycleBin\DTO\RestoreConflictDTO;
+use Dtyq\SuperMagic\Application\RecycleBin\DTO\RestorePreviewItemDTO;
+use Dtyq\SuperMagic\Application\RecycleBin\DTO\RestorePreviewResponseDTO;
 use Dtyq\SuperMagic\Application\RecycleBin\DTO\RestoreRequestDTO;
 use Dtyq\SuperMagic\Application\RecycleBin\DTO\RestoreResponseDTO;
 use Dtyq\SuperMagic\Application\RecycleBin\DTO\RestoreResultItemDTO;
 use Dtyq\SuperMagic\Application\SuperAgent\Service\AbstractAppService;
 use Dtyq\SuperMagic\Domain\RecycleBin\Entity\RecycleBinEntity;
 use Dtyq\SuperMagic\Domain\RecycleBin\Enum\RecycleBinResourceType;
+use Dtyq\SuperMagic\Domain\RecycleBin\Enum\RestoreConflictType;
 use Dtyq\SuperMagic\Domain\RecycleBin\Service\RecycleBinDomainService;
 use Dtyq\SuperMagic\Domain\RecycleBin\Service\RecycleBinRestoreDomainService;
 use Dtyq\SuperMagic\Domain\RecycleBin\Service\TopicRecycleDomainService;
@@ -35,6 +39,8 @@ use Hyperf\Logger\LoggerFactory;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
+
+use function Hyperf\Translation\trans;
 
 class RecycleBinAppService extends AbstractAppService
 {
@@ -96,84 +102,121 @@ class RecycleBinAppService extends AbstractAppService
     }
 
     /**
-     * 检查父级是否存在.
-     * 先按「当前用户可访问」查出回收站记录，再检查父级，避免越权.
+     * 获取各资源类型的回收站数量.
      */
-    public function checkParent(
+    public function getRecycleBinCounts(
         RequestContext $requestContext,
-        CheckParentRequestDTO $requestDTO
-    ): CheckParentResponseDTO {
+        RecycleBinCountsRequestDTO $requestDTO
+    ): RecycleBinCountsResponseDTO {
         $userAuthorization = $requestContext->getUserAuthorization();
         $userId = $userAuthorization->getId();
 
-        $entities = $this->recycleBinDomainService->findLatestByResourceIds(
-            $requestDTO->getResourceIds(),
-            $requestDTO->getResourceType(),
-            $userId
+        $countsByType = $this->recycleBinDomainService->getCountsByType(
+            $userId,
+            $requestDTO->getKeyword()
         );
 
-        $itemsNeedMove = [];
-        $itemsNoNeedMove = [];
-        foreach ($entities as $entity) {
-            $parentId = $entity->getParentId();
-            if ($parentId === null) {
-                $itemsNoNeedMove[] = $entity;
-                continue;
-            }
+        $this->logger->info('查询回收站类型数量', [
+            'user_id' => $userId,
+            'keyword' => $requestDTO->getKeyword(),
+            'counts' => $countsByType,
+        ]);
 
-            $resourceTypeValue = $entity->getResourceType()->value;
+        return new RecycleBinCountsResponseDTO($countsByType);
+    }
 
-            if ($resourceTypeValue === RecycleBinResourceType::Workspace->value) {
-                $itemsNoNeedMove[] = $entity;
-                continue;
-            }
+    /**
+     * Check restore conflicts for a batch of resources (all types).
+     *
+     * Unified endpoint for all resource types:
+     * - File: detects parent_missing + name_conflict via domain service
+     * - Project/Topic: detects parent_missing (parent workspace/project existence check)
+     * - Workspace: always no-conflict
+     *
+     * Read-only; no side effects.
+     */
+    public function checkConflicts(
+        RequestContext $requestContext,
+        CheckParentRequestDTO $requestDTO
+    ): RestorePreviewResponseDTO {
+        $userAuthorization = $requestContext->getUserAuthorization();
+        $userId = $userAuthorization->getId();
 
-            $parentExists = false;
+        $resourceType = $requestDTO->getResourceType();
+        $resourceIds = $requestDTO->getResourceIds();
 
-            if ($resourceTypeValue === RecycleBinResourceType::Project->value) {
-                $workspace = $this->workspaceDomainService->getWorkspaceDetail($parentId);
-                if ($workspace !== null) {
-                    $parentExists = true;
+        $itemsWithConflict = [];
+        $itemsNoConflict = [];
+
+        if ($resourceType === RecycleBinResourceType::File) {
+            // File type: full conflict detection (parent_missing + name_conflict)
+            $result = $this->recycleBinRestoreDomainService->previewFileConflicts($resourceIds, $userId);
+            $itemsWithConflict = $result['items_with_conflict'];
+            $itemsNoConflict = $result['items_no_conflict'];
+        } else {
+            // Project/Topic/Workspace: parent-existence check only
+            $entities = $this->recycleBinDomainService->findLatestByResourceIds(
+                $resourceIds,
+                $resourceType,
+                $userId
+            );
+
+            foreach ($entities as $entity) {
+                $parentId = $entity->getParentId();
+                $resourceId = (string) $entity->getResourceId();
+                $resourceName = $entity->getResourceName();
+
+                // Workspace or root-level resource — no parent check needed
+                if ($resourceType === RecycleBinResourceType::Workspace || $parentId === null) {
+                    $itemsNoConflict[] = new RestorePreviewItemDTO(
+                        resourceId: $resourceId,
+                        resourceName: $resourceName,
+                        isDirectory: true,
+                    );
+                    continue;
                 }
-            } elseif ($resourceTypeValue === RecycleBinResourceType::Topic->value) {
-                try {
-                    $project = $this->projectDomainService->getProjectNotUserId($parentId);
-                    if ($project !== null) {
-                        $parentExists = true;
+
+                $parentExists = false;
+
+                if ($resourceType === RecycleBinResourceType::Project) {
+                    $workspace = $this->workspaceDomainService->getWorkspaceDetail($parentId);
+                    $parentExists = $workspace !== null;
+                } elseif ($resourceType === RecycleBinResourceType::Topic) {
+                    try {
+                        $project = $this->projectDomainService->getProjectNotUserId($parentId);
+                        $parentExists = $project !== null;
+                    } catch (Throwable) {
+                        $parentExists = false;
                     }
-                } catch (Throwable $e) {
-                    $parentExists = false;
                 }
-            } else {
-                $itemsNoNeedMove[] = $entity;
-                continue;
-            }
 
-            if ($parentExists) {
-                $itemsNoNeedMove[] = $entity;
-            } else {
-                $itemsNeedMove[] = $entity;
+                if ($parentExists) {
+                    $itemsNoConflict[] = new RestorePreviewItemDTO(
+                        resourceId: $resourceId,
+                        resourceName: $resourceName,
+                        isDirectory: true,
+                    );
+                } else {
+                    $itemsWithConflict[] = new RestorePreviewItemDTO(
+                        resourceId: $resourceId,
+                        resourceName: $resourceName,
+                        isDirectory: true,
+                        conflict: new RestoreConflictDTO(
+                            type: RestoreConflictType::ParentMissing,
+                        ),
+                    );
+                }
             }
         }
 
-        $dtoListNeedMove = array_map(
-            fn (RecycleBinEntity $e) => $this->entityToCheckItemDto($e),
-            $itemsNeedMove
-        );
-        $dtoListNoNeedMove = array_map(
-            fn (RecycleBinEntity $e) => $this->entityToCheckItemDto($e),
-            $itemsNoNeedMove
-        );
-
-        $this->logger->info('检查父级是否存在', [
+        $this->logger->info('Check restore conflicts', [
             'user_id' => $userId,
-            'resource_ids' => $requestDTO->getResourceIds(),
-            'resource_type' => $requestDTO->getResourceType()->value,
-            'items_need_move_count' => count($dtoListNeedMove),
-            'items_no_need_move_count' => count($dtoListNoNeedMove),
+            'resource_type' => $resourceType->value,
+            'with_conflict_count' => count($itemsWithConflict),
+            'no_conflict_count' => count($itemsNoConflict),
         ]);
 
-        return new CheckParentResponseDTO($dtoListNeedMove, $dtoListNoNeedMove);
+        return new RestorePreviewResponseDTO($itemsWithConflict, $itemsNoConflict);
     }
 
     /**
@@ -191,7 +234,8 @@ class RecycleBinAppService extends AbstractAppService
         $result = $this->recycleBinRestoreDomainService->restoreBatch(
             $resourceIds,
             $resourceType,
-            $userId
+            $userId,
+            $requestDTO->getConflictResolutions()
         );
 
         $resultDTOs = [];
@@ -215,6 +259,7 @@ class RecycleBinAppService extends AbstractAppService
             $dto->resourceId = (string) $entity->getResourceId();
             $dto->resourceName = $entity->getResourceName();
             $dto->success = false;
+            $dto->errorMessage = (string) ($failedItem['error'] ?? '');
 
             $resultDTOs[] = $dto;
         }
@@ -252,11 +297,11 @@ class RecycleBinAppService extends AbstractAppService
         Db::transaction(function () use ($sourceProjectId, $targetWorkspaceId, $userId) {
             $project = $this->recycleBinRestoreDomainService->findProjectByIdWithTrashed($sourceProjectId);
             if (! $project) {
-                throw new RuntimeException('项目不存在或已被永久删除');
+                throw new RuntimeException(trans('recycle_bin.restore.project_not_found_or_permanently_deleted'));
             }
 
             if (! $project->isDeleted()) {
-                throw new RuntimeException('该项目不在回收站中，请使用正常的移动接口');
+                throw new RuntimeException(trans('recycle_bin.move.project_not_in_recycle_bin_use_normal_move'));
             }
 
             // 恢复 → 移动 → 清理回收站记录
@@ -315,11 +360,11 @@ class RecycleBinAppService extends AbstractAppService
 
                     $project = $this->recycleBinRestoreDomainService->findProjectByIdWithTrashed($projectIdInt);
                     if (! $project) {
-                        throw new RuntimeException('项目不存在或已被永久删除');
+                        throw new RuntimeException(trans('recycle_bin.restore.project_not_found_or_permanently_deleted'));
                     }
 
                     if (! $project->isDeleted()) {
-                        throw new RuntimeException('该项目不在回收站中');
+                        throw new RuntimeException(trans('recycle_bin.move.project_not_in_recycle_bin'));
                     }
 
                     // 恢复 → 移动 → 清理回收站记录
@@ -340,7 +385,7 @@ class RecycleBinAppService extends AbstractAppService
                 $results[] = [
                     'project_id' => $projectId,
                     'success' => true,
-                    'message' => '移动并恢复成功',
+                    'message' => trans('recycle_bin.move.success'),
                 ];
             } catch (Throwable $e) {
                 $results[] = [
@@ -390,11 +435,11 @@ class RecycleBinAppService extends AbstractAppService
         Db::transaction(function () use ($sourceTopicId, $targetProjectId, $userId) {
             $topic = $this->recycleBinRestoreDomainService->findTopicByIdWithTrashed($sourceTopicId);
             if (! $topic) {
-                throw new RuntimeException('话题不存在或已被永久删除');
+                throw new RuntimeException(trans('recycle_bin.restore.topic_not_found_or_permanently_deleted'));
             }
 
             if ($topic->getDeletedAt() === null) {
-                throw new RuntimeException('该话题不在回收站中，请使用正常的移动接口');
+                throw new RuntimeException(trans('recycle_bin.move.topic_not_in_recycle_bin_use_normal_move'));
             }
 
             // 恢复 → 移动 → 清理回收站记录
@@ -421,7 +466,7 @@ class RecycleBinAppService extends AbstractAppService
         return [
             'success' => true,
             'topic_id' => (string) $sourceTopicId,
-            'message' => '话题移动并恢复成功',
+            'message' => trans('recycle_bin.move.topic_success'),
         ];
     }
 
@@ -455,11 +500,11 @@ class RecycleBinAppService extends AbstractAppService
                 Db::transaction(function () use ($topicId, $targetProjectId, $userId) {
                     $topic = $this->recycleBinRestoreDomainService->findTopicByIdWithTrashed($topicId);
                     if (! $topic) {
-                        throw new RuntimeException('话题不存在或已被永久删除');
+                        throw new RuntimeException(trans('recycle_bin.restore.topic_not_found_or_permanently_deleted'));
                     }
 
                     if ($topic->getDeletedAt() === null) {
-                        throw new RuntimeException('该话题不在回收站中');
+                        throw new RuntimeException(trans('recycle_bin.move.topic_not_in_recycle_bin'));
                     }
 
                     // 恢复 → 移动 → 清理回收站记录
@@ -480,7 +525,7 @@ class RecycleBinAppService extends AbstractAppService
                 $succeeded[] = [
                     'topic_id' => (string) $topicId,
                     'success' => true,
-                    'message' => '移动并恢复成功',
+                    'message' => trans('recycle_bin.move.success'),
                 ];
 
                 $this->logger->info('话题移动成功', [
@@ -546,17 +591,5 @@ class RecycleBinAppService extends AbstractAppService
         ]);
 
         return $result;
-    }
-
-    private function entityToCheckItemDto(RecycleBinEntity $entity): ParentNotFoundItemDTO
-    {
-        $dto = new ParentNotFoundItemDTO();
-        $dto->id = (string) $entity->getId();
-        $dto->resourceType = $entity->getResourceType()->value;
-        $dto->resourceId = (string) $entity->getResourceId();
-        $dto->resourceName = $entity->getResourceName();
-        $dto->parentId = $entity->getParentId() !== null ? (string) $entity->getParentId() : null;
-
-        return $dto;
     }
 }

@@ -23,6 +23,9 @@ use Hyperf\Snowflake\Concern\Snowflake;
  * @property string $deleted_by 删除人ID(与业务表 user_id 一致，VARCHAR 128)
  * @property null|Carbon $deleted_at 删除时间
  * @property int $retain_days 有效期(天)
+ * @property null|Carbon $removed_at 从回收站删除/清空时间
+ * @property null|string $removed_by 从回收站删除/清空操作人ID
+ * @property null|Carbon $purged_at 物理清理完成时间
  * @property null|int $parent_id 父级资源ID
  * @property null|array $extra_data 扩展信息
  * @property null|Carbon $created_at 创建时间
@@ -49,6 +52,9 @@ class RecycleBinModel extends AbstractModel
         'deleted_by',
         'deleted_at',
         'retain_days',
+        'removed_at',
+        'removed_by',
+        'purged_at',
         'parent_id',
         'extra_data',
         'created_at',
@@ -65,6 +71,9 @@ class RecycleBinModel extends AbstractModel
         'owner_id' => 'string',
         'deleted_by' => 'string',
         'retain_days' => 'integer',
+        'removed_at' => 'datetime',
+        'removed_by' => 'string',
+        'purged_at' => 'datetime',
         'parent_id' => 'integer',
         'extra_data' => 'array',
         'deleted_at' => 'datetime',

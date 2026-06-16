@@ -1061,9 +1061,9 @@ class SandboxGatewayService extends AbstractSandboxOS implements SandboxGatewayI
         $requestId = CoContext::getRequestId() ?: (string) IdGenerator::getSnowId();
 
         return [
-            'Content-Type' => 'application/json',
-            'request-id' => $requestId,
-            'X-Request-ID' => $requestId,
+            'Content-Type'      => 'application/json',
+            'Sandbox-Gateway-Token' => $this->getToken(),
+            'request-id'            => $requestId,
         ];
     }
 
@@ -1110,7 +1110,7 @@ class SandboxGatewayService extends AbstractSandboxOS implements SandboxGatewayI
 
     /**
      * Override parent getAuthHeaders to include request tracing headers.
-     * Reuses getCommonHeaders() so request-id and X-Request-ID are always consistent.
+     * Reuses getCommonHeaders() so request-id is always consistent.
      */
     protected function getAuthHeaders(): array
     {

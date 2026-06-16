@@ -34,6 +34,12 @@ class RecycleBinItemDTO
 
     public string $expireAt = '';
 
+    public ?string $removedAt = null;
+
+    public ?string $removedBy = null;
+
+    public ?string $purgedAt = null;
+
     public ?string $parentId = null;
 
     public ?array $extraData = null;
@@ -66,6 +72,9 @@ class RecycleBinItemDTO
         $remainingSeconds = $expireTimestamp - time();
         $dto->remainingDays = $remainingSeconds > 0 ? (int) ceil($remainingSeconds / 86400) : 0;
 
+        $dto->removedAt = $entity->getRemovedAt();
+        $dto->removedBy = $entity->getRemovedBy();
+        $dto->purgedAt = $entity->getPurgedAt();
         $dto->parentId = $entity->getParentId() !== null ? (string) $entity->getParentId() : null;
         $dto->extraData = $entity->getExtraData();
 
@@ -87,6 +96,9 @@ class RecycleBinItemDTO
             'deleted_by' => $this->deletedBy,
             'deleted_at' => $this->deletedAt,
             'expire_at' => $this->expireAt,
+            'removed_at' => $this->removedAt,
+            'removed_by' => $this->removedBy,
+            'purged_at' => $this->purgedAt,
             'parent_id' => $this->parentId,
             'extra_data' => $this->extraData,
             'remaining_days' => $this->remainingDays,

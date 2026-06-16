@@ -14,9 +14,12 @@ use Dtyq\SuperMagic\Domain\MagicFS\Service\MagicFSFileDomainService;
 use Dtyq\SuperMagic\Domain\SuperAgent\Constant\ProjectFileConstant;
 use Dtyq\SuperMagic\Domain\SuperAgent\Entity\ProjectEntity;
 use Dtyq\SuperMagic\Domain\SuperAgent\Entity\TaskFileEntity;
+use Dtyq\SuperMagic\Domain\SuperAgent\Entity\ValueObject\FileMoveChangeSet;
 use Dtyq\SuperMagic\Domain\SuperAgent\Entity\ValueObject\TaskFileSource;
 use Dtyq\SuperMagic\Domain\SuperAgent\Event\AttachmentsProcessedEvent;
+use Dtyq\SuperMagic\Domain\SuperAgent\Event\DeleteEventSource;
 use Dtyq\SuperMagic\Domain\SuperAgent\Event\DirectoryDeletedEvent;
+use Dtyq\SuperMagic\Domain\SuperAgent\Event\FileBatchMoveCompletedEvent;
 use Dtyq\SuperMagic\Domain\SuperAgent\Event\FileBatchMoveEvent;
 use Dtyq\SuperMagic\Domain\SuperAgent\Event\FileDeletedEvent;
 use Dtyq\SuperMagic\Domain\SuperAgent\Service\ProjectDisplayConfigDomainService;
@@ -80,6 +83,9 @@ class FileBatchMoveSubscriber extends ConsumerMessage
 
     /** Number of individual files (non-directories) successfully moved so far. */
     private int $processedFiles = 0;
+
+    /** Collected file changes for the current batch operation. */
+    private ?FileMoveChangeSet $currentChangeSet = null;
 
     /**
      * Constructor.
@@ -254,7 +260,14 @@ class FileBatchMoveSubscriber extends ConsumerMessage
                         $dirUserAuth = new MagicUserAuthorization();
                         $dirUserAuth->setId($sourceDirEntity->getUserId());
                         $dirUserAuth->setOrganizationCode($sourceDirEntity->getOrganizationCode());
-                        $this->eventDispatcher->dispatch(new DirectoryDeletedEvent($sourceDirEntity, $dirUserAuth));
+                        $this->eventDispatcher->dispatch(new DirectoryDeletedEvent(
+                            $sourceDirEntity,
+                            $dirUserAuth,
+                            DeleteEventSource::InternalOverwrite
+                        ));
+                        if ($this->currentChangeSet !== null) {
+                            $this->currentChangeSet->recordDeletedFile($sourceDirEntity);
+                        }
                     }
                 }
             } else {
@@ -267,6 +280,19 @@ class FileBatchMoveSubscriber extends ConsumerMessage
                 $oldParentId = $fileEntity->getParentId();
                 $newParentId = $targetParentEntity->getFileId();
 
+                // Pre-detect overwritten file before moveProjectFile silently deletes it
+                $batchOverwrittenFile = null;
+                if ($this->currentChangeSet !== null && ! in_array((string) $fileId, $keepBothFileIds, true)) {
+                    $batchCandidate = $this->taskFileDomainService->getByProjectParentAndName(
+                        $targetProject->getId(),
+                        $newParentId,
+                        $fileEntity->getFileName()
+                    );
+                    if ($batchCandidate !== null && $batchCandidate->getFileId() !== $fileId && ! $batchCandidate->getIsDirectory()) {
+                        $batchOverwrittenFile = $batchCandidate;
+                    }
+                }
+
                 $this->taskFileDomainService->moveProjectFile(
                     $dataIsolation,
                     $fileEntity,
@@ -275,6 +301,17 @@ class FileBatchMoveSubscriber extends ConsumerMessage
                     $newParentId,
                     $keepBothFileIds
                 );
+
+                if ($this->currentChangeSet !== null) {
+                    if ($batchOverwrittenFile !== null) {
+                        $this->currentChangeSet->recordDeletedFile($batchOverwrittenFile);
+                    }
+                    $this->currentChangeSet->recordUpdatedFileId($fileId);
+                    $this->currentChangeSet->recordAffectedParentId($newParentId, $targetProject->getId());
+                    if ($oldParentId !== null && $oldParentId > 0 && $oldParentId !== $newParentId) {
+                        $this->currentChangeSet->recordAffectedParentId($oldParentId, $sourceProject->getId());
+                    }
+                }
 
                 $this->syncTreeAfterProjectMove(
                     $fileEntity,
@@ -479,6 +516,9 @@ class FileBatchMoveSubscriber extends ConsumerMessage
         $fileTree = FileTreeUtil::assembleFilesTreeByParentId($files);
         $this->logger->info(sprintf('recordOldFile, %s', $batchKey), ['data' => $fileDebugArr]);
 
+        // Initialize change collector for this batch
+        $this->currentChangeSet = new FileMoveChangeSet();
+
         // File moving phase (10% - 90%)
         $this->updateProgress(10, 'Starting file move operations');
         $this->moveFileByTree($dataIsolation, $fileTree, $sourceProject, $targetProject, $targetParentId, $keepBothFileIds);
@@ -495,12 +535,24 @@ class FileBatchMoveSubscriber extends ConsumerMessage
             'file_count' => count($fileIds),
         ]);
 
+        $changeSet = $this->currentChangeSet;
+        $this->currentChangeSet = null;
         try {
-            // Dispatch only after actual batch move success.
-            $this->eventDispatcher->dispatch($event);
+            // Dispatch aggregated completion event (carries FileMoveChangeSet for rich notifications).
+            if ($changeSet !== null && ! $changeSet->isEmpty()) {
+                $this->eventDispatcher->dispatch(new FileBatchMoveCompletedEvent(
+                    $batchKey,
+                    $userId,
+                    $organizationCode,
+                    $targetProjectId,
+                    $sourceProjectId,
+                    $targetParentId,
+                    $changeSet
+                ));
+            }
         } catch (Throwable $e) {
             // Keep move task success state even if downstream notification/logging fails.
-            $this->logger->warning('Batch move succeeded but event dispatch failed', [
+            $this->logger->warning('Batch move succeeded but completed event dispatch failed', [
                 'batch_key' => $batchKey,
                 'error' => $e->getMessage(),
             ]);
@@ -576,17 +628,24 @@ class FileBatchMoveSubscriber extends ConsumerMessage
             $this->eventDispatcher->dispatch(new FileDeletedEvent(
                 $conflictEntity,
                 $conflictEntity->getUserId(),
-                $conflictEntity->getOrganizationCode()
+                $conflictEntity->getOrganizationCode(),
+                DeleteEventSource::InternalOverwrite
             ));
+            if ($this->currentChangeSet !== null) {
+                $this->currentChangeSet->recordDeletedFile($conflictEntity);
+            }
             $targetFileEntity = null;
         }
 
         if (! $shouldKeepBoth && $targetFileEntity !== null && $targetFileEntity->getIsDirectory()) {
-            // Batch move keeps directory-merge behavior for compatibility: reuse target directory.
-            return [
-                'target_dir' => $targetFileEntity,
-                'delete_source_dir_after_children' => $fullMove,
-            ];
+            $this->logger->info('Deleting existing target directory before directory move overwrite', [
+                'source_id' => $sourceFileId,
+                'existing_id' => $targetFileEntity->getFileId(),
+                'target_parent_id' => $targetParentId,
+            ]);
+
+            $this->magicFSFileDomainService->deleteFile((string) $targetFileEntity->getFileId(), true);
+            $targetFileEntity = null;
         }
 
         if ($fullMove) {
@@ -607,6 +666,15 @@ class FileBatchMoveSubscriber extends ConsumerMessage
             );
 
             $movedDirectory = $this->taskFileDomainService->getById($sourceFileId) ?? $oldFileEntity;
+
+            if ($this->currentChangeSet !== null) {
+                $this->currentChangeSet->recordUpdatedFileId($sourceFileId);
+                $this->currentChangeSet->recordAffectedParentId($targetParentId, $targetProject->getId());
+                $oldDirParentId = $oldFileEntity->getParentId();
+                if ($oldDirParentId !== null && $oldDirParentId > 0 && $oldDirParentId !== $targetParentId) {
+                    $this->currentChangeSet->recordAffectedParentId($oldDirParentId, $sourceProject->getId());
+                }
+            }
 
             return [
                 'target_dir' => $movedDirectory,
@@ -636,6 +704,11 @@ class FileBatchMoveSubscriber extends ConsumerMessage
         $createdDirectory->setMetadata($oldFileEntity->getMetadata());
         $createdDirectory->setDisplayConfig($oldFileEntity->getDisplayConfig());
         $createdDirectory = $this->taskFileDomainService->updateById($createdDirectory);
+
+        if ($this->currentChangeSet !== null) {
+            $this->currentChangeSet->recordAddedFileId($createdDirectory->getFileId());
+            $this->currentChangeSet->recordAffectedParentId($targetParentId, $targetProject->getId());
+        }
 
         return [
             'target_dir' => $createdDirectory,

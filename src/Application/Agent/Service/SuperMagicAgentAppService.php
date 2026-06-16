@@ -58,9 +58,13 @@ use Dtyq\SuperMagic\Domain\Skill\Entity\ValueObject\SkillDataIsolation;
 use Dtyq\SuperMagic\Domain\Skill\Entity\ValueObject\SkillMentionSource;
 use Dtyq\SuperMagic\Domain\Skill\Service\SkillDomainService;
 use Dtyq\SuperMagic\Domain\Skill\Service\SkillVersionDomainService;
+use Dtyq\SuperMagic\Domain\SuperAgent\Entity\ProjectEntity;
+use Dtyq\SuperMagic\Domain\SuperAgent\Entity\ValueObject\TaskStatus;
 use Dtyq\SuperMagic\Domain\SuperAgent\Service\AgentDomainService;
 use Dtyq\SuperMagic\Domain\SuperAgent\Service\ProjectDomainService;
+use Dtyq\SuperMagic\Domain\SuperAgent\Service\TaskDomainService;
 use Dtyq\SuperMagic\Domain\SuperAgent\Service\TaskFileDomainService;
+use Dtyq\SuperMagic\Domain\SuperAgent\Service\TopicDomainService;
 use Dtyq\SuperMagic\ErrorCode\SuperAgentErrorCode;
 use Dtyq\SuperMagic\ErrorCode\SuperMagicErrorCode;
 use Dtyq\SuperMagic\Infrastructure\Utils\WorkDirectoryUtil;
@@ -79,6 +83,8 @@ class SuperMagicAgentAppService extends AbstractSuperMagicAppService
     private const string REQUIRED_IDENTITY_PATH = '.magic/IDENTITY.md';
 
     private const string KNOWLEDGE_SEARCH_TOOL_CODE = 'search_knowledge';
+
+    private const string AGENT_PUBLISH_EXPORT_TASK_PROMPT = 'Agent Publish Export Task';
 
     #[Inject]
     protected SkillDomainService $skillDomainService;
@@ -118,6 +124,12 @@ class SuperMagicAgentAppService extends AbstractSuperMagicAppService
 
     #[Inject]
     protected AgentDomainService $agentDomainService;
+
+    #[Inject]
+    protected TopicDomainService $topicDomainService;
+
+    #[Inject]
+    protected TaskDomainService $taskDomainService;
 
     #[Transactional]
     public function save(Authenticatable $authorization, SuperMagicAgentEntity $entity, bool $checkPrompt = true): SuperMagicAgentEntity
@@ -1199,20 +1211,14 @@ class SuperMagicAgentAppService extends AbstractSuperMagicAppService
         $fullPrefix = $this->taskFileDomainService->getFullPrefix($project->getUserOrganizationCode());
         $fullWorkdir = WorkDirectoryUtil::getFullWorkdir($fullPrefix, $project->getWorkDir());
 
-        $sandboxId = WorkDirectoryUtil::generateUniqueCodeFromSnowflakeId($projectId . '_custom_agent');
-        $this->agentDomainService->ensureSandboxRunning(
-            $dataIsolation->getCurrentUserId(),
-            $dataIsolation->getCurrentOrganizationCode(),
-            $sandboxId,
-            (string) $projectId,
-            $fullWorkdir
-        );
+        $sandboxId = $this->initializeAgentPublishSandbox($dataIsolation, $code, $project);
 
         return $this->superMagicAgentDomainService->exportAgentFromSandbox(
             $dataIsolation,
             $code,
             $projectId,
-            $fullWorkdir
+            $fullWorkdir,
+            $sandboxId
         );
     }
 
@@ -1807,22 +1813,87 @@ class SuperMagicAgentAppService extends AbstractSuperMagicAppService
         $fullPrefix = $this->taskFileDomainService->getFullPrefix($project->getUserOrganizationCode());
         $fullWorkdir = WorkDirectoryUtil::getFullWorkdir($fullPrefix, $project->getWorkDir());
 
-        $sandboxId = WorkDirectoryUtil::generateUniqueCodeFromSnowflakeId($projectId . '_custom_agent');
-        $this->agentDomainService->ensureSandboxRunning(
-            $dataIsolation->getCurrentUserId(),
-            $dataIsolation->getCurrentOrganizationCode(),
-            $sandboxId,
-            (string) $projectId,
-            $fullWorkdir
-        );
+        $sandboxId = $this->initializeAgentPublishSandbox($dataIsolation, $code, $project);
 
         return $this->superMagicAgentDomainService->exportAgentFromSandbox(
             $dataIsolation,
             $code,
             $projectId,
             $fullWorkdir,
+            $sandboxId,
             $sourcePath
         );
+    }
+
+    private function initializeAgentPublishSandbox(
+        SuperMagicAgentDataIsolation $dataIsolation,
+        string $agentCode,
+        ProjectEntity $projectEntity
+    ): string {
+        $topicId = $projectEntity->getCurrentTopicId();
+        if (empty($topicId)) {
+            ExceptionBuilder::throw(SuperAgentErrorCode::TOPIC_NOT_FOUND, 'topic.topic_not_found');
+        }
+
+        $topicEntity = $this->topicDomainService->getTopicById($topicId);
+        if ($topicEntity === null || $topicEntity->getProjectId() !== $projectEntity->getId()) {
+            ExceptionBuilder::throw(SuperAgentErrorCode::TOPIC_NOT_FOUND, 'topic.topic_not_found');
+        }
+
+        $contactDataIsolation = ContactDataIsolation::simpleMake(
+            $dataIsolation->getCurrentOrganizationCode(),
+            $dataIsolation->getCurrentUserId()
+        );
+
+        if ($topicEntity->getAgentCode() !== $agentCode) {
+            $this->topicDomainService->updateTopicAgentCode($contactDataIsolation, $topicEntity->getId(), $agentCode);
+            $topicEntity->setAgentCode($agentCode);
+        }
+
+        $sandboxId = $topicEntity->getSandboxId();
+        if ($sandboxId === (string) $topicEntity->getId()) {
+            $sandboxId = '';
+        }
+        $topicEntity->setSandboxId($sandboxId);
+
+        $taskEntity = $this->taskDomainService->initDefaultTask(
+            $contactDataIsolation,
+            $topicEntity,
+            self::AGENT_PUBLISH_EXPORT_TASK_PROMPT
+        );
+
+        $agentContext = $this->agentDomainService->buildInitAgentContext(
+            dataIsolation: $contactDataIsolation,
+            projectEntity: $projectEntity,
+            topicEntity: $topicEntity,
+            taskEntity: $taskEntity,
+            sandboxId: $sandboxId,
+            skipInitMessage: true
+        );
+        $sandboxId = $this->agentDomainService->ensureSandboxInitialized($contactDataIsolation, $agentContext);
+
+        $this->topicDomainService->updateTopicStatusAndSandboxId(
+            $topicEntity->getId(),
+            $taskEntity->getId(),
+            TaskStatus::FINISHED,
+            $sandboxId
+        );
+        $this->taskDomainService->updateTaskStatus(
+            TaskStatus::FINISHED,
+            $taskEntity->getId(),
+            (string) $taskEntity->getId(),
+            $sandboxId
+        );
+
+        $this->logger->info('Agent publish sandbox initialized through sandbox pool', [
+            'agent_code' => $agentCode,
+            'project_id' => $projectEntity->getId(),
+            'topic_id' => $topicEntity->getId(),
+            'task_id' => $taskEntity->getId(),
+            'sandbox_id' => $sandboxId,
+        ]);
+
+        return $sandboxId;
     }
 
     /**

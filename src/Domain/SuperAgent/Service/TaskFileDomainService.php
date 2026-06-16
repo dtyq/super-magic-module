@@ -108,6 +108,14 @@ class TaskFileDomainService
     }
 
     /**
+     * Get file by ID, including soft-deleted records.
+     */
+    public function getByIdWithTrash(int $id): ?TaskFileEntity
+    {
+        return $this->taskFileRepository->getByIdWithTrash($id);
+    }
+
+    /**
      * Get project root directory file ID for sandbox initialization.
      *
      * @throws BusinessException
@@ -305,6 +313,57 @@ class TaskFileDomainService
     public function getFilesWithParentsByIds(array $fileIds, int $projectId = 0): array
     {
         return $this->taskFileRepository->getFilesWithParentsByIds($fileIds, $projectId);
+    }
+
+    /**
+     * Keyset cursor pagination over a project's files. Returns raw rows for the
+     * V2 attachment list hot path (no entity hydration).
+     *
+     * @param string[] $fileTypes
+     * @return array<int, array<string, mixed>>
+     */
+    public function getProjectFilesByCursor(
+        int $projectId,
+        string $storageType,
+        ?int $afterFileId,
+        int $limit,
+        array $fileTypes = [],
+        ?string $updatedAfter = null
+    ): array {
+        return $this->taskFileRepository->getProjectFilesByCursor(
+            $projectId,
+            $storageType,
+            $afterFileId,
+            $limit,
+            $fileTypes,
+            $updatedAfter
+        );
+    }
+
+    /**
+     * Cursor pagination for one parent's direct children using tree order.
+     *
+     * @param string[] $fileTypes
+     * @return array<int, array<string, mixed>>
+     */
+    public function getProjectFileChildrenByParentCursor(
+        int $projectId,
+        int $parentId,
+        string $storageType,
+        ?int $afterSort,
+        ?int $afterFileId,
+        int $limit,
+        array $fileTypes = []
+    ): array {
+        return $this->taskFileRepository->getProjectFileChildrenByParentCursor(
+            $projectId,
+            $parentId,
+            $storageType,
+            $afterSort,
+            $afterFileId,
+            $limit,
+            $fileTypes
+        );
     }
 
     /**
@@ -1387,8 +1446,15 @@ class TaskFileDomainService
         $shouldKeepBoth = in_array($sourceFileIdStr, $keepBothFileIds, true);
 
         if ($existingTargetFile !== null && $existingTargetFile->getFileId() === $fileEntity->getFileId()) {
-            // Copying to the same directory should keep both and rename below.
-            $shouldKeepBoth = true;
+            if (! $shouldKeepBoth) {
+                $this->logger->info('Skipped copy because target file is source file itself', [
+                    'source_file_id' => $fileEntity->getFileId(),
+                    'target_parent_id' => $targetParentId,
+                    'target_file_name' => $targetFileName,
+                ]);
+
+                return $fileEntity;
+            }
         }
 
         if ($existingTargetFile !== null && $shouldKeepBoth) {
@@ -2827,6 +2893,29 @@ class TaskFileDomainService
     }
 
     /**
+     * 获取单个项目的文件数量（workspace + 非隐藏 + 未删除）.
+     */
+    public function countFilesByProjectId(int $projectId): int
+    {
+        if ($projectId <= 0) {
+            return 0;
+        }
+        return $this->taskFileRepository->countFilesByProjectId($projectId);
+    }
+
+    /**
+     * V2 列表口径的附件计数（workspace + 未删除，不过滤 is_hidden、不剔除根目录）.
+     * 与 V2 列表接口在不传 file_type 时返回的总行数保持一致，供前端做灰度阈值判断。
+     */
+    public function countAttachmentsByProjectIdV2(int $projectId): int
+    {
+        if ($projectId <= 0) {
+            return 0;
+        }
+        return $this->taskFileRepository->countAttachmentsByProjectIdV2($projectId);
+    }
+
+    /**
      * 批量获取项目的文件数量.
      *
      * @param array<int> $projectIds 项目ID数组
@@ -3523,7 +3612,11 @@ class TaskFileDomainService
                 ExceptionBuilder::throw(SuperAgentErrorCode::FILE_EXIST, trans('file.file_exist'));
             }
             if ($existingTarget->getIsDirectory()) {
-                ExceptionBuilder::throw(SuperAgentErrorCode::FILE_EXIST, trans('file.file_exist'));
+                if (! $file->getIsDirectory()) {
+                    ExceptionBuilder::throw(SuperAgentErrorCode::FILE_EXIST, trans('file.file_exist'));
+                }
+
+                $this->getMagicFSFileDomainService()->deleteFile((string) $existingTarget->getFileId(), true);
             }
         }
 
@@ -3584,22 +3677,16 @@ class TaskFileDomainService
         );
 
         if ($overwrite) {
-            if ($existingTarget !== null && $existingTarget->getFileId() !== $sourceFile->getFileId()) {
+            if ($existingTarget !== null && $existingTarget->getFileId() === $sourceFile->getFileId()) {
+                return $sourceFile;
+            }
+
+            if ($existingTarget !== null) {
                 if (! $existingTarget->getIsDirectory()) {
                     $this->taskFileRepository->deleteById($existingTarget->getFileId(), false);
                 } else {
-                    $targetFileName = $this->generateUniqueFileNameInParent(
-                        $targetProjectId,
-                        $targetParentIdInt ?? 0,
-                        $targetFileName
-                    );
+                    ExceptionBuilder::throw(SuperAgentErrorCode::FILE_EXIST, trans('file.file_exist'));
                 }
-            } elseif ($existingTarget !== null) {
-                $targetFileName = $this->generateUniqueFileNameInParent(
-                    $targetProjectId,
-                    $targetParentIdInt ?? 0,
-                    $targetFileName
-                );
             }
         } else {
             $targetFileName = $this->generateUniqueFileNameInParent(

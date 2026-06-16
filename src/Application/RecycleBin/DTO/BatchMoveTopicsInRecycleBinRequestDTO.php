@@ -9,6 +9,8 @@ namespace Dtyq\SuperMagic\Application\RecycleBin\DTO;
 
 use App\Infrastructure\Core\AbstractRequestDTO;
 
+use function Hyperf\Translation\trans;
+
 /**
  * 回收站批量话题移动请求 DTO.
  */
@@ -40,14 +42,14 @@ class BatchMoveTopicsInRecycleBinRequestDTO extends AbstractRequestDTO
     protected static function getHyperfValidationMessage(): array
     {
         return [
-            'topic_ids.required' => '话题ID列表不能为空',
-            'topic_ids.array' => '话题ID列表必须是数组',
-            'topic_ids.min' => '至少需要选择一个话题',
-            'topic_ids.max' => '单次最多移动50个话题',
-            'topic_ids.*.required' => '话题ID不能为空',
-            'topic_ids.*.numeric' => '话题ID必须是有效的数字',
-            'target_project_id.required' => '目标项目ID不能为空',
-            'target_project_id.numeric' => '目标项目ID必须是有效的数字',
+            'topic_ids.required' => trans('recycle_bin.validation.topic_ids_required'),
+            'topic_ids.array' => trans('recycle_bin.validation.topic_ids_array'),
+            'topic_ids.min' => trans('recycle_bin.validation.topic_ids_min'),
+            'topic_ids.max' => trans('recycle_bin.validation.topic_ids_max'),
+            'topic_ids.*.required' => trans('recycle_bin.validation.topic_id_required'),
+            'topic_ids.*.numeric' => trans('recycle_bin.validation.topic_id_numeric'),
+            'target_project_id.required' => trans('recycle_bin.validation.target_project_id_required'),
+            'target_project_id.numeric' => trans('recycle_bin.validation.target_project_id_numeric'),
         ];
     }
 }

@@ -30,6 +30,8 @@ Router::addGroup(
             Router::addGroup('/file', static function () {
                 // 创建文件版本
                 Router::post('/versions', [FileApi::class, 'createFileVersion']);
+                // 获取文件最新版本
+                Router::get('/{id}/versions/latest', [FileApi::class, 'getLatestFileVersion']);
             });
         });
     },
@@ -49,6 +51,8 @@ Router::addGroup(
         Router::addGroup('/file', static function () {
             // 创建文件版本
             Router::post('/versions', [FileApi::class, 'createFileVersion']);
+            // 获取文件最新版本
+            Router::get('/{id}/versions/latest', [FileApi::class, 'getLatestFileVersion']);
             // 获取文件树
             Router::post('/tree', [FileApi::class, 'getFileTree']);
             // 扫描对象存储目录下的 .wav 文件并持久化到 task file 表

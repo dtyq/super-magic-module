@@ -25,7 +25,7 @@ class CreateAudioProjectRequestDTO extends AbstractRequestDTO
     public string $workspaceId = '';
 
     /**
-     * Recording source: app | device.
+     * Recording source: app | device | h5 | pc.
      */
     public string $source = 'app';
 
@@ -114,7 +114,7 @@ class CreateAudioProjectRequestDTO extends AbstractRequestDTO
         return [
             'project_name' => 'present|string|max:255',
             'workspace_id' => 'nullable|string',
-            'source' => 'required|string|in:app,device',
+            'source' => 'required|string|in:app,device,h5,pc',
             'device_id' => 'nullable|string|max:100',
             'is_hidden' => 'nullable|boolean',
             'task_key' => 'required|string|max:128',
@@ -133,7 +133,7 @@ class CreateAudioProjectRequestDTO extends AbstractRequestDTO
             'project_name.present' => 'Project name field is required',
             'project_name.max' => 'Project name cannot exceed 255 characters',
             'source.required' => 'Source cannot be empty',
-            'source.in' => 'Source must be either app or device',
+            'source.in' => 'Source must be app, device, h5, or pc',
             'device_id.max' => 'Device ID cannot exceed 100 characters',
             'is_hidden.boolean' => 'Is hidden must be a boolean value',
             'task_key.required' => 'Task key is required',

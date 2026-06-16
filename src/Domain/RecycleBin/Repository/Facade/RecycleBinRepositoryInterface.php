@@ -85,6 +85,13 @@ interface RecycleBinRepositoryInterface
     ): array;
 
     /**
+     * 获取当前用户各资源类型的回收站数量.
+     *
+     * @return array<int, int> key 为 RecycleBinResourceType->value，value 为数量
+     */
+    public function getCountsByTypeVisibleToUser(string $userId, ?string $keyword = null): array;
+
+    /**
      * 批量查询当前用户可访问的回收站记录（带类型过滤）.
      * 与列表使用同一套可访问条件，供检查父级/恢复等使用.
      *
@@ -111,6 +118,15 @@ interface RecycleBinRepositoryInterface
      * @return int 删除的记录数
      */
     public function deleteByIds(array $ids): int;
+
+    /**
+     * 标记回收站记录已从用户可见回收站移除.
+     *
+     * @param array $ids 回收站记录ID数组
+     * @param string $removedBy 操作人ID
+     * @return int 更新的记录数
+     */
+    public function markRemovedByIds(array $ids, string $removedBy): int;
 
     /**
      * 根据资源ID批量查询回收站记录（用于恢复）.
@@ -140,4 +156,17 @@ interface RecycleBinRepositoryInterface
      * @return RecycleBinEntity[] 回收站实体数组
      */
     public function findByIdsWithoutPermission(array $ids): array;
+
+    /**
+     * 查询等待物理清理的文件回收站记录.
+     *
+     * @param int $limit 查询数量限制
+     * @return RecycleBinEntity[] 回收站实体数组
+     */
+    public function findFilePurgeCandidates(int $limit = 1000): array;
+
+    /**
+     * 标记回收站记录对应资源已完成物理清理.
+     */
+    public function markPurged(int $id): bool;
 }

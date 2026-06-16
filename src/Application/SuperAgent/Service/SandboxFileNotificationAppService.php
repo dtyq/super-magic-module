@@ -14,6 +14,7 @@ use App\Infrastructure\Util\Locker\LockerInterface;
 use Dtyq\SuperMagic\Domain\SuperAgent\Entity\ProjectEntity;
 use Dtyq\SuperMagic\Domain\SuperAgent\Entity\ValueObject\MessageMetadata;
 use Dtyq\SuperMagic\Domain\SuperAgent\Entity\ValueObject\SandboxFileNotificationDataValueObject;
+use Dtyq\SuperMagic\Domain\SuperAgent\Event\DeleteEventSource;
 use Dtyq\SuperMagic\Domain\SuperAgent\Event\FileContentSavedEvent;
 use Dtyq\SuperMagic\Domain\SuperAgent\Event\FileDeletedEvent;
 use Dtyq\SuperMagic\Domain\SuperAgent\Event\FileUploadedEvent;
@@ -312,7 +313,12 @@ class SandboxFileNotificationAppService extends AbstractAppService
                 $this->eventDispatcher->dispatch($event);
                 break;
             case 'DELETE':
-                $event = new FileDeletedEvent($taskFileEntity, $userId, $organizationCode);
+                $event = new FileDeletedEvent(
+                    $taskFileEntity,
+                    $userId,
+                    $organizationCode,
+                    DeleteEventSource::Agent
+                );
                 $this->eventDispatcher->dispatch($event);
                 break;
         }

@@ -20,6 +20,7 @@ use Dtyq\SuperMagic\Interfaces\SuperAgent\DTO\Request\CreateSpecialProjectReques
 use Dtyq\SuperMagic\Interfaces\SuperAgent\DTO\Request\ForkProjectRequestDTO;
 use Dtyq\SuperMagic\Interfaces\SuperAgent\DTO\Request\GetParticipatedProjectsRequestDTO;
 use Dtyq\SuperMagic\Interfaces\SuperAgent\DTO\Request\GetProjectAttachmentsRequestDTO;
+use Dtyq\SuperMagic\Interfaces\SuperAgent\DTO\Request\GetProjectAttachmentsV2RequestDTO;
 use Dtyq\SuperMagic\Interfaces\SuperAgent\DTO\Request\GetProjectListRequestDTO;
 use Dtyq\SuperMagic\Interfaces\SuperAgent\DTO\Request\GetSidebarTopicsRequestDTO;
 use Dtyq\SuperMagic\Interfaces\SuperAgent\DTO\Request\MoveProjectRequestDTO;
@@ -174,6 +175,8 @@ class ProjectApi extends AbstractApi
 
         return array_merge($projectDTO->toArray(), [
             'user_role' => $userRole,
+            'is_pinned' => $memberSetting?->isPinned() ?? false,
+            'pinned_at' => $memberSetting?->getPinnedAt(),
             'is_bind_workspace' => $memberSetting?->isBindWorkspace() ?? false,
             'bind_workspace_id' => (string) ($memberSetting?->getBindWorkspaceId() ?? 0),
         ]);
@@ -247,6 +250,37 @@ class ProjectApi extends AbstractApi
         // 登录用户使用的场景
         $requestContext->setUserAuthorization($this->checkAndGetAuthorization());
         return $this->projectAppService->getProjectAttachments($requestContext, $dto);
+    }
+
+    /**
+     * V2 project attachments: backend-managed parent traversal, raw rows, no tree.
+     */
+    public function getProjectAttachmentsV2(RequestContext $requestContext): array
+    {
+        $dto = GetProjectAttachmentsV2RequestDTO::fromRequest($this->request);
+
+        if (! empty($dto->getToken())) {
+            return $this->projectAppService->getProjectAttachmentsByAccessTokenV2($dto);
+        }
+
+        $requestContext->setUserAuthorization($this->checkAndGetAuthorization());
+        return $this->projectAppService->getProjectAttachmentsV2($requestContext, $dto);
+    }
+
+    /**
+     * 项目附件总数（临时灰度开关）。
+     * 前端根据返回的 total 决定走 V1（≤500）或 V2（>500）。
+     */
+    public function getProjectAttachmentsCount(RequestContext $requestContext, string $id): array
+    {
+        $token = (string) $this->request->input('token', '');
+
+        if ($token !== '') {
+            return $this->projectAppService->getProjectAttachmentsCount(null, (int) $id, $token);
+        }
+
+        $requestContext->setUserAuthorization($this->checkAndGetAuthorization());
+        return $this->projectAppService->getProjectAttachmentsCount($requestContext, (int) $id, null);
     }
 
     public function getCloudFiles(RequestContext $requestContext, string $id): array

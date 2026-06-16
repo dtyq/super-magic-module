@@ -15,11 +15,19 @@ use App\Infrastructure\Core\AbstractDTO;
 class CreateFileVersionResponseDTO extends AbstractDTO
 {
     /**
-     * 创建空响应实例.
+     * 最新版本号.
      */
-    public static function createEmpty(): self
+    protected int $latestVersion = 1;
+
+    /**
+     * 创建响应实例.
+     */
+    public static function create(int $latestVersion): self
     {
-        return new self();
+        $dto = new self();
+        $dto->latestVersion = $latestVersion;
+
+        return $dto;
     }
 
     /**
@@ -27,6 +35,8 @@ class CreateFileVersionResponseDTO extends AbstractDTO
      */
     public function toArray(): array
     {
-        return [];
+        return [
+            'latest_version' => $this->latestVersion,
+        ];
     }
 }

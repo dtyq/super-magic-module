@@ -23,6 +23,11 @@ enum HiddenType: int
     case AGENT = 2;
 
     /**
+     * 批量下载隐藏（用于项目文件打包沙箱复用）.
+     */
+    case BATCH_DOWNLOAD = 3;
+
+    /**
      * 获取所有隐藏类型的值
      */
     public static function values(): array
@@ -50,6 +55,7 @@ enum HiddenType: int
         return match ($this) {
             self::PRE_WARM => '预启动隐藏',
             self::AGENT => 'Agent 项目隐藏',
+            self::BATCH_DOWNLOAD => '批量下载隐藏',
         };
     }
 }
