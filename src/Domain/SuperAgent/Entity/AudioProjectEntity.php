@@ -18,7 +18,7 @@ class AudioProjectEntity extends AbstractEntity
 
     protected int $projectId = 0;
 
-    protected string $source = 'app';  // app | device
+    protected string $source = 'app';  // app | device | h5 | pc
 
     protected string $audioSource = 'recorded';  // recorded | imported
 
