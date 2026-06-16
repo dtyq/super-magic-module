@@ -83,12 +83,12 @@ abstract class AbstractSandboxOS
 
     /**
      * Get authentication header information
-     * Uses X-Sandbox-Gateway header according to sandbox communication documentation.
+     * Uses Sandbox-Gateway-Token header according to sandbox communication documentation.
      */
     protected function getAuthHeaders(): array
     {
         return [
-            'X-Sandbox-Gateway' => $this->getToken(),
+            'Sandbox-Gateway-Token' => $this->getToken(),
             'Content-Type' => 'application/json',
         ];
     }
