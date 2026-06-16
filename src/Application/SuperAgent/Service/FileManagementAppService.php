@@ -1213,39 +1213,18 @@ class FileManagementAppService extends AbstractAppService
                 ExceptionBuilder::throw(ShareErrorCode::RESOURCE_NOT_FOUND, 'share.resource_not_found');
             }
 
-            $projectId = 0;
-            switch ($shareEntity->getResourceType()) {
-                case ResourceType::Topic->value:
-                    $topicEntity = $this->topicDomainService->getTopicWithDeleted((int) $shareEntity->getResourceId());
-                    if (empty($topicEntity)) {
-                        ExceptionBuilder::throw(SuperAgentErrorCode::TOPIC_NOT_FOUND, 'topic.topic_not_found');
-                    }
-                    $projectId = $topicEntity->getProjectId();
-                    break;
-                case ResourceType::Project->value:
-                    $projectId = (int) $shareEntity->getProjectId();
-                    break;
-                case ResourceType::FileCollection->value:
-                    // 当分享的是文件集时，resource_id 是文件集ID
-                    $collectionId = (int) $shareEntity->getResourceId();
-                    $projectId = $this->fileCollectionDomainService->getProjectIdByCollectionId($collectionId);
-                    if (empty($projectId)) {
-                        ExceptionBuilder::throw(SuperAgentErrorCode::FILE_NOT_FOUND, 'file.file_collection_empty_or_not_found');
-                    }
-                    break;
-                case ResourceType::File->value:
-                    // 单文件类型：resource_id 是文件集ID（单文件也使用文件集存储）
-                    $collectionId = (int) $shareEntity->getResourceId();
-                    $projectId = $this->fileCollectionDomainService->getProjectIdByCollectionId($collectionId);
-                    if (empty($projectId)) {
-                        ExceptionBuilder::throw(SuperAgentErrorCode::FILE_NOT_FOUND, 'file.file_collection_empty_or_not_found');
-                    }
-                    break;
-                default:
-                    ExceptionBuilder::throw(ShareErrorCode::RESOURCE_TYPE_NOT_SUPPORTED, 'share.resource_type_not_supported');
+            $fileScope = $this->resolveAccessTokenFileScope($shareEntity);
+            $authorizedFileIds = $this->filterFileIdsByAllowedScope($fileIds, $fileScope['allowed_file_ids']);
+            if (empty($authorizedFileIds)) {
+                return [];
             }
 
-            return $this->taskFileDomainService->getFileUrlsByProjectId($fileIds, $projectId, $downloadMode, $fileVersions);
+            return $this->taskFileDomainService->getFileUrlsByProjectId(
+                $authorizedFileIds,
+                $fileScope['project_id'],
+                $downloadMode,
+                $fileVersions
+            );
         } catch (BusinessException $e) {
             $this->logger->warning(sprintf(
                 'Business logic error in get file URLs by token: %s, File IDs: %s, Download Mode: %s, Error Code: %d',
@@ -2280,6 +2259,136 @@ class FileManagementAppService extends AbstractAppService
             $projectId,
             $userAuthorization,
         ));
+    }
+
+    /**
+     * @return array{project_id:int, allowed_file_ids:null|int[]}
+     */
+    private function resolveAccessTokenFileScope(ResourceShareEntity $shareEntity): array
+    {
+        return match ($shareEntity->getResourceType()) {
+            ResourceType::Topic->value => $this->resolveTopicShareFileScope($shareEntity),
+            ResourceType::Project->value => [
+                'project_id' => (int) $shareEntity->getProjectId(),
+                'allowed_file_ids' => null,
+            ],
+            ResourceType::FileCollection->value,
+            ResourceType::File->value => $this->resolveFileCollectionShareFileScope($shareEntity),
+            default => ExceptionBuilder::throw(ShareErrorCode::RESOURCE_TYPE_NOT_SUPPORTED, 'share.resource_type_not_supported'),
+        };
+    }
+
+    /**
+     * @return array{project_id:int, allowed_file_ids:int[]}
+     */
+    private function resolveTopicShareFileScope(ResourceShareEntity $shareEntity): array
+    {
+        $topicEntity = $this->topicDomainService->getTopicWithDeleted((int) $shareEntity->getResourceId());
+        if (empty($topicEntity)) {
+            ExceptionBuilder::throw(SuperAgentErrorCode::TOPIC_NOT_FOUND, 'topic.topic_not_found');
+        }
+
+        $topicFiles = $this->taskFileDomainService->findUserFilesByTopicId($shareEntity->getResourceId());
+
+        return [
+            'project_id' => $topicEntity->getProjectId(),
+            'allowed_file_ids' => $this->getAllowedFileIdsFromEntities($topicFiles),
+        ];
+    }
+
+    /**
+     * @return array{project_id:int, allowed_file_ids:int[]}
+     */
+    private function resolveFileCollectionShareFileScope(ResourceShareEntity $shareEntity): array
+    {
+        $collectionId = (int) $shareEntity->getResourceId();
+        $projectId = $this->fileCollectionDomainService->getProjectIdByCollectionId($collectionId);
+        if (empty($projectId)) {
+            ExceptionBuilder::throw(SuperAgentErrorCode::FILE_NOT_FOUND, 'file.file_collection_empty_or_not_found');
+        }
+
+        return [
+            'project_id' => $projectId,
+            'allowed_file_ids' => $this->getAllowedFileIdsFromCollection($collectionId, $projectId),
+        ];
+    }
+
+    /**
+     * @param null|int[] $allowedFileIds
+     * @return int[]
+     */
+    private function filterFileIdsByAllowedScope(array $fileIds, ?array $allowedFileIds): array
+    {
+        $normalizedFileIds = $this->normalizeFileIds($fileIds);
+        if ($allowedFileIds === null) {
+            return $normalizedFileIds;
+        }
+
+        $allowedFileIdMap = array_fill_keys($this->normalizeFileIds($allowedFileIds), true);
+        $authorizedFileIds = [];
+        foreach ($normalizedFileIds as $fileId) {
+            if (isset($allowedFileIdMap[$fileId])) {
+                $authorizedFileIds[] = $fileId;
+            }
+        }
+
+        return $authorizedFileIds;
+    }
+
+    /**
+     * @return int[]
+     */
+    private function normalizeFileIds(array $fileIds): array
+    {
+        $normalizedFileIds = [];
+        foreach ($fileIds as $fileId) {
+            $normalizedFileId = (int) $fileId;
+            if ($normalizedFileId > 0) {
+                $normalizedFileIds[$normalizedFileId] = $normalizedFileId;
+            }
+        }
+
+        return array_values($normalizedFileIds);
+    }
+
+    /**
+     * @param TaskFileEntity[] $fileEntities
+     * @return int[]
+     */
+    private function getAllowedFileIdsFromEntities(array $fileEntities): array
+    {
+        $allowedFileIds = [];
+        foreach ($fileEntities as $fileEntity) {
+            $fileId = $fileEntity->getFileId();
+            $allowedFileIds[] = $fileId;
+
+            if ($fileEntity->getIsDirectory()) {
+                $allowedFileIds = array_merge($allowedFileIds, $this->collectSubtreeFileIdsByMagicFs($fileId));
+            }
+        }
+
+        return array_values(array_unique($allowedFileIds));
+    }
+
+    /**
+     * Get all allowed file IDs from a file collection.
+     * This includes files directly in the collection AND all child files of directories in the collection.
+     *
+     * @param int $collectionId File collection ID
+     * @param int $projectId Project ID
+     * @return int[] Array of allowed file IDs
+     */
+    private function getAllowedFileIdsFromCollection(int $collectionId, int $projectId): array
+    {
+        $collectionItems = $this->fileCollectionDomainService->getFilesByCollectionId($collectionId);
+        if (empty($collectionItems)) {
+            return [];
+        }
+
+        $sharedFileIds = array_map(fn ($item) => (int) $item->getFileId(), $collectionItems);
+        $sharedEntities = $this->taskFileDomainService->findFilesByProjectIdAndIds($projectId, $sharedFileIds);
+
+        return $this->getAllowedFileIdsFromEntities($sharedEntities);
     }
 
     /**
