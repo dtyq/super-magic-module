@@ -15,6 +15,7 @@ use Dtyq\SuperMagic\Domain\RecycleBin\Enum\RestoreConflictResolution;
 use Dtyq\SuperMagic\Domain\RecycleBin\Enum\RestoreConflictType;
 use Dtyq\SuperMagic\Domain\RecycleBin\Repository\Facade\RecycleBinRepositoryInterface;
 use Dtyq\SuperMagic\Domain\SuperAgent\Entity\ProjectEntity;
+use Dtyq\SuperMagic\Domain\SuperAgent\Entity\TaskFileEntity;
 use Dtyq\SuperMagic\Domain\SuperAgent\Entity\TopicEntity;
 use Dtyq\SuperMagic\Domain\SuperAgent\Repository\Facade\ProjectMemberRepositoryInterface;
 use Dtyq\SuperMagic\Domain\SuperAgent\Repository\Facade\ProjectRepositoryInterface;
@@ -54,7 +55,7 @@ class RecycleBinRestoreDomainService
     /**
      * Batch restore resources (partial success allowed).
      *
-     * @param array<string, array<string, string>> $conflictResolutions resource_id → [conflict_type → resolution]
+     * @param array<int|string, array<string, string>> $conflictResolutions resource_id → [conflict_type → resolution]
      * @return array{succeeded: RecycleBinEntity[], failed: array{entity: RecycleBinEntity, error: string}[]}
      */
     public function restoreBatch(
@@ -64,6 +65,7 @@ class RecycleBinRestoreDomainService
         array $conflictResolutions = []
     ): array {
         $entities = $this->recycleBinRepository->findLatestByResourceIds($resourceIds, $resourceType, $userId);
+        $entities = $this->sortRecycleBinEntitiesByDeletedAtDesc($entities);
 
         if (empty($entities)) {
             return ['succeeded' => [], 'failed' => []];
@@ -71,6 +73,12 @@ class RecycleBinRestoreDomainService
 
         $succeeded = [];
         $failed = [];
+
+        if ($resourceType === RecycleBinResourceType::File) {
+            $fileRestorePlan = $this->filterDuplicateFileRestoreTargets($entities, $conflictResolutions);
+            $entities = $fileRestorePlan['entities'];
+            $failed = $fileRestorePlan['failed'];
+        }
 
         foreach ($entities as $entity) {
             try {
@@ -114,6 +122,9 @@ class RecycleBinRestoreDomainService
             RecycleBinResourceType::File,
             $userId
         );
+        $entities = $this->sortRecycleBinEntitiesByDeletedAtDesc($entities);
+        $seenTargetKeys = [];
+        $projectExistsCache = [];
 
         foreach ($entities as $entity) {
             $fileId = (int) $entity->getResourceId();
@@ -125,6 +136,18 @@ class RecycleBinRestoreDomainService
                     resourceId: (string) $fileId,
                     resourceName: $entity->getResourceName(),
                     isDirectory: false,
+                );
+                continue;
+            }
+
+            if (! $this->projectExistsAndNotDeleted($file->getProjectId(), $projectExistsCache)) {
+                $itemsWithConflict[] = new RestorePreviewItemDTO(
+                    resourceId: (string) $fileId,
+                    resourceName: $file->getFileName(),
+                    isDirectory: $file->getIsDirectory(),
+                    conflict: new RestoreConflictDTO(
+                        type: RestoreConflictType::ProjectMissing,
+                    ),
                 );
                 continue;
             }
@@ -148,7 +171,22 @@ class RecycleBinRestoreDomainService
                 }
             }
 
-            // Step 2: detect name_conflict (only when parent is healthy)
+            // Step 2: detect duplicate target within the current restore batch.
+            $targetKey = $this->buildFileRestoreTargetKey($file, $parentId);
+            if (isset($seenTargetKeys[$targetKey])) {
+                $itemsWithConflict[] = new RestorePreviewItemDTO(
+                    resourceId: (string) $fileId,
+                    resourceName: $file->getFileName(),
+                    isDirectory: $file->getIsDirectory(),
+                    conflict: new RestoreConflictDTO(
+                        type: RestoreConflictType::DuplicateRestoreTarget,
+                    ),
+                );
+                continue;
+            }
+            $seenTargetKeys[$targetKey] = true;
+
+            // Step 3: detect name_conflict (only when parent is healthy)
             $existing = $this->taskFileRepository->getByProjectParentAndName(
                 $file->getProjectId(),
                 $parentId,
@@ -241,7 +279,111 @@ class RecycleBinRestoreDomainService
     }
 
     /**
-     * @param array<string, array<string, string>> $conflictResolutions
+     * @param RecycleBinEntity[] $entities
+     * @return RecycleBinEntity[]
+     */
+    private function sortRecycleBinEntitiesByDeletedAtDesc(array $entities): array
+    {
+        usort(
+            $entities,
+            static function (RecycleBinEntity $left, RecycleBinEntity $right): int {
+                $deletedAtCompare = strcmp($right->getDeletedAt(), $left->getDeletedAt());
+                if ($deletedAtCompare !== 0) {
+                    return $deletedAtCompare;
+                }
+
+                return ((int) $right->getId()) <=> ((int) $left->getId());
+            }
+        );
+
+        return $entities;
+    }
+
+    /**
+     * @param RecycleBinEntity[] $entities
+     * @param array<int|string, array<string, string>> $conflictResolutions
+     * @return array{entities: RecycleBinEntity[], failed: array{entity: RecycleBinEntity, error: string}[]}
+     */
+    private function filterDuplicateFileRestoreTargets(array $entities, array $conflictResolutions): array
+    {
+        $selectedEntities = [];
+        $failed = [];
+        $seenTargetKeys = [];
+        $projectExistsCache = [];
+
+        foreach ($entities as $entity) {
+            if ($entity->getRemovedAt() !== null || $entity->getPurgedAt() !== null) {
+                $selectedEntities[] = $entity;
+                continue;
+            }
+
+            $fileId = (int) $entity->getResourceId();
+            $file = $this->taskFileRepository->getByIdWithTrash($fileId);
+            if ($file === null) {
+                $selectedEntities[] = $entity;
+                continue;
+            }
+
+            if (! $this->projectExistsAndNotDeleted($file->getProjectId(), $projectExistsCache)) {
+                $failed[] = [
+                    'entity' => $entity,
+                    'error' => trans('recycle_bin.restore.file_project_missing'),
+                ];
+                continue;
+            }
+
+            if ($file->getDeletedAt() === null) {
+                $selectedEntities[] = $entity;
+                continue;
+            }
+
+            $resolution = $conflictResolutions[(string) $fileId] ?? [];
+
+            try {
+                $targetParentId = $this->resolveTargetParentId($file->getParentId(), $file->getProjectId(), $resolution);
+            } catch (RuntimeException) {
+                $selectedEntities[] = $entity;
+                continue;
+            }
+
+            $targetKey = $this->buildFileRestoreTargetKey($file, $targetParentId);
+            if (isset($seenTargetKeys[$targetKey])) {
+                $failed[] = [
+                    'entity' => $entity,
+                    'error' => trans('recycle_bin.restore.file_duplicate_restore_target'),
+                ];
+                continue;
+            }
+
+            $seenTargetKeys[$targetKey] = true;
+            $selectedEntities[] = $entity;
+        }
+
+        return [
+            'entities' => $selectedEntities,
+            'failed' => $failed,
+        ];
+    }
+
+    /**
+     * @param array<int, bool> $projectExistsCache
+     */
+    private function projectExistsAndNotDeleted(int $projectId, array &$projectExistsCache): bool
+    {
+        if (! array_key_exists($projectId, $projectExistsCache)) {
+            $projectExistsCache[$projectId] = $this->projectRepository->existsAndNotDeleted($projectId);
+        }
+
+        return $projectExistsCache[$projectId];
+    }
+
+    private function buildFileRestoreTargetKey(TaskFileEntity $file, ?int $targetParentId): string
+    {
+        return sprintf('%d:%d:%s', $file->getProjectId(), $targetParentId ?? 0, $file->getFileName());
+    }
+
+    /**
+     * @param array<int|string, array<string, string>> $conflictResolutions
      */
     private function restoreSingle(
         RecycleBinEntity $entity,
@@ -387,7 +529,7 @@ class RecycleBinRestoreDomainService
      * Checks parent_missing then name_conflict in order.
      * Any unresolved conflict (missing or 'skip' strategy) throws, causing the item to be failed.
      *
-     * @param array<string, array<string, string>> $conflictResolutions
+     * @param array<int|string, array<string, string>> $conflictResolutions
      */
     private function restoreFile(
         RecycleBinEntity $entity,
@@ -407,6 +549,10 @@ class RecycleBinRestoreDomainService
             $file = $this->taskFileRepository->getByIdWithTrash($fileId);
             if ($file === null) {
                 throw new RuntimeException(trans('recycle_bin.restore.file_not_found_or_permanently_deleted'));
+            }
+
+            if (! $this->projectRepository->existsAndNotDeleted($file->getProjectId())) {
+                throw new RuntimeException(trans('recycle_bin.restore.file_project_missing'));
             }
 
             // 3. Already restored — just clean up recycle bin record

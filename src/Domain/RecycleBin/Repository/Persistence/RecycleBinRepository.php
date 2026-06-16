@@ -305,6 +305,8 @@ class RecycleBinRepository extends AbstractRepository implements RecycleBinRepos
             ->where($table . '.resource_type', $resourceType->value)
             ->whereNull($table . '.removed_at')
             ->select($table . '.*')
+            ->orderBy($table . '.deleted_at', 'desc')
+            ->orderBy($table . '.id', 'desc')
             ->get();
 
         $entities = [];

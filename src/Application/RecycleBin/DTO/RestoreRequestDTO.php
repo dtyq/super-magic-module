@@ -32,7 +32,7 @@ class RestoreRequestDTO
      * Per-resource conflict resolution map.
      * Shape: [ 'resource_id' => [ 'parent_missing' => 'restore_to_root', 'name_conflict' => 'overwrite' ] ].
      *
-     * @var array<string, array<string, string>>
+     * @var array<int|string, array<string, string>>
      */
     private array $conflictResolutions = [];
 
@@ -82,7 +82,7 @@ class RestoreRequestDTO
      * Returns the conflict resolution map.
      * Shape: [ 'resource_id' => [ 'parent_missing' => 'restore_to_root', 'name_conflict' => 'overwrite' ] ].
      *
-     * @return array<string, array<string, string>>
+     * @return array<int|string, array<string, string>>
      */
     public function getConflictResolutions(): array
     {

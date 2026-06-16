@@ -11,4 +11,6 @@ enum RestoreConflictType: string
 {
     case ParentMissing = 'parent_missing';
     case NameConflict = 'name_conflict';
+    case ProjectMissing = 'project_missing';
+    case DuplicateRestoreTarget = 'duplicate_restore_target';
 }
