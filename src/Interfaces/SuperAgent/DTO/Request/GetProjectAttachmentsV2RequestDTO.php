@@ -11,17 +11,40 @@ use Hyperf\HttpServer\Contract\RequestInterface;
 
 class GetProjectAttachmentsV2RequestDTO
 {
+    public const DEFAULT_PAGE_SIZE = 1000;
+
+    public const MAX_PAGE_SIZE = 1000;
+
     protected string $projectId;
 
     /**
-     * Current page number.
+     * Optional directory to use as the first-page traversal root.
      */
-    protected int $page;
+    protected ?string $parentId = null;
 
     /**
-     * Items per page.
+     * Items per page, clamped to [1, MAX_PAGE_SIZE].
      */
     protected int $pageSize;
+
+    /**
+     * Backend-managed breadth-first traversal queue (opaque pagination cursor).
+     *
+     * Round-trip contract: the server returns this array as `next_parent_ids` in the
+     * response; the client MUST send it back verbatim on the next page and MUST NOT
+     * craft or mutate it. An empty array means "first page" (the server resolves the
+     * project root, emits the root directory row, then seeds the queue).
+     *
+     * Each entry is a keyset cursor for one directory:
+     *  - parent_id:     directory whose children are being paged
+     *  - after_sort:    last emitted child's `sort` (manual drag-sort value; defaults
+     *                   to 0 for agent/uploaded files and only becomes meaningful after
+     *                   a move/reorder via POST /files/{id}/move)
+     *  - after_file_id: last emitted child's `file_id`, the stable tiebreaker
+     *
+     * @var array<int, array{parent_id: string, after_sort: null|int, after_file_id: null|string}>
+     */
+    protected array $nextParentIds = [];
 
     /**
      * File type filter.
@@ -33,36 +56,23 @@ class GetProjectAttachmentsV2RequestDTO
      */
     protected ?string $token = null;
 
-    /**
-     * Updated after timestamp (for filtering files updated after this time).
-     */
-    protected ?string $updatedAfter = null;
-
     public function __construct(array $data = [], ?string $projectId = null)
     {
-        // Use passed projectId parameter first
         $this->projectId = $projectId ?? (string) ($data['project_id'] ?? '');
-        $this->page = (int) ($data['page'] ?? 1);
-        $this->pageSize = (int) ($data['page_size'] ?? 200);
+        $this->pageSize = $this->clampPageSize((int) ($data['page_size'] ?? self::DEFAULT_PAGE_SIZE));
+        $this->parentId = $this->normalizeParentId($data['parent_id'] ?? null);
+        $this->nextParentIds = $this->normalizeNextParentIds($data['next_parent_ids'] ?? []);
         $this->token = $data['token'] ?? null;
-        $this->updatedAfter = $data['updated_after'] ?? null;
 
-        // Handle file type, can accept string or array
         if (isset($data['file_type'])) {
             if (is_array($data['file_type'])) {
                 $this->fileType = $data['file_type'];
-            } elseif (is_string($data['file_type']) && ! empty($data['file_type'])) {
+            } elseif (is_string($data['file_type']) && $data['file_type'] !== '') {
                 $this->fileType = [$data['file_type']];
             }
         }
     }
 
-    /**
-     * Create DTO from request.
-     *
-     * @param RequestInterface $request Request object
-     * @return self Return a new DTO instance
-     */
     public static function fromRequest(RequestInterface $request): self
     {
         return new self(
@@ -76,9 +86,9 @@ class GetProjectAttachmentsV2RequestDTO
         return $this->projectId;
     }
 
-    public function getPage(): int
+    public function getParentId(): ?string
     {
-        return $this->page;
+        return $this->parentId;
     }
 
     public function getPageSize(): int
@@ -86,100 +96,162 @@ class GetProjectAttachmentsV2RequestDTO
         return $this->pageSize;
     }
 
+    /**
+     * @return array<int, array{parent_id: string, after_sort: null|int, after_file_id: null|string}>
+     */
+    public function getNextParentIds(): array
+    {
+        return $this->nextParentIds;
+    }
+
     public function getFileType(): array
     {
         return $this->fileType;
     }
 
-    /**
-     * Get updated after timestamp.
-     *
-     * @return null|string Updated after timestamp
-     */
-    public function getUpdatedAfter(): ?string
+    public function getToken(): ?string
     {
-        return $this->updatedAfter;
+        return $this->token;
     }
 
-    /**
-     * Set project ID.
-     *
-     * @param string $projectId Project ID
-     * @return self Return current instance for method chaining
-     */
     public function setProjectId(string $projectId): self
     {
         $this->projectId = $projectId;
         return $this;
     }
 
-    /**
-     * Set current page number.
-     *
-     * @param int $page Current page number
-     * @return self Return current instance for method chaining
-     */
-    public function setPage(int $page): self
+    public function setParentId(?string $parentId): self
     {
-        $this->page = $page;
+        $this->parentId = $this->normalizeParentId($parentId);
         return $this;
     }
 
-    /**
-     * Set items per page.
-     *
-     * @param int $pageSize Items per page
-     * @return self Return current instance for method chaining
-     */
     public function setPageSize(int $pageSize): self
     {
-        $this->pageSize = $pageSize;
+        $this->pageSize = $this->clampPageSize($pageSize);
         return $this;
     }
 
-    /**
-     * Set file type filter.
-     *
-     * @param array $fileType File type filter array
-     * @return self Return current instance for method chaining
-     */
+    public function setNextParentIds(array $nextParentIds): self
+    {
+        $this->nextParentIds = $this->normalizeNextParentIds($nextParentIds);
+        return $this;
+    }
+
     public function setFileType(array $fileType): self
     {
         $this->fileType = $fileType;
         return $this;
     }
 
-    /**
-     * Get access token.
-     *
-     * @return null|string Access token
-     */
-    public function getToken(): ?string
-    {
-        return $this->token;
-    }
-
-    /**
-     * Set access token.
-     *
-     * @param null|string $token Access token
-     * @return self Return current instance for method chaining
-     */
     public function setToken(?string $token): self
     {
         $this->token = $token;
         return $this;
     }
 
-    /**
-     * Set updated after timestamp.
-     *
-     * @param null|string $updatedAfter Updated after timestamp
-     * @return self Return current instance for method chaining
-     */
-    public function setUpdatedAfter(?string $updatedAfter): self
+    private function clampPageSize(int $value): int
     {
-        $this->updatedAfter = $updatedAfter;
-        return $this;
+        if ($value <= 0) {
+            return self::DEFAULT_PAGE_SIZE;
+        }
+        return min($value, self::MAX_PAGE_SIZE);
+    }
+
+    private function normalizeParentId(mixed $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $parentId = trim((string) $value);
+        if ($parentId === '' || $parentId === '0') {
+            return null;
+        }
+
+        return $parentId;
+    }
+
+    /**
+     * @return array<int, array{parent_id: string, after_sort: null|int, after_file_id: null|string}>
+     */
+    private function normalizeNextParentIds(mixed $value): array
+    {
+        if (is_string($value)) {
+            $decoded = json_decode($value, true);
+            $value = is_array($decoded) ? $decoded : [$value];
+        }
+
+        if (! is_array($value)) {
+            return [];
+        }
+
+        $result = [];
+        $seen = [];
+        foreach ($value as $item) {
+            $state = $this->normalizeParentState($item);
+            if ($state === null) {
+                continue;
+            }
+
+            $key = implode(':', [
+                $state['parent_id'],
+                (string) ($state['after_sort'] ?? ''),
+                (string) ($state['after_file_id'] ?? ''),
+            ]);
+            if (isset($seen[$key])) {
+                continue;
+            }
+
+            $seen[$key] = true;
+            $result[] = $state;
+        }
+
+        return $result;
+    }
+
+    /**
+     * @return null|array{parent_id: string, after_sort: null|int, after_file_id: null|string}
+     */
+    private function normalizeParentState(mixed $item): ?array
+    {
+        if (is_string($item) || is_int($item)) {
+            $parentId = trim((string) $item);
+            if ($parentId === '' || $parentId === '0') {
+                return null;
+            }
+
+            return [
+                'parent_id' => $parentId,
+                'after_sort' => null,
+                'after_file_id' => null,
+            ];
+        }
+
+        if (! is_array($item)) {
+            return null;
+        }
+
+        $parentId = trim((string) ($item['parent_id'] ?? ''));
+        if ($parentId === '' || $parentId === '0') {
+            return null;
+        }
+
+        $afterSort = isset($item['after_sort']) && is_numeric($item['after_sort'])
+            ? (int) $item['after_sort']
+            : null;
+        $afterFileId = isset($item['after_file_id'])
+            ? trim((string) $item['after_file_id'])
+            : null;
+
+        if ($afterSort === null || $afterFileId === '') {
+            $afterFileId = null;
+        }
+
+        return [
+            'parent_id' => $parentId,
+            'after_sort' => $afterSort,
+            'after_file_id' => $afterFileId,
+        ];
     }
 }

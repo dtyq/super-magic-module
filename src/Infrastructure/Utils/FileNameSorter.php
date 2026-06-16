@@ -52,6 +52,7 @@ class FileNameSorter
         $this->collator = new Collator($normalizedLocale);
 
         // Enable numeric collation (file2 < file10)
+        // @phpstan-ignore argument.invalidConstant (intl stub is overly strict; Collator::ON is valid for NUMERIC_COLLATION)
         $this->collator->setAttribute(Collator::NUMERIC_COLLATION, Collator::ON);
 
         // Case insensitive comparison (Apple ≈ apple)

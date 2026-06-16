@@ -29,6 +29,7 @@ class UnicodeSortUtil
             $collator = Collator::create('root');
             if ($collator !== null) {
                 // Set numeric collation for natural number sorting
+                // @phpstan-ignore argument.invalidConstant (intl stub is overly strict; Collator::ON is valid for NUMERIC_COLLATION)
                 $collator->setAttribute(Collator::NUMERIC_COLLATION, Collator::ON);
                 return $collator->compare($a, $b);
             }

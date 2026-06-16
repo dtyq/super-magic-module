@@ -582,11 +582,14 @@ class FileBatchMoveSubscriber extends ConsumerMessage
         }
 
         if (! $shouldKeepBoth && $targetFileEntity !== null && $targetFileEntity->getIsDirectory()) {
-            // Batch move keeps directory-merge behavior for compatibility: reuse target directory.
-            return [
-                'target_dir' => $targetFileEntity,
-                'delete_source_dir_after_children' => $fullMove,
-            ];
+            $this->logger->info('Deleting existing target directory before directory move overwrite', [
+                'source_id' => $sourceFileId,
+                'existing_id' => $targetFileEntity->getFileId(),
+                'target_parent_id' => $targetParentId,
+            ]);
+
+            $this->magicFSFileDomainService->deleteFile((string) $targetFileEntity->getFileId(), true);
+            $targetFileEntity = null;
         }
 
         if ($fullMove) {

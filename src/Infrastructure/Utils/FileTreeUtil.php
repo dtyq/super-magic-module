@@ -254,34 +254,28 @@ class FileTreeUtil
             return [];
         }
 
-        // 1. 收集所有存在的 file_id 和构建文件映射
-        $existingFileIds = [];
+        // 1. Build file map (file_id => file) for O(1) parent lookup
         $fileMap = [];
 
         foreach ($files as $file) {
             $fileId = $file['file_id'] ?? 0;
             if ($fileId > 0) {
-                $existingFileIds[] = $fileId;
                 $fileMap[$fileId] = $file;
             }
         }
 
-        // 2. 按 parent_id 分组，识别根节点和子节点
+        // 2. Group by parent_id; nodes whose parent is not in $fileMap are root nodes.
+        //    Use isset($fileMap[$parentId]) instead of in_array() to get O(1) per lookup,
+        //    reducing the overall pass from O(N²) to O(N).
         $parentChildMap = [];  // parent_id => [child_files]
-        $rootNodes = [];       // 根节点（parent_id 不在现有文件中）
+        $rootNodes = [];       // root nodes (parent not present in the current file list)
 
         foreach ($files as $file) {
-            $fileId = $file['file_id'] ?? 0;
             $parentId = $file['parent_id'] ?? 0;
 
-            if ($parentId <= 0 || ! in_array($parentId, $existingFileIds)) {
-                // 父节点不存在于当前文件列表中，视为根节点
+            if ($parentId <= 0 || ! isset($fileMap[$parentId])) {
                 $rootNodes[] = $file;
             } else {
-                // 父节点存在，加入父子映射
-                if (! isset($parentChildMap[$parentId])) {
-                    $parentChildMap[$parentId] = [];
-                }
                 $parentChildMap[$parentId][] = $file;
             }
         }

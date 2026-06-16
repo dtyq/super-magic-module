@@ -1097,6 +1097,11 @@ class FileManagementAppService extends AbstractAppService
                 ! $shouldKeepBoth
             );
 
+            if ($newFileEntity->getFileId() === $fileEntity->getFileId()) {
+                $result = TaskFileItemDTO::fromEntity($newFileEntity)->toArray();
+                return FileBatchOperationResponseDTO::createSyncSuccess($result)->toArray();
+            }
+
             // Dispatch file uploaded event for the new copy
             $this->eventDispatcher->dispatch(new FileUploadedEvent(
                 $newFileEntity,

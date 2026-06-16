@@ -66,7 +66,6 @@ use Dtyq\SuperMagic\Domain\SuperAgent\Repository\Facade\ProjectRepositoryInterfa
 use Dtyq\SuperMagic\Domain\SuperAgent\Service\AudioProjectDomainService;
 use Dtyq\SuperMagic\Domain\SuperAgent\Service\ProjectDomainService;
 use Dtyq\SuperMagic\Domain\SuperAgent\Service\ProjectMemberDomainService;
-use Dtyq\SuperMagic\Domain\SuperAgent\Service\TaskDomainService;
 use Dtyq\SuperMagic\Domain\SuperAgent\Service\TaskFileDomainService;
 use Dtyq\SuperMagic\Domain\SuperAgent\Service\TopicDomainService;
 use Dtyq\SuperMagic\Domain\SuperAgent\Service\WorkspaceDomainService;
@@ -119,6 +118,20 @@ class ProjectAppService extends AbstractAppService
      */
     private const MAX_HIDDEN_PROJECTS_PER_WORKSPACE = 3;
 
+    /**
+     * Defensive runaway guard for V2 attachment tree traversal: the maximum number
+     * of per-parent cursor queries a single request may issue.
+     *
+     * This is NOT a page-size limiter. The traversal keeps filling the current page
+     * until page_size rows are emitted or the queue is drained, so a non-final page
+     * is always full and the client-side call count stays predictable
+     * (ceil(emittedItems / page_size)). This guard only trips on pathological,
+     * extremely sparse trees (e.g. many empty directories) to bound worst-case work;
+     * when it trips the queue is still non-empty, so has_more remains true and the
+     * client simply continues paging.
+     */
+    private const ATTACHMENT_V2_MAX_PARENT_QUERIES = 1000;
+
     protected LoggerInterface $logger;
 
     public function __construct(
@@ -127,7 +140,6 @@ class ProjectAppService extends AbstractAppService
         private readonly ProjectRepositoryInterface $projectRepository,
         private readonly ProjectMemberDomainService $projectMemberDomainService,
         private readonly TopicDomainService $topicDomainService,
-        private readonly TaskDomainService $taskDomainService,
         private readonly TaskFileDomainService $taskFileDomainService,
         private readonly MagicFSFileDomainService $magicFSFileDomainService,
         private readonly ChatAppService $chatAppService,
@@ -899,12 +911,9 @@ class ProjectAppService extends AbstractAppService
 
         // 验证项目存在性和所有权
         $projectEntity = $this->getAccessibleProject((int) $requestDTO->getProjectId(), $userAuthorization->getId(), $userAuthorization->getOrganizationCode());
-
-        // 创建基于用户的数据隔离
         $dataIsolation = $this->createDataIsolation($userAuthorization);
 
-        // 获取附件列表，不返回树状结构，不使用 storage_type 过滤
-        return $this->getProjectAttachmentListV2($dataIsolation, $requestDTO, $projectEntity->getWorkDir() ?? '');
+        return $this->buildAttachmentListV2((int) $requestDTO->getProjectId(), $requestDTO, $dataIsolation, $projectEntity);
     }
 
     /**
@@ -1003,7 +1012,7 @@ class ProjectAppService extends AbstractAppService
 
         // 由于前端当前的分享话题也会获取项目列表的接口，所以这里需要兼容分享类型是话题的情况，否则直接处理 ResourceType::Project 即可
         $projectId = '';
-        $workDir = '';
+        $projectEntity = null;
         switch ($shareEntity->getResourceType()) {
             case ResourceType::Topic->value:
                 $topicEntity = $this->topicDomainService->getTopicWithDeleted((int) $shareEntity->getResourceId());
@@ -1011,7 +1020,10 @@ class ProjectAppService extends AbstractAppService
                     ExceptionBuilder::throw(SuperAgentErrorCode::TOPIC_NOT_FOUND, 'topic.topic_not_found');
                 }
                 $projectId = (string) $topicEntity->getProjectId();
-                $workDir = $topicEntity->getWorkDir();
+                $projectEntity = $this->projectDomainService->getProjectNotUserId((int) $projectId);
+                if (empty($projectEntity)) {
+                    ExceptionBuilder::throw(SuperAgentErrorCode::PROJECT_NOT_FOUND, 'project.project_not_found');
+                }
                 break;
             case ResourceType::Project->value:
                 $projectEntity = $this->projectDomainService->getProjectNotUserId((int) $shareEntity->getResourceId());
@@ -1019,7 +1031,6 @@ class ProjectAppService extends AbstractAppService
                     ExceptionBuilder::throw(SuperAgentErrorCode::PROJECT_NOT_FOUND, 'project.project_not_found');
                 }
                 $projectId = (string) $projectEntity->getId();
-                $workDir = $projectEntity->getWorkDir();
                 break;
             default:
                 ExceptionBuilder::throw(ShareErrorCode::RESOURCE_TYPE_NOT_SUPPORTED, 'share.resource_type_not_supported');
@@ -1027,11 +1038,56 @@ class ProjectAppService extends AbstractAppService
 
         $requestDto->setProjectId($projectId);
         $organizationCode = AccessTokenUtil::getOrganizationCode($token);
-        // 创建DataIsolation
         $dataIsolation = DataIsolation::simpleMake($organizationCode, '');
+        return $this->buildAttachmentListV2((int) $projectId, $requestDto, $dataIsolation, $projectEntity);
+    }
 
-        // 令牌模式不需要workDir处理，传空字符串，V2 不返回树状结构
-        return $this->getProjectAttachmentListV2($dataIsolation, $requestDto, $workDir);
+    /**
+     * 获取项目附件总数（临时灰度开关用：前端按此值决定走 V1 或 V2）.
+     * 支持登录态与分享 token 两种鉴权模式。
+     */
+    public function getProjectAttachmentsCount(?RequestContext $requestContext, int $projectId, ?string $token = null): array
+    {
+        // 分享 token 模式
+        if (! empty($token)) {
+            if (! AccessTokenUtil::validate($token)) {
+                ExceptionBuilder::throw(ShareErrorCode::PARAMETER_CHECK_FAILURE, 'share.parameter_check_failure');
+            }
+            $shareId = AccessTokenUtil::getShareId($token);
+            $shareEntity = $this->resourceShareDomainService->getValidShareById($shareId);
+            if (! $shareEntity) {
+                ExceptionBuilder::throw(ShareErrorCode::RESOURCE_NOT_FOUND, 'share.resource_not_found');
+            }
+            $resolvedProjectId = 0;
+            switch ($shareEntity->getResourceType()) {
+                case ResourceType::Topic->value:
+                    $topicEntity = $this->topicDomainService->getTopicWithDeleted((int) $shareEntity->getResourceId());
+                    if (empty($topicEntity)) {
+                        ExceptionBuilder::throw(SuperAgentErrorCode::TOPIC_NOT_FOUND, 'topic.topic_not_found');
+                    }
+                    $resolvedProjectId = (int) $topicEntity->getProjectId();
+                    break;
+                case ResourceType::Project->value:
+                    $projectEntity = $this->projectDomainService->getProjectNotUserId((int) $shareEntity->getResourceId());
+                    if (empty($projectEntity)) {
+                        ExceptionBuilder::throw(SuperAgentErrorCode::PROJECT_NOT_FOUND, 'project.project_not_found');
+                    }
+                    $resolvedProjectId = (int) $projectEntity->getId();
+                    break;
+                default:
+                    ExceptionBuilder::throw(ShareErrorCode::RESOURCE_TYPE_NOT_SUPPORTED, 'share.resource_type_not_supported');
+            }
+            return ['total' => $this->taskFileDomainService->countAttachmentsByProjectIdV2($resolvedProjectId)];
+        }
+
+        // 登录态
+        $userAuthorization = $requestContext?->getUserAuthorization();
+        if ($userAuthorization === null) {
+            ExceptionBuilder::throw(ShareErrorCode::PARAMETER_CHECK_FAILURE, 'share.parameter_check_failure');
+        }
+        $this->getAccessibleProject($projectId, $userAuthorization->getId(), $userAuthorization->getOrganizationCode());
+
+        return ['total' => $this->taskFileDomainService->countAttachmentsByProjectIdV2($projectId)];
     }
 
     public function getCloudFiles(RequestContext $requestContext, int $projectId): array
@@ -1359,15 +1415,16 @@ class ProjectAppService extends AbstractAppService
         // Step 3: Separate valid and invalid projects
         $projectMap = [];
         foreach ($projectEntities as $entity) {
-            $projectMap[(string) $entity->getId()] = $entity;
+            $projectMap[$entity->getId()] = $entity;
         }
 
         $validProjectIds = [];
         $invalidResults = [];
 
         foreach ($requestDTO->getProjectIds() as $projectId) {
-            if (isset($projectMap[$projectId])) {
-                $project = $projectMap[$projectId];
+            $projectIdInt = (int) $projectId;
+            if (isset($projectMap[$projectIdInt])) {
+                $project = $projectMap[$projectIdInt];
                 // Check if project is already in target workspace
                 if ($project->getWorkspaceId() === $targetWorkspaceId) {
                     $invalidResults[] = [
@@ -1376,7 +1433,7 @@ class ProjectAppService extends AbstractAppService
                         'message' => 'Project is already in target workspace',
                     ];
                 } else {
-                    $validProjectIds[] = (int) $projectId;
+                    $validProjectIds[] = $projectIdInt;
                 }
             } else {
                 $invalidResults[] = [
@@ -1475,9 +1532,8 @@ class ProjectAppService extends AbstractAppService
         if ($successCount > 0) {
             $movedProjects = [];
             foreach ($validProjectIds as $projectId) {
-                $projectKey = (string) $projectId;
-                if (isset($projectMap[$projectKey])) {
-                    $movedProjects[] = $projectMap[$projectKey];
+                if (isset($projectMap[$projectId])) {
+                    $movedProjects[] = $projectMap[$projectId];
                 }
             }
 
@@ -1535,21 +1591,27 @@ class ProjectAppService extends AbstractAppService
         }
 
         $list = [];
-        $fileKeys = [];
+        $fileKeySet = [];   // hash map for O(1) dedup instead of in_array O(N)
         $relativePathMap = $this->buildRelativePathsByParentIds($entities, (int) $requestDTO->getProjectId());
         foreach ($entities as $entity) {
+            $fileKey = $entity->getFileKey();
+            if (isset($fileKeySet[$fileKey])) {
+                continue;
+            }
+            $fileKeySet[$fileKey] = true;
+
             $dto = new TaskFileItemDTO();
             $dto->fileId = (string) $entity->getFileId();
             $dto->taskId = (string) $entity->getTaskId();
             $dto->fileType = $entity->getFileType();
             $dto->fileName = $entity->getFileName();
             $dto->fileExtension = $entity->getFileExtension();
-            $dto->fileKey = $entity->getFileKey();
+            $dto->fileKey = $fileKey;
             $dto->fileSize = $entity->getFileSize();
             $dto->isHidden = $entity->getIsHidden();
             $dto->updatedAt = $entity->getUpdatedAt();
             $dto->topicId = (string) $entity->getTopicId();
-            $dto->relativeFilePath = $relativePathMap[$entity->getFileId()] ?? WorkDirectoryUtil::getRelativeFilePath($entity->getFileKey(), $workDir);
+            $dto->relativeFilePath = $relativePathMap[$entity->getFileId()] ?? WorkDirectoryUtil::getRelativeFilePath($fileKey, $workDir);
             $dto->isDirectory = $entity->getIsDirectory();
             $dto->displayConfig = FileMetadataUtil::decodeJsonObject($entity->getDisplayConfig());
             $dto->metadata = $dto->displayConfig;
@@ -1558,12 +1620,6 @@ class ProjectAppService extends AbstractAppService
             $dto->fileUrl = '';
             $dto->parentId = (string) $entity->getParentId();
             $dto->source = $entity->getSource();
-
-            $fileKey = $entity->getFileKey();
-            if (in_array($fileKey, $fileKeys, true)) {
-                continue;
-            }
-            $fileKeys[] = $fileKey;
             $list[] = $dto->toArray();
         }
 
@@ -1578,71 +1634,6 @@ class ProjectAppService extends AbstractAppService
             'total' => $total,
             'list' => $list,
             'tree' => $tree,
-        ];
-    }
-
-    /**
-     * 获取项目附件列表的核心逻辑 V2（不返回树状结构，支持数据库级别的更新时间过滤）.
-     */
-    public function getProjectAttachmentListV2(DataIsolation $dataIsolation, GetProjectAttachmentsV2RequestDTO $requestDTO, string $workDir = ''): array
-    {
-        // 通过任务领域服务获取项目下的附件列表，使用数据库级别的时间过滤
-        $result = $this->taskDomainService->getTaskAttachmentsByProjectId(
-            (int) $requestDTO->getProjectId(),
-            $dataIsolation,
-            $requestDTO->getPage(),
-            $requestDTO->getPageSize(),
-            $requestDTO->getFileType(),
-            StorageType::WORKSPACE->value,  // V2 固定使用 workspace 存储类型
-            $requestDTO->getUpdatedAfter()  // 数据库级别的时间过滤
-        );
-
-        // 处理文件 URL
-        $list = [];
-        $fileKeys = [];
-        $relativePathMap = $this->buildRelativePathsByParentIds($result['list'], (int) $requestDTO->getProjectId());
-        // 遍历附件列表，使用TaskFileItemDTO处理
-        foreach ($result['list'] as $entity) {
-            /**
-             * @var TaskFileEntity $entity
-             */
-            // 创建DTO
-            $dto = new TaskFileItemDTO();
-            $dto->fileId = (string) $entity->getFileId();
-            $dto->taskId = (string) $entity->getTaskId();
-            $dto->fileType = $entity->getFileType();
-            $dto->fileName = $entity->getFileName();
-            $dto->fileExtension = $entity->getFileExtension();
-            $dto->fileKey = $entity->getFileKey();
-            $dto->fileSize = $entity->getFileSize();
-            $dto->isHidden = $entity->getIsHidden();
-            $dto->updatedAt = $entity->getUpdatedAt();
-            $dto->topicId = (string) $entity->getTopicId();
-            $dto->relativeFilePath = $relativePathMap[$entity->getFileId()] ?? WorkDirectoryUtil::getRelativeFilePath($entity->getFileKey(), $workDir);
-            $dto->isDirectory = $entity->getIsDirectory();
-            $dto->displayConfig = FileMetadataUtil::decodeJsonObject($entity->getDisplayConfig());
-            $dto->metadata = $dto->displayConfig;
-            // 添加 project_id 字段
-            $dto->projectId = (string) $entity->getProjectId();
-            // 设置排序字段
-            $dto->sort = $entity->getSort();
-            $dto->fileUrl = '';
-            $dto->parentId = (string) $entity->getParentId();
-            $dto->source = $entity->getSource();
-            // 添加 file_url 字段
-            $fileKey = $entity->getFileKey();
-            // 判断file key是否重复，如果重复，则跳过
-            // 如果根目录，也跳过
-            if (in_array($fileKey, $fileKeys) || empty($entity->getParentId())) {
-                continue;
-            }
-            $fileKeys[] = $fileKey;
-            $list[] = $dto->toArray();
-        }
-
-        return [
-            'total' => $result['total'],
-            'list' => $list,
         ];
     }
 
@@ -2289,6 +2280,198 @@ class ProjectAppService extends AbstractAppService
 
         // Delete core project
         $this->projectDomainService->deleteProject($projectId, $project->getUserId());
+    }
+
+    /**
+     * V2 attachment list using backend-managed breadth-first tree traversal.
+     *
+     * The client treats next_parent_ids as an opaque ordered queue and sends it
+     * back unchanged. Each state points to a parent directory and, for very large
+     * directories, the last emitted child position under that parent.
+     */
+    private function buildAttachmentListV2(
+        int $projectId,
+        GetProjectAttachmentsV2RequestDTO $requestDTO,
+        ?DataIsolation $dataIsolation = null,
+        ?ProjectEntity $projectEntity = null
+    ): array {
+        $pageSize = $requestDTO->getPageSize();
+        $queue = $requestDTO->getNextParentIds();
+
+        $list = [];
+        $remaining = $pageSize;
+        $parentQueryCount = 0;
+
+        // An empty incoming queue marks the first page. Resolve the project root,
+        // emit the root directory row itself as the very first item (keeps the list
+        // consistent with countAttachmentsByProjectIdV2(), which also counts the
+        // root), then seed the traversal queue with the root as a parent so its
+        // descendants are paged afterwards.
+        if (empty($queue)) {
+            $rootEntity = $this->resolveAttachmentTraversalRoot($projectId, $requestDTO, $dataIsolation, $projectEntity);
+            if ($rootEntity === null) {
+                return [
+                    'list' => [],
+                    'next_parent_ids' => [],
+                    'has_more' => false,
+                ];
+            }
+
+            $list[] = $this->formatAttachmentRowV2($rootEntity->toArray());
+            --$remaining;
+            $queue[] = $this->makeAttachmentParentState((string) $rootEntity->getFileId());
+        }
+
+        while ($remaining > 0 && ! empty($queue) && $parentQueryCount < self::ATTACHMENT_V2_MAX_PARENT_QUERIES) {
+            $state = array_shift($queue);
+            $parentId = (int) ($state['parent_id'] ?? 0);
+            if ($parentId <= 0) {
+                continue;
+            }
+
+            ++$parentQueryCount;
+            $rows = $this->taskFileDomainService->getProjectFileChildrenByParentCursor(
+                $projectId,
+                $parentId,
+                StorageType::WORKSPACE->value,
+                $state['after_sort'] ?? null,
+                isset($state['after_file_id']) ? (int) $state['after_file_id'] : null,
+                $remaining + 1,
+                $requestDTO->getFileType()
+            );
+
+            $rowsToEmit = array_slice($rows, 0, $remaining);
+            $lastEmittedRow = null;
+            foreach ($rowsToEmit as $row) {
+                $row = (array) $row;
+                $lastEmittedRow = $row;
+
+                $list[] = $this->formatAttachmentRowV2($row);
+                --$remaining;
+
+                if ((bool) ($row['is_directory'] ?? false)) {
+                    $childParentId = (string) ($row['file_id'] ?? '');
+                    if ($childParentId !== '' && $childParentId !== (string) $parentId) {
+                        $queue[] = $this->makeAttachmentParentState($childParentId);
+                    }
+                }
+            }
+
+            // The current directory still has more children than we could emit on
+            // this page (we fetched $remaining + 1 rows as a look-ahead). Push the
+            // directory back to the FRONT of the queue carrying a (sort, file_id)
+            // cursor so the NEXT request resumes this exact directory before
+            // descending into any sibling/child directories discovered above. At
+            // this point $remaining is always 0, so the returned page is full.
+            if (count($rows) > count($rowsToEmit) && $lastEmittedRow !== null) {
+                array_unshift(
+                    $queue,
+                    $this->makeAttachmentParentState(
+                        (string) $parentId,
+                        (int) ($lastEmittedRow['sort'] ?? 0),
+                        (string) ($lastEmittedRow['file_id'] ?? '')
+                    )
+                );
+                break;
+            }
+        }
+
+        return [
+            'list' => $list,
+            'next_parent_ids' => array_values($queue),
+            'has_more' => ! empty($queue),
+        ];
+    }
+
+    /**
+     * Resolve the project root directory entity used as the V2 traversal start.
+     *
+     * Returns the root TaskFileEntity (so the caller can emit it as the first list
+     * item) or null when the project has no resolvable root. For the share/audit
+     * paths (no project entity or no data isolation) the existing root is read
+     * directly; for the login path the root is created on demand if missing.
+     */
+    private function resolveAttachmentTraversalRoot(
+        int $projectId,
+        GetProjectAttachmentsV2RequestDTO $requestDTO,
+        ?DataIsolation $dataIsolation,
+        ?ProjectEntity $projectEntity
+    ): ?TaskFileEntity {
+        $parentId = $requestDTO->getParentId();
+        if ($parentId !== null) {
+            $parentEntity = $this->taskFileDomainService->getById((int) $parentId);
+            if (
+                $parentEntity === null
+                || $parentEntity->getProjectId() !== $projectId
+                || ! $parentEntity->getIsDirectory()
+                || $parentEntity->getStorageType() !== StorageType::WORKSPACE
+            ) {
+                ExceptionBuilder::throw(SuperAgentErrorCode::FILE_NOT_FOUND, trans('file.file_not_found'));
+            }
+
+            return $parentEntity;
+        }
+
+        if ($projectEntity === null || $dataIsolation === null) {
+            return $this->taskFileDomainService->getRootFile($projectId);
+        }
+
+        $userId = $dataIsolation->getCurrentUserId() ?: $projectEntity->getUserId();
+        $organizationCode = $dataIsolation->getCurrentOrganizationCode();
+        $projectOrganizationCode = $projectEntity->getUserOrganizationCode() ?: $organizationCode;
+
+        $rootId = $this->taskFileDomainService->findOrCreateProjectRootDirectory(
+            (int) $requestDTO->getProjectId(),
+            $projectEntity->getWorkDir() ?? '',
+            (string) $userId,
+            $organizationCode,
+            $projectOrganizationCode
+        );
+
+        if ((int) $rootId <= 0) {
+            return null;
+        }
+
+        return $this->taskFileDomainService->getById((int) $rootId);
+    }
+
+    /**
+     * @return array{parent_id: string, after_sort: null|int, after_file_id: null|string}
+     */
+    private function makeAttachmentParentState(string $parentId, ?int $afterSort = null, ?string $afterFileId = null): array
+    {
+        return [
+            'parent_id' => $parentId,
+            'after_sort' => $afterSort,
+            'after_file_id' => $afterFileId === '' ? null : $afterFileId,
+        ];
+    }
+
+    private function formatAttachmentRowV2(array $row): array
+    {
+        $displayConfig = FileMetadataUtil::decodeJsonObject($row['display_config'] ?? null);
+
+        return [
+            'file_id' => (string) ($row['file_id'] ?? ''),
+            'task_id' => (string) ($row['task_id'] ?? ''),
+            'project_id' => (string) ($row['project_id'] ?? ''),
+            'topic_id' => (string) ($row['topic_id'] ?? ''),
+            'parent_id' => (string) ($row['parent_id'] ?? ''),
+            'file_type' => (string) ($row['file_type'] ?? ''),
+            'file_name' => (string) ($row['file_name'] ?? ''),
+            'file_extension' => (string) ($row['file_extension'] ?? ''),
+            'file_key' => (string) ($row['file_key'] ?? ''),
+            'file_size' => (int) ($row['file_size'] ?? 0),
+            'file_url' => '',
+            'is_hidden' => (bool) ($row['is_hidden'] ?? false),
+            'is_directory' => (bool) ($row['is_directory'] ?? false),
+            'sort' => (int) ($row['sort'] ?? 0),
+            'source' => (int) ($row['source'] ?? 0),
+            'updated_at' => (string) ($row['updated_at'] ?? ''),
+            'display_config' => $displayConfig,
+            // metadata 与 display_config 保持 V1/V2 旧行为一致（同源）
+            'metadata' => $displayConfig,
+        ];
     }
 
     /**

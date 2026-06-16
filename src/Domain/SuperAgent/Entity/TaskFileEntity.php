@@ -211,9 +211,9 @@ class TaskFileEntity extends AbstractEntity
         return $this->isHidden;
     }
 
-    public function setIsHidden(bool $isHidden): void
+    public function setIsHidden(bool|int $isHidden): void
     {
-        $this->isHidden = $isHidden;
+        $this->isHidden = (bool) $isHidden;
     }
 
     public function getIsDirectory(): bool
@@ -221,9 +221,9 @@ class TaskFileEntity extends AbstractEntity
         return $this->isDirectory;
     }
 
-    public function setIsDirectory(bool $isDirectory): void
+    public function setIsDirectory(bool|int $isDirectory): void
     {
-        $this->isDirectory = $isDirectory;
+        $this->isDirectory = (bool) $isDirectory;
     }
 
     public function getSort(): int

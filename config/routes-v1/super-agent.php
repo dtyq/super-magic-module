@@ -382,6 +382,8 @@ Router::addGroup(
         // 获取项目的附件列表
         Router::addGroup('/projects', static function () {
             Router::post('/{id}/attachments', [ProjectApi::class, 'getProjectAttachments']);
+            // 项目附件总数（前端灰度开关：>500 走 V2，否则走 V1）。临时接口。
+            Router::post('/{id}/attachments/count', [ProjectApi::class, 'getProjectAttachmentsCount']);
         });
         // 获取话题的附件列表
         Router::addGroup('/topics', static function () {
@@ -414,7 +416,7 @@ Router::addGroup(
 Router::addGroup(
     '/api/v2/super-agent',
     static function () {
-        // 获取项目的附件列表 V2 (不返回树状结构)
+        // 获取项目的附件列表 V2 (按 parent_id 层级遍历，不返回树状结构)
         Router::addGroup('/projects', static function () {
             Router::post('/{id}/attachments', [ProjectApi::class, 'getProjectAttachmentsV2']);
         });

@@ -333,6 +333,91 @@ class TaskFileRepository implements TaskFileRepositoryInterface
         ];
     }
 
+    public function getProjectFilesByCursor(
+        int $projectId,
+        string $storageType,
+        ?int $afterFileId,
+        int $limit,
+        array $fileTypes = [],
+        ?string $updatedAfter = null
+    ): array {
+        $query = $this->model::query()
+            ->select([
+                'file_id', 'task_id', 'project_id', 'topic_id', 'parent_id',
+                'file_type', 'file_name', 'file_extension', 'file_key', 'file_size',
+                'is_hidden', 'is_directory', 'sort', 'source',
+                'updated_at', 'display_config', 'metadata',
+            ])
+            ->where('project_id', $projectId)
+            ->whereNull('deleted_at');
+
+        if ($storageType !== '') {
+            $query->where('storage_type', $storageType);
+        }
+        if ($afterFileId !== null && $afterFileId > 0) {
+            $query->where('file_id', '>', $afterFileId);
+        }
+        if (! empty($fileTypes)) {
+            $query->whereIn('file_type', $fileTypes);
+        }
+        if ($updatedAfter !== null && $updatedAfter !== '') {
+            $query->where('updated_at', '>', $updatedAfter);
+        }
+
+        $query->orderBy('file_id', 'ASC')->limit($limit);
+
+        // Return raw associative arrays, bypass Eloquent hydration / casts / Carbon
+        return Db::select($query->toSql(), $query->getBindings());
+    }
+
+    public function getProjectFileChildrenByParentCursor(
+        int $projectId,
+        int $parentId,
+        string $storageType,
+        ?int $afterSort,
+        ?int $afterFileId,
+        int $limit,
+        array $fileTypes = []
+    ): array {
+        $query = $this->model::query()
+            ->select([
+                'file_id', 'task_id', 'project_id', 'topic_id', 'parent_id',
+                'file_type', 'file_name', 'file_extension', 'file_key', 'file_size',
+                'is_hidden', 'is_directory', 'sort', 'source',
+                'updated_at', 'display_config', 'metadata',
+            ])
+            ->where('project_id', $projectId)
+            ->where('parent_id', $parentId)
+            ->whereNull('deleted_at');
+
+        if ($storageType !== '') {
+            $query->where('storage_type', $storageType);
+        }
+
+        if (! empty($fileTypes)) {
+            $query->where(static function ($query) use ($fileTypes): void {
+                $query->where('is_directory', true)
+                    ->orWhereIn('file_type', $fileTypes);
+            });
+        }
+
+        if ($afterSort !== null && $afterFileId !== null && $afterFileId > 0) {
+            $query->where(static function ($query) use ($afterSort, $afterFileId): void {
+                $query->where('sort', '>', $afterSort)
+                    ->orWhere(static function ($query) use ($afterSort, $afterFileId): void {
+                        $query->where('sort', $afterSort)
+                            ->where('file_id', '>', $afterFileId);
+                    });
+            });
+        }
+
+        $query->orderBy('sort', 'ASC')
+            ->orderBy('file_id', 'ASC')
+            ->limit($limit);
+
+        return Db::select($query->toSql(), $query->getBindings());
+    }
+
     /**
      * 根据任务ID获取文件列表.
      *
@@ -1048,6 +1133,21 @@ class TaskFileRepository implements TaskFileRepositoryInterface
             ->where('project_id', $projectId)
             ->where('storage_type', StorageType::WORKSPACE->value)
             ->where('is_hidden', false)
+            ->whereNull('deleted_at')
+            ->count();
+    }
+
+    /**
+     * Count attachments by project ID using the V2 list endpoint semantics:
+     * workspace storage + not deleted. No is_hidden filter and no root-row
+     * trimming. Used by the V2 count endpoint so the returned total matches
+     * what the V2 list endpoint would emit when called without file_type.
+     */
+    public function countAttachmentsByProjectIdV2(int $projectId): int
+    {
+        return $this->model::query()
+            ->where('project_id', $projectId)
+            ->where('storage_type', StorageType::WORKSPACE->value)
             ->whereNull('deleted_at')
             ->count();
     }
