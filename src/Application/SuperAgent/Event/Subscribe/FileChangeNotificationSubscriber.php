@@ -12,6 +12,7 @@ use App\Domain\Contact\Repository\Persistence\MagicUserRepository;
 use App\Infrastructure\Rpc\JsonRpc\Client\Knowledge\ProjectFileRpcClient;
 use App\Infrastructure\Util\SocketIO\SocketIOUtil;
 use Dtyq\AsyncEvent\Kernel\Annotation\AsyncListener;
+use Dtyq\SuperMagic\Domain\SuperAgent\Constant\ProjectFileConstant;
 use Dtyq\SuperMagic\Domain\SuperAgent\Entity\TaskFileEntity;
 use Dtyq\SuperMagic\Domain\SuperAgent\Event\DirectoryDeletedEvent;
 use Dtyq\SuperMagic\Domain\SuperAgent\Event\FileBatchMoveEvent;
@@ -243,7 +244,8 @@ class FileChangeNotificationSubscriber implements ListenerInterface
             workspaceId: $projectEntity->getWorkDir(),
             changes: $changes,
             organizationCode: $userAuthorization->getOrganizationCode(),
-            topicId: ''
+            topicId: '',
+            refreshParentIds: $this->collectMetadataRefreshParentIds($event->getAllEntities())
         );
 
         $this->pushNotification($userAuthorization->getId(), $pushData);
@@ -323,11 +325,13 @@ class FileChangeNotificationSubscriber implements ListenerInterface
 
         // Build batch changes
         $changes = [];
+        $fileEntities = [];
         $topicId = '';
         foreach ($fileIds as $fileId) {
             try {
                 $fileEntity = $this->taskFileDomainService->getById($fileId);
                 if ($fileEntity) {
+                    $fileEntities[] = $fileEntity;
                     $relativeFilePath = $this->buildRelativeFilePathForEntity($fileEntity, $projectId);
                     $fileDto = TaskFileItemDTO::fromEntity($fileEntity, $projectEntity->getWorkDir(), $relativeFilePath);
                     $changes[] = [
@@ -357,7 +361,8 @@ class FileChangeNotificationSubscriber implements ListenerInterface
             workspaceId: $projectEntity->getWorkDir(),
             changes: $changes,
             organizationCode: $event->getOrganizationCode(),
-            topicId: $topicId
+            topicId: $topicId,
+            refreshParentIds: $this->collectMetadataRefreshParentIds($fileEntities)
         );
 
         $this->pushNotification($event->getUserId(), $pushData);
@@ -427,8 +432,33 @@ class FileChangeNotificationSubscriber implements ListenerInterface
             changes: $changes,
             organizationCode: $organizationCode,
             conversationId: $conversationId,
-            topicId: $topicId
+            topicId: $topicId,
+            refreshParentIds: $this->collectMetadataRefreshParentIds([$fileEntity])
         );
+    }
+
+    /**
+     * @param TaskFileEntity[] $fileEntities
+     * @return string[]
+     */
+    private function collectMetadataRefreshParentIds(array $fileEntities): array
+    {
+        $parentIdSet = [];
+        foreach ($fileEntities as $fileEntity) {
+            if (! $fileEntity instanceof TaskFileEntity) {
+                continue;
+            }
+            if (! ProjectFileConstant::isSetMetadataFile($fileEntity->getFileName())) {
+                continue;
+            }
+
+            $parentId = $fileEntity->getParentId();
+            if ($parentId !== null && $parentId > 0) {
+                $parentIdSet[$parentId] = true;
+            }
+        }
+
+        return array_map('strval', array_keys($parentIdSet));
     }
 
     /**
@@ -440,8 +470,22 @@ class FileChangeNotificationSubscriber implements ListenerInterface
         array $changes,
         string $organizationCode = '',
         string $conversationId = '',
-        string $topicId = ''
+        string $topicId = '',
+        array $refreshParentIds = []
     ): array {
+        $message = [
+            'type' => 'super_magic_file_change',
+            'project_id' => $projectId,
+            'workspace_id' => $workspaceId,
+            'topic_id' => $topicId,
+            'changes' => $changes,
+            'timestamp' => date('c'),
+        ];
+
+        if (! empty($refreshParentIds)) {
+            $message['refresh_parent_ids'] = $refreshParentIds;
+        }
+
         return [
             'type' => 'seq',
             'seq' => [
@@ -452,14 +496,7 @@ class FileChangeNotificationSubscriber implements ListenerInterface
                 'sender_message_id' => '',
                 'conversation_id' => $conversationId,
                 'organization_code' => $organizationCode,
-                'message' => [
-                    'type' => 'super_magic_file_change',
-                    'project_id' => $projectId,
-                    'workspace_id' => $workspaceId,
-                    'topic_id' => $topicId,
-                    'changes' => $changes,
-                    'timestamp' => date('c'),
-                ],
+                'message' => $message,
             ],
         ];
     }

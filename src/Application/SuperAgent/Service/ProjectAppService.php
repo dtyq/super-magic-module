@@ -1396,15 +1396,16 @@ class ProjectAppService extends AbstractAppService
         // Step 3: Separate valid and invalid projects
         $projectMap = [];
         foreach ($projectEntities as $entity) {
-            $projectMap[(string) $entity->getId()] = $entity;
+            $projectMap[$entity->getId()] = $entity;
         }
 
         $validProjectIds = [];
         $invalidResults = [];
 
         foreach ($requestDTO->getProjectIds() as $projectId) {
-            if (isset($projectMap[$projectId])) {
-                $project = $projectMap[$projectId];
+            $projectIdInt = (int) $projectId;
+            if (isset($projectMap[$projectIdInt])) {
+                $project = $projectMap[$projectIdInt];
                 // Check if project is already in target workspace
                 if ($project->getWorkspaceId() === $targetWorkspaceId) {
                     $invalidResults[] = [
@@ -1413,7 +1414,7 @@ class ProjectAppService extends AbstractAppService
                         'message' => 'Project is already in target workspace',
                     ];
                 } else {
-                    $validProjectIds[] = (int) $projectId;
+                    $validProjectIds[] = $projectIdInt;
                 }
             } else {
                 $invalidResults[] = [
@@ -1512,9 +1513,8 @@ class ProjectAppService extends AbstractAppService
         if ($successCount > 0) {
             $movedProjects = [];
             foreach ($validProjectIds as $projectId) {
-                $projectKey = (string) $projectId;
-                if (isset($projectMap[$projectKey])) {
-                    $movedProjects[] = $projectMap[$projectKey];
+                if (isset($projectMap[$projectId])) {
+                    $movedProjects[] = $projectMap[$projectId];
                 }
             }
 
@@ -2378,6 +2378,21 @@ class ProjectAppService extends AbstractAppService
         ?DataIsolation $dataIsolation,
         ?ProjectEntity $projectEntity
     ): ?TaskFileEntity {
+        $parentId = $requestDTO->getParentId();
+        if ($parentId !== null) {
+            $parentEntity = $this->taskFileDomainService->getById((int) $parentId);
+            if (
+                $parentEntity === null
+                || $parentEntity->getProjectId() !== $projectId
+                || ! $parentEntity->getIsDirectory()
+                || $parentEntity->getStorageType() !== StorageType::WORKSPACE
+            ) {
+                ExceptionBuilder::throw(SuperAgentErrorCode::FILE_NOT_FOUND, trans('file.file_not_found'));
+            }
+
+            return $parentEntity;
+        }
+
         if ($projectEntity === null || $dataIsolation === null) {
             return $this->taskFileDomainService->getRootFile($projectId);
         }

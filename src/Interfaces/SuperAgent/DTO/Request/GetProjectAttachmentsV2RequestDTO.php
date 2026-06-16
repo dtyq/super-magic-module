@@ -18,6 +18,11 @@ class GetProjectAttachmentsV2RequestDTO
     protected string $projectId;
 
     /**
+     * Optional directory to use as the first-page traversal root.
+     */
+    protected ?string $parentId = null;
+
+    /**
      * Items per page, clamped to [1, MAX_PAGE_SIZE].
      */
     protected int $pageSize;
@@ -55,6 +60,7 @@ class GetProjectAttachmentsV2RequestDTO
     {
         $this->projectId = $projectId ?? (string) ($data['project_id'] ?? '');
         $this->pageSize = $this->clampPageSize((int) ($data['page_size'] ?? self::DEFAULT_PAGE_SIZE));
+        $this->parentId = $this->normalizeParentId($data['parent_id'] ?? null);
         $this->nextParentIds = $this->normalizeNextParentIds($data['next_parent_ids'] ?? []);
         $this->token = $data['token'] ?? null;
 
@@ -78,6 +84,11 @@ class GetProjectAttachmentsV2RequestDTO
     public function getProjectId(): string
     {
         return $this->projectId;
+    }
+
+    public function getParentId(): ?string
+    {
+        return $this->parentId;
     }
 
     public function getPageSize(): int
@@ -106,6 +117,12 @@ class GetProjectAttachmentsV2RequestDTO
     public function setProjectId(string $projectId): self
     {
         $this->projectId = $projectId;
+        return $this;
+    }
+
+    public function setParentId(?string $parentId): self
+    {
+        $this->parentId = $this->normalizeParentId($parentId);
         return $this;
     }
 
@@ -139,6 +156,20 @@ class GetProjectAttachmentsV2RequestDTO
             return self::DEFAULT_PAGE_SIZE;
         }
         return min($value, self::MAX_PAGE_SIZE);
+    }
+
+    private function normalizeParentId(mixed $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $parentId = trim((string) $value);
+        if ($parentId === '' || $parentId === '0') {
+            return null;
+        }
+
+        return $parentId;
     }
 
     /**
