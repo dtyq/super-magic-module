@@ -35,7 +35,7 @@ class GetAudioProjectListRequestDTO extends AbstractRequestDTO
     public string $keyword = '';
 
     /**
-     * Filter by source: app | device (optional).
+     * Filter by source: app | device | h5 | pc (optional).
      */
     public string $source = '';
 
@@ -327,7 +327,7 @@ class GetAudioProjectListRequestDTO extends AbstractRequestDTO
             'page_size' => 'integer|min:1|max:100',
             'workspace_id' => 'nullable|string',
             'keyword' => 'nullable|string|max:255',
-            'source' => 'nullable|string|in:app,device',
+            'source' => 'nullable|string|in:app,device,h5,pc',
             'device_id' => 'nullable|string|max:100',
             'current_phase' => 'nullable|array',
             'current_phase.*' => 'string|in:waiting,merging,summarizing',
@@ -356,7 +356,7 @@ class GetAudioProjectListRequestDTO extends AbstractRequestDTO
             'keyword.string' => 'Keyword must be a string',
             'keyword.max' => 'Keyword cannot exceed 255 characters',
             'source.string' => 'Source must be a string',
-            'source.in' => 'Source must be either app or device',
+            'source.in' => 'Source must be app, device, h5, or pc',
             'device_id.string' => 'Device ID must be a string',
             'device_id.max' => 'Device ID cannot exceed 100 characters',
             'current_phase.array' => 'Current phase must be an array',

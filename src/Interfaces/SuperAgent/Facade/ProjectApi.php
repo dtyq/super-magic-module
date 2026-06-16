@@ -174,6 +174,8 @@ class ProjectApi extends AbstractApi
 
         return array_merge($projectDTO->toArray(), [
             'user_role' => $userRole,
+            'is_pinned' => $memberSetting?->isPinned() ?? false,
+            'pinned_at' => $memberSetting?->getPinnedAt(),
             'is_bind_workspace' => $memberSetting?->isBindWorkspace() ?? false,
             'bind_workspace_id' => (string) ($memberSetting?->getBindWorkspaceId() ?? 0),
         ]);

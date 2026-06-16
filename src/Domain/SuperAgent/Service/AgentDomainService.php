@@ -361,6 +361,8 @@ class AgentDomainService
                 );
             }
 
+            $this->refreshInitContextSandboxId($agentContext, $sandboxId);
+
             if ($interruptChecker !== null && $interruptChecker()) {
                 $this->logger->info('[Sandbox][Domain] Interrupted after sandbox creation', [
                     'sandbox_id' => $sandboxId,
@@ -910,36 +912,6 @@ class AgentDomainService
     }
 
     /**
-     * 重置沙箱保活状态.
-     */
-    public function resetSandboxKeepAlive(string $sandboxId, string $source = 'special-project-crontab'): AgentResponse
-    {
-        $this->logger->debug('[Sandbox][App] Resetting sandbox keepalive', [
-            'sandbox_id' => $sandboxId,
-            'source' => $source,
-        ]);
-
-        $result = $this->agent->resetKeepAlive($sandboxId, $source);
-
-        if (! $result->isSuccess()) {
-            $this->logger->error('[Sandbox][App] Failed to reset sandbox keepalive', [
-                'sandbox_id' => $sandboxId,
-                'source' => $source,
-                'error' => $result->getMessage(),
-                'code' => $result->getCode(),
-            ]);
-            throw new SandboxOperationException('Reset sandbox keepalive', $result->getMessage(), $result->getCode());
-        }
-
-        $this->logger->info('[Sandbox][App] Sandbox keepalive reset successfully', [
-            'sandbox_id' => $sandboxId,
-            'source' => $source,
-        ]);
-
-        return $result;
-    }
-
-    /**
      * Wait for workspace to be ready with optional interrupt check.
      * Polls workspace status until initialization completes, fails, times out, or is interrupted.
      *
@@ -1387,6 +1359,18 @@ class AgentDomainService
             ]);
             return '';
         }
+    }
+
+    private function refreshInitContextSandboxId(AgentContext $agentContext, string $sandboxId): void
+    {
+        $initContext = $agentContext->getInitContext();
+        if ($initContext === null) {
+            return;
+        }
+
+        $metadata = $initContext->getMetadata();
+        $metadata['sandbox_id'] = $sandboxId;
+        $initContext->setMetadata($metadata);
     }
 
     /**
