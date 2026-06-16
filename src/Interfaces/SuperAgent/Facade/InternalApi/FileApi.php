@@ -42,6 +42,20 @@ class FileApi extends AbstractApi
     }
 
     /**
+     * 获取文件最新版本号.
+     *
+     * @param RequestContext $requestContext 请求上下文
+     * @param string $id 文件ID
+     * @return array 最新版本号
+     */
+    public function getLatestFileVersion(RequestContext $requestContext, string $id): array
+    {
+        $requestContext->setUserAuthorization($this->getAuthorization());
+
+        return $this->fileVersionAppService->getLatestFileVersion($requestContext, (int) $id)->toArray();
+    }
+
+    /**
      * 获取文件树.
      *
      * @return array 文件树结构

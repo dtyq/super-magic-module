@@ -18,6 +18,11 @@ interface TaskFileRepositoryInterface
     public function getById(int $id): ?TaskFileEntity;
 
     /**
+     * 根据ID获取文件，包含已软删除记录.
+     */
+    public function getByIdWithTrash(int $id): ?TaskFileEntity;
+
+    /**
      * 根据ID批量获取文件.
      * @return TaskFileEntity[]
      */

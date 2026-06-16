@@ -1413,11 +1413,13 @@ class ProjectAppService extends AbstractAppService
         }
 
         // Step 3: Separate valid and invalid projects
+        /** @var array<int, ProjectEntity> $projectMap */
         $projectMap = [];
         foreach ($projectEntities as $entity) {
             $projectMap[$entity->getId()] = $entity;
         }
 
+        /** @var int[] $validProjectIds */
         $validProjectIds = [];
         $invalidResults = [];
 

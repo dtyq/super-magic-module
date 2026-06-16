@@ -10,6 +10,8 @@ namespace Dtyq\SuperMagic\Application\RecycleBin\DTO;
 use Hyperf\HttpServer\Contract\RequestInterface;
 use InvalidArgumentException;
 
+use function Hyperf\Translation\trans;
+
 /**
  * 彻底删除请求 DTO.
  */
@@ -24,17 +26,17 @@ class PermanentDeleteRequestDTO
     public function __construct(array $data)
     {
         if (! isset($data['ids'])) {
-            throw new InvalidArgumentException('参数 ids 必须提供');
+            throw new InvalidArgumentException(trans('recycle_bin.validation.ids_required'));
         }
 
         if (! is_array($data['ids'])) {
-            throw new InvalidArgumentException('参数 ids 必须是数组');
+            throw new InvalidArgumentException(trans('recycle_bin.validation.ids_must_be_array'));
         }
 
         $this->ids = array_values(array_unique(array_map(fn ($id) => (string) $id, $data['ids'])));
 
         if (empty($this->ids)) {
-            throw new InvalidArgumentException('参数 ids 不能为空');
+            throw new InvalidArgumentException(trans('recycle_bin.validation.ids_empty'));
         }
     }
 

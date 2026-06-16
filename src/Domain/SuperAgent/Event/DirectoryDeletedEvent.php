@@ -17,7 +17,8 @@ class DirectoryDeletedEvent extends AbstractEvent
 {
     public function __construct(
         private readonly TaskFileEntity $directoryEntity,
-        private readonly MagicUserAuthorization $userAuthorization
+        private readonly MagicUserAuthorization $userAuthorization,
+        private readonly DeleteEventSource $source = DeleteEventSource::User,
     ) {
         parent::__construct();
     }
@@ -30,5 +31,10 @@ class DirectoryDeletedEvent extends AbstractEvent
     public function getUserAuthorization(): MagicUserAuthorization
     {
         return $this->userAuthorization;
+    }
+
+    public function getSource(): DeleteEventSource
+    {
+        return $this->source;
     }
 }

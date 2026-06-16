@@ -108,6 +108,14 @@ class TaskFileDomainService
     }
 
     /**
+     * Get file by ID, including soft-deleted records.
+     */
+    public function getByIdWithTrash(int $id): ?TaskFileEntity
+    {
+        return $this->taskFileRepository->getByIdWithTrash($id);
+    }
+
+    /**
      * Get project root directory file ID for sandbox initialization.
      *
      * @throws BusinessException

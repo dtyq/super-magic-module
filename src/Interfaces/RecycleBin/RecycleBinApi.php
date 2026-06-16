@@ -17,6 +17,7 @@ use Dtyq\SuperMagic\Application\RecycleBin\DTO\CheckParentRequestDTO;
 use Dtyq\SuperMagic\Application\RecycleBin\DTO\MoveProjectInRecycleBinRequestDTO;
 use Dtyq\SuperMagic\Application\RecycleBin\DTO\MoveTopicInRecycleBinRequestDTO;
 use Dtyq\SuperMagic\Application\RecycleBin\DTO\PermanentDeleteRequestDTO;
+use Dtyq\SuperMagic\Application\RecycleBin\DTO\RecycleBinCountsRequestDTO;
 use Dtyq\SuperMagic\Application\RecycleBin\DTO\RecycleBinListRequestDTO;
 use Dtyq\SuperMagic\Application\RecycleBin\DTO\RestoreRequestDTO;
 use Dtyq\SuperMagic\Application\RecycleBin\Service\RecycleBinAppService;
@@ -46,11 +47,27 @@ class RecycleBinApi extends AbstractApi
     }
 
     /**
-     * 检查父级是否存在.
+     * 获取各资源类型的回收站数量.
+     */
+    public function getRecycleBinCounts(RequestContext $requestContext): array
+    {
+        $requestContext->setUserAuthorization($this->getAuthorization());
+        $requestDTO = RecycleBinCountsRequestDTO::fromRequest($this->request);
+
+        return $this->recycleBinAppService->getRecycleBinCounts($requestContext, $requestDTO)->toArray();
+    }
+
+    /**
+     * Check restore conflicts for a batch of resources (all resource types).
+     *
+     * Returns unified items_with_conflict / items_no_conflict for all types:
+     * - File: parent_missing + name_conflict
+     * - Project/Topic: parent_missing
+     * - Workspace: always no-conflict
      *
      * @throws BusinessException
      */
-    public function checkParent(RequestContext $requestContext): array
+    public function checkConflicts(RequestContext $requestContext): array
     {
         $requestContext->setUserAuthorization($this->getAuthorization());
 
@@ -63,7 +80,7 @@ class RecycleBinApi extends AbstractApi
             );
         }
 
-        return $this->recycleBinAppService->checkParent($requestContext, $requestDTO)->toArray();
+        return $this->recycleBinAppService->checkConflicts($requestContext, $requestDTO)->toArray();
     }
 
     /**

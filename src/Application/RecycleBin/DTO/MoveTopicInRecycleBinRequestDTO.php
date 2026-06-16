@@ -9,6 +9,8 @@ namespace Dtyq\SuperMagic\Application\RecycleBin\DTO;
 
 use App\Infrastructure\Core\AbstractRequestDTO;
 
+use function Hyperf\Translation\trans;
+
 /**
  * 回收站话题移动请求 DTO.
  */
@@ -39,10 +41,10 @@ class MoveTopicInRecycleBinRequestDTO extends AbstractRequestDTO
     protected static function getHyperfValidationMessage(): array
     {
         return [
-            'source_topic_id.required' => '话题ID不能为空',
-            'source_topic_id.numeric' => '话题ID必须是有效的数字',
-            'target_project_id.required' => '目标项目ID不能为空',
-            'target_project_id.numeric' => '目标项目ID必须是有效的数字',
+            'source_topic_id.required' => trans('recycle_bin.validation.source_topic_id_required'),
+            'source_topic_id.numeric' => trans('recycle_bin.validation.source_topic_id_numeric'),
+            'target_project_id.required' => trans('recycle_bin.validation.target_project_id_required'),
+            'target_project_id.numeric' => trans('recycle_bin.validation.target_project_id_numeric'),
         ];
     }
 }

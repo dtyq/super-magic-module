@@ -7,13 +7,19 @@ declare(strict_types=1);
 
 namespace Dtyq\SuperMagic\Domain\RecycleBin\Service;
 
+use Dtyq\SuperMagic\Application\RecycleBin\DTO\RestoreConflictDTO;
+use Dtyq\SuperMagic\Application\RecycleBin\DTO\RestorePreviewItemDTO;
 use Dtyq\SuperMagic\Domain\RecycleBin\Entity\RecycleBinEntity;
 use Dtyq\SuperMagic\Domain\RecycleBin\Enum\RecycleBinResourceType;
+use Dtyq\SuperMagic\Domain\RecycleBin\Enum\RestoreConflictResolution;
+use Dtyq\SuperMagic\Domain\RecycleBin\Enum\RestoreConflictType;
 use Dtyq\SuperMagic\Domain\RecycleBin\Repository\Facade\RecycleBinRepositoryInterface;
 use Dtyq\SuperMagic\Domain\SuperAgent\Entity\ProjectEntity;
+use Dtyq\SuperMagic\Domain\SuperAgent\Entity\TaskFileEntity;
 use Dtyq\SuperMagic\Domain\SuperAgent\Entity\TopicEntity;
 use Dtyq\SuperMagic\Domain\SuperAgent\Repository\Facade\ProjectMemberRepositoryInterface;
 use Dtyq\SuperMagic\Domain\SuperAgent\Repository\Facade\ProjectRepositoryInterface;
+use Dtyq\SuperMagic\Domain\SuperAgent\Repository\Facade\TaskFileRepositoryInterface;
 use Dtyq\SuperMagic\Domain\SuperAgent\Repository\Facade\TopicRepositoryInterface;
 use Dtyq\SuperMagic\Domain\SuperAgent\Repository\Facade\WorkspaceRepositoryInterface;
 use Hyperf\DbConnection\Db;
@@ -22,10 +28,13 @@ use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
 
+use function Hyperf\Translation\trans;
+
 /**
- * 回收站恢复领域服务.
+ * Recycle bin restore domain service.
  *
- * 负责工作区、项目、话题的恢复逻辑（含级联恢复）.
+ * Handles workspace, project, topic, and file restore (with cascade).
+ * File restore supports explicit conflict resolution via conflict_resolutions map.
  */
 class RecycleBinRestoreDomainService
 {
@@ -36,6 +45,7 @@ class RecycleBinRestoreDomainService
         protected WorkspaceRepositoryInterface $workspaceRepository,
         protected ProjectRepositoryInterface $projectRepository,
         protected TopicRepositoryInterface $topicRepository,
+        protected TaskFileRepositoryInterface $taskFileRepository,
         protected ProjectMemberRepositoryInterface $projectMemberRepository,
         LoggerFactory $loggerFactory
     ) {
@@ -43,19 +53,19 @@ class RecycleBinRestoreDomainService
     }
 
     /**
-     * 批量恢复资源（允许部分成功）.
+     * Batch restore resources (partial success allowed).
      *
-     * @param array $resourceIds 资源ID数组
-     * @param RecycleBinResourceType $resourceType 资源类型枚举
-     * @param string $userId 当前用户ID
-     * @return array ['succeeded' => RecycleBinEntity[], 'failed' => ['entity' => RecycleBinEntity, 'error' => string][]]
+     * @param array<int|string, array<string, string>> $conflictResolutions resource_id → [conflict_type → resolution]
+     * @return array{succeeded: RecycleBinEntity[], failed: array{entity: RecycleBinEntity, error: string}[]}
      */
     public function restoreBatch(
         array $resourceIds,
         RecycleBinResourceType $resourceType,
-        string $userId
+        string $userId,
+        array $conflictResolutions = []
     ): array {
         $entities = $this->recycleBinRepository->findLatestByResourceIds($resourceIds, $resourceType, $userId);
+        $entities = $this->sortRecycleBinEntitiesByDeletedAtDesc($entities);
 
         if (empty($entities)) {
             return ['succeeded' => [], 'failed' => []];
@@ -64,12 +74,18 @@ class RecycleBinRestoreDomainService
         $succeeded = [];
         $failed = [];
 
+        if ($resourceType === RecycleBinResourceType::File) {
+            $fileRestorePlan = $this->filterDuplicateFileRestoreTargets($entities, $conflictResolutions);
+            $entities = $fileRestorePlan['entities'];
+            $failed = $fileRestorePlan['failed'];
+        }
+
         foreach ($entities as $entity) {
             try {
-                $this->restoreSingle($entity, $userId);
+                $this->restoreSingle($entity, $userId, $conflictResolutions);
                 $succeeded[] = $entity;
             } catch (Throwable $e) {
-                $this->logger->error('恢复资源失败', [
+                $this->logger->error('Failed to restore resource', [
                     'recycle_bin_id' => $entity->getId(),
                     'resource_type' => $entity->getResourceType()->value,
                     'resource_id' => $entity->getResourceId(),
@@ -83,49 +99,150 @@ class RecycleBinRestoreDomainService
             }
         }
 
+        return ['succeeded' => $succeeded, 'failed' => $failed];
+    }
+
+    /**
+     * Preview file conflicts for a list of resource IDs.
+     * Read-only; no side effects.
+     *
+     * @return array{items_with_conflict: RestorePreviewItemDTO[], items_no_conflict: RestorePreviewItemDTO[]}
+     */
+    public function previewFileConflicts(array $resourceIds, string $userId): array
+    {
+        $itemsWithConflict = [];
+        $itemsNoConflict = [];
+
+        if (empty($resourceIds)) {
+            return ['items_with_conflict' => [], 'items_no_conflict' => []];
+        }
+
+        $entities = $this->recycleBinRepository->findLatestByResourceIds(
+            $resourceIds,
+            RecycleBinResourceType::File,
+            $userId
+        );
+        $entities = $this->sortRecycleBinEntitiesByDeletedAtDesc($entities);
+        $seenTargetKeys = [];
+        $projectExistsCache = [];
+
+        foreach ($entities as $entity) {
+            $fileId = (int) $entity->getResourceId();
+            $file = $this->taskFileRepository->getByIdWithTrash($fileId);
+
+            // File permanently deleted or purged from recycle bin — no actionable conflict
+            if ($file === null || $entity->getRemovedAt() !== null || $entity->getPurgedAt() !== null) {
+                $itemsNoConflict[] = new RestorePreviewItemDTO(
+                    resourceId: (string) $fileId,
+                    resourceName: $entity->getResourceName(),
+                    isDirectory: false,
+                );
+                continue;
+            }
+
+            if (! $this->projectExistsAndNotDeleted($file->getProjectId(), $projectExistsCache)) {
+                $itemsWithConflict[] = new RestorePreviewItemDTO(
+                    resourceId: (string) $fileId,
+                    resourceName: $file->getFileName(),
+                    isDirectory: $file->getIsDirectory(),
+                    conflict: new RestoreConflictDTO(
+                        type: RestoreConflictType::ProjectMissing,
+                    ),
+                );
+                continue;
+            }
+
+            $parentId = $file->getParentId();
+
+            // Step 1: detect parent_missing
+            if ($parentId !== null && $parentId > 0) {
+                $parent = $this->taskFileRepository->getByIdWithTrash($parentId);
+                if ($parent === null || $parent->getDeletedAt() !== null || ! $parent->getIsDirectory()) {
+                    $itemsWithConflict[] = new RestorePreviewItemDTO(
+                        resourceId: (string) $fileId,
+                        resourceName: $file->getFileName(),
+                        isDirectory: $file->getIsDirectory(),
+                        conflict: new RestoreConflictDTO(
+                            type: RestoreConflictType::ParentMissing,
+                            originalParentId: $parentId,
+                        ),
+                    );
+                    continue;
+                }
+            }
+
+            // Step 2: detect duplicate target within the current restore batch.
+            $targetKey = $this->buildFileRestoreTargetKey($file, $parentId);
+            if (isset($seenTargetKeys[$targetKey])) {
+                $itemsWithConflict[] = new RestorePreviewItemDTO(
+                    resourceId: (string) $fileId,
+                    resourceName: $file->getFileName(),
+                    isDirectory: $file->getIsDirectory(),
+                    conflict: new RestoreConflictDTO(
+                        type: RestoreConflictType::DuplicateRestoreTarget,
+                    ),
+                );
+                continue;
+            }
+            $seenTargetKeys[$targetKey] = true;
+
+            // Step 3: detect name_conflict (only when parent is healthy)
+            $existing = $this->taskFileRepository->getByProjectParentAndName(
+                $file->getProjectId(),
+                $parentId,
+                $file->getFileName()
+            );
+
+            if ($existing !== null && $existing->getFileId() !== $file->getFileId()) {
+                $itemsWithConflict[] = new RestorePreviewItemDTO(
+                    resourceId: (string) $fileId,
+                    resourceName: $file->getFileName(),
+                    isDirectory: $file->getIsDirectory(),
+                    conflict: new RestoreConflictDTO(
+                        type: RestoreConflictType::NameConflict,
+                        existingFileId: $existing->getFileId(),
+                        existingIsDirectory: $existing->getIsDirectory(),
+                    ),
+                );
+                continue;
+            }
+
+            $itemsNoConflict[] = new RestorePreviewItemDTO(
+                resourceId: (string) $fileId,
+                resourceName: $file->getFileName(),
+                isDirectory: $file->getIsDirectory(),
+            );
+        }
+
         return [
-            'succeeded' => $succeeded,
-            'failed' => $failed,
+            'items_with_conflict' => $itemsWithConflict,
+            'items_no_conflict' => $itemsNoConflict,
         ];
     }
 
     /**
-     * 恢复项目及其子资源（不验证父级，不删除回收站记录）.
-     *
-     * @param int $projectId 项目ID
-     * @param string $userId 当前用户ID
-     * @throws RuntimeException
+     * Restore project and its sub-resources without parent check (no recycle bin record deletion).
      */
     public function restoreProjectWithoutParentCheck(int $projectId, string $userId): void
     {
         $restored = $this->projectRepository->restore($projectId, $userId);
         if (! $restored) {
-            throw new RuntimeException('恢复项目失败');
+            throw new RuntimeException(trans('recycle_bin.restore.project_failed'));
         }
 
-        $restoredMembers = $this->projectMemberRepository->restoreByProjectIds(
-            [$projectId],
-            $userId
-        );
-
-        $this->logger->info('恢复项目成员', [
+        $restoredMembers = $this->projectMemberRepository->restoreByProjectIds([$projectId], $userId);
+        $this->logger->info('Restored project members', [
             'project_id' => $projectId,
             'member_count' => $restoredMembers,
         ]);
 
-        // 查询用户曾单独删除的话题，恢复时排除
         $excludeTopicIds = $this->recycleBinRepository->findResourceIdsByParent(
             $projectId,
             RecycleBinResourceType::Topic
         );
 
-        $restoredTopics = $this->topicRepository->restoreByProjectId(
-            $projectId,
-            $excludeTopicIds,
-            $userId
-        );
-
-        $this->logger->info('恢复项目下的话题', [
+        $restoredTopics = $this->topicRepository->restoreByProjectId($projectId, $excludeTopicIds, $userId);
+        $this->logger->info('Restored topics under project', [
             'project_id' => $projectId,
             'restored_count' => $restoredTopics,
             'excluded_count' => count($excludeTopicIds),
@@ -133,30 +250,20 @@ class RecycleBinRestoreDomainService
     }
 
     /**
-     * 恢复话题（不验证父级，不删除回收站记录）.
-     *
-     * @param int $topicId 话题ID
-     * @param string $userId 当前用户ID
-     * @throws RuntimeException
+     * Restore topic without parent check (no recycle bin record deletion).
      */
     public function restoreTopicWithoutParentCheck(int $topicId, string $userId): void
     {
         $restored = $this->topicRepository->restore($topicId, $userId);
         if (! $restored) {
-            throw new RuntimeException('恢复话题失败');
+            throw new RuntimeException(trans('recycle_bin.restore.topic_failed'));
         }
 
-        $this->logger->info('恢复话题成功', [
-            'topic_id' => $topicId,
-            'user_id' => $userId,
-        ]);
+        $this->logger->info('Topic restored', ['topic_id' => $topicId, 'user_id' => $userId]);
     }
 
     /**
-     * 根据ID查询项目（包含软删除的项目）.
-     *
-     * @param int $projectId 项目ID
-     * @return null|ProjectEntity 项目实体或null
+     * Find project by ID including soft-deleted records.
      */
     public function findProjectByIdWithTrashed(int $projectId): ?ProjectEntity
     {
@@ -164,10 +271,7 @@ class RecycleBinRestoreDomainService
     }
 
     /**
-     * 根据ID查询话题（包含软删除的话题）.
-     *
-     * @param int $topicId 话题ID
-     * @return null|TopicEntity 话题实体或null
+     * Find topic by ID including soft-deleted records.
      */
     public function findTopicByIdWithTrashed(int $topicId): ?TopicEntity
     {
@@ -175,27 +279,130 @@ class RecycleBinRestoreDomainService
     }
 
     /**
-     * 恢复单个资源.
-     *
-     * @param RecycleBinEntity $entity 回收站实体
-     * @param string $userId 当前用户ID
-     * @throws RuntimeException 当恢复失败时抛出
+     * @param RecycleBinEntity[] $entities
+     * @return RecycleBinEntity[]
      */
-    private function restoreSingle(RecycleBinEntity $entity, string $userId): void
+    private function sortRecycleBinEntitiesByDeletedAtDesc(array $entities): array
     {
+        usort(
+            $entities,
+            static function (RecycleBinEntity $left, RecycleBinEntity $right): int {
+                $deletedAtCompare = strcmp($right->getDeletedAt(), $left->getDeletedAt());
+                if ($deletedAtCompare !== 0) {
+                    return $deletedAtCompare;
+                }
+
+                return ((int) $right->getId()) <=> ((int) $left->getId());
+            }
+        );
+
+        return $entities;
+    }
+
+    /**
+     * @param RecycleBinEntity[] $entities
+     * @param array<int|string, array<string, string>> $conflictResolutions
+     * @return array{entities: RecycleBinEntity[], failed: array{entity: RecycleBinEntity, error: string}[]}
+     */
+    private function filterDuplicateFileRestoreTargets(array $entities, array $conflictResolutions): array
+    {
+        $selectedEntities = [];
+        $failed = [];
+        $seenTargetKeys = [];
+        $projectExistsCache = [];
+
+        foreach ($entities as $entity) {
+            if ($entity->getRemovedAt() !== null || $entity->getPurgedAt() !== null) {
+                $selectedEntities[] = $entity;
+                continue;
+            }
+
+            $fileId = (int) $entity->getResourceId();
+            $file = $this->taskFileRepository->getByIdWithTrash($fileId);
+            if ($file === null) {
+                $selectedEntities[] = $entity;
+                continue;
+            }
+
+            if (! $this->projectExistsAndNotDeleted($file->getProjectId(), $projectExistsCache)) {
+                $failed[] = [
+                    'entity' => $entity,
+                    'error' => trans('recycle_bin.restore.file_project_missing'),
+                ];
+                continue;
+            }
+
+            if ($file->getDeletedAt() === null) {
+                $selectedEntities[] = $entity;
+                continue;
+            }
+
+            $resolution = $conflictResolutions[(string) $fileId] ?? [];
+
+            try {
+                $targetParentId = $this->resolveTargetParentId($file->getParentId(), $file->getProjectId(), $resolution);
+            } catch (RuntimeException) {
+                $selectedEntities[] = $entity;
+                continue;
+            }
+
+            $targetKey = $this->buildFileRestoreTargetKey($file, $targetParentId);
+            if (isset($seenTargetKeys[$targetKey])) {
+                $failed[] = [
+                    'entity' => $entity,
+                    'error' => trans('recycle_bin.restore.file_duplicate_restore_target'),
+                ];
+                continue;
+            }
+
+            $seenTargetKeys[$targetKey] = true;
+            $selectedEntities[] = $entity;
+        }
+
+        return [
+            'entities' => $selectedEntities,
+            'failed' => $failed,
+        ];
+    }
+
+    /**
+     * @param array<int, bool> $projectExistsCache
+     */
+    private function projectExistsAndNotDeleted(int $projectId, array &$projectExistsCache): bool
+    {
+        if (! array_key_exists($projectId, $projectExistsCache)) {
+            $projectExistsCache[$projectId] = $this->projectRepository->existsAndNotDeleted($projectId);
+        }
+
+        return $projectExistsCache[$projectId];
+    }
+
+    private function buildFileRestoreTargetKey(TaskFileEntity $file, ?int $targetParentId): string
+    {
+        return sprintf('%d:%d:%s', $file->getProjectId(), $targetParentId ?? 0, $file->getFileName());
+    }
+
+    /**
+     * @param array<int|string, array<string, string>> $conflictResolutions
+     */
+    private function restoreSingle(
+        RecycleBinEntity $entity,
+        string $userId,
+        array $conflictResolutions = []
+    ): void {
         $resourceType = $entity->getResourceType();
 
         match ($resourceType) {
             RecycleBinResourceType::Workspace => $this->restoreWorkspace($entity, $userId),
             RecycleBinResourceType::Project => $this->restoreProject($entity, $userId),
             RecycleBinResourceType::Topic => $this->restoreTopic($entity, $userId),
-            default => throw new RuntimeException('不支持的资源类型: ' . $resourceType->value),
+            RecycleBinResourceType::File => $this->restoreFile($entity, $userId, $conflictResolutions),
+            default => throw new RuntimeException(
+                trans('recycle_bin.restore.unsupported_resource_type', ['type' => $resourceType->value])
+            ),
         };
     }
 
-    /**
-     * 恢复工作区（级联恢复项目、话题）.
-     */
     private function restoreWorkspace(RecycleBinEntity $entity, string $userId): void
     {
         $workspaceId = (int) $entity->getResourceId();
@@ -204,10 +411,9 @@ class RecycleBinRestoreDomainService
         try {
             $restored = $this->workspaceRepository->restore($workspaceId, $userId);
             if (! $restored) {
-                throw new RuntimeException('工作区不存在或已被永久删除');
+                throw new RuntimeException(trans('recycle_bin.restore.workspace_not_found_or_permanently_deleted'));
             }
 
-            // 查询用户曾单独删除的项目，恢复时排除
             $excludeProjectIds = $this->recycleBinRepository->findResourceIdsByParent(
                 $workspaceId,
                 RecycleBinResourceType::Project
@@ -219,13 +425,12 @@ class RecycleBinRestoreDomainService
                 $userId
             );
 
-            $this->logger->info('恢复工作区下的项目', [
+            $this->logger->info('Restored projects under workspace', [
                 'workspace_id' => $workspaceId,
                 'restored_count' => $restoredProjects,
                 'excluded_count' => count($excludeProjectIds),
             ]);
 
-            // 查询用户曾单独删除的话题，恢复时排除
             $restoredProjectIds = $this->projectRepository->findProjectIdsByWorkspaceId(
                 $workspaceId,
                 $excludeProjectIds
@@ -243,7 +448,7 @@ class RecycleBinRestoreDomainService
                 $userId
             );
 
-            $this->logger->info('恢复工作区下的话题', [
+            $this->logger->info('Restored topics under workspace', [
                 'workspace_id' => $workspaceId,
                 'restored_count' => $restoredTopics,
                 'excluded_count' => count($excludeTopicIds),
@@ -254,7 +459,7 @@ class RecycleBinRestoreDomainService
             Db::commit();
         } catch (Throwable $e) {
             Db::rollBack();
-            $this->logger->error('恢复工作区失败', [
+            $this->logger->error('Failed to restore workspace', [
                 'workspace_id' => $workspaceId,
                 'error' => $e->getMessage(),
             ]);
@@ -262,13 +467,6 @@ class RecycleBinRestoreDomainService
         }
     }
 
-    /**
-     * 恢复项目（级联恢复话题、成员，排除用户曾删的话题）.
-     *
-     * @param RecycleBinEntity $entity 回收站实体
-     * @param string $userId 当前用户ID
-     * @throws RuntimeException 恢复失败时抛出异常
-     */
     private function restoreProject(RecycleBinEntity $entity, string $userId): void
     {
         $projectId = (int) $entity->getResourceId();
@@ -276,18 +474,17 @@ class RecycleBinRestoreDomainService
         Db::transaction(function () use ($projectId, $entity, $userId) {
             $project = $this->projectRepository->findByIdWithTrashed($projectId);
             if (! $project) {
-                throw new RuntimeException('项目不存在或已被永久删除');
+                throw new RuntimeException(trans('recycle_bin.restore.project_not_found_or_permanently_deleted'));
             }
 
-            // 验证父级工作区是否存在
             $workspaceId = $project->getWorkspaceId();
             if ($workspaceId !== null) {
                 $workspaceExists = $this->workspaceRepository->existsAndNotDeleted($workspaceId);
                 if (! $workspaceExists) {
-                    throw new RuntimeException('父级工作区不存在，请先移动项目到其他工作区');
+                    throw new RuntimeException(trans('recycle_bin.restore.parent_workspace_missing'));
                 }
             } else {
-                $this->logger->warning('恢复项目时 workspace_id 为空', [
+                $this->logger->warning('workspace_id is null when restoring project', [
                     'project_id' => $projectId,
                     'recycle_bin_id' => $entity->getId(),
                 ]);
@@ -298,13 +495,6 @@ class RecycleBinRestoreDomainService
         });
     }
 
-    /**
-     * 恢复话题（单独恢复）.
-     *
-     * @param RecycleBinEntity $entity 回收站实体
-     * @param string $userId 当前用户ID
-     * @throws RuntimeException 恢复失败时抛出异常
-     */
     private function restoreTopic(RecycleBinEntity $entity, string $userId): void
     {
         $topicId = (int) $entity->getResourceId();
@@ -312,18 +502,17 @@ class RecycleBinRestoreDomainService
         Db::transaction(function () use ($topicId, $entity, $userId) {
             $topic = $this->topicRepository->findByIdWithTrashed($topicId);
             if (! $topic) {
-                throw new RuntimeException('话题不存在或已被永久删除');
+                throw new RuntimeException(trans('recycle_bin.restore.topic_not_found_or_permanently_deleted'));
             }
 
-            // 验证父级项目是否存在
             $parentId = $entity->getParentId();
             if ($parentId !== null) {
                 $parentExists = $this->projectRepository->existsAndNotDeleted($parentId);
                 if (! $parentExists) {
-                    throw new RuntimeException('父级项目不存在，请先移动话题到其他项目');
+                    throw new RuntimeException(trans('recycle_bin.restore.parent_project_missing'));
                 }
             } else {
-                $this->logger->warning('恢复话题时 parent_id 为空', [
+                $this->logger->warning('parent_id is null when restoring topic', [
                     'topic_id' => $topicId,
                     'recycle_bin_id' => $entity->getId(),
                 ]);
@@ -332,5 +521,136 @@ class RecycleBinRestoreDomainService
             $this->restoreTopicWithoutParentCheck($topicId, $userId);
             $this->recycleBinRepository->deleteById($entity->getId());
         });
+    }
+
+    /**
+     * Restore a file or directory.
+     *
+     * Checks parent_missing then name_conflict in order.
+     * Any unresolved conflict (missing or 'skip' strategy) throws, causing the item to be failed.
+     *
+     * @param array<int|string, array<string, string>> $conflictResolutions
+     */
+    private function restoreFile(
+        RecycleBinEntity $entity,
+        string $userId,
+        array $conflictResolutions = []
+    ): void {
+        $fileId = (int) $entity->getResourceId();
+        $resolution = $conflictResolutions[(string) $fileId] ?? [];
+
+        Db::transaction(function () use ($fileId, $entity, $userId, $resolution) {
+            // 1. Validate recycle bin record state
+            if ($entity->getRemovedAt() !== null || $entity->getPurgedAt() !== null) {
+                throw new RuntimeException(trans('recycle_bin.restore.file_removed_cannot_restore'));
+            }
+
+            // 2. Load file (including soft-deleted)
+            $file = $this->taskFileRepository->getByIdWithTrash($fileId);
+            if ($file === null) {
+                throw new RuntimeException(trans('recycle_bin.restore.file_not_found_or_permanently_deleted'));
+            }
+
+            if (! $this->projectRepository->existsAndNotDeleted($file->getProjectId())) {
+                throw new RuntimeException(trans('recycle_bin.restore.file_project_missing'));
+            }
+
+            // 3. Already restored — just clean up recycle bin record
+            if ($file->getDeletedAt() === null) {
+                $this->recycleBinRepository->deleteById($entity->getId());
+                return;
+            }
+
+            // 4. Resolve target parent (use file.parent_id directly, no extra_data)
+            $targetParentId = $this->resolveTargetParentId($file->getParentId(), $file->getProjectId(), $resolution);
+
+            // 5. Check name conflict at resolved target location
+            $existing = $this->taskFileRepository->getByProjectParentAndName(
+                $file->getProjectId(),
+                $targetParentId,
+                $file->getFileName()
+            );
+
+            if ($existing !== null && $existing->getFileId() !== $file->getFileId()) {
+                $nameResolution = RestoreConflictResolution::tryFrom($resolution['name_conflict'] ?? '');
+
+                if ($nameResolution === RestoreConflictResolution::Overwrite) {
+                    // Soft-delete the conflicting entry (self only, no recursive)
+                    $this->taskFileRepository->deleteById($existing->getFileId(), false);
+                    $this->logger->info('Overwrote conflicting file during restore', [
+                        'existing_file_id' => $existing->getFileId(),
+                        'restore_file_id' => $fileId,
+                    ]);
+                } else {
+                    throw new RuntimeException(trans('recycle_bin.restore.file_name_conflict'));
+                }
+            }
+
+            // 6. Restore the file record
+            $this->taskFileRepository->restoreFile($fileId);
+            $restored = $this->taskFileRepository->getById($fileId);
+            if ($restored === null) {
+                throw new RuntimeException(trans('recycle_bin.restore.file_failed'));
+            }
+
+            // 7. Update parent and timestamp
+            $restored->setParentId($targetParentId);
+            $restored->setFileName($file->getFileName());
+            $restored->setFileExtension(
+                $restored->getIsDirectory() ? '' : (pathinfo($file->getFileName(), PATHINFO_EXTENSION) ?: '')
+            );
+            $restored->setDeletedAt(null);
+            $restored->setUpdatedAt(date('Y-m-d H:i:s'));
+            $this->taskFileRepository->updateById($restored);
+
+            // 8. Bump parent metadata version
+            if ($targetParentId !== null && $targetParentId > 0) {
+                $this->taskFileRepository->incrementMetadataVersionByIds([$targetParentId]);
+            }
+
+            $this->logger->info('File restored successfully', [
+                'file_id' => $fileId,
+                'target_parent_id' => $targetParentId,
+                'user_id' => $userId,
+            ]);
+
+            // 9. Remove recycle bin record
+            $this->recycleBinRepository->deleteById($entity->getId());
+        });
+    }
+
+    /**
+     * Resolve the effective target parent ID.
+     * Uses file.parent_id directly. On parent_missing, applies resolution strategy.
+     *
+     * @param array<string, string> $resolution
+     * @throws RuntimeException when parent is missing and no valid resolution is given
+     */
+    private function resolveTargetParentId(?int $parentId, int $projectId, array $resolution): ?int
+    {
+        // Root-level file — no parent check needed
+        if ($parentId === null || $parentId <= 0) {
+            return null;
+        }
+
+        $parent = $this->taskFileRepository->getByIdWithTrash($parentId);
+        $parentMissing = $parent === null || $parent->getDeletedAt() !== null || ! $parent->getIsDirectory();
+
+        if (! $parentMissing) {
+            return $parentId;
+        }
+
+        // Parent is missing — apply resolution
+        $parentResolution = RestoreConflictResolution::tryFrom($resolution['parent_missing'] ?? '');
+
+        if ($parentResolution === RestoreConflictResolution::RestoreToRoot) {
+            $root = $this->taskFileRepository->findRootDirectoryByProjectId($projectId);
+            if ($root === null) {
+                throw new RuntimeException(trans('recycle_bin.restore.file_restore_to_root_failed'));
+            }
+            return $root->getFileId();
+        }
+
+        throw new RuntimeException(trans('recycle_bin.restore.file_parent_missing'));
     }
 }

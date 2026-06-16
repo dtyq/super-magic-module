@@ -7,6 +7,8 @@ declare(strict_types=1);
 
 namespace Dtyq\SuperMagic\Domain\RecycleBin\Enum;
 
+use function Hyperf\Translation\trans;
+
 /**
  * 回收站资源类型枚举.
  */
@@ -36,10 +38,10 @@ enum RecycleBinResourceType: int
     public function getLabel(): string
     {
         return match ($this) {
-            self::Workspace => '工作区',
-            self::Project => '项目',
-            self::Topic => '话题',
-            self::File => '文件',
+            self::Workspace => trans('recycle_bin.resource_type.workspace'),
+            self::Project => trans('recycle_bin.resource_type.project'),
+            self::Topic => trans('recycle_bin.resource_type.topic'),
+            self::File => trans('recycle_bin.resource_type.file'),
         };
     }
 

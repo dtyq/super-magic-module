@@ -33,6 +33,7 @@ class FilesBatchDeletedEvent extends AbstractEvent
         private readonly string $organizationCode,
         private readonly int $projectId,
         private readonly MagicUserAuthorization $userAuthorization,
+        private readonly DeleteEventSource $source = DeleteEventSource::User,
     ) {
         parent::__construct();
     }
@@ -85,6 +86,11 @@ class FilesBatchDeletedEvent extends AbstractEvent
     public function getUserAuthorization(): MagicUserAuthorization
     {
         return $this->userAuthorization;
+    }
+
+    public function getSource(): DeleteEventSource
+    {
+        return $this->source;
     }
 
     /**

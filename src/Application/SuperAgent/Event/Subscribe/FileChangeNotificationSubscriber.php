@@ -16,9 +16,11 @@ use Dtyq\AsyncEvent\Kernel\Annotation\AsyncListener;
 use Dtyq\SuperMagic\Domain\SuperAgent\Entity\ProjectEntity;
 use Dtyq\SuperMagic\Domain\SuperAgent\Constant\ProjectFileConstant;
 use Dtyq\SuperMagic\Domain\SuperAgent\Entity\TaskFileEntity;
+use Dtyq\SuperMagic\Domain\SuperAgent\Entity\ValueObject\FileMoveChangeSet;
 use Dtyq\SuperMagic\Domain\SuperAgent\Event\CheckpointRollbackFilesChangedEvent;
+use Dtyq\SuperMagic\Domain\SuperAgent\Event\DeleteEventSource;
 use Dtyq\SuperMagic\Domain\SuperAgent\Event\DirectoryDeletedEvent;
-use Dtyq\SuperMagic\Domain\SuperAgent\Event\FileBatchMoveEvent;
+use Dtyq\SuperMagic\Domain\SuperAgent\Event\FileBatchMoveCompletedEvent;
 use Dtyq\SuperMagic\Domain\SuperAgent\Event\FileContentSavedEvent;
 use Dtyq\SuperMagic\Domain\SuperAgent\Event\FileDeletedEvent;
 use Dtyq\SuperMagic\Domain\SuperAgent\Event\FileMovedEvent;
@@ -69,7 +71,7 @@ class FileChangeNotificationSubscriber implements ListenerInterface
             FilesBatchDeletedEvent::class,
             FileRenamedEvent::class,
             FileMovedEvent::class,
-            FileBatchMoveEvent::class,
+            FileBatchMoveCompletedEvent::class,
             FileContentSavedEvent::class,
             FileReplacedEvent::class,
             CheckpointRollbackFilesChangedEvent::class,
@@ -89,7 +91,7 @@ class FileChangeNotificationSubscriber implements ListenerInterface
                 $event instanceof FilesBatchDeletedEvent => $this->handleBatchDeleted($event),
                 $event instanceof FileRenamedEvent => $this->handleFileRenamed($event),
                 $event instanceof FileMovedEvent => $this->handleFileMoved($event),
-                $event instanceof FileBatchMoveEvent => $this->handleBatchMoved($event),
+                $event instanceof FileBatchMoveCompletedEvent => $this->handleBatchMoveCompleted($event),
                 $event instanceof FileContentSavedEvent => $this->handleFileContentSaved($event),
                 $event instanceof FileReplacedEvent => $this->handleFileReplaced($event),
                 $event instanceof CheckpointRollbackFilesChangedEvent => $this->handleCheckpointRollbackFilesChanged($event),
@@ -140,6 +142,11 @@ class FileChangeNotificationSubscriber implements ListenerInterface
      */
     private function handleFileDeleted(FileDeletedEvent $event): void
     {
+        // Internal overwrites during batch moves are covered by FileBatchMoveCompletedEvent.
+        if ($event->getSource() === DeleteEventSource::InternalOverwrite) {
+            return;
+        }
+
         $fileEntity = $event->getFileEntity();
         $projectEntity = $this->projectDomainService->getProjectNotUserId($fileEntity->getProjectId());
 
@@ -197,6 +204,11 @@ class FileChangeNotificationSubscriber implements ListenerInterface
      */
     private function handleDirectoryDeleted(DirectoryDeletedEvent $event): void
     {
+        // Internal overwrites during batch moves are covered by FileBatchMoveCompletedEvent.
+        if ($event->getSource() === DeleteEventSource::InternalOverwrite) {
+            return;
+        }
+
         $fileEntity = $event->getDirectoryEntity();
         $projectEntity = $this->projectDomainService->getProjectNotUserId($fileEntity->getProjectId());
 
@@ -300,79 +312,155 @@ class FileChangeNotificationSubscriber implements ListenerInterface
         }
 
         $userAuthorization = $event->getUserAuthorization();
-        $pushData = $this->buildPushData(
-            operation: 'update',
+        $changes = [];
+        $allNotifyFileIds = [];
+
+        // 1. Record delete for the overwritten file (if any)
+        $overwrittenFile = $event->getOverwrittenFile();
+        if ($overwrittenFile !== null) {
+            $changes[] = [
+                'operation' => 'delete',
+                'file_id' => (string) $overwrittenFile->getFileId(),
+            ];
+            $allNotifyFileIds[] = $overwrittenFile->getFileId();
+        }
+
+        // 2. Record update for the moved file
+        $relativeFilePath = $this->buildRelativeFilePathForEntity($fileEntity, $fileEntity->getProjectId());
+        $fileDto = TaskFileItemDTO::fromEntity($fileEntity, $projectEntity->getWorkDir(), $relativeFilePath);
+        $changes[] = [
+            'operation' => 'update',
+            'file_id' => (string) $fileEntity->getFileId(),
+            'file' => $fileDto->toArray(),
+        ];
+        $allNotifyFileIds[] = $fileEntity->getFileId();
+
+        // 3. Collect refresh_parent_ids: new parent + overwritten file parent + old parent
+        $parentIdSet = [];
+        $newParentId = $fileEntity->getParentId();
+        if ($newParentId !== null && $newParentId > 0) {
+            $parentIdSet[$newParentId] = true;
+        }
+        if ($overwrittenFile !== null) {
+            $owParentId = $overwrittenFile->getParentId();
+            if ($owParentId !== null && $owParentId > 0) {
+                $parentIdSet[$owParentId] = true;
+            }
+        }
+        $oldParentId = $event->getOldParentId();
+        if ($oldParentId !== null && $oldParentId > 0) {
+            $parentIdSet[$oldParentId] = true;
+        }
+        $refreshParentIds = array_map('strval', array_keys($parentIdSet));
+
+        $pushData = $this->buildBatchPushData(
             projectId: (string) $fileEntity->getProjectId(),
             workspaceId: $this->getProjectWorkspaceId($projectEntity),
-            fileEntity: $fileEntity,
-            workDir: $projectEntity->getWorkDir(),
+            changes: $changes,
             organizationCode: $userAuthorization->getOrganizationCode(),
             conversationId: '',
-            topicId: (string) $fileEntity->getTopicId()
+            topicId: (string) $fileEntity->getTopicId(),
+            refreshParentIds: $refreshParentIds
         );
 
         $this->pushNotification($userAuthorization->getId(), $pushData);
-        $this->notifyKnowledgeProjectFileChange($fileEntity->getFileId());
+        foreach ($allNotifyFileIds as $notifyFileId) {
+            $this->notifyKnowledgeProjectFileChange($notifyFileId);
+        }
     }
 
     /**
-     * Handle batch moved event.
+     * Handle batch move completed event.
+     * Builds a single aggregated notification from the FileMoveChangeSet.
+     * Query count is O(1): one getFilesByIds + one getFilesWithParentsByIds regardless of batch size.
      */
-    private function handleBatchMoved(FileBatchMoveEvent $event): void
+    private function handleBatchMoveCompleted(FileBatchMoveCompletedEvent $event): void
     {
-        $projectId = $event->getProjectId();
-        $fileIds = $event->getFileIds();
-        $projectEntity = $this->projectDomainService->getProjectNotUserId($projectId);
+        $changeSet = $event->getChangeSet();
+        $targetProjectId = $event->getTargetProjectId();
 
+        $projectEntity = $this->projectDomainService->getProjectNotUserId($targetProjectId);
         if (! $projectEntity) {
             return;
         }
 
-        // Build batch changes
         $changes = [];
-        $fileEntities = [];
-        $topicId = '';
-        foreach ($fileIds as $fileId) {
-            try {
-                $fileEntity = $this->taskFileDomainService->getById($fileId);
-                if ($fileEntity) {
-                    $fileEntities[] = $fileEntity;
-                    $relativeFilePath = $this->buildRelativeFilePathForEntity($fileEntity, $projectId);
-                    $fileDto = TaskFileItemDTO::fromEntity($fileEntity, $projectEntity->getWorkDir(), $relativeFilePath);
-                    $changes[] = [
-                        'operation' => 'update',
-                        'file_id' => (string) $fileId,
-                        'file' => $fileDto->toArray(),
-                    ];
-                    // Use the first file's topicId if available
-                    if (empty($topicId) && $fileEntity->getTopicId() > 0) {
-                        $topicId = (string) $fileEntity->getTopicId();
-                    }
-                }
-            } catch (Throwable $e) {
-                $this->logger->warning('Failed to get file info for batch move notification', [
-                    'file_id' => $fileId,
-                    'error' => $e->getMessage(),
-                ]);
+        $allNotifyFileIds = [];
+
+        // 1. Deletes — entities were captured before soft-delete, no re-query needed
+        foreach ($changeSet->getDeletedFileEntities() as $fileEntity) {
+            $changes[] = [
+                'operation' => 'delete',
+                'file_id' => (string) $fileEntity->getFileId(),
+            ];
+            $allNotifyFileIds[] = $fileEntity->getFileId();
+        }
+
+        // 2. Added + Updated — one batch load
+        $addedFileIds = $changeSet->getAddedFileIds();
+        $updatedFileIds = $changeSet->getUpdatedFileIds();
+        $allLiveIds = array_merge($addedFileIds, $updatedFileIds);
+
+        $liveEntities = empty($allLiveIds)
+            ? []
+            : $this->taskFileDomainService->getFilesByIds($allLiveIds, $targetProjectId);
+
+        // Build relative paths in one shot (internally uses one getFilesWithParentsByIds call)
+        $relPathMap = $this->buildRelativeFilePathsForEntities($liveEntities, $targetProjectId);
+
+        $liveById = [];
+        foreach ($liveEntities as $liveEntity) {
+            $liveById[$liveEntity->getFileId()] = $liveEntity;
+        }
+
+        foreach ($addedFileIds as $fileId) {
+            $liveEntity = $liveById[$fileId] ?? null;
+            if ($liveEntity === null) {
+                continue;
             }
+            $fileDto = TaskFileItemDTO::fromEntity($liveEntity, $projectEntity->getWorkDir(), $relPathMap[$liveEntity->getFileId()] ?? null);
+            $changes[] = ['operation' => 'add', 'file_id' => (string) $fileId, 'file' => $fileDto->toArray()];
+            $allNotifyFileIds[] = $fileId;
+        }
+
+        foreach ($updatedFileIds as $fileId) {
+            $liveEntity = $liveById[$fileId] ?? null;
+            if ($liveEntity === null) {
+                continue;
+            }
+            $fileDto = TaskFileItemDTO::fromEntity($liveEntity, $projectEntity->getWorkDir(), $relPathMap[$liveEntity->getFileId()] ?? null);
+            $changes[] = ['operation' => 'update', 'file_id' => (string) $fileId, 'file' => $fileDto->toArray()];
+            $allNotifyFileIds[] = $fileId;
         }
 
         if (empty($changes)) {
             return;
         }
 
+        // Derive topic_id from first live entity that has one
+        $topicId = '';
+        foreach ($liveEntities as $liveEntity) {
+            if ($liveEntity->getTopicId() > 0) {
+                $topicId = (string) $liveEntity->getTopicId();
+                break;
+            }
+        }
+
+        // Refresh parent IDs scoped to the target project
+        $refreshParentIds = array_map('strval', $changeSet->getAffectedParentIdsForProject($targetProjectId));
+
         $pushData = $this->buildBatchPushData(
-            projectId: (string) $projectId,
+            projectId: (string) $targetProjectId,
             workspaceId: $this->getProjectWorkspaceId($projectEntity),
             changes: $changes,
             organizationCode: $event->getOrganizationCode(),
             topicId: $topicId,
-            refreshParentIds: $this->collectMetadataRefreshParentIds($fileEntities)
+            refreshParentIds: $refreshParentIds
         );
 
         $this->pushNotification($event->getUserId(), $pushData);
-        foreach ($fileIds as $fileId) {
-            $this->notifyKnowledgeProjectFileChange((int) $fileId);
+        foreach (array_unique($allNotifyFileIds) as $notifyFileId) {
+            $this->notifyKnowledgeProjectFileChange((int) $notifyFileId);
         }
     }
 
@@ -473,7 +561,8 @@ class FileChangeNotificationSubscriber implements ListenerInterface
             workspaceId: $this->getProjectWorkspaceId($projectEntity),
             changes: $changes,
             organizationCode: $event->getOrganizationCode(),
-            topicId: $event->getTopicId() > 0 ? (string) $event->getTopicId() : ''
+            topicId: $event->getTopicId() > 0 ? (string) $event->getTopicId() : '',
+            refreshParentIds: $this->collectMetadataRefreshParentIds($fileEntities)
         );
 
         $this->pushNotification($event->getUserId(), $pushData);
