@@ -34,6 +34,7 @@ use Dtyq\SuperMagic\Domain\SuperAgent\Entity\TopicEntity;
 use Dtyq\SuperMagic\Domain\SuperAgent\Entity\ValueObject\CreationSource;
 use Dtyq\SuperMagic\Domain\SuperAgent\Entity\ValueObject\FileType;
 use Dtyq\SuperMagic\Domain\SuperAgent\Entity\ValueObject\StorageType;
+use Dtyq\SuperMagic\Domain\SuperAgent\Entity\ValueObject\SuperMagicExecutionSource;
 use Dtyq\SuperMagic\Domain\SuperAgent\Entity\ValueObject\TaskFileSource;
 use Dtyq\SuperMagic\Domain\SuperAgent\Service\MessageScheduleDomainService;
 use Dtyq\SuperMagic\Domain\SuperAgent\Service\ProjectDomainService;
@@ -728,6 +729,10 @@ class MessageScheduleAppService extends AbstractAppService
 
                 // Migrate chat message attachments to project and get updated content
                 $messageContent = $this->moveMessageFileToProject($dataIsolation, $messageScheduleEntity->getMessageType(), $messageScheduleEntity->getMessageContent(), $projectEntity);
+                $messageContent = SuperMagicExecutionSource::stampMessageContent(
+                    $messageContent,
+                    SuperMagicExecutionSource::MessageSchedule
+                );
 
                 // 3. Get topic entity
                 $topicEntity = $this->getTopicOrCreate($dataIsolation, $messageScheduleEntity->getTopicId(), $projectEntity, $messageScheduleEntity->getMessageType(), $messageScheduleEntity->getMessageContent(), (string) $executionLog->getId());
