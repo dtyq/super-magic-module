@@ -12,8 +12,6 @@ namespace Dtyq\SuperMagic\Domain\SuperAgent\Entity\ValueObject;
  */
 enum SuperMagicExecutionSource: string
 {
-    public const DYNAMIC_PARAM_KEY = 'super_magic_execution_source';
-
     case HumanChat = 'human_chat';
     case OpenApi = 'open_api';
     case MessageSchedule = 'message_schedule';
@@ -22,6 +20,8 @@ enum SuperMagicExecutionSource: string
     case Cron = 'cron';
     case System = 'system';
     case Unknown = 'unknown';
+
+    public const string DYNAMIC_PARAM_KEY = 'super_magic_execution_source';
 
     public static function fromRaw(mixed $value): self
     {
