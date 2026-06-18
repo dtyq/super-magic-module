@@ -75,7 +75,11 @@ class RecycleBinRestoreDomainService
         $failed = [];
 
         if ($resourceType === RecycleBinResourceType::File) {
-            $fileRestorePlan = $this->filterDuplicateFileRestoreTargets($entities, $conflictResolutions);
+            $batchContext = $this->buildFileBatchContext($entities);
+            // Restore parents before children so that a child's parent is already live
+            // when restoreFile() resolves its target parent (no batch-awareness needed there).
+            $entities = $this->sortFileEntitiesParentFirst($entities, $batchContext['filesById']);
+            $fileRestorePlan = $this->filterDuplicateFileRestoreTargets($entities, $conflictResolutions, $batchContext);
             $entities = $fileRestorePlan['entities'];
             $failed = $fileRestorePlan['failed'];
         }
@@ -123,12 +127,15 @@ class RecycleBinRestoreDomainService
             $userId
         );
         $entities = $this->sortRecycleBinEntitiesByDeletedAtDesc($entities);
+        $batchContext = $this->buildFileBatchContext($entities);
+        $filesById = $batchContext['filesById'];
+        $selectedDirIds = $batchContext['selectedDirIds'];
         $seenTargetKeys = [];
         $projectExistsCache = [];
 
         foreach ($entities as $entity) {
             $fileId = (int) $entity->getResourceId();
-            $file = $this->taskFileRepository->getByIdWithTrash($fileId);
+            $file = $filesById[$fileId] ?? null;
 
             // File permanently deleted or purged from recycle bin — no actionable conflict
             if ($file === null || $entity->getRemovedAt() !== null || $entity->getPurgedAt() !== null) {
@@ -154,10 +161,12 @@ class RecycleBinRestoreDomainService
 
             $parentId = $file->getParentId();
 
-            // Step 1: detect parent_missing
+            // Step 1: detect parent_missing. A parent that is still soft-deleted but is a
+            // directory selected in this same batch counts as available, since it will be
+            // restored first (parent-first ordering).
             if ($parentId !== null && $parentId > 0) {
-                $parent = $this->taskFileRepository->getByIdWithTrash($parentId);
-                if ($parent === null || $parent->getDeletedAt() !== null || ! $parent->getIsDirectory()) {
+                $parent = $filesById[$parentId] ?? null;
+                if (! $this->isParentAvailableInBatch($parentId, $parent, $selectedDirIds)) {
                     $itemsWithConflict[] = new RestorePreviewItemDTO(
                         resourceId: (string) $fileId,
                         resourceName: $file->getFileName(),
@@ -302,14 +311,16 @@ class RecycleBinRestoreDomainService
     /**
      * @param RecycleBinEntity[] $entities
      * @param array<int|string, array<string, string>> $conflictResolutions
+     * @param array{filesById: array<int, TaskFileEntity>, selectedDirIds: array<int, bool>} $batchContext
      * @return array{entities: RecycleBinEntity[], failed: array{entity: RecycleBinEntity, error: string}[]}
      */
-    private function filterDuplicateFileRestoreTargets(array $entities, array $conflictResolutions): array
+    private function filterDuplicateFileRestoreTargets(array $entities, array $conflictResolutions, array $batchContext): array
     {
         $selectedEntities = [];
         $failed = [];
         $seenTargetKeys = [];
         $projectExistsCache = [];
+        $filesById = $batchContext['filesById'];
 
         foreach ($entities as $entity) {
             if ($entity->getRemovedAt() !== null || $entity->getPurgedAt() !== null) {
@@ -318,7 +329,7 @@ class RecycleBinRestoreDomainService
             }
 
             $fileId = (int) $entity->getResourceId();
-            $file = $this->taskFileRepository->getByIdWithTrash($fileId);
+            $file = $filesById[$fileId] ?? null;
             if ($file === null) {
                 $selectedEntities[] = $entity;
                 continue;
@@ -340,7 +351,7 @@ class RecycleBinRestoreDomainService
             $resolution = $conflictResolutions[(string) $fileId] ?? [];
 
             try {
-                $targetParentId = $this->resolveTargetParentId($file->getParentId(), $file->getProjectId(), $resolution);
+                $targetParentId = $this->resolveBatchTargetParentId($file, $resolution, $batchContext);
             } catch (RuntimeException) {
                 $selectedEntities[] = $entity;
                 continue;
@@ -363,6 +374,181 @@ class RecycleBinRestoreDomainService
             'entities' => $selectedEntities,
             'failed' => $failed,
         ];
+    }
+
+    /**
+     * Build a one-shot batch context for file restore/preview.
+     *
+     * Loads all selected files (including soft-deleted) and their parents in batch
+     * to avoid N+1 queries, and records which selected items are directories.
+     *
+     * @param RecycleBinEntity[] $entities
+     * @return array{filesById: array<int, TaskFileEntity>, selectedDirIds: array<int, bool>}
+     */
+    private function buildFileBatchContext(array $entities): array
+    {
+        $fileIds = [];
+        foreach ($entities as $entity) {
+            $fileIds[] = (int) $entity->getResourceId();
+        }
+
+        $filesById = $this->taskFileRepository->getByIdsWithTrash($fileIds);
+
+        // Directories explicitly selected in this batch (used to treat a still-deleted
+        // parent as "available" because it will be restored in the same batch).
+        $selectedDirIds = [];
+        foreach ($filesById as $fileId => $file) {
+            if ($file->getIsDirectory()) {
+                $selectedDirIds[$fileId] = true;
+            }
+        }
+
+        // Preload parents that are not part of the selected set so parent availability
+        // checks stay query-free.
+        $missingParentIds = [];
+        foreach ($filesById as $file) {
+            $parentId = $file->getParentId();
+            if ($parentId !== null && $parentId > 0 && ! isset($filesById[$parentId])) {
+                $missingParentIds[$parentId] = $parentId;
+            }
+        }
+        if (! empty($missingParentIds)) {
+            foreach ($this->taskFileRepository->getByIdsWithTrash(array_values($missingParentIds)) as $parentId => $parent) {
+                $filesById[$parentId] = $parent;
+            }
+        }
+
+        return [
+            'filesById' => $filesById,
+            'selectedDirIds' => $selectedDirIds,
+        ];
+    }
+
+    /**
+     * Decide whether a parent directory is usable as a restore target within the batch.
+     *
+     * @param array<int, bool> $selectedDirIds
+     */
+    private function isParentAvailableInBatch(?int $parentId, ?TaskFileEntity $parent, array $selectedDirIds): bool
+    {
+        // Root-level node — no parent required.
+        if ($parentId === null || $parentId <= 0) {
+            return true;
+        }
+        if ($parent === null || ! $parent->getIsDirectory()) {
+            return false;
+        }
+        // Live directory.
+        if ($parent->getDeletedAt() === null) {
+            return true;
+        }
+        // Still soft-deleted, but selected in this batch and will be restored first.
+        return isset($selectedDirIds[$parentId]);
+    }
+
+    /**
+     * Resolve the effective target parent ID during batch dedup, treating in-batch
+     * parents as available. Falls back to the parent_missing resolution strategy.
+     *
+     * @param array{filesById: array<int, TaskFileEntity>, selectedDirIds: array<int, bool>} $batchContext
+     * @param array<string, string> $resolution
+     * @throws RuntimeException when parent is missing and no valid resolution is given
+     */
+    private function resolveBatchTargetParentId(TaskFileEntity $file, array $resolution, array $batchContext): ?int
+    {
+        $parentId = $file->getParentId();
+        if ($parentId === null || $parentId <= 0) {
+            return null;
+        }
+
+        $parent = $batchContext['filesById'][$parentId] ?? null;
+        if ($this->isParentAvailableInBatch($parentId, $parent, $batchContext['selectedDirIds'])) {
+            return $parentId;
+        }
+
+        $parentResolution = RestoreConflictResolution::tryFrom($resolution['parent_missing'] ?? '');
+        if ($parentResolution === RestoreConflictResolution::RestoreToRoot) {
+            $root = $this->taskFileRepository->findRootDirectoryByProjectId($file->getProjectId());
+            if ($root === null) {
+                throw new RuntimeException(trans('recycle_bin.restore.file_restore_to_root_failed'));
+            }
+            return $root->getFileId();
+        }
+
+        throw new RuntimeException(trans('recycle_bin.restore.file_parent_missing'));
+    }
+
+    /**
+     * Sort entities so that any parent directory is restored before its descendants.
+     * Ordering is by in-batch depth ascending; ties keep the original deleted_at desc order.
+     *
+     * @param RecycleBinEntity[] $entities
+     * @param array<int, TaskFileEntity> $filesById
+     * @return RecycleBinEntity[]
+     */
+    private function sortFileEntitiesParentFirst(array $entities, array $filesById): array
+    {
+        $batchIds = [];
+        foreach ($entities as $entity) {
+            $batchIds[(int) $entity->getResourceId()] = true;
+        }
+
+        $depthCache = [];
+        $indexed = [];
+        foreach ($entities as $entity) {
+            $indexed[] = [
+                'entity' => $entity,
+                'depth' => $this->computeBatchDepth((int) $entity->getResourceId(), $filesById, $batchIds, $depthCache),
+            ];
+        }
+
+        usort(
+            $indexed,
+            static function (array $left, array $right): int {
+                if ($left['depth'] !== $right['depth']) {
+                    return $left['depth'] <=> $right['depth'];
+                }
+
+                $deletedAtCompare = strcmp($right['entity']->getDeletedAt(), $left['entity']->getDeletedAt());
+                if ($deletedAtCompare !== 0) {
+                    return $deletedAtCompare;
+                }
+
+                return ((int) $right['entity']->getId()) <=> ((int) $left['entity']->getId());
+            }
+        );
+
+        return array_map(static fn (array $item): RecycleBinEntity => $item['entity'], $indexed);
+    }
+
+    /**
+     * Compute a node's depth relative to ancestors that are also in the batch.
+     * The tentative cache write doubles as a cycle guard for malformed parent chains.
+     *
+     * @param array<int, TaskFileEntity> $filesById
+     * @param array<int, bool> $batchIds
+     * @param array<int, int> $depthCache
+     */
+    private function computeBatchDepth(int $fileId, array $filesById, array $batchIds, array &$depthCache): int
+    {
+        if (isset($depthCache[$fileId])) {
+            return $depthCache[$fileId];
+        }
+
+        // Tentatively treat as root to break any accidental cycle.
+        $depthCache[$fileId] = 0;
+
+        $file = $filesById[$fileId] ?? null;
+        if ($file === null) {
+            return 0;
+        }
+
+        $parentId = $file->getParentId();
+        if ($parentId === null || $parentId <= 0 || ! isset($batchIds[$parentId])) {
+            return 0;
+        }
+
+        return $depthCache[$fileId] = $this->computeBatchDepth($parentId, $filesById, $batchIds, $depthCache) + 1;
     }
 
     /**

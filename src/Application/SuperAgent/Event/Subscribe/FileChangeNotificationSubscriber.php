@@ -44,7 +44,7 @@ use Throwable;
  * Using async listener to avoid blocking the main business process.
  */
 #[AsyncListener]
-#[Listener]
+#[Listener(priority: -100)]
 class FileChangeNotificationSubscriber implements ListenerInterface
 {
     private readonly LoggerInterface $logger;
