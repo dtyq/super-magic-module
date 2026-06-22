@@ -342,25 +342,6 @@ class OpenMessageScheduleAppService extends AbstractAppService
         ];
     }
 
-    private function buildOpenMessageSuperAgentExtra(
-        array $model,
-        string $topicPattern = 'general',
-        string $agentCode = ''
-    ): array {
-        $superAgentExtra = [
-            'model' => $model,
-            'mentions' => [],
-            'chat_mode' => 'normal',
-            'input_mode' => 'plan',
-            'topic_pattern' => $topicPattern === '' ? 'general' : $topicPattern,
-        ];
-        if ($agentCode !== '') {
-            $superAgentExtra['agent_code'] = $agentCode;
-        }
-
-        return $superAgentExtra;
-    }
-
     protected function buildModelFromProviderModelId(string $modelId, DataIsolation $dataIsolation): array
     {
         $provider = $this->providerModelDomainService->getModelByModelId($modelId);
@@ -575,6 +556,25 @@ class OpenMessageScheduleAppService extends AbstractAppService
         }
 
         return false;
+    }
+
+    private function buildOpenMessageSuperAgentExtra(
+        array $model,
+        string $topicPattern = 'general',
+        string $agentCode = ''
+    ): array {
+        $superAgentExtra = [
+            'model' => $model,
+            'mentions' => [],
+            'chat_mode' => 'normal',
+            'input_mode' => 'plan',
+            'topic_pattern' => $topicPattern === '' ? 'general' : $topicPattern,
+        ];
+        if ($agentCode !== '') {
+            $superAgentExtra['agent_code'] = $agentCode;
+        }
+
+        return $superAgentExtra;
     }
 
     private function applyOpenMessageContentUpdates(
