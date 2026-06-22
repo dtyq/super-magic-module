@@ -17,7 +17,7 @@ use Throwable;
  * 消息队列补偿定时任务 - 处理遗漏的消息队列补偿.
  */
 #[Crontab(
-    rule: '*/30 * * * * *',                    // Execute every 30 seconds
+    rule: '*/15 * * * * *',                    // Execute every 15 seconds
     name: 'MessageQueueCompensationCrontab',
     singleton: true,                           // Singleton mode to prevent duplicate execution
     mutexExpires: 60,                          // Mutex lock expires in 60 seconds

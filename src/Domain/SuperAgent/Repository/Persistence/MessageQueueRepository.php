@@ -16,6 +16,8 @@ use Hyperf\DbConnection\Db;
 
 class MessageQueueRepository implements MessageQueueRepositoryInterface
 {
+    private const TOPICS_TABLE = 'magic_super_agent_topics';
+
     public function __construct(protected MessageQueueModel $model)
     {
     }
@@ -135,30 +137,42 @@ class MessageQueueRepository implements MessageQueueRepositoryInterface
         int $pageSize = 10,
         int $page = 1,
         string $orderBy = 'id',
-        string $order = 'asc'
+        string $order = 'asc',
+        bool $excludeDeletedTopics = false
     ): array {
-        $query = $this->model::query()->whereNull('deleted_at');
+        $query = $this->model::query();
+
+        if ($excludeDeletedTopics) {
+            $query->from($this->model->getTable() . ' as mq')
+                ->select('mq.*')
+                ->join(self::TOPICS_TABLE . ' as t', 't.id', '=', 'mq.topic_id')
+                ->whereNull('mq.deleted_at')
+                ->whereNull('t.deleted_at');
+        } else {
+            $query->whereNull('deleted_at');
+        }
 
         // Apply conditions
         foreach ($conditions as $key => $value) {
+            $column = $this->qualifyMessageQueueColumn($key, $excludeDeletedTopics);
             if (is_array($value)) {
-                $query->whereIn($key, $value);
+                $query->whereIn($column, $value);
             } else {
-                $query->where($key, $value);
+                $query->where($column, $value);
             }
         }
 
         // Apply status filter
         if (! empty($statuses)) {
             $statusValues = array_map(fn ($status) => $status->value, $statuses);
-            $query->whereIn('status', $statusValues);
+            $query->whereIn($this->qualifyMessageQueueColumn('status', $excludeDeletedTopics), $statusValues);
         }
 
         // Get total count
         $total = $query->count();
 
         // Apply ordering and pagination
-        $query->orderBy($orderBy, $order);
+        $query->orderBy($this->qualifyMessageQueueColumn($orderBy, $excludeDeletedTopics), $order);
 
         if ($needPagination) {
             $offset = ($page - 1) * $pageSize;
@@ -234,27 +248,71 @@ class MessageQueueRepository implements MessageQueueRepositoryInterface
             ->toArray();
 
         // Main query: PENDING messages whose expected execution time has arrived.
+        // Join topics to avoid soft-deleted historical topics starving the compensation batch.
         $query = $this->model::query()
-            ->select('topic_id')
+            ->from($this->model->getTable() . ' as mq')
+            ->select('mq.topic_id')
             ->distinct()
-            ->where('status', MessageQueueStatus::PENDING->value)
-            ->where('except_execute_time', '<=', date('Y-m-d H:i:s'))
-            ->whereNull('deleted_at');
+            ->join(self::TOPICS_TABLE . ' as t', 't.id', '=', 'mq.topic_id')
+            ->where('mq.status', MessageQueueStatus::PENDING->value)
+            ->where('mq.except_execute_time', '<=', date('Y-m-d H:i:s'))
+            ->whereNull('mq.deleted_at')
+            ->whereNull('t.deleted_at');
 
         // Exclude topics already being processed
         if (! empty($inProgressTopicIds)) {
-            $query->whereNotIn('topic_id', $inProgressTopicIds);
+            $query->whereNotIn('mq.topic_id', $inProgressTopicIds);
         }
 
         // Apply organization code filter if provided
         if (! empty($organizationCodes)) {
-            $query->whereIn('organization_code', $organizationCodes);
+            $query->whereIn('mq.organization_code', $organizationCodes);
         }
 
-        return $query->orderBy('topic_id')
+        return $query->orderBy('mq.topic_id')
             ->limit($limit)
-            ->pluck('topic_id')
+            ->pluck('mq.topic_id')
             ->toArray();
+    }
+
+    public function cascadeDeleteUnfinishedByTopicIds(array $topicIds, string $reason): int
+    {
+        $topicIds = $this->normalizeIds($topicIds);
+        if (empty($topicIds)) {
+            return 0;
+        }
+
+        $now = date('Y-m-d H:i:s');
+
+        return (int) $this->model::query()
+            ->whereIn('topic_id', $topicIds)
+            ->whereIn('status', $this->getUnfinishedStatusValues())
+            ->whereNull('deleted_at')
+            ->update([
+                'deleted_at' => $now,
+                'updated_at' => $now,
+                'err_message' => $reason,
+            ]);
+    }
+
+    public function cascadeDeleteUnfinishedByProjectIds(array $projectIds, string $reason): int
+    {
+        $projectIds = $this->normalizeIds($projectIds);
+        if (empty($projectIds)) {
+            return 0;
+        }
+
+        $now = date('Y-m-d H:i:s');
+
+        return (int) $this->model::query()
+            ->whereIn('project_id', $projectIds)
+            ->whereIn('status', $this->getUnfinishedStatusValues())
+            ->whereNull('deleted_at')
+            ->update([
+                'deleted_at' => $now,
+                'updated_at' => $now,
+                'err_message' => $reason,
+            ]);
     }
 
     /**
@@ -312,6 +370,43 @@ class MessageQueueRepository implements MessageQueueRepositoryInterface
             ->first();
 
         return $model ? $this->convertToEntity($model) : null;
+    }
+
+    private function qualifyMessageQueueColumn(string $column, bool $withAlias): string
+    {
+        if (! $withAlias || str_contains($column, '.') || str_contains($column, '(')) {
+            return $column;
+        }
+
+        return 'mq.' . $column;
+    }
+
+    /**
+     * @return int[]
+     */
+    private function getUnfinishedStatusValues(): array
+    {
+        return [
+            MessageQueueStatus::PENDING->value,
+            MessageQueueStatus::FAILED->value,
+            MessageQueueStatus::IN_PROGRESS->value,
+        ];
+    }
+
+    /**
+     * @return int[]
+     */
+    private function normalizeIds(array $ids): array
+    {
+        $normalizedIds = [];
+        foreach ($ids as $id) {
+            $id = (int) $id;
+            if ($id > 0 && ! in_array($id, $normalizedIds, true)) {
+                $normalizedIds[] = $id;
+            }
+        }
+
+        return $normalizedIds;
     }
 
     /**

@@ -7,6 +7,7 @@ declare(strict_types=1);
 
 namespace Dtyq\SuperMagic\Tests\Unit\Domain\SuperAgent\Service;
 
+use App\Domain\Contact\Entity\ValueObject\DataIsolation;
 use App\Infrastructure\Util\Locker\LockerInterface;
 use Dtyq\SuperMagic\Domain\SuperAgent\Entity\MessageQueueEntity;
 use Dtyq\SuperMagic\Domain\SuperAgent\Entity\ValueObject\MessageQueueStatus;
@@ -15,6 +16,7 @@ use Dtyq\SuperMagic\Domain\SuperAgent\Service\MessageQueueDomainService;
 use Hyperf\Logger\LoggerFactory;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 
 /**
  * MessageQueueDomainService Compensation Methods Unit Test.
@@ -38,6 +40,7 @@ class MessageQueueDomainServiceTest extends TestCase
         $this->mockRepository = $this->createMock(MessageQueueRepositoryInterface::class);
         $this->mockLocker = $this->createMock(LockerInterface::class);
         $this->mockLoggerFactory = $this->createMock(LoggerFactory::class);
+        $this->mockLoggerFactory->method('get')->willReturn($this->createMock(LoggerInterface::class));
 
         $this->service = new MessageQueueDomainService(
             $this->mockRepository,
@@ -310,6 +313,62 @@ class MessageQueueDomainServiceTest extends TestCase
             ->willReturn(true);
 
         $this->service->updateStatus(3, MessageQueueStatus::FAILED, $longMessage);
+    }
+
+    public function testQueryMessagesExcludesDeletedTopics(): void
+    {
+        $dataIsolation = DataIsolation::simpleMake('org1', 'user1');
+
+        $this->mockRepository->expects($this->once())
+            ->method('getMessagesByStatuses')
+            ->with(
+                [
+                    'topic_id' => 123,
+                    'user_id' => 'user1',
+                    'status' => [
+                        MessageQueueStatus::PENDING->value,
+                        MessageQueueStatus::IN_PROGRESS->value,
+                        MessageQueueStatus::FAILED->value,
+                    ],
+                ],
+                [],
+                true,
+                20,
+                2,
+                'id',
+                'asc',
+                true
+            )
+            ->willReturn(['list' => [], 'total' => 0]);
+
+        $result = $this->service->queryMessages($dataIsolation, ['topic_id' => 123], 2, 20);
+
+        $this->assertSame(['list' => [], 'total' => 0], $result);
+    }
+
+    public function testCascadeDeleteUnfinishedByTopicIdsNormalizesIdsAndTruncatesReason(): void
+    {
+        $longReason = str_repeat('A', 600);
+        $expectedReason = str_repeat('A', 497) . '...';
+
+        $this->mockRepository->expects($this->once())
+            ->method('cascadeDeleteUnfinishedByTopicIds')
+            ->with([123, 456], $expectedReason)
+            ->willReturn(2);
+
+        $result = $this->service->cascadeDeleteUnfinishedByTopicIds(['123', 0, 456, 123], $longReason);
+
+        $this->assertSame(2, $result);
+    }
+
+    public function testCascadeDeleteUnfinishedByProjectIdsIgnoresEmptyIds(): void
+    {
+        $this->mockRepository->expects($this->never())
+            ->method('cascadeDeleteUnfinishedByProjectIds');
+
+        $result = $this->service->cascadeDeleteUnfinishedByProjectIds([], 'Project deleted');
+
+        $this->assertSame(0, $result);
     }
 
     /**

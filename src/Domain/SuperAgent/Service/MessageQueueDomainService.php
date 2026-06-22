@@ -171,7 +171,10 @@ class MessageQueueDomainService
             [],
             true,
             $pageSize,
-            $page
+            $page,
+            'id',
+            'asc',
+            true
         );
     }
 
@@ -247,12 +250,11 @@ class MessageQueueDomainService
         MessageQueueStatus $status,
         ?string $errorMessage = null
     ): bool {
-        // Domain rule: Limit error message length to prevent database issues
-        if ($errorMessage !== null && mb_strlen($errorMessage) > 500) {
-            $errorMessage = mb_substr($errorMessage, 0, 497) . '...';
-        }
-
-        return $this->messageQueueRepository->updateStatus($messageId, $status, $errorMessage);
+        return $this->messageQueueRepository->updateStatus(
+            $messageId,
+            $status,
+            $this->normalizeErrorMessage($errorMessage)
+        );
     }
 
     /**
@@ -318,6 +320,32 @@ class MessageQueueDomainService
         return $this->messageQueueRepository->getCompensationTopics($limit, $organizationCodes);
     }
 
+    public function cascadeDeleteUnfinishedByTopicIds(array $topicIds, string $reason): int
+    {
+        $topicIds = $this->normalizeIds($topicIds);
+        if (empty($topicIds)) {
+            return 0;
+        }
+
+        return $this->messageQueueRepository->cascadeDeleteUnfinishedByTopicIds(
+            $topicIds,
+            $this->normalizeReason($reason)
+        );
+    }
+
+    public function cascadeDeleteUnfinishedByProjectIds(array $projectIds, string $reason): int
+    {
+        $projectIds = $this->normalizeIds($projectIds);
+        if (empty($projectIds)) {
+            return 0;
+        }
+
+        return $this->messageQueueRepository->cascadeDeleteUnfinishedByProjectIds(
+            $projectIds,
+            $this->normalizeReason($reason)
+        );
+    }
+
     /**
      * Get earliest pending message for specific topic.
      * 获取指定话题的最早待处理消息.
@@ -354,12 +382,48 @@ class MessageQueueDomainService
      */
     public function updateStatus(int $messageId, MessageQueueStatus $status, ?string $errorMessage = null): bool
     {
-        // Domain rule: Limit error message length to prevent database issues
-        if ($errorMessage !== null && mb_strlen($errorMessage) > 500) {
-            $errorMessage = mb_substr($errorMessage, 0, 497) . '...';
+        return $this->messageQueueRepository->updateStatus(
+            $messageId,
+            $status,
+            $this->normalizeErrorMessage($errorMessage)
+        );
+    }
+
+    /**
+     * @return int[]
+     */
+    private function normalizeIds(array $ids): array
+    {
+        $normalizedIds = [];
+        foreach ($ids as $id) {
+            $id = (int) $id;
+            if ($id > 0 && ! in_array($id, $normalizedIds, true)) {
+                $normalizedIds[] = $id;
+            }
         }
 
-        return $this->messageQueueRepository->updateStatus($messageId, $status, $errorMessage);
+        return $normalizedIds;
+    }
+
+    /**
+     * Domain rule: Limit error message length to prevent database issues.
+     */
+    private function normalizeErrorMessage(?string $errorMessage): ?string
+    {
+        if ($errorMessage !== null && mb_strlen($errorMessage) > 500) {
+            return mb_substr($errorMessage, 0, 497) . '...';
+        }
+
+        return $errorMessage;
+    }
+
+    private function normalizeReason(string $reason): string
+    {
+        if (mb_strlen($reason) > 500) {
+            return mb_substr($reason, 0, 497) . '...';
+        }
+
+        return $reason;
     }
 
     /**

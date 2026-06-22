@@ -59,6 +59,7 @@ interface MessageQueueRepositoryInterface
      * @param bool $needPagination Whether to use pagination
      * @param int $pageSize Page size
      * @param int $page Page number
+     * @param bool $excludeDeletedTopics Whether to exclude queues under soft-deleted topics
      * @return array{list: MessageQueueEntity[], total: int}
      */
     public function getMessagesByStatuses(
@@ -68,7 +69,8 @@ interface MessageQueueRepositoryInterface
         int $pageSize = 10,
         int $page = 1,
         string $orderBy = 'id',
-        string $order = 'asc'
+        string $order = 'asc',
+        bool $excludeDeletedTopics = false
     ): array;
 
     /**
@@ -90,6 +92,22 @@ interface MessageQueueRepositoryInterface
      * @return array Array of topic IDs
      */
     public function getCompensationTopics(int $limit, array $organizationCodes = []): array;
+
+    /**
+     * Soft delete unfinished queues by topic IDs.
+     *
+     * @param int[] $topicIds
+     * @return int affected rows
+     */
+    public function cascadeDeleteUnfinishedByTopicIds(array $topicIds, string $reason): int;
+
+    /**
+     * Soft delete unfinished queues by project IDs.
+     *
+     * @param int[] $projectIds
+     * @return int affected rows
+     */
+    public function cascadeDeleteUnfinishedByProjectIds(array $projectIds, string $reason): int;
 
     /**
      * Get earliest pending message for specific topic.
