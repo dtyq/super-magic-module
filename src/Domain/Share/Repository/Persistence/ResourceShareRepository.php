@@ -239,6 +239,7 @@ class ResourceShareRepository extends AbstractRepository implements ResourceShar
         if ($queryVO->getProjectId() !== null) {
             $query->where('magic_resource_shares.project_id', $queryVO->getProjectId());
         }
+        $this->applyProjectModeFilter($query, $queryVO);
 
         // 话题类型特殊处理：不返回已取消的分享
         $resourceTypes = $queryVO->getResourceTypes();
@@ -751,6 +752,7 @@ class ResourceShareRepository extends AbstractRepository implements ResourceShar
         if ($queryVO->getProjectId() !== null) {
             $countQuery->where('magic_resource_shares.project_id', $queryVO->getProjectId());
         }
+        $this->applyProjectModeFilter($countQuery, $queryVO);
 
         // 话题类型特殊处理：不返回已取消的分享
         $resourceTypes = $queryVO->getResourceTypes();
@@ -887,5 +889,32 @@ class ResourceShareRepository extends AbstractRepository implements ResourceShar
                 }
             });
         }
+    }
+
+    private function applyProjectModeFilter(Builder $query, ResourceShareQueryVO $queryVO): void
+    {
+        $projectModes = $queryVO->getProjectModes();
+        if (empty($projectModes)) {
+            return;
+        }
+
+        $query->where(function ($modeQuery) use ($projectModes) {
+            $modeQuery->whereExists(function ($projectQuery) use ($projectModes) {
+                $projectQuery->selectRaw('1')
+                    ->from('magic_super_agent_project as p')
+                    ->whereColumn('magic_resource_shares.project_id', 'p.id')
+                    ->whereNull('p.deleted_at')
+                    ->whereIn('p.project_mode', $projectModes);
+            })->orWhereExists(function ($topicProjectQuery) use ($projectModes) {
+                $topicProjectQuery->selectRaw('1')
+                    ->from('magic_super_agent_topics as t')
+                    ->join('magic_super_agent_project as p', 't.project_id', '=', 'p.id')
+                    ->where('magic_resource_shares.resource_type', ResourceType::Topic->value)
+                    ->whereColumn('magic_resource_shares.resource_id', 't.id')
+                    ->whereNull('t.deleted_at')
+                    ->whereNull('p.deleted_at')
+                    ->whereIn('p.project_mode', $projectModes);
+            });
+        });
     }
 }

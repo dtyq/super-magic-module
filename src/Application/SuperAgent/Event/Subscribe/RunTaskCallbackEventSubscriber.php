@@ -193,6 +193,7 @@ class RunTaskCallbackEventSubscriber implements ListenerInterface
                     'workspace_name' => $workspaceName,
                     'project_id' => (string) $topicEntity->getProjectId(),
                     'project_name' => $projectName,
+                    'project_mode' => $projectEntity->getProjectMode(),
                     'topic_id' => (string) $topicEntity->getId(),
                     'organization_code' => $event->getOrganizationCode(),
                     'success' => $taskStatus === TaskStatus::FINISHED,

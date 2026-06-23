@@ -652,6 +652,9 @@ class ResourceShareAppService extends AbstractShareAppService
         if ($dto->getProjectId() !== null) {
             $conditions['project_id'] = $dto->getProjectId();
         }
+        if (! empty($dto->getProjectModes())) {
+            $conditions['project_mode'] = $dto->getProjectModes();
+        }
 
         $result = $this->shareDomainService->getShareList($dto->getPage(), $dto->getPageSize(), $conditions);
 

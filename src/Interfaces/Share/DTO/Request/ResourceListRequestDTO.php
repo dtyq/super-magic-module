@@ -9,6 +9,7 @@ namespace Dtyq\SuperMagic\Interfaces\Share\DTO\Request;
 
 use App\Infrastructure\Core\AbstractDTO;
 use Dtyq\SuperMagic\Domain\Share\Constant\ShareFilterType;
+use Dtyq\SuperMagic\Domain\SuperAgent\Entity\ValueObject\ProjectMode;
 use Hyperf\HttpServer\Contract\RequestInterface;
 use Hyperf\Validation\Contract\ValidatorFactoryInterface;
 use Hyperf\Validation\ValidationException;
@@ -47,6 +48,12 @@ class ResourceListRequestDTO extends AbstractDTO
     public ?int $projectId = null;
 
     /**
+     * Project mode for filtering.
+     * @var array<string>
+     */
+    public array $projectModes = [];
+
+    /**
      * 是否分享整个项目（前端传递的字段）.
      *
      * 注意：后端处理逻辑：
@@ -71,6 +78,14 @@ class ResourceListRequestDTO extends AbstractDTO
         // 在验证前统一处理 resource_type：如果是单个整数，转换为数组
         if (isset($data['resource_type']) && ! is_array($data['resource_type'])) {
             $data['resource_type'] = [$data['resource_type']];
+        }
+
+        if (array_key_exists('project_mode', $data)) {
+            if ($data['project_mode'] === '' || $data['project_mode'] === null) {
+                unset($data['project_mode']);
+            } elseif (! is_array($data['project_mode'])) {
+                $data['project_mode'] = [$data['project_mode']];
+            }
         }
 
         // 参数验证
@@ -100,6 +115,11 @@ class ResourceListRequestDTO extends AbstractDTO
         $dto->projectId = (isset($validated['project_id']) && $validated['project_id'] !== '')
             ? (int) $validated['project_id']
             : null;
+
+        $dto->projectModes = array_values(array_unique(array_map(
+            static fn ($projectMode) => (string) $projectMode,
+            $validated['project_mode'] ?? []
+        )));
 
         // 处理 share_project：空字符串或不传时为 null（查询全部），有值时转为 bool
         if (isset($validated['share_project']) && $validated['share_project'] !== '') {
@@ -240,6 +260,15 @@ class ResourceListRequestDTO extends AbstractDTO
     }
 
     /**
+     * Get project modes.
+     * @return array<string>
+     */
+    public function getProjectModes(): array
+    {
+        return $this->projectModes;
+    }
+
+    /**
      * 获取是否分享整个项目.
      */
     public function getShareProject(): ?bool
@@ -278,6 +307,8 @@ class ResourceListRequestDTO extends AbstractDTO
      */
     public function rules(): array
     {
+        $projectModes = implode(',', ProjectMode::getAllModes());
+
         return [
             'page' => 'integer|min:1',
             'page_size' => 'integer|min:1|max:100',
@@ -285,6 +316,8 @@ class ResourceListRequestDTO extends AbstractDTO
             'resource_type' => 'required|array', // 必须是数组
             'resource_type.*' => 'required|integer|min:1', // 数组元素必须是整数且 >= 1
             'project_id' => 'nullable', // 允许空字符串、null 或有效整数
+            'project_mode' => 'nullable|array',
+            'project_mode.*' => 'required|string|in:' . $projectModes,
             'share_project' => 'nullable|boolean', // 是否分享整个项目
             'filter_type' => 'nullable|string|in:all,active,expired,cancelled', // 过滤类型
         ];
@@ -309,6 +342,8 @@ class ResourceListRequestDTO extends AbstractDTO
             'resource_type.*.min' => '资源类型最小为1',
             'project_id.integer' => 'Project ID must be an integer',
             'project_id.min' => 'Project ID must be at least 1',
+            'project_mode.array' => '项目模式必须是数组或字符串',
+            'project_mode.*.in' => '项目模式不合法',
             'filter_type.in' => '过滤类型必须是 all、active、expired 或 cancelled 之一',
         ];
     }
@@ -324,6 +359,7 @@ class ResourceListRequestDTO extends AbstractDTO
             'keyword' => '搜索关键词',
             'resource_type' => '资源类型',
             'project_id' => 'Project ID',
+            'project_mode' => '项目模式',
             'share_project' => '是否分享整个项目',
             'filter_type' => '过滤类型',
         ];

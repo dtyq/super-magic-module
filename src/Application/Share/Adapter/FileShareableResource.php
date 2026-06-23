@@ -58,6 +58,7 @@ class FileShareableResource implements ResourceFactoryInterface
                 // 如果文件集为空，返回空结构
                 return [
                     'project_id' => '',
+                    'project_mode' => '',
                     'project_name' => '',
                     'extended' => [],
                 ];
@@ -71,6 +72,7 @@ class FileShareableResource implements ResourceFactoryInterface
             if (empty($fileEntities)) {
                 return [
                     'project_id' => '',
+                    'project_mode' => '',
                     'project_name' => '',
                     'extended' => [],
                 ];
@@ -83,6 +85,7 @@ class FileShareableResource implements ResourceFactoryInterface
             if ($projectId === 0) {
                 return [
                     'project_id' => '',
+                    'project_mode' => '',
                     'project_name' => '',
                     'extended' => [],
                 ];
@@ -101,6 +104,7 @@ class FileShareableResource implements ResourceFactoryInterface
             // 返回和项目类型一样的数据结构
             return [
                 'project_id' => (string) $projectEntity->getId(),
+                'project_mode' => $projectEntity->getProjectMode() ?? '',
                 'project_name' => $projectEntity->getProjectName(),
                 'extended' => [
                     'description' => $projectEntity->getProjectDescription(),
@@ -112,6 +116,7 @@ class FileShareableResource implements ResourceFactoryInterface
             $this->logger->error('Failed to get file content: ' . $e->getMessage());
             return [
                 'project_id' => '',
+                'project_mode' => '',
                 'project_name' => '',
                 'extended' => [],
             ];

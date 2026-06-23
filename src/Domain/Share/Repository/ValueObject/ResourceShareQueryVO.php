@@ -22,6 +22,7 @@ class ResourceShareQueryVO
      * @param null|string $keyword 搜索关键词（用于特殊搜索逻辑）
      * @param null|int $projectId Project ID for filtering
      * @param null|bool $shareProject 是否分享整个项目
+     * @param array<string> $projectModes Project modes for filtering
      * @param string $filterType 过滤类型（all=全部, active=分享中, expired=已失效, cancelled=已取消）
      */
     public function __construct(
@@ -30,6 +31,7 @@ class ResourceShareQueryVO
         private ?string $keyword = null,
         private ?int $projectId = null,
         private ?bool $shareProject = null,
+        private array $projectModes = [],
         private string $filterType = ShareFilterType::All->value,
     ) {
     }
@@ -104,6 +106,15 @@ class ResourceShareQueryVO
     }
 
     /**
+     * Get project modes.
+     * @return array<string>
+     */
+    public function getProjectModes(): array
+    {
+        return $this->projectModes;
+    }
+
+    /**
      * 获取过滤类型.
      */
     public function getFilterType(): string
@@ -128,12 +139,26 @@ class ResourceShareQueryVO
             }
         }
 
+        $projectModes = [];
+        if (isset($data['project_mode'])) {
+            $projectMode = $data['project_mode'];
+            if (is_array($projectMode)) {
+                $projectModes = array_values(array_unique(array_filter(
+                    array_map(static fn ($mode) => (string) $mode, $projectMode),
+                    static fn (string $mode) => $mode !== ''
+                )));
+            } elseif ($projectMode !== '') {
+                $projectModes = [(string) $projectMode];
+            }
+        }
+
         return new self(
             createdUid: $data['created_uid'] ?? null,
             resourceType: $resourceType,
             keyword: $data['keyword'] ?? null,
             projectId: isset($data['project_id']) ? (int) $data['project_id'] : null,
             shareProject: isset($data['share_project']) ? (bool) $data['share_project'] : null,
+            projectModes: $projectModes,
             filterType: $data['filter_type'] ?? ShareFilterType::All->value,
         );
     }
