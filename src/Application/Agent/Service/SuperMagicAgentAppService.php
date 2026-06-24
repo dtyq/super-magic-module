@@ -68,6 +68,7 @@ use Dtyq\SuperMagic\Domain\SuperAgent\Service\TopicDomainService;
 use Dtyq\SuperMagic\ErrorCode\SuperAgentErrorCode;
 use Dtyq\SuperMagic\ErrorCode\SuperMagicErrorCode;
 use Dtyq\SuperMagic\Infrastructure\Utils\WorkDirectoryUtil;
+use Dtyq\SuperMagic\Interfaces\Agent\DTO\Request\GetMyAvailableAgentsRequestDTO;
 use Dtyq\SuperMagic\Interfaces\Agent\DTO\Request\PublishAgentRequestDTO;
 use Dtyq\SuperMagic\Interfaces\Agent\DTO\Request\QueryAgentsRequestDTO;
 use Dtyq\SuperMagic\Interfaces\Agent\DTO\Request\QueryAgentVersionsRequestDTO;
@@ -491,6 +492,52 @@ class SuperMagicAgentAppService extends AbstractSuperMagicAppService
         $queryCodes = array_values(array_unique(array_merge($marketCodes, $officialCodes)));
 
         return $this->queryPublishedVisibleAgentsByCodes($dataIsolation, $requestDTO, $queryCodes, true);
+    }
+
+    /**
+     * 获取当前用户可用的已发布员工列表.
+     *
+     * @return array{total: int, list: array<int, array{code: string, name: string, description: string}>}
+     */
+    public function getMyAvailableAgents(Authenticatable $authorization, GetMyAvailableAgentsRequestDTO $requestDTO): array
+    {
+        $dataIsolation = $this->createSuperMagicDataIsolation($authorization);
+        $availableCodes = $this->getAccessibleAgentCodes($dataIsolation, $authorization->getId())['codes'];
+        if ($availableCodes === []) {
+            return [
+                'total' => 0,
+                'list' => [],
+            ];
+        }
+
+        $language = $dataIsolation->getLanguage() ?: LanguageEnum::ZH_CN->value;
+        $versionQuery = new AgentVersionQuery();
+        $versionQuery->setCodes($availableCodes);
+        $versionQuery->setPublishedOnly(true);
+        $versionQuery->setIsCurrentVersions(true);
+        $versionQuery->setLanguageCode($language);
+        $versionQuery->setKeywords($requestDTO->getKeywords());
+
+        $dataIsolation->disabled();
+        $result = $this->superMagicAgentVersionDomainService->queries(
+            $dataIsolation,
+            $versionQuery,
+            new Page($requestDTO->getPage(), $requestDTO->getPageSize())
+        );
+
+        $list = array_map(
+            static fn (AgentVersionEntity $version): array => [
+                'code' => $version->getCode(),
+                'name' => $version->getI18nName($language),
+                'description' => $version->getI18nDescription($language),
+            ],
+            $result['list']
+        );
+
+        return [
+            'total' => $result['total'],
+            'list' => $list,
+        ];
     }
 
     /**

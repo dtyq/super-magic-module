@@ -16,6 +16,11 @@ class AgentVersionQuery extends AbstractQuery
 {
     protected ?string $keyword = null;
 
+    /**
+     * @var null|array<int, string>
+     */
+    protected ?array $keywords = null;
+
     protected ?string $languageCode = null;
 
     /**
@@ -41,6 +46,40 @@ class AgentVersionQuery extends AbstractQuery
     public function setKeyword(?string $keyword): self
     {
         $this->keyword = $keyword;
+        return $this;
+    }
+
+    /**
+     * @return null|array<int, string>
+     */
+    public function getKeywords(): ?array
+    {
+        return $this->keywords;
+    }
+
+    /**
+     * @param null|array<int, string> $keywords
+     */
+    public function setKeywords(?array $keywords): self
+    {
+        if ($keywords === null) {
+            $this->keywords = null;
+            return $this;
+        }
+
+        $normalized = [];
+        foreach ($keywords as $keyword) {
+            if (! is_string($keyword)) {
+                continue;
+            }
+            $keyword = trim($keyword);
+            if ($keyword === '' || in_array($keyword, $normalized, true)) {
+                continue;
+            }
+            $normalized[] = $keyword;
+        }
+
+        $this->keywords = $normalized;
         return $this;
     }
 

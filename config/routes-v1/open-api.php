@@ -6,6 +6,7 @@ declare(strict_types=1);
  */
 use App\Interfaces\Middleware\Auth\ApiKeyMiddleware;
 use App\Interfaces\Middleware\Auth\SandboxUserAuthMiddleware;
+use Dtyq\SuperMagic\Interfaces\Agent\Facade\OpenApi\OpenSuperMagicAgentApi;
 use Dtyq\SuperMagic\Interfaces\Agent\Facade\Sandbox\SkillSandboxApi;
 use Dtyq\SuperMagic\Interfaces\Agent\Facade\Sandbox\SuperMagicAgentSandboxApi;
 use Dtyq\SuperMagic\Interfaces\Share\Facade\ShareApi;
@@ -87,6 +88,8 @@ Router::addGroup(
     '/api/v1/open-api/sandbox',
     static function () {
         Router::addGroup('/agents', static function () {
+            // 获取当前用户可用的员工列表
+            Router::post('/me/available', [OpenSuperMagicAgentApi::class, 'getMyAvailableAgents']);
             Router::post('/tool-execute', [SuperMagicAgentSandboxApi::class, 'executeTool']);
             Router::post('/agent-execute', [SuperMagicAgentSandboxApi::class, 'executeAgent']);
             Router::get('/{code}/latest-version', [SuperMagicAgentSandboxApi::class, 'showLatestVersion']);

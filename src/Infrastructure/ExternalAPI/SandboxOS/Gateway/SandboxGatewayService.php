@@ -1061,9 +1061,9 @@ class SandboxGatewayService extends AbstractSandboxOS implements SandboxGatewayI
         $requestId = CoContext::getRequestId() ?: (string) IdGenerator::getSnowId();
 
         return [
-            'Content-Type'      => 'application/json',
+            'Content-Type' => 'application/json',
             'Sandbox-Gateway-Token' => $this->getToken(),
-            'request-id'            => $requestId,
+            'request-id' => $requestId,
         ];
     }
 

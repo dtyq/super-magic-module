@@ -146,6 +146,7 @@ class AgentVersionRepository extends SuperMagicAbstractRepository implements Age
         }
 
         $keyword = trim((string) ($query->getKeyword() ?? ''));
+        $keywords = $query->getKeywords() ?? [];
         $languageCode = $query->getLanguageCode() ?: 'en_US';
         $isCurrentVersions = $query->getIsCurrentVersions() ?? true;
         $publishedOnly = $query->getPublishedOnly() ?? false;
@@ -159,7 +160,9 @@ class AgentVersionRepository extends SuperMagicAbstractRepository implements Age
             $builder->where('publish_status', PublishStatus::PUBLISHED->value);
         }
 
-        if ($keyword !== '') {
+        if ($keywords !== []) {
+            $this->applyVersionKeywordsSearch($builder, $keywords);
+        } elseif ($keyword !== '') {
             $this->applyVersionKeywordSearch($builder, $keyword, $languageCode);
         }
 
@@ -467,6 +470,27 @@ class AgentVersionRepository extends SuperMagicAbstractRepository implements Age
         $builder->where(function ($q) use ($conditions): void {
             foreach ($conditions as $i => [$sql, $bindings]) {
                 $i === 0 ? $q->whereRaw($sql, $bindings) : $q->orWhereRaw($sql, $bindings);
+            }
+        });
+    }
+
+    /**
+     * 在 name_i18n、description_i18n 上按多个关键词做 OR 搜索.
+     *
+     * @param array<int, string> $keywords
+     */
+    protected function applyVersionKeywordsSearch(Builder $builder, array $keywords): void
+    {
+        $builder->where(function ($query) use ($keywords): void {
+            foreach ($keywords as $index => $keyword) {
+                $likePattern = '%' . $keyword . '%';
+                $callback = static function ($keywordQuery) use ($likePattern): void {
+                    $keywordQuery
+                        ->where('name_i18n', 'like', $likePattern)
+                        ->orWhere('description_i18n', 'like', $likePattern);
+                };
+
+                $index === 0 ? $query->where($callback) : $query->orWhere($callback);
             }
         });
     }
