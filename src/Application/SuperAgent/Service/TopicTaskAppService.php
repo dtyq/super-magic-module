@@ -40,6 +40,7 @@ use Dtyq\SuperMagic\Domain\SuperAgent\Entity\TopicEntity;
 use Dtyq\SuperMagic\Domain\SuperAgent\Entity\ValueObject\AskUserStatus;
 use Dtyq\SuperMagic\Domain\SuperAgent\Entity\ValueObject\MessageType;
 use Dtyq\SuperMagic\Domain\SuperAgent\Entity\ValueObject\StorageType;
+use Dtyq\SuperMagic\Domain\SuperAgent\Entity\ValueObject\SuperMagicExecutionSource;
 use Dtyq\SuperMagic\Domain\SuperAgent\Entity\ValueObject\TaskStatus;
 use Dtyq\SuperMagic\Domain\SuperAgent\Event\RunTaskAfterEvent;
 use Dtyq\SuperMagic\Domain\SuperAgent\Event\RunTaskBeforeEvent;
@@ -673,14 +674,21 @@ class TopicTaskAppService extends AbstractAppService
      * @param CreateTaskRequestDTO $requestDTO Request DTO
      * @return array Task creation result
      */
-    public function createTask(RequestContext $requestContext, CreateTaskRequestDTO $requestDTO): array
-    {
+    public function createTask(
+        RequestContext $requestContext,
+        CreateTaskRequestDTO $requestDTO,
+        SuperMagicExecutionSource $executionSource = SuperMagicExecutionSource::HumanChat
+    ): array {
         $userAuthorization = $requestContext->getUserAuthorization();
         $dataIsolation = DataIsolation::create(
             $userAuthorization->getOrganizationCode(),
             $userAuthorization->getId()
         );
-        $result = $this->createTaskByDataIsolation($dataIsolation, $requestDTO);
+        $result = $this->createTaskByDataIsolation(
+            $dataIsolation,
+            $requestDTO,
+            executionSource: $executionSource
+        );
 
         return [
             'task_id' => $result['task_id'],
@@ -696,7 +704,13 @@ class TopicTaskAppService extends AbstractAppService
         CreateTaskRequestDTO $requestDTO,
         array $source
     ): array {
-        return $this->createTaskByDataIsolation($dataIsolation, $requestDTO, $source, deliverToQueue: false);
+        return $this->createTaskByDataIsolation(
+            $dataIsolation,
+            $requestDTO,
+            $source,
+            deliverToQueue: false,
+            executionSource: $this->resolveIngestExecutionSource($source)
+        );
     }
 
     /**
@@ -872,9 +886,13 @@ class TopicTaskAppService extends AbstractAppService
         DataIsolation $dataIsolation,
         CreateTaskRequestDTO $requestDTO,
         ?array $source = null,
-        bool $deliverToQueue = true
+        bool $deliverToQueue = true,
+        ?SuperMagicExecutionSource $executionSource = null
     ): array {
         $preparedRequestDTO = $this->createTaskRequestDTOWithSource($requestDTO, $source);
+        if ($executionSource !== null) {
+            $preparedRequestDTO = $this->createTaskRequestDTOWithExecutionSource($preparedRequestDTO, $executionSource);
+        }
 
         $topicId = 0;
         $taskId = '';
@@ -1561,6 +1579,31 @@ class TopicTaskAppService extends AbstractAppService
             'message_type' => $requestDTO->getMessageType(),
             'message_content' => $messageContent,
         ]);
+    }
+
+    private function createTaskRequestDTOWithExecutionSource(
+        CreateTaskRequestDTO $requestDTO,
+        SuperMagicExecutionSource $executionSource
+    ): CreateTaskRequestDTO {
+        return new CreateTaskRequestDTO([
+            'project_id' => $requestDTO->getProjectId(),
+            'topic_id' => $requestDTO->getTopicId(),
+            'message_type' => $requestDTO->getMessageType(),
+            'message_content' => SuperMagicExecutionSource::stampMessageContent(
+                $requestDTO->getMessageContent(),
+                $executionSource
+            ),
+        ]);
+    }
+
+    private function resolveIngestExecutionSource(array $source): SuperMagicExecutionSource
+    {
+        $channel = strtolower(trim((string) ($source['channel'] ?? '')));
+        if (in_array($channel, ['webhook', 'web_hook'], true)) {
+            return SuperMagicExecutionSource::Webhook;
+        }
+
+        return SuperMagicExecutionSource::ThirdPartyIm;
     }
 
     private function resolveUserMessageId(?array $source = null): string

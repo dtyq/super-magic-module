@@ -247,6 +247,7 @@ class TaskInitializationConsumer extends ConsumerMessage
         );
         $mcpConfig = $this->projectMcpConfigService->buildForTask($mcpDataIsolation, $taskContext);
         $taskContext = $taskContext->setMcpConfig($mcpConfig);
+        $taskContext = $this->appendDynamicParamsToDynamicConfig($taskContext, $extra);
 
         // Create and initialize sandbox with interrupt support
         $sandboxId = $this->createAndInitializeSandbox(
@@ -281,6 +282,17 @@ class TaskInitializationConsumer extends ConsumerMessage
                 : null,
         ], static fn (mixed $value): bool => $value !== null);
 
+        return $taskContext->setDynamicConfig($dynamicConfig);
+    }
+
+    private function appendDynamicParamsToDynamicConfig(TaskContext $taskContext, ?SuperAgentExtra $extra): TaskContext
+    {
+        $dynamicParams = $extra?->getDynamicParams();
+        if (empty($dynamicParams)) {
+            return $taskContext;
+        }
+
+        $dynamicConfig = array_merge($taskContext->getDynamicConfig(), $dynamicParams);
         return $taskContext->setDynamicConfig($dynamicConfig);
     }
 

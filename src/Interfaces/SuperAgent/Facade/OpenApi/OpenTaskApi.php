@@ -24,6 +24,7 @@ use Dtyq\SuperMagic\Application\SuperAgent\Service\TopicTaskAppService;
 use Dtyq\SuperMagic\Application\SuperAgent\Service\WorkspaceAppService;
 use Dtyq\SuperMagic\Domain\Share\Constant\ResourceType;
 use Dtyq\SuperMagic\Domain\Share\Constant\ShareAccessType;
+use Dtyq\SuperMagic\Domain\SuperAgent\Entity\ValueObject\SuperMagicExecutionSource;
 use Dtyq\SuperMagic\Domain\SuperAgent\Entity\ValueObject\TaskStatus;
 use Dtyq\SuperMagic\Domain\SuperAgent\Service\UserDomainService;
 use Dtyq\SuperMagic\ErrorCode\SuperAgentErrorCode;
@@ -140,7 +141,11 @@ class OpenTaskApi extends AbstractApi
 
         $taskDTO = new CreateTaskRequestDTO($taskRequestData);
 
-        return $this->topicTaskAppService->createTask($requestContext, $taskDTO);
+        return $this->topicTaskAppService->createTask(
+            $requestContext,
+            $taskDTO,
+            SuperMagicExecutionSource::OpenApi
+        );
     }
 
     /**
@@ -316,7 +321,11 @@ class OpenTaskApi extends AbstractApi
         $taskDTO = new CreateTaskRequestDTO($taskRequestData);
 
         // 7. Call application service with converted DTO
-        return $this->topicTaskAppService->createTask($requestContext, $taskDTO);
+        return $this->topicTaskAppService->createTask(
+            $requestContext,
+            $taskDTO,
+            SuperMagicExecutionSource::OpenApi
+        );
     }
 
     /**

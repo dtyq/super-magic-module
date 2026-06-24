@@ -22,6 +22,7 @@ use Dtyq\SuperMagic\Application\SuperAgent\Service\TopicAppService;
 use Dtyq\SuperMagic\Application\SuperAgent\Service\TopicTaskAppService;
 use Dtyq\SuperMagic\Application\SuperAgent\Service\WorkspaceAppService;
 use Dtyq\SuperMagic\Domain\SuperAgent\Constant\ConvertStatusEnum;
+use Dtyq\SuperMagic\Domain\SuperAgent\Entity\ValueObject\SuperMagicExecutionSource;
 use Dtyq\SuperMagic\Domain\SuperAgent\Service\UserDomainService;
 use Dtyq\SuperMagic\ErrorCode\SuperAgentErrorCode;
 use Dtyq\SuperMagic\Interfaces\SuperAgent\DTO\Request\ConvertFilesRequestDTO;
@@ -242,7 +243,11 @@ class TaskApi extends AbstractApi
         $requestContext->setUserAuthorization($this->getAuthorization());
         $requestDTO = CreateTaskRequestDTO::fromRequest($this->request);
 
-        return $this->topicTaskAppService->createTask($requestContext, $requestDTO);
+        return $this->topicTaskAppService->createTask(
+            $requestContext,
+            $requestDTO,
+            SuperMagicExecutionSource::HumanChat
+        );
     }
 
     /**

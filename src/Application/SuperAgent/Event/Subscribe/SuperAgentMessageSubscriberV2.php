@@ -25,6 +25,7 @@ use App\Interfaces\Chat\Assembler\SeqAssembler;
 use Dtyq\SuperMagic\Application\SuperAgent\DTO\UserMessageDTO;
 use Dtyq\SuperMagic\Application\SuperAgent\Service\HandleUserMessageAppService;
 use Dtyq\SuperMagic\Domain\SuperAgent\Entity\ValueObject\ChatInstruction;
+use Dtyq\SuperMagic\Domain\SuperAgent\Entity\ValueObject\SuperMagicExecutionSource;
 use Dtyq\SuperMagic\Domain\SuperAgent\Entity\ValueObject\TaskMode;
 use Hyperf\Logger\LoggerFactory;
 use Psr\Log\LoggerInterface;
@@ -172,7 +173,10 @@ class SuperAgentMessageSubscriberV2 extends MagicAgentEventAppService
             $topicMode = $superAgentExtra?->getTopicPattern() ?? 'general';
 
             // Extract dynamic params from super agent extra (if present)
-            $dynamicParams = $superAgentExtra?->getDynamicParams();
+            $dynamicParams = SuperMagicExecutionSource::ensureDynamicParams(
+                $superAgentExtra?->getDynamicParams(),
+                SuperMagicExecutionSource::HumanChat
+            );
 
             // Create user message DTO
             $userMessageDTO = new UserMessageDTO(
