@@ -37,6 +37,7 @@ use Dtyq\SuperMagic\Domain\SuperAgent\Service\TaskFileVersionDomainService;
 use Dtyq\SuperMagic\Domain\SuperAgent\Service\TopicDomainService;
 use Dtyq\SuperMagic\Domain\SuperAgent\Service\WorkspaceDomainService;
 use Dtyq\SuperMagic\ErrorCode\SuperAgentErrorCode;
+use Dtyq\SuperMagic\Infrastructure\Utils\RelativeFilePathUtil;
 use Dtyq\SuperMagic\Infrastructure\Utils\WorkDirectoryUtil;
 use Dtyq\SuperMagic\Interfaces\SuperAgent\DTO\Request\BatchSaveFileContentRequestDTO;
 use Dtyq\SuperMagic\Interfaces\SuperAgent\DTO\Request\RefreshStsTokenRequestDTO;
@@ -932,7 +933,7 @@ class FileProcessAppService extends AbstractAppService
 
         // Validate project access permission
         $userAuthorization = $requestContext->getUserAuthorization();
-        $this->getAccessibleProject(
+        $projectEntity = $this->getAccessibleProject(
             $taskFileEntity->getProjectId(),
             $userAuthorization->getId(),
             $userAuthorization->getOrganizationCode()
@@ -945,9 +946,22 @@ class FileProcessAppService extends AbstractAppService
         $responseDTO = new FileInfoResponseDTO(
             $taskFileEntity->getFileName(),
             $currentVersion,
-            $taskFileEntity->getOrganizationCode()
+            $taskFileEntity->getOrganizationCode(),
+            $this->buildRelativeFilePathForEntity($taskFileEntity, $projectEntity->getId())
         );
         return $responseDTO->toArray();
+    }
+
+    private function buildRelativeFilePathForEntity(TaskFileEntity $entity, int $projectId): string
+    {
+        $filesWithParents = $this->taskFileDomainService->getFilesWithParentsByIds(
+            [$entity->getFileId()],
+            $projectId
+        );
+        $fileMap = RelativeFilePathUtil::indexByFileId($filesWithParents);
+        $fileMap[$entity->getFileId()] = $entity;
+
+        return RelativeFilePathUtil::buildPathByParentChain($entity, $fileMap);
     }
 
     /**

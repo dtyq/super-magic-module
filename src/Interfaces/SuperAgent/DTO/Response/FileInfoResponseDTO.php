@@ -12,7 +12,8 @@ class FileInfoResponseDTO
     public function __construct(
         public readonly string $fileName,
         public readonly int $currentVersion,
-        public readonly string $organizationCode
+        public readonly string $organizationCode,
+        public readonly string $relativeFilePath = ''
     ) {
     }
 
@@ -22,6 +23,7 @@ class FileInfoResponseDTO
             'file_name' => $this->fileName,
             'version' => $this->currentVersion,
             'organization_code' => $this->organizationCode,
+            'relative_file_path' => $this->relativeFilePath,
         ];
     }
 }
