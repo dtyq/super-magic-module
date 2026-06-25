@@ -7,6 +7,7 @@ declare(strict_types=1);
 
 namespace Dtyq\SuperMagic\Application\SuperAgent\Service;
 
+use App\Domain\Contact\Service\MagicUserDomainService;
 use App\ErrorCode\GenericErrorCode;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Interfaces\Authorization\Web\MagicUserAuthorization;
@@ -24,7 +25,8 @@ use Throwable;
 class AccessTokenAuthorizationService
 {
     public function __construct(
-        private readonly ResourceShareDomainService $resourceShareDomainService
+        private readonly ResourceShareDomainService $resourceShareDomainService,
+        private readonly MagicUserDomainService $magicUserDomainService
     ) {
     }
 
@@ -53,12 +55,14 @@ class AccessTokenAuthorizationService
         }
 
         // 3. 创建临时用户授权（基于分享创建者的身份信息）
-        // 注意：这里使用分享创建者的 ID 和组织代码，使匿名用户能以创建者身份访问资源
-        $userAuthorization = new MagicUserAuthorization();
-        $userAuthorization->setId($shareEntity->getCreatedUid());
-        $userAuthorization->setOrganizationCode($shareEntity->getOrganizationCode());
+        // 注意：这里使用分享创建者的身份访问资源，但必须校验组织一致，避免构造跨组织身份。
+        $userEntity = $this->magicUserDomainService->getUserById($shareEntity->getCreatedUid());
+        if ($userEntity === null || $userEntity->getOrganizationCode() !== $shareEntity->getOrganizationCode()) {
+            ExceptionBuilder::throw(GenericErrorCode::AccessDenied, 'task_file.access_denied');
+        }
 
-        return $userAuthorization;
+        return MagicUserAuthorization::fromUserEntity($userEntity)
+            ->setOrganizationCode($shareEntity->getOrganizationCode());
     }
 
     /**
