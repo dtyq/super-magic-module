@@ -502,7 +502,11 @@ class SuperMagicAgentAppService extends AbstractSuperMagicAppService
     public function getMyAvailableAgents(Authenticatable $authorization, GetMyAvailableAgentsRequestDTO $requestDTO): array
     {
         $dataIsolation = $this->createSuperMagicDataIsolation($authorization);
-        $availableCodes = $this->getAccessibleAgentCodes($dataIsolation, $authorization->getId())['codes'];
+        $officialCodes = $this->getOfficialAgentCodes($dataIsolation);
+        $availableCodes = array_values(array_unique(array_merge(
+            $this->getAccessibleAgentCodes($dataIsolation, $authorization->getId())['codes'],
+            $officialCodes
+        )));
         if ($availableCodes === []) {
             return [
                 'total' => 0,
