@@ -638,14 +638,23 @@ class FileBatchMoveSubscriber extends ConsumerMessage
         }
 
         if (! $shouldKeepBoth && $targetFileEntity !== null && $targetFileEntity->getIsDirectory()) {
-            $this->logger->info('Deleting existing target directory before directory move overwrite', [
+            // When the existing target with the same name is also a directory, reuse it
+            // (merge into it) instead of deleting and recreating. This preserves the
+            // target directory's existing children and lets inner file conflicts be
+            // resolved per-file (e.g. keep-both renames source copies to "name(1).ext").
+            // After all children have been moved out, delete the now-empty source directory.
+            // Only delete when all children are being moved (fullMove); for partial moves the
+            // source directory still holds unselected children, so leave it intact.
+            $this->logger->info('Reusing existing target directory for merge move', [
                 'source_id' => $sourceFileId,
                 'existing_id' => $targetFileEntity->getFileId(),
                 'target_parent_id' => $targetParentId,
             ]);
 
-            $this->magicFSFileDomainService->deleteFile((string) $targetFileEntity->getFileId(), true);
-            $targetFileEntity = null;
+            return [
+                'target_dir' => $targetFileEntity,
+                'delete_source_dir_after_children' => $fullMove,
+            ];
         }
 
         if ($fullMove) {

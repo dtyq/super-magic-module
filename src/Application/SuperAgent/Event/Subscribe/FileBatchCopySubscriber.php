@@ -355,6 +355,22 @@ class FileBatchCopySubscriber extends ConsumerMessage
         }
 
         if (! $shouldKeepBoth && $targetFileEntity !== null) {
+            // When the existing target with the same name is also a directory, reuse it
+            // (merge into it) instead of deleting and recreating. This preserves the
+            // target directory's existing children and lets inner file conflicts be
+            // resolved per-file (e.g. keep-both renames source copies to "name(1).ext").
+            if ($targetFileEntity->getIsDirectory()) {
+                $this->logger->info('Reusing existing target directory for merge copy', [
+                    'source_id' => $sourceFileId,
+                    'existing_id' => $targetFileEntity->getFileId(),
+                    'target_parent_id' => $parentId,
+                ]);
+
+                return $targetFileEntity;
+            }
+
+            // Type mismatch: existing target is a file while source is a directory.
+            // Keep the original overwrite behavior by deleting the conflicting file first.
             $this->logger->info('Deleting existing target before directory copy overwrite', [
                 'source_id' => $sourceFileId,
                 'existing_id' => $targetFileEntity->getFileId(),
