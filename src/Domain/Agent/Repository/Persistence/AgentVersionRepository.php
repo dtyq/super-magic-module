@@ -213,6 +213,7 @@ class AgentVersionRepository extends SuperMagicAbstractRepository implements Age
      */
     public function save(SuperMagicAgentDataIsolation $dataIsolation, AgentVersionEntity $entity): AgentVersionEntity
     {
+        $entity->hydrateScalarTextForWrite();
         $attributes = $this->entityToModelAttributes($entity);
 
         if ($entity->getId() && $entity->getId() > 0) {

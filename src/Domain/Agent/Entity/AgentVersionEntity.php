@@ -599,6 +599,12 @@ class AgentVersionEntity extends AbstractEntity
         return $this->name;
     }
 
+    public function hydrateScalarTextForWrite(): void
+    {
+        $this->name = $this->resolveWriteTextFallback($this->name, $this->nameI18n);
+        $this->description = $this->resolveWriteTextFallback($this->description, $this->descriptionI18n);
+    }
+
     public function getI18nDescription(string $language): string
     {
         if (! empty($this->descriptionI18n[$language])) {
@@ -610,5 +616,38 @@ class AgentVersionEntity extends AbstractEntity
         }
 
         return $this->description;
+    }
+
+    private function resolveWriteTextFallback(string $text, ?array $i18n): string
+    {
+        if (trim($text) !== '') {
+            return $text;
+        }
+
+        $i18n = is_array($i18n) ? $i18n : [];
+        foreach ([LanguageEnum::DEFAULT->value, LanguageEnum::ZH_CN->value, LanguageEnum::EN_US->value] as $languageCode) {
+            $value = $this->normalizeI18nTextValue($i18n[$languageCode] ?? null);
+            if ($value !== '') {
+                return $value;
+            }
+        }
+
+        foreach ($i18n as $value) {
+            $value = $this->normalizeI18nTextValue($value);
+            if ($value !== '') {
+                return $value;
+            }
+        }
+
+        return '';
+    }
+
+    private function normalizeI18nTextValue(mixed $value): string
+    {
+        if (is_string($value) || is_numeric($value)) {
+            return trim((string) $value);
+        }
+
+        return '';
     }
 }

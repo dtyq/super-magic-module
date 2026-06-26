@@ -10,7 +10,6 @@ namespace Dtyq\SuperMagic\Domain\Agent\Service;
 use App\Infrastructure\Core\DataIsolation\ValueObject\OrganizationType;
 use App\Infrastructure\Core\Exception\ExceptionBuilder;
 use App\Infrastructure\Core\ValueObject\Page;
-use App\Infrastructure\ExternalAPI\Sms\Enum\LanguageEnum;
 use Dtyq\SuperMagic\Domain\Agent\Entity\AgentMarketEntity;
 use Dtyq\SuperMagic\Domain\Agent\Entity\AgentSkillEntity;
 use Dtyq\SuperMagic\Domain\Agent\Entity\AgentVersionEntity;
@@ -185,20 +184,13 @@ class SuperMagicAgentVersionDomainService
 
         $this->agentVersionRepository->invalidateAwaitingReviewVersionsByCode($dataIsolation, $agentEntity->getCode());
 
-        $nameI18n = $agentEntity->getNameI18n();
-        $name = $nameI18n[LanguageEnum::EN_US->value] ?? ($nameI18n[LanguageEnum::ZH_CN->value] ?? '');
-
-        $descriptionI18n = $agentEntity->getDescriptionI18n();
-        $description = '';
-        if ($descriptionI18n) {
-            $description = $descriptionI18n[LanguageEnum::EN_US->value] ?? ($descriptionI18n[LanguageEnum::ZH_CN->value] ?? '');
-        }
+        $agentEntity->hydrateScalarTextForWrite();
 
         $versionEntity->setCode($agentEntity->getCode());
         $versionEntity->setOrganizationCode($agentEntity->getOrganizationCode());
         $versionEntity->setVersion($version);
-        $versionEntity->setName($name);
-        $versionEntity->setDescription($description);
+        $versionEntity->setName($agentEntity->getName());
+        $versionEntity->setDescription($agentEntity->getDescription());
         $versionEntity->setIcon($agentEntity->getIcon());
         $versionEntity->setIconType($agentEntity->getIconType());
         $versionEntity->setType($agentEntity->getType()->value);

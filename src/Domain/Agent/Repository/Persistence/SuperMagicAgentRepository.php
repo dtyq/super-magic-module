@@ -109,6 +109,8 @@ class SuperMagicAgentRepository extends SuperMagicAbstractRepository implements 
 
     public function save(SuperMagicAgentDataIsolation $dataIsolation, SuperMagicAgentEntity $entity): SuperMagicAgentEntity
     {
+        $entity->hydrateScalarTextForWrite();
+
         if (! $entity->getId()) {
             $model = new SuperMagicAgentModel();
         } else {

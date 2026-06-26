@@ -171,6 +171,7 @@ class SuperMagicAgentEntity extends AbstractEntity
         if (empty($this->organizationCode)) {
             ExceptionBuilder::throw(SuperMagicErrorCode::ValidateFailed, 'common.empty', ['label' => 'organization_code']);
         }
+        $this->hydrateScalarTextForWrite();
         if ($checkPrompt) {
             if (empty($this->name)) {
                 ExceptionBuilder::throw(SuperMagicErrorCode::ValidateFailed, 'common.empty', ['label' => 'super_magic.agent.fields.name']);
@@ -207,7 +208,7 @@ class SuperMagicAgentEntity extends AbstractEntity
         }
         // 如果没有设置 name_i18n，从 name 字段生成
         if (empty($this->nameI18n) && ! empty($this->name)) {
-            $this->nameI18n = ['en' => $this->name];
+            $this->nameI18n = $this->fillPublishI18nValues($this->nameI18n, $this->name);
         }
     }
 
@@ -216,6 +217,7 @@ class SuperMagicAgentEntity extends AbstractEntity
         if (empty($this->organizationCode)) {
             ExceptionBuilder::throw(SuperMagicErrorCode::ValidateFailed, 'common.empty', ['label' => 'organization_code']);
         }
+        $this->hydrateScalarTextForWrite();
         if ($checkPrompt) {
             if (empty($this->name)) {
                 ExceptionBuilder::throw(SuperMagicErrorCode::ValidateFailed, 'common.empty', ['label' => 'super_magic.agent.fields.name']);
@@ -669,6 +671,12 @@ class SuperMagicAgentEntity extends AbstractEntity
         return $this->getPromptString();
     }
 
+    public function hydrateScalarTextForWrite(): void
+    {
+        $this->name = $this->resolveWriteTextFallback($this->name ?? '', $this->nameI18n);
+        $this->description = $this->resolveWriteTextFallback($this->description, $this->descriptionI18n);
+    }
+
     public function hydrateI18nForPublish(): void
     {
         $resolvedName = $this->resolvePublishTextFallback($this->name, $this->nameI18n);
@@ -811,12 +819,42 @@ class SuperMagicAgentEntity extends AbstractEntity
             return $text;
         }
 
+        return $this->resolveI18nTextFallback($i18n);
+    }
+
+    private function resolveWriteTextFallback(string $text, ?array $i18n): string
+    {
+        if (trim($text) !== '') {
+            return $text;
+        }
+
+        return $this->resolveI18nTextFallback($i18n);
+    }
+
+    private function resolveI18nTextFallback(?array $i18n): string
+    {
         $i18n = is_array($i18n) ? $i18n : [];
-        foreach (LanguageEnum::getAllLanguageCodes() as $languageCode) {
-            $value = trim((string) ($i18n[$languageCode] ?? ''));
+        foreach ([LanguageEnum::DEFAULT->value, LanguageEnum::ZH_CN->value, LanguageEnum::EN_US->value] as $languageCode) {
+            $value = $this->normalizeI18nTextValue($i18n[$languageCode] ?? null);
             if ($value !== '') {
                 return $value;
             }
+        }
+
+        foreach ($i18n as $value) {
+            $value = $this->normalizeI18nTextValue($value);
+            if ($value !== '') {
+                return $value;
+            }
+        }
+
+        return '';
+    }
+
+    private function normalizeI18nTextValue(mixed $value): string
+    {
+        if (is_string($value) || is_numeric($value)) {
+            return trim((string) $value);
         }
 
         return '';

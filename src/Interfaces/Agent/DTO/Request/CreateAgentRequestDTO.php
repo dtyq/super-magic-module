@@ -126,11 +126,14 @@ class CreateAgentRequestDTO extends AbstractRequestDTO
     {
         return [
             'name_i18n' => 'nullable|array',
+            'name_i18n.default' => 'nullable|string',
             'name_i18n.en_US' => 'nullable|string',
             'role_i18n' => 'nullable|array',
+            'role_i18n.default' => 'nullable|array',
             'role_i18n.zh_CN' => 'nullable|array',
             'role_i18n.en_US' => 'nullable|array',
             'description_i18n' => 'nullable|array',
+            'description_i18n.default' => 'nullable|string',
             'description_i18n.zh_CN' => 'nullable|string',
             'description_i18n.en_US' => 'nullable|string',
             'icon' => 'nullable|array',
@@ -152,10 +155,13 @@ class CreateAgentRequestDTO extends AbstractRequestDTO
         return [
             'name_i18n.required' => __('super_magic.agent.name_i18n_required'),
             'name_i18n.array' => __('super_magic.agent.name_i18n_must_be_array'),
+            'name_i18n.default.string' => __('super_magic.agent.name_i18n_en_must_be_string'),
             'name_i18n.en_US.required' => __('super_magic.agent.name_i18n_en_required'),
             'name_i18n.en_US.string' => __('super_magic.agent.name_i18n_en_must_be_string'),
             'role_i18n.array' => __('super_magic.agent.role_i18n_must_be_array'),
+            'role_i18n.default.array' => __('super_magic.agent.role_i18n_must_be_array'),
             'description_i18n.array' => __('super_magic.agent.description_i18n_must_be_array'),
+            'description_i18n.default.string' => __('super_magic.agent.description_i18n_en_must_be_string'),
             'icon.array' => __('super_magic.agent.icon_must_be_array'),
             'icon_type.integer' => __('super_magic.agent.icon_type_must_be_integer'),
             'icon_type.in' => __('super_magic.agent.icon_type_invalid'),

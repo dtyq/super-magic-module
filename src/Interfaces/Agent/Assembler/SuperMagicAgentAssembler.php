@@ -152,14 +152,7 @@ class SuperMagicAgentAssembler
         $entity->setNameI18n($requestDTO->getNameI18n());
         $entity->setRoleI18n($requestDTO->getRoleI18n());
         $entity->setDescriptionI18n($requestDTO->getDescriptionI18n());
-
-        // 从 name_i18n.en_US 提取 name
-        $nameI18n = $requestDTO->getNameI18n();
-        $entity->setName($nameI18n[LanguageEnum::EN_US->value] ?? '');
-
-        // 从 description_i18n.en_US 提取 description（如果存在）
-        $descriptionI18n = $requestDTO->getDescriptionI18n();
-        $entity->setDescription($descriptionI18n[LanguageEnum::EN_US->value] ?? '');
+        $entity->hydrateScalarTextForWrite();
 
         // 处理 icon
         $entity->setIcon($requestDTO->getIcon());
