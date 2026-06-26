@@ -529,12 +529,13 @@ class SuperMagicAgentAppService extends AbstractSuperMagicAppService
             new Page($requestDTO->getPage(), $requestDTO->getPageSize())
         );
 
+        $fallbackAgents = $this->loadAgentVersionTextFallbackAgents($dataIsolation, $result['list'], $language);
         $list = array_map(
-            static fn (AgentVersionEntity $version): array => [
-                'code' => $version->getCode(),
-                'name' => $version->getI18nName($language),
-                'description' => $version->getI18nDescription($language),
-            ],
+            fn (AgentVersionEntity $version): array => $this->buildAvailableAgentItem(
+                $version,
+                $language,
+                $fallbackAgents[$version->getCode()] ?? null
+            ),
             $result['list']
         );
 
@@ -1374,6 +1375,69 @@ class SuperMagicAgentAppService extends AbstractSuperMagicAppService
         )));
     }
 
+    /**
+     * @return array{code: string, name: string, description: string}
+     */
+    private function buildAvailableAgentItem(
+        AgentVersionEntity $versionEntity,
+        string $language,
+        ?SuperMagicAgentEntity $fallbackAgent = null
+    ): array {
+        return [
+            'code' => $versionEntity->getCode(),
+            'name' => $this->resolveAgentVersionName($versionEntity, $language, $fallbackAgent),
+            'description' => $this->resolveAgentVersionDescription($versionEntity, $language, $fallbackAgent),
+        ];
+    }
+
+    /**
+     * @param array<AgentVersionEntity> $versionEntities
+     * @return array<string, SuperMagicAgentEntity>
+     */
+    private function loadAgentVersionTextFallbackAgents(
+        SuperMagicAgentDataIsolation $dataIsolation,
+        array $versionEntities,
+        string $language
+    ): array {
+        $fallbackCodes = [];
+        foreach ($versionEntities as $versionEntity) {
+            if ($versionEntity->getI18nName($language) === '' || $versionEntity->getI18nDescription($language) === '') {
+                $fallbackCodes[] = $versionEntity->getCode();
+            }
+        }
+
+        $fallbackCodes = array_values(array_unique($fallbackCodes));
+        return $fallbackCodes === []
+            ? []
+            : $this->superMagicAgentDomainService->findByCodes($dataIsolation, $fallbackCodes);
+    }
+
+    private function resolveAgentVersionName(
+        AgentVersionEntity $versionEntity,
+        string $language,
+        ?SuperMagicAgentEntity $fallbackAgent
+    ): string {
+        $name = $versionEntity->getI18nName($language);
+        if ($name === '' && $fallbackAgent !== null) {
+            return $fallbackAgent->getI18nName($language);
+        }
+
+        return $name;
+    }
+
+    private function resolveAgentVersionDescription(
+        AgentVersionEntity $versionEntity,
+        string $language,
+        ?SuperMagicAgentEntity $fallbackAgent
+    ): string {
+        $description = $versionEntity->getI18nDescription($language);
+        if ($description === '' && $fallbackAgent !== null) {
+            return $fallbackAgent->getI18nDescription($language);
+        }
+
+        return $description;
+    }
+
     private function hydrateToolSchemas(SuperMagicAgentEntity $agent, mixed $flowDataIsolation): void
     {
         $agent->setTools($agent->getTools());
@@ -2203,14 +2267,21 @@ class SuperMagicAgentAppService extends AbstractSuperMagicAppService
         SuperMagicAgentDataIsolation $dataIsolation,
         array $currentVersionsMap
     ): array {
+        $language = $dataIsolation->getLanguage();
+        $fallbackAgents = $this->loadAgentVersionTextFallbackAgents($dataIsolation, $currentVersionsMap, $language);
+
         $agents = [];
         foreach ($currentVersionsMap as $code => $versionEntity) {
+            $fallbackAgent = $fallbackAgents[$code] ?? null;
+            $name = $this->resolveAgentVersionName($versionEntity, $language, $fallbackAgent);
+            $description = $this->resolveAgentVersionDescription($versionEntity, $language, $fallbackAgent);
+
             $agent = new SuperMagicAgentEntity();
             $agent->setId($versionEntity->getId());
             $agent->setOrganizationCode($versionEntity->getOrganizationCode());
             $agent->setCode($code);
-            $agent->setName($versionEntity->getI18nName($dataIsolation->getLanguage()));
-            $agent->setDescription($versionEntity->getI18nDescription($dataIsolation->getLanguage()));
+            $agent->setName($name);
+            $agent->setDescription($description);
             $agent->setIcon($versionEntity->getIcon());
             $agent->setIconType($versionEntity->getIconType());
             $agent->setType($versionEntity->getType());
