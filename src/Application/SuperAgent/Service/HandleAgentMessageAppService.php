@@ -888,6 +888,10 @@ class HandleAgentMessageAppService extends AbstractAppService
             return;
         }
 
+        if (! ToolProcessor::shouldPersistToolMessageContent($tool)) {
+            return;
+        }
+
         // Check tool content
         $content = $tool['detail']['data']['content'] ?? '';
         if (empty($content)) {

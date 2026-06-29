@@ -1278,6 +1278,10 @@ class TaskAppService extends AbstractAppService
             return;
         }
 
+        if (! ToolProcessor::shouldPersistToolMessageContent($tool)) {
+            return;
+        }
+
         // 检查工具内容
         $content = $tool['detail']['data']['content'] ?? '';
         if (empty($content)) {
