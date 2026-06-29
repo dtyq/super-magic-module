@@ -936,6 +936,10 @@ class ResourceShareAppService extends AbstractShareAppService
 
         // 使用话题的 workDir 来计算相对路径，确保层级目录正确
         $workDir = $topicEntity->getWorkDir();
+        if (! $shareEntity->isViewFileListEnabled()) {
+            return $this->getFilesFromTopic($topicId, $projectId, $organizationCode, $dataIsolation, $dto, $workDir);
+        }
+
         return $this->getFilesFromProject($projectId, $organizationCode, $dataIsolation, $dto, $workDir);
     }
 
@@ -2453,6 +2457,83 @@ class ResourceShareAppService extends AbstractShareAppService
 
         // Build file tree structure with VS Code-style sorting (always use zh_CN for pinyin sorting)
         // 使用完整列表构建树结构，确保树结构完整
+        $tree = FileTreeUtil::assembleFilesTreeByParentId($allList, 'zh_CN');
+
+        return [
+            'list' => $list,
+            'tree' => $tree,
+            'total' => $total,
+        ];
+    }
+
+    /**
+     * 从话题获取文件列表.
+     *
+     * @param int $topicId 话题ID
+     * @param int $projectId 项目ID
+     * @param string $organizationCode 组织编码
+     * @param DataIsolation $dataIsolation 数据隔离对象
+     * @param GetShareFilesRequestDTO $dto 请求DTO
+     * @param string $workDir 工作目录
+     * @return array 文件列表及树结构
+     */
+    private function getFilesFromTopic(int $topicId, int $projectId, string $organizationCode, DataIsolation $dataIsolation, GetShareFilesRequestDTO $dto, string $workDir = ''): array
+    {
+        $allEntities = [];
+        $page = 1;
+        $pageSize = 1000;
+
+        while (true) {
+            $result = $this->taskDomainService->getTaskAttachmentsByTopicId(
+                $topicId,
+                $dataIsolation,
+                $page,
+                $pageSize,
+                [],
+                StorageType::WORKSPACE->value
+            );
+
+            $entities = $result['list'] ?? [];
+            if (empty($entities)) {
+                break;
+            }
+
+            foreach ($entities as $entity) {
+                if ($entity instanceof TaskFileEntity
+                    && $entity->getProjectId() === $projectId
+                    && ! $entity->getIsHidden()) {
+                    $allEntities[] = $entity;
+                }
+            }
+
+            if (count($entities) < $pageSize) {
+                break;
+            }
+
+            ++$page;
+        }
+
+        $fileIds = array_map(fn ($entity) => $entity->getFileId(), $allEntities);
+        $allEntities = ! empty($fileIds)
+            ? $this->taskFileDomainService->getFilesWithParentsByIds($fileIds, $projectId)
+            : [];
+        $allEntities = array_values(array_filter(
+            $allEntities,
+            static fn (TaskFileEntity $entity): bool => ! $entity->getIsHidden()
+        ));
+        $allEntities = RelativeFilePathUtil::filterByValidParentChain($allEntities);
+
+        // 过滤系统目录（如 .magic 及其子文件）
+        $allEntities = $this->taskFileDomainService->filterOutDescendantsByDirectoryNames($allEntities, ['.magic']);
+
+        $allList = $this->convertEntitiesToDtoList($allEntities, $organizationCode, $workDir);
+        $total = count($allList);
+
+        $page = $dto->getPage();
+        $pageSize = $dto->getPageSize();
+        $offset = ($page - 1) * $pageSize;
+        $list = array_slice($allList, $offset, $pageSize);
+
         $tree = FileTreeUtil::assembleFilesTreeByParentId($allList, 'zh_CN');
 
         return [

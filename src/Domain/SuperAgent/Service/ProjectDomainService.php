@@ -49,6 +49,7 @@ class ProjectDomainService
         private readonly TaskFileRepositoryInterface $taskFileRepository,
         private readonly TopicRepositoryInterface $topicRepository,
         private readonly TaskRepositoryInterface $taskRepository,
+        private readonly MessageScheduleDomainService $messageScheduleDomainService,
         private readonly CacheInterface $cache,
         LoggerFactory $loggerFactory
     ) {
@@ -398,6 +399,14 @@ class ProjectDomainService
                         'workspace_id' => $targetWorkspaceId,
                         'updated_at' => $currentTime,
                     ]
+                );
+
+                $this->messageScheduleDomainService->syncMovedProjectSchedules(
+                    [$sourceProjectId],
+                    $userId,
+                    $sourceProject->getUserOrganizationCode(),
+                    (int) ($targetWorkspaceId ?? 0),
+                    $userId
                 );
 
                 $this->syncOwnerWorkspaceBinding($sourceProject, $targetWorkspaceId);

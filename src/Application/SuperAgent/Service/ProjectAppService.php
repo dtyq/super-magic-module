@@ -64,6 +64,7 @@ use Dtyq\SuperMagic\Domain\SuperAgent\Event\ProjectUpdatedEvent;
 use Dtyq\SuperMagic\Domain\SuperAgent\Event\StopRunningTaskEvent;
 use Dtyq\SuperMagic\Domain\SuperAgent\Repository\Facade\ProjectRepositoryInterface;
 use Dtyq\SuperMagic\Domain\SuperAgent\Service\AudioProjectDomainService;
+use Dtyq\SuperMagic\Domain\SuperAgent\Service\MessageScheduleDomainService;
 use Dtyq\SuperMagic\Domain\SuperAgent\Service\ProjectDomainService;
 use Dtyq\SuperMagic\Domain\SuperAgent\Service\ProjectMemberDomainService;
 use Dtyq\SuperMagic\Domain\SuperAgent\Service\TaskFileDomainService;
@@ -139,6 +140,7 @@ class ProjectAppService extends AbstractAppService
         private readonly ProjectDomainService $projectDomainService,
         private readonly ProjectRepositoryInterface $projectRepository,
         private readonly ProjectMemberDomainService $projectMemberDomainService,
+        private readonly MessageScheduleDomainService $messageScheduleDomainService,
         private readonly TopicDomainService $topicDomainService,
         private readonly TaskFileDomainService $taskFileDomainService,
         private readonly MagicFSFileDomainService $magicFSFileDomainService,
@@ -1475,7 +1477,20 @@ class ProjectAppService extends AbstractAppService
                         'updated_count' => $topicUpdatedCount,
                     ]);
 
-                    // Step 4.3: Sync owner's personal workspace binding.
+                    // Step 4.3: Sync message schedule workspace.
+                    $scheduleUpdatedCount = $this->messageScheduleDomainService->syncMovedProjectSchedules(
+                        $validProjectIds,
+                        $userId,
+                        $organizationCode,
+                        (int) ($targetWorkspaceId ?? 0),
+                        $userId
+                    );
+
+                    $this->logger->info('Batch synced message schedule workspace', [
+                        'updated_count' => $scheduleUpdatedCount,
+                    ]);
+
+                    // Step 4.4: Sync owner's personal workspace binding.
                     $settingUpdatedCount = $this->projectMemberDomainService->syncOwnerProjectWorkspaceBindings(
                         $userId,
                         $validProjectIds,
@@ -1487,7 +1502,7 @@ class ProjectAppService extends AbstractAppService
                         'updated_count' => $settingUpdatedCount,
                     ]);
 
-                    // Step 4.4: Build success results
+                    // Step 4.5: Build success results
                     $results = [];
                     foreach ($validProjectIds as $projectId) {
                         $projectIdStr = (string) $projectId;

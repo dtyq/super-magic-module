@@ -90,4 +90,29 @@ interface MessageScheduleRepositoryInterface
      * Batch update message schedules by condition.
      */
     public function batchUpdateByCondition(array $condition, array $data): int;
+
+    /**
+     * Batch update message schedule owner and workspace by project IDs.
+     */
+    public function batchUpdateOwnerAndWorkspaceByProjectIds(
+        array $projectIds,
+        string $fromUserId,
+        string $toUserId,
+        string $organizationCode,
+        int $workspaceId,
+        string $updatedUid,
+        string $updatedAt
+    ): int;
+
+    /**
+     * Batch update message schedule workspace by project IDs.
+     */
+    public function batchUpdateWorkspaceByProjectIds(
+        array $projectIds,
+        string $userId,
+        string $organizationCode,
+        int $workspaceId,
+        string $updatedUid,
+        string $updatedAt
+    ): int;
 }
