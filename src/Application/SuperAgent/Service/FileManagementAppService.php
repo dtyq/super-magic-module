@@ -1218,6 +1218,10 @@ class FileManagementAppService extends AbstractAppService
                 ExceptionBuilder::throw(ShareErrorCode::RESOURCE_NOT_FOUND, 'share.resource_not_found');
             }
 
+            if ($shareEntity->getResourceType() === ResourceType::Topic->value) {
+                return $this->getTopicShareFileUrlsByAccessToken($shareEntity, $fileIds, $downloadMode, $fileVersions);
+            }
+
             $fileScope = $this->resolveAccessTokenFileScope($shareEntity);
             $authorizedFileIds = $this->filterFileIdsByAllowedScope($fileIds, $fileScope['allowed_file_ids']);
             if (empty($authorizedFileIds)) {
@@ -2272,7 +2276,6 @@ class FileManagementAppService extends AbstractAppService
     private function resolveAccessTokenFileScope(ResourceShareEntity $shareEntity): array
     {
         return match ($shareEntity->getResourceType()) {
-            ResourceType::Topic->value => $this->resolveTopicShareFileScope($shareEntity),
             ResourceType::Project->value => [
                 'project_id' => (int) $shareEntity->getProjectId(),
                 'allowed_file_ids' => null,
@@ -2284,21 +2287,34 @@ class FileManagementAppService extends AbstractAppService
     }
 
     /**
-     * @return array{project_id:int, allowed_file_ids:int[]}
+     * @return array<int, array<string, mixed>>
      */
-    private function resolveTopicShareFileScope(ResourceShareEntity $shareEntity): array
+    private function getTopicShareFileUrlsByAccessToken(ResourceShareEntity $shareEntity, array $fileIds, string $downloadMode, array $fileVersions): array
     {
         $topicEntity = $this->topicDomainService->getTopicWithDeleted((int) $shareEntity->getResourceId());
         if (empty($topicEntity)) {
             ExceptionBuilder::throw(SuperAgentErrorCode::TOPIC_NOT_FOUND, 'topic.topic_not_found');
         }
 
-        $topicFiles = $this->taskFileDomainService->findUserFilesByTopicId($shareEntity->getResourceId());
+        $projectId = $topicEntity->getProjectId();
+        if ($projectId <= 0) {
+            return [];
+        }
 
-        return [
-            'project_id' => $topicEntity->getProjectId(),
-            'allowed_file_ids' => $this->getAllowedFileIdsFromEntities($topicFiles),
-        ];
+        $authorizedFileIds = $shareEntity->isViewFileListEnabled()
+            ? $this->normalizeFileIds($fileIds)
+            : $this->filterFileIdsByTopicScope($fileIds, $projectId, (int) $shareEntity->getResourceId());
+
+        if (empty($authorizedFileIds)) {
+            return [];
+        }
+
+        return $this->taskFileDomainService->getFileUrlsByProjectId(
+            $authorizedFileIds,
+            $projectId,
+            $downloadMode,
+            $fileVersions
+        );
     }
 
     /**
@@ -2333,6 +2349,40 @@ class FileManagementAppService extends AbstractAppService
         $authorizedFileIds = [];
         foreach ($normalizedFileIds as $fileId) {
             if (isset($allowedFileIdMap[$fileId])) {
+                $authorizedFileIds[] = $fileId;
+            }
+        }
+
+        return $authorizedFileIds;
+    }
+
+    /**
+     * @return int[]
+     */
+    private function filterFileIdsByTopicScope(array $fileIds, int $projectId, int $topicId): array
+    {
+        $normalizedFileIds = $this->normalizeFileIds($fileIds);
+        if (empty($normalizedFileIds)) {
+            return [];
+        }
+
+        $fileEntities = $this->taskFileDomainService->findFilesByProjectIdAndIds($projectId, $normalizedFileIds);
+        if (empty($fileEntities)) {
+            return [];
+        }
+
+        $topicFileIdMap = [];
+        foreach ($fileEntities as $fileEntity) {
+            if ($fileEntity instanceof TaskFileEntity
+                && $fileEntity->getProjectId() === $projectId
+                && $fileEntity->getTopicId() === $topicId) {
+                $topicFileIdMap[$fileEntity->getFileId()] = true;
+            }
+        }
+
+        $authorizedFileIds = [];
+        foreach ($normalizedFileIds as $fileId) {
+            if (isset($topicFileIdMap[$fileId])) {
                 $authorizedFileIds[] = $fileId;
             }
         }

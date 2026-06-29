@@ -19,6 +19,8 @@ use Throwable;
  */
 class ResourceShareEntity extends AbstractEntity
 {
+    private const EXTRA_FIELD_VIEW_FILE_LIST = 'view_file_list';
+
     /**
      * @var int 主键ID
      */
@@ -508,6 +510,17 @@ class ResourceShareEntity extends AbstractEntity
     public function getExtraAttribute(string $key, mixed $default = null): mixed
     {
         return $this->extra[$key] ?? $default;
+    }
+
+    public function isViewFileListEnabled(bool $default = true): bool
+    {
+        $value = $this->getExtraAttribute(self::EXTRA_FIELD_VIEW_FILE_LIST, $default);
+        if (is_bool($value)) {
+            return $value;
+        }
+
+        $parsedValue = filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+        return $parsedValue ?? $default;
     }
 
     /**
