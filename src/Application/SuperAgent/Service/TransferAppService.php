@@ -20,6 +20,7 @@ use Dtyq\SuperMagic\Domain\SuperAgent\Entity\ValueObject\TransferType;
 use Dtyq\SuperMagic\Domain\SuperAgent\Event\ProjectTransferredEvent;
 use Dtyq\SuperMagic\Domain\SuperAgent\Repository\Facade\ProjectRepositoryInterface;
 use Dtyq\SuperMagic\Domain\SuperAgent\Repository\Facade\WorkspaceRepositoryInterface;
+use Dtyq\SuperMagic\Domain\SuperAgent\Service\MessageScheduleDomainService;
 use Dtyq\SuperMagic\Domain\SuperAgent\Service\ProjectDomainService;
 use Dtyq\SuperMagic\Domain\SuperAgent\Service\ProjectMemberDomainService;
 use Dtyq\SuperMagic\Domain\SuperAgent\Service\ProjectOperationLogDomainService;
@@ -56,6 +57,7 @@ class TransferAppService extends AbstractAppService
         private readonly ProjectRepositoryInterface $projectRepository,
         private readonly WorkspaceRepositoryInterface $workspaceRepository,
         private readonly PackageFilterInterface $packageFilterService,
+        private readonly MessageScheduleDomainService $messageScheduleDomainService,
     ) {
     }
 
@@ -252,6 +254,15 @@ class TransferAppService extends AbstractAppService
                 ];
             }
 
+            $this->messageScheduleDomainService->syncTransferredProjectSchedules(
+                $projectIds,
+                $fromUserId,
+                $toUserId,
+                $organizationCode,
+                (int) ($transferResult->getProject()?->getWorkspaceId() ?? 0),
+                $fromUserId
+            );
+
             // Step 2: Handle receiver membership using batch method
             $this->projectMemberDomainService->batchHandleReceiverMembership(
                 $projectIds,
@@ -409,6 +420,15 @@ class TransferAppService extends AbstractAppService
 
             // Step 2: Batch handle member relationships using optimized methods
             $projectIds = array_map('intval', $transferResult->getTransferredProjectIds());
+
+            $this->messageScheduleDomainService->syncTransferredProjectSchedules(
+                $projectIds,
+                $fromUserId,
+                $toUserId,
+                $organizationCode,
+                (int) ($transferResult->getWorkspace()?->getId() ?? 0),
+                $fromUserId
+            );
 
             // Pre-query: Batch get receiver member status for all projects
             $receiverMemberMap = $this->projectMemberDomainService->batchGetMembersByProjectsAndUser(

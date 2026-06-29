@@ -311,6 +311,58 @@ class MessageScheduleDomainService
         return $this->messageScheduleRepository->batchUpdateByCondition($conditions, $data);
     }
 
+    /**
+     * Sync message schedules after project/workspace ownership transfer.
+     */
+    public function syncTransferredProjectSchedules(
+        array $projectIds,
+        string $fromUserId,
+        string $toUserId,
+        string $organizationCode,
+        int $workspaceId,
+        string $updatedUid
+    ): int {
+        $projectIds = $this->normalizeProjectIds($projectIds);
+        if (empty($projectIds)) {
+            return 0;
+        }
+
+        return $this->messageScheduleRepository->batchUpdateOwnerAndWorkspaceByProjectIds(
+            $projectIds,
+            $fromUserId,
+            $toUserId,
+            $organizationCode,
+            $workspaceId,
+            $updatedUid,
+            date('Y-m-d H:i:s')
+        );
+    }
+
+    /**
+     * Sync message schedule workspace after project move.
+     */
+    public function syncMovedProjectSchedules(
+        array $projectIds,
+        string $userId,
+        string $organizationCode,
+        int $workspaceId,
+        string $updatedUid
+    ): int {
+        $projectIds = $this->normalizeProjectIds($projectIds);
+        if (empty($projectIds)) {
+            return 0;
+        }
+
+        return $this->messageScheduleRepository->batchUpdateWorkspaceByProjectIds(
+            $projectIds,
+            $userId,
+            $organizationCode,
+            $workspaceId,
+            $updatedUid,
+            date('Y-m-d H:i:s')
+        );
+    }
+
     // ===== Message Schedule Log Methods =====
 
     /**
@@ -381,5 +433,22 @@ class MessageScheduleDomainService
     public function updateExecutionLogDetails(int $executionLogId, array $updateData): bool
     {
         return $this->messageScheduleLogRepository->updateExecutionLogDetails($executionLogId, $updateData);
+    }
+
+    /**
+     * @param array<int|string> $projectIds
+     * @return int[]
+     */
+    private function normalizeProjectIds(array $projectIds): array
+    {
+        $normalized = [];
+        foreach ($projectIds as $projectId) {
+            $projectId = (int) $projectId;
+            if ($projectId > 0) {
+                $normalized[$projectId] = $projectId;
+            }
+        }
+
+        return array_values($normalized);
     }
 }

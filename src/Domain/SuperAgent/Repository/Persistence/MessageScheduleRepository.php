@@ -283,6 +283,62 @@ class MessageScheduleRepository extends AbstractRepository implements MessageSch
     }
 
     /**
+     * Batch update message schedule owner and workspace by project IDs.
+     */
+    public function batchUpdateOwnerAndWorkspaceByProjectIds(
+        array $projectIds,
+        string $fromUserId,
+        string $toUserId,
+        string $organizationCode,
+        int $workspaceId,
+        string $updatedUid,
+        string $updatedAt
+    ): int {
+        if (empty($projectIds)) {
+            return 0;
+        }
+
+        return $this->messageScheduleModel::query()
+            ->whereIn('project_id', $projectIds)
+            ->where('user_id', $fromUserId)
+            ->where('organization_code', $organizationCode)
+            ->whereNull('deleted_at')
+            ->update([
+                'user_id' => $toUserId,
+                'workspace_id' => $workspaceId,
+                'updated_uid' => $updatedUid,
+                'updated_at' => $updatedAt,
+            ]);
+    }
+
+    /**
+     * Batch update message schedule workspace by project IDs.
+     */
+    public function batchUpdateWorkspaceByProjectIds(
+        array $projectIds,
+        string $userId,
+        string $organizationCode,
+        int $workspaceId,
+        string $updatedUid,
+        string $updatedAt
+    ): int {
+        if (empty($projectIds)) {
+            return 0;
+        }
+
+        return $this->messageScheduleModel::query()
+            ->whereIn('project_id', $projectIds)
+            ->where('user_id', $userId)
+            ->where('organization_code', $organizationCode)
+            ->whereNull('deleted_at')
+            ->update([
+                'workspace_id' => $workspaceId,
+                'updated_uid' => $updatedUid,
+                'updated_at' => $updatedAt,
+            ]);
+    }
+
+    /**
      * Model to entity.
      */
     protected function modelToEntity(MessageScheduleModel $model): MessageScheduleEntity
