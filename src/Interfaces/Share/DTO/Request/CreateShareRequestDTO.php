@@ -34,6 +34,8 @@ class CreateShareRequestDTO extends AbstractDTO
 
     public const EXTRA_FIELD_ALLOW_DOWNLOAD_PROJECT_FILE = 'allow_download_project_file';
 
+    public const EXTRA_FIELD_PURE_MODE = 'pure_mode';
+
     /**
      * 资源ID.
      */
@@ -520,6 +522,7 @@ class CreateShareRequestDTO extends AbstractDTO
             self::EXTRA_FIELD_VIEW_FILE_LIST,             // 可查看文件列表
             self::EXTRA_FIELD_HIDE_CREATED_BY_SUPER_MAGIC, // 隐藏"由超级麦吉创造"字样
             self::EXTRA_FIELD_ALLOW_DOWNLOAD_PROJECT_FILE, // 允许下载项目文件
+            self::EXTRA_FIELD_PURE_MODE,                   // 纯净模式（全屏显示并隐藏头部）
         ];
 
         // 检查是否包含不允许的字段
