@@ -22,10 +22,12 @@ use App\Infrastructure\Core\Exception\BusinessException;
 use App\Infrastructure\Core\ValueObject\Page;
 use Dtyq\SuperMagic\Application\Agent\Service\SuperMagicAgentAppService;
 use Dtyq\SuperMagic\Application\Collaboration\Policy\ResourceAccessPolicyService;
+use Dtyq\SuperMagic\Domain\Agent\Entity\AgentVersionEntity;
 use Dtyq\SuperMagic\Domain\Agent\Entity\SuperMagicAgentEntity;
 use Dtyq\SuperMagic\Domain\Agent\Entity\ValueObject\SuperMagicAgentDataIsolation;
 use Dtyq\SuperMagic\Domain\Agent\Entity\ValueObject\SuperMagicAgentTool;
 use Dtyq\SuperMagic\Domain\Agent\Entity\ValueObject\SuperMagicAgentToolType;
+use Dtyq\SuperMagic\Domain\Agent\Service\SuperMagicAgentDomainService;
 use Dtyq\SuperMagic\Domain\SuperAgent\Entity\ProjectEntity;
 use Dtyq\SuperMagic\Domain\SuperAgent\Entity\TaskEntity;
 use Dtyq\SuperMagic\Domain\SuperAgent\Entity\TopicEntity;
@@ -230,6 +232,87 @@ class SuperMagicAgentAppServiceTest extends TestCase
         $sandboxId = $method->invoke($this->service, $dataIsolation, 'SMA-agent', $projectEntity);
 
         self::assertSame('pooled-agent-sandbox-1', $sandboxId);
+    }
+
+    public function testBuildExternalVisibleAgentsFallsBackToSourceAgentI18nWhenPublishedVersionTextIsEmpty(): void
+    {
+        ApplicationContext::setContainer($this->buildContainer([]));
+
+        $dataIsolation = new SuperMagicAgentDataIsolation('ORG', 'user-1');
+        $versionEntity = new AgentVersionEntity();
+        $versionEntity->setId(1001);
+        $versionEntity->setCode('SMA-empty-version');
+        $versionEntity->setOrganizationCode('ORG');
+        $versionEntity->setName('');
+        $versionEntity->setDescription('');
+        $versionEntity->setNameI18n(['zh_CN' => '', 'default' => '']);
+        $versionEntity->setDescriptionI18n(['zh_CN' => '', 'default' => '']);
+        $versionEntity->setIcon([]);
+        $versionEntity->setIconType(1);
+        $versionEntity->setType(2);
+        $versionEntity->setEnabled(true);
+        $versionEntity->setPrompt([]);
+        $versionEntity->setTools([]);
+        $versionEntity->setCreator('creator');
+        $versionEntity->setModifier('modifier');
+        $versionEntity->setCreatedAt('2026-06-26 16:20:00');
+        $versionEntity->setUpdatedAt('2026-06-26 16:20:00');
+
+        $sourceAgent = new SuperMagicAgentEntity();
+        $sourceAgent->setCode('SMA-empty-version');
+        $sourceAgent->setName('');
+        $sourceAgent->setDescription('');
+        $sourceAgent->setNameI18n(['zh_CN' => '', 'default' => '装机大师']);
+        $sourceAgent->setDescriptionI18n(['zh_CN' => '', 'default' => '为不同预算的用户提供电脑配置建议']);
+
+        $superMagicAgentDomainService = new readonly class($sourceAgent) extends SuperMagicAgentDomainService {
+            public function __construct(private SuperMagicAgentEntity $sourceAgent)
+            {
+            }
+
+            public function findByCodes(SuperMagicAgentDataIsolation $dataIsolation, array $codes): array
+            {
+                return ['SMA-empty-version' => $this->sourceAgent];
+            }
+        };
+        $this->setProperty($this->service, 'superMagicAgentDomainService', $superMagicAgentDomainService);
+
+        $method = new ReflectionMethod($this->service, 'buildExternalVisibleAgentsFromVersions');
+        $method->setAccessible(true);
+
+        $agents = $method->invoke($this->service, $dataIsolation, ['SMA-empty-version' => $versionEntity]);
+
+        self::assertCount(1, $agents);
+        self::assertSame('装机大师', $agents[0]->getI18nName('zh_CN'));
+        self::assertSame('为不同预算的用户提供电脑配置建议', $agents[0]->getI18nDescription('zh_CN'));
+    }
+
+    public function testBuildAvailableAgentItemFallsBackToSourceAgentI18nWhenPublishedVersionTextIsEmpty(): void
+    {
+        $versionEntity = new AgentVersionEntity();
+        $versionEntity->setCode('SMA-empty-version');
+        $versionEntity->setName('');
+        $versionEntity->setDescription('');
+        $versionEntity->setNameI18n(['zh_CN' => '', 'default' => '']);
+        $versionEntity->setDescriptionI18n(['zh_CN' => '', 'default' => '']);
+
+        $sourceAgent = new SuperMagicAgentEntity();
+        $sourceAgent->setCode('SMA-empty-version');
+        $sourceAgent->setName('');
+        $sourceAgent->setDescription('');
+        $sourceAgent->setNameI18n(['zh_CN' => '', 'default' => '装机大师']);
+        $sourceAgent->setDescriptionI18n(['zh_CN' => '', 'default' => '为不同预算的用户提供电脑配置建议']);
+
+        $method = new ReflectionMethod($this->service, 'buildAvailableAgentItem');
+        $method->setAccessible(true);
+
+        $item = $method->invoke($this->service, $versionEntity, 'zh_CN', $sourceAgent);
+
+        self::assertSame([
+            'code' => 'SMA-empty-version',
+            'name' => '装机大师',
+            'description' => '为不同预算的用户提供电脑配置建议',
+        ], $item);
     }
 
     /**

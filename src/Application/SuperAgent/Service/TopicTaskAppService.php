@@ -1142,6 +1142,10 @@ class TopicTaskAppService extends AbstractAppService
 
         // 检查工具内容
         $tool = $taskMessageEntity->getTool();
+        if (! ToolProcessor::shouldPersistToolMessageContent($tool)) {
+            return;
+        }
+
         $content = $tool['detail']['data']['content'] ?? '';
         $fileName = $tool['detail']['data']['file_name'] ?? 'tool_content.txt';
 

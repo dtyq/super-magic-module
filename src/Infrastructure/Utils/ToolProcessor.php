@@ -74,6 +74,16 @@ class ToolProcessor
     }
 
     /**
+     * Tool message content is persisted only for completed tool details.
+     * Failed tool details should remain inline in the message and must not
+     * create task file records.
+     */
+    public static function shouldPersistToolMessageContent(?array $tool): bool
+    {
+        return ($tool['status'] ?? '') !== 'error';
+    }
+
+    /**
      * Generate output content tool based on attachments.
      * Prioritizes HTML files, then MD files, and selects files with specific keywords.
      */
