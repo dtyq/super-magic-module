@@ -10,6 +10,7 @@ use Dtyq\SuperMagic\Interfaces\Agent\Facade\OpenApi\OpenSuperMagicAgentApi;
 use Dtyq\SuperMagic\Interfaces\Agent\Facade\Sandbox\SkillSandboxApi;
 use Dtyq\SuperMagic\Interfaces\Agent\Facade\Sandbox\SuperMagicAgentSandboxApi;
 use Dtyq\SuperMagic\Interfaces\Share\Facade\ShareApi;
+use Dtyq\SuperMagic\Interfaces\SuperAgent\Facade\InternalApi\AiAbilityApi;
 use Dtyq\SuperMagic\Interfaces\SuperAgent\Facade\InternalApi\FileApi;
 use Dtyq\SuperMagic\Interfaces\SuperAgent\Facade\InternalApi\SandboxApi as InternalSandboxApi;
 use Dtyq\SuperMagic\Interfaces\SuperAgent\Facade\InternalApi\TaskApi as InternalTaskApi;
@@ -68,6 +69,11 @@ Router::addGroup(
         Router::addGroup('/super-agent/tasks', static function () {
             // 第三方消息入站
             Router::post('/ingest-third-party-message', [InternalTaskApi::class, 'ingestThirdPartyMessage']);
+        });
+
+        // AI 能力运行时配置
+        Router::addGroup('/ai-abilities', static function () {
+            Router::get('/runtime-config', [AiAbilityApi::class, 'runtimeConfig']);
         });
 
         // 分享管理相关
